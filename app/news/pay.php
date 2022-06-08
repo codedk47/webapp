@@ -89,7 +89,7 @@ final class webapp_pay_newbee implements webapp_pay
 	function notify(mixed $input, ?array &$result):bool
 	{
 		$result = [
-			'code' => 
+			'code' => 200,			//返回状态码
 			'type' => 'text/plain',	//返回数据类型
 			'data' => 'success'		//返回数据内容
 		];
