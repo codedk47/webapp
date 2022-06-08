@@ -37,8 +37,9 @@ final class webapp_pay_test implements webapp_pay
 	function notify(mixed $input, ?array &$result):bool
 	{
 		$result = [
+			'code' => 200,			//返回状态码
 			'type' => 'text/plain',	//返回数据类型
-			'data' => 'success'		//返回数据内容
+			'data' => 'SUCCESS'		//返回数据内容
 		];
 		return TRUE;
 	}
@@ -89,15 +90,18 @@ final class webapp_pay_newbee implements webapp_pay
 	function notify(mixed $input, ?array &$result):bool
 	{
 		$result = [
-			'code' => 200,			//返回状态码
-			'type' => 'text/plain',	//返回数据类型
-			'data' => 'success'		//返回数据内容
+			'code' => 200,
+			'type' => 'text/plain',
+			'data' => 'success'
 		];
 		return TRUE;
 	}
 }
 final class webapp_router_pay extends webapp_echo_xml
 {
+	#为了更好的兼容回调地址请改写地址重写
+	#const notify = 'https://kenb.cloud/?pay/notify,channel:';
+	const notify = 'https://kenb.cloud/notify';
 	// function __construct(webapp $webapp)
 	// {
 	// 	parent::__construct($webapp, 'pay');
@@ -141,8 +145,7 @@ final class webapp_router_pay extends webapp_echo_xml
 				$error = '支付类型不存在！';
 				break;
 			}
-			$data['notify_url'] = "https://kenb.cloud/?pay/notify,channel:{$data['pay_name']}";
-			$data['notify_url'] = "https://localhost/test";
+			$data['notify_url'] = self::notify . $data['pay_name'];
 			return (new $channel($this->webapp['app_pay'][$data['pay_name']]))->create($data, $result);
 		}
 		return FALSE;
