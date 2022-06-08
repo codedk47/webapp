@@ -1,10 +1,10 @@
 <?php
 interface webapp_pay
 {
-	static function paytype():array;						//可支付类型
-	function __construct(array $context);					//支付上下文
-	function create(array $order, ?array &$result):bool;	//创建订单，订单字段统一，结果字段统一
-	function notify(mixed $input, ?array &$result):bool;	//订单通知地址回调函数，结果字段统一
+	static function paytype():array; //可支付类型
+	function __construct(array $context); //支付上下文
+	function create(array $order, ?array &$result, ?string &$error):bool; //创建订单，订单字段统一，结果字段统一
+	function notify(mixed $input, ?array &$result):bool; //订单通知地址回调函数，结果字段统一
 }
 final class webapp_pay_test implements webapp_pay
 {
@@ -20,15 +20,17 @@ final class webapp_pay_test implements webapp_pay
 	{
 		$this->ctx = $context;
 	}
-	function create(array $order, &$result):bool
+	function create(array $order, ?array &$result, ?string &$error):bool
 	{
-		if (is_array($data = webapp_client_http::open('https://localhost/', [
-			'method' => 'POST',		//提交方法
-			'data' => [
-				...$order			//请看订单数据内容和支付接口需要数据进行组合后提交
-			]])->content())) {		//判断接口返回类型，或者更多内容判断
+		while (is_array($data = webapp_client_http::open('https://httpbin.org/post', [
+			'method' => 'POST',											//提交方法
+			'data' => $order											//请看订单数据内容和支付接口需要数据进行组合后提交
+			])->content())) {											//判断接口返回类型，或者更多内容判断
 			$result = [
-				...$data			//结果数据
+				'trade_no' => 0,										//N方交易号
+				'order_no' => $order['order_no'],						//对方订单号
+				'type' => 'post',										//data 数据，goto 跳转，qrcode 二维码，post转移提交，html展示代码
+				'data' => json_encode($data, JSON_UNESCAPED_UNICODE)	//操作数据
 			];
 			return TRUE;
 		}
@@ -59,7 +61,7 @@ final class webapp_pay_newbee implements webapp_pay
 	{
 		$this->ctx = $context;
 	}
-	function create(array $order, &$result):bool
+	function create(array $order, ?array &$result, ?string &$error):bool
 	{
 		$data = [
 			'channel' => 98,
@@ -77,12 +79,15 @@ final class webapp_pay_newbee implements webapp_pay
 		$query[] = "key={$this->ctx['key']}";
 		//var_dump(join('&', $query));
 		$data['sign'] = strtoupper(md5(join('&', $query)));
-		print_r($data);
-		if (is_array($content = webapp_client_http::open('http://47.75.104.122:8081/gate/take_order.do', [
+		//print_r($data);
+		while (is_array($content = webapp_client_http::open('http://47.75.104.122:8081/gate/take_order.do', [
 			'method' => 'POST',
 			'data' => $data])->content())) {
-			$result = [];
-			print_r($content);
+			if ((array_key_exists('result', $content) && $content['result']) === FALSE)
+			{
+				$error = $content['message'] ?? NULL;
+				break;
+			}
 			return TRUE;
 		}
 		return FALSE;
@@ -125,28 +130,28 @@ final class webapp_router_pay extends webapp_echo_xml
 		//订单费用
 		$form->field('order_fee', 'number', ['min' => 0, 'required' => NULL], fn($v)=>floatval($v));
 
-		while ($form->fetch($data, $error))
+		while ($form->fetch($order, $error))
 		{
 			//授权认证（现在使用webapp内部认证。以后公开后另外使用）
-			if (empty($auth = $this->webapp->admin($data['pay_auth'])))
+			if (empty($auth = $this->webapp->admin($order['pay_auth'])))
 			{
 				$error = '支付认证失败！';
 				break;
 			}
-			$data['pay_from'] = intval($auth[2]);
-			if (array_key_exists($data['pay_name'], $this->webapp['app_pay']) === FALSE)
+			$order['pay_from'] = intval($auth[2]);
+			if (array_key_exists($order['pay_name'], $this->webapp['app_pay']) === FALSE)
 			{
 				$error = '支付名称不存在！';
 				break;
 			}
-			$channel = "webapp_pay_{$data['pay_name']}";
-			if (array_key_exists($data['pay_type'], $channel::paytype()) === FALSE)
+			$channel = "webapp_pay_{$order['pay_name']}";
+			if (array_key_exists($order['pay_type'], $channel::paytype()) === FALSE)
 			{
 				$error = '支付类型不存在！';
 				break;
 			}
-			$data['notify_url'] = self::notify . $data['pay_name'];
-			return (new $channel($this->webapp['app_pay'][$data['pay_name']]))->create($data, $result);
+			$order['notify_url'] = self::notify . $order['pay_name'];
+			return (new $channel($this->webapp['app_pay'][$order['pay_name']]))->create($order, $result, $error);
 		}
 		return FALSE;
 	}
@@ -154,10 +159,13 @@ final class webapp_router_pay extends webapp_echo_xml
 	{
 		foreach ($this->webapp['app_pay'] as $channel => $context)
 		{
-			$pay = $this->xml->append('pay', ['value' => $channel, 'name' => $context['name']]);
-			foreach ("webapp_pay_{$channel}"::paytype() as $type => $name)
+			if ($context['open'])
 			{
-				$pay->append('type', ['value' => $type, 'name' => $name]);
+				$pay = $this->xml->append('pay', ['value' => $channel, 'name' => $context['name']]);
+				foreach ("webapp_pay_{$channel}"::paytype() as $type => $name)
+				{
+					$pay->append('type', ['value' => $type, 'name' => $name]);
+				}
 			}
 		}
 	}
@@ -165,10 +173,17 @@ final class webapp_router_pay extends webapp_echo_xml
 	{
 		if ($this->create($result, $error))
 		{
-			$this->xml->import($result);
+			$this->xml->cdata($result['data']);
+			$this->xml['type'] = $result['type'];
+			$this->xml['trade_no'] = $result['trade_no'];
+			$this->xml['order_no'] = $result['order_no'];
+			$this->xml['1'] = 1;
+
+
 			return;
 		}
-		$this->xml->append('error')->cdata($error ?? '未知错误');
+		$this->xml->cdata($error ?? '未知错误');
+		$this->xml['type'] = 'error';
 	}
 	function notify(string $name, $data)
 	{
