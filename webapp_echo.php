@@ -14,18 +14,18 @@ trait webapp_echo
 	// 	return $this->webapp->{$name}(...$params);
 	// }
 }
-class webapp_echo_text implements Stringable
-{
-	use webapp_echo;
-	function __construct(public readonly webapp $webapp, private string $content = '')
-	{
-		$webapp->response_content_type("text/plain; charset={$webapp['app_charset']}");
-	}
-	function __toString():string
-	{
-		return $this->content;
-	}
-}
+// class webapp_echo_text implements Stringable
+// {
+// 	use webapp_echo;
+// 	function __construct(public readonly webapp $webapp, private string $content = '')
+// 	{
+// 		$webapp->response_content_type("text/plain; charset={$webapp['app_charset']}");
+// 	}
+// 	function __toString():string
+// 	{
+// 		return $this->content;
+// 	}
+// }
 class webapp_echo_xml extends webapp_implementation
 {
 	use webapp_echo;
