@@ -171,13 +171,12 @@ final class webapp_router_pay extends webapp_echo_xml
 	{
 		if (class_exists($channel = "webapp_pay_{$name}", FALSE)
 			&& (new $channel($this->webapp['app_pay'][$name]))->notify($data, $result)) {
-			// header("Content-Type: {$result['type']}");
-			// echo $result['data'];
-			// print_r($result);
-			// return;
+			http_response_code($result['code']);
+			header("Content-Type: {$result['type']}");
+			echo $result['data'];
+			print_r($result);
+			return;
 		}
-		// $this->webapp->app('webapp_echo_text', 'FAILURE');
-		// return 500;
 		http_response_code(500);
 		header("Content-Type: text/plain");
 		echo 'FAILURE';
