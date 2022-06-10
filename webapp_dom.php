@@ -142,8 +142,7 @@ class webapp_xml extends SimpleXMLElement
 	function remove():static
 	{
 		$child = $this->dom();
-		$parent = $child->parentNode;
-		return static::from($parent->removeChild($child));
+		return static::from($child->parentNode->removeChild($child));
 	}
 	function clear():string
 	{
