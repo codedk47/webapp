@@ -134,16 +134,18 @@ class webapp_xml extends SimpleXMLElement
 
 	
 
-
+	#https://www.w3.org/TR/2003/WD-DOM-Level-3-Core-20030226/DOM3-Core.html#core-ID-1950641247
 	function parent():static
 	{
-		return $this->xpath('..')[0] ?? $this;
+		return ($dom = $this->dom())->parentNode ? static::from($dom->parentNode) : $this;
 	}
 	function remove():static
 	{
-		//11
-		$child = $this->dom();
-		return static::from($child->parentNode->removeChild($child));
+		return static::from(($dom = $this->dom())->parentNode->removeChild($dom));
+	}
+	function copy(webapp_xml $node):static
+	{
+		return static::from($this->dom()->appendChild($node->clone(TRUE)));
 	}
 	function clear():string
 	{
@@ -699,6 +701,7 @@ class webapp_form implements ArrayAccess
 		{
 			if ($this->echo)
 			{
+				$field = '';
 				break;
 			}
 			if (is_array($this->context))
@@ -739,7 +742,7 @@ class webapp_form implements ArrayAccess
 						};
 						break;
 					default:
-						$value = $input[$field] ?? '';
+						$value = array_key_exists($field, $input) && is_scalar($input[$field]) ? (string)$input[$field] : '';
 						if ((isset($node['required']) && strlen($value) === 0)
 							|| static::validate($node, $value) === FALSE) {
 							break 3;

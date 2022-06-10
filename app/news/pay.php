@@ -61,50 +61,50 @@ final class webapp_pay_changjiang implements webapp_pay
 	}
 	function create(array &$order, ?string &$error):bool
 	{
-		$data = [
-			'merId' => $this->ctx['id'],
-			'orderId' => $order['hash'],
-			'orderAmt' => $order['order_fee'] * 0.01,
-			'channel' => $order['pay_type'],
-			'desc' => 'news',
-			'attch' => '',
-			'smstyle' => 1,
-			'userId' => '',
-			'ip' => $order['client_ip'],
-			'notifyUrl' => $order['notify_url'],
-			'returnUrl' => $order['return_url'],
-			'nonceStr' => md5(random_bytes(16))
-		];
-		ksort($data);
-		reset($data);
-		$query = [];
-		foreach ($data as $k => $v)
-		{
-			if ($v !== '')
-			{
-				$query[] = "{$k}={$v}";
-			}
-		}
-		$query[] = "key={$this->ctx['key']}";
-		//var_dump(join('&', $query));
-		$private = 'MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMaS/D3G2o3bxH66sCxoe6FXnpE7HiNyLWJXsvPxK0XbsEWjSgHchiKB5uDiUeM4oc4G+ZCPTgCOjgg5uA8SGpl5YlEdla+TFvhALu4YDD91SM5l6mTRaIBej0o6p0mfchliRlEWZi+r/uVvB+eZ8T6tEeY3QT87hUfXcM7sMna3AgMBAAECgYEAjCjfZfNf/FUsoo6/Hvk4mi8wOy5RHY/PvORN6aVGd+6SwvR4nku7Wcv63KyiRBGLE9MUgBbGZdo5IlErO2f54S3Pwnc1FqBi01q9ZJylrZRt6BHYoXcSS3OiKQMK1bqAZWn1md/EhSNAP/0bLtimo/uP/8Mmm9jcH4pn9Y2qcuECQQD8x0HW9PHhm100QlnkVxjscPNy9bNsHjm9lYRpUaawgB3uKwq97Kr5IswirKOT6C9bSTvlGIjfkRiiO6qCMwI/AkEAyRrgIWKl/7S4RPo1KGTnWD6wSCrPWSkZ5BL+cqVE3foNMbOtB71q7sxdI8jU5fCjuQ08zePfaiebE71ZgtL9iQJAcJBKwW5SSCTnXF4vqX8fmiqyPn8rZvoOvF3YmQ3DLNXgfi6smebKPCdCwC4gqby7WetCwMIsMWJrldL8Gv6cAQJAEtzNdvQsw74spnOddst4E4PVvv8c8az0O7s4WIJ94iApCqdirF4s4HcUqV2V8ndOs/W05U7hTrCmUASrl6S4mQJBALVOSzDSM7/qfEDnTRCWKEOINFBZihlmw4rqTXuesNIqpcthaBx7Y3GUjP2y6Q9Urb34yXPXoFlQtLvVKc6kF40=';
-		$key = openssl_pkey_get_private("-----BEGIN PRIVATE KEY-----\n" . chunk_split($private, 64, "\n") . "-----END PRIVATE KEY-----\n");
-		if ($key === FALSE
-			|| openssl_sign(strtoupper(md5(join('&', $query))), $sign, $key, OPENSSL_ALGO_SHA256) === FALSE) {
-			$error = '签名失败！';
-			return FALSE;
-		}
-		$data['sign'] = base64_encode($sign);
-		//print_r($data);
 		do
 		{
+			$data = [
+				'merId' => $this->ctx['id'],
+				'orderId' => $order['hash'],
+				'orderAmt' => $order['order_fee'] * 0.01,
+				'channel' => $order['pay_type'],
+				'desc' => 'news',
+				'attch' => '',
+				'smstyle' => 1,
+				'userId' => '',
+				'ip' => $order['client_ip'],
+				'notifyUrl' => $order['notify_url'],
+				'returnUrl' => $order['return_url'],
+				'nonceStr' => md5(random_bytes(16))
+			];
+			ksort($data);
+			reset($data);
+			$query = [];
+			foreach ($data as $k => $v)
+			{
+				if ($v !== '')
+				{
+					$query[] = "{$k}={$v}";
+				}
+			}
+			$query[] = "key={$this->ctx['key']}";
+			//var_dump(join('&', $query));
+			$private = 'MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMaS/D3G2o3bxH66sCxoe6FXnpE7HiNyLWJXsvPxK0XbsEWjSgHchiKB5uDiUeM4oc4G+ZCPTgCOjgg5uA8SGpl5YlEdla+TFvhALu4YDD91SM5l6mTRaIBej0o6p0mfchliRlEWZi+r/uVvB+eZ8T6tEeY3QT87hUfXcM7sMna3AgMBAAECgYEAjCjfZfNf/FUsoo6/Hvk4mi8wOy5RHY/PvORN6aVGd+6SwvR4nku7Wcv63KyiRBGLE9MUgBbGZdo5IlErO2f54S3Pwnc1FqBi01q9ZJylrZRt6BHYoXcSS3OiKQMK1bqAZWn1md/EhSNAP/0bLtimo/uP/8Mmm9jcH4pn9Y2qcuECQQD8x0HW9PHhm100QlnkVxjscPNy9bNsHjm9lYRpUaawgB3uKwq97Kr5IswirKOT6C9bSTvlGIjfkRiiO6qCMwI/AkEAyRrgIWKl/7S4RPo1KGTnWD6wSCrPWSkZ5BL+cqVE3foNMbOtB71q7sxdI8jU5fCjuQ08zePfaiebE71ZgtL9iQJAcJBKwW5SSCTnXF4vqX8fmiqyPn8rZvoOvF3YmQ3DLNXgfi6smebKPCdCwC4gqby7WetCwMIsMWJrldL8Gv6cAQJAEtzNdvQsw74spnOddst4E4PVvv8c8az0O7s4WIJ94iApCqdirF4s4HcUqV2V8ndOs/W05U7hTrCmUASrl6S4mQJBALVOSzDSM7/qfEDnTRCWKEOINFBZihlmw4rqTXuesNIqpcthaBx7Y3GUjP2y6Q9Urb34yXPXoFlQtLvVKc6kF40=';
+			$key = openssl_pkey_get_private("-----BEGIN PRIVATE KEY-----\n" . chunk_split($private, 64, "\n") . "-----END PRIVATE KEY-----\n");
+			if ($key === FALSE
+				|| openssl_sign(strtoupper(md5(join('&', $query))), $sign, $key, OPENSSL_ALGO_SHA256) === FALSE) {
+				$error = '签名失败！';
+				break;
+			}
+			$data['sign'] = base64_encode($sign);
+			//print_r($data);
 			if (is_array($result = webapp_client_http::open('http://a.cjpay.xyz/api/pay', [
 				'method' => 'POST',
 				'type' => 'application/json',
 				'data' => $data])->content()) === FALSE) {
 				break;
 			}
-			//print_r($result);
+			//var_dump($result);
 			if ((array_key_exists('code', $result) && $result['code'] === 1) === FALSE)
 			{
 				$error = '远程支付失败！';
@@ -165,24 +165,37 @@ final class webapp_pay_yk implements webapp_pay
 						$fee,
 						$order['notify_url']
 					])))
-				]]) ) === FALSE) {
+				]])->content()) === FALSE) {
 				break;
 			}
-			
+			//var_dump($result);
+			if ((array_key_exists('code', $result) && $result['code'] === '1') === FALSE)
+			{
+				$error = '远程支付失败！';
+				break;
+			}
+			$order['trade_no'] = $result['ownOrderNo'];
+			$order['type'] = 'goto';
+			$order['data'] = $result['payUrl'];
+			return TRUE;
 		} while (0);
-		print_r($result);
 		return FALSE;
 	}
 	function notify(mixed $result, ?array &$status):bool
 	{
-		$status = [
-			'code' => 200,			//返回状态码
-			'type' => 'text/plain',	//返回数据类型
-			'data' => 'SUCCESS',	//返回数据内容
-			'hash' => 0,			//订单哈希（获取订单号，提交订单的时使用订单哈希）
-			'actual_fee' => 0		//实际费用（可选）
-		];
-		return TRUE;
+		if (is_array($result)
+			&& isset($result['status'], $result['orderNo'], $result['amount'])
+			&& $result['status'] === '1') {
+			$status = [
+				'code' => 200,
+				'type' => 'text/plain',
+				'data' => 'success',
+				'hash' => $result['orderNo'],
+				'actual_fee' => $result['amount']
+			];
+			return TRUE;
+		}
+		return FALSE;
 	}
 }
 final class webapp_router_pay extends webapp_echo_xml
@@ -218,6 +231,11 @@ final class webapp_router_pay extends webapp_echo_xml
 		$form->field('notify_url', 'text', ['required' => NULL]);
 		//跳转地址（可选）
 		$form->field('return_url', 'text');
+
+		if ($this->webapp->request_content_type() === 'application/json')
+		{
+			$form->xml['enctype'] = 'application/json';
+		}
 
 		while ($form->fetch($order, $error))
 		{

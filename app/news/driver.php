@@ -151,12 +151,12 @@ class news_driver extends webapp
 				'notify_url' => $account,
 				'return_url' => $gotourl
 			]])->content())) {
-			var_dump($result);
+			//var_dump($result);
 			$data = $result->getattr();
 			$data['data'] = (string)$result;
 			return $data;
 		}
-		var_dump($result);
+		//var_dump($result);
 		return [];
 	}
 
