@@ -143,9 +143,9 @@ class webapp_xml extends SimpleXMLElement
 	{
 		return static::from(($dom = $this->dom())->parentNode->removeChild($dom));
 	}
-	function copy(webapp_xml $node, ?string $position = NULL):static
+	function copy(webapp_xml $node):static
 	{
-		return $this->insert($node->clone(TRUE), $position);
+		return static::from($this->dom()->appendChild($node->clone(TRUE)));
 	}
 	function clear():string
 	{
