@@ -137,17 +137,26 @@ class news_driver extends webapp
 		return $channels;
 	}
 	//创建一个订单
-	function underorder(array $order):array
+	function underorder(string $pay_name, string $pay_type, string $order_no, int $order_fee, string $account, string $gotourl):array
 	{
 		if (is_object($result = webapp_client_http::open($this['app_payurl'], [
 			'method' => 'POST',
+			'type' => 'application/json',
 			'data' => [
-				'pay_auth' => $this->signature($this['admin_username'], $this['admin_password'], (string)$this['app_sid'])
-			] + $order])->content())) {
+				'pay_auth' => $this->signature($this['admin_username'], $this['admin_password'], (string)$this['app_sid']),
+				'pay_name' => $pay_name,
+				'pay_type' => $pay_type,
+				'order_no' => $order_no,
+				'order_fee' => $order_fee,
+				'notify_url' => $account,
+				'return_url' => $gotourl
+			]])->content())) {
+			var_dump($result);
 			$data = $result->getattr();
 			$data['data'] = (string)$result;
 			return $data;
 		}
+		var_dump($result);
 		return [];
 	}
 
