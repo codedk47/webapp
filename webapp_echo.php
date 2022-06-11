@@ -129,6 +129,23 @@ class webapp_echo_html extends webapp_implementation
 		$form->button('Sign In', 'submit');
 		return $form;
 	}
+	static function frame(webapp_echo_html $context):webapp_html
+	{
+		if ($context instanceof webapp_echo_html)
+		{
+			unset($context->xml->head->link, $context->xml->body->div);
+			$context->xml->body['style'] = $context->xml->html['style'] = 'height:100%;margin:0';
+			$context = $context->xml->body;
+		}
+		
+		$frame = $context->append('iframe', [
+			'frameborder' => 0,
+			'width' => '100%',
+			'height' => '100%',
+			'src' => 'about:blank'
+		]);
+		return $frame;
+	}
 }
 class webapp_echo_json extends ArrayObject implements Stringable
 {
@@ -140,7 +157,7 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	}
 	function __toString():string
 	{
-		return json_encode($this->getArrayCopy(), JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE);
+		return json_encode($this->getArrayCopy(), JSON_UNESCAPED_UNICODE);
 	}
 }
 /*
