@@ -2,49 +2,86 @@ window.addEventListener('DOMContentLoaded', function()
 {
 	if (top !== self)
 	{
-		console.log('app loaded')
-		return window.addEventListener('click', function(event)
+		return document.addEventListener('click', function(event)
 		{
-			if (event.target.tagName === 'A')
+			for (let target = event.target; target.parentNode; target = target.parentNode)
 			{
-				event.preventDefault();
-				top.postMessage(event.target.href, '*');
+				if (target.tagName === 'A')
+				{
+					event.preventDefault();
+					//router('get', target.getAttribute('href'));
+					break;
+				}
 			}
 		});
 	}
-	// const fapp = document.querySelector('iframe'), options = {
-	// 	headers: {
-	// 		'Authorization': 'Bearer 1231231',
-	// 		'Content-Type': 'binary'
-	// 	}
-	// };
 
 
 
-	// console.log('main loaded')
-	// window.addEventListener('message', function(event)
-	// {
-	// 	alert(event.data)
-	// 	console.log(event)
-	// });
+	const source = document.body.dataset.app, options = {
+		headers: {
+			'Authorization': 'Bearer 1231231',
+			'Content-Type': 'binary'
+		}
+	};
+	let frame;
+
+	function router(method, path, body)
+	{
+		console.log(source+path)
+		//fetch(source, options).then(response => response.arrayBuffer()).then(unpack).then(loader);
+	}
+
+	window.addEventListener('message', function(event)
+	{
+		alert(event.data)
+	});
 
 
 
-	// fetch(fapp.dataset.src, options).then(response => response.arrayBuffer()).then(unpack)
-	// .then(data => fapp.src = `data:text/html;base64,${btoa(String.fromCharCode(...data))}`);
-})
+
+	function loader(data)
+	{
+		const newframe = document.createElement('iframe');
+
+		newframe.style.cssText = 'width:100%;height:100%';
+
+
+		document.body.appendChild(newframe);
+		newframe.contentDocument.write((new TextDecoder('utf-8')).decode(data));
+		newframe.contentDocument.close();
+
+
+
+
+		frame && frame.remove();
+		frame = newframe;
+		return;
+	}
+
+	
+	const xhr = new XMLHttpRequest;
+	xhr.open('get', source);
+	xhr.responseType = 'arraybuffer';
+	xhr.onload = () => {
+		console.log( xhr.getAllResponseHeaders() )
+		loader(unpack(xhr.response))
+	};
+	xhr.send(null);
+
+
+	// fetch(source, options).then(response => {
+
+	// 	console.log(Array.from(response.headers.values()))
+	// 	return response.arrayBuffer()
+	// }).then(unpack).then(loader);
+	
+});
 
 
 function fapp(source)
 {
-	// window.addEventListener('message', function(event)
-	// {
-	// 	console.log(event)
-	// });
 
-
-
-	return;
 	const fapp = document.querySelector('iframe'), options = {
 		headers: {
 			'Authorization': 'Bearer 1231231',
@@ -83,7 +120,19 @@ function fapp(source)
 		// 	console.log(111111111111)
 		// });
 	}
-	fetch(source, options).then(response => response.arrayBuffer()).then(unpack).then(loader);
+
+
+
+	const xhr = new XMLHttpRequest;
+	xhr.open('get', source);
+	xhr.responseType = 'arraybuffer';
+	xhr.onload = () => {
+		console.log( 123 )
+		loader(unpack(xhr.response))
+	};
+	xhr.send(null);
+
+	//fetch(source, options).then(response => response.arrayBuffer()).then(unpack).then(loader);
 }
 function unpack(data)
 {
@@ -110,10 +159,7 @@ function aa(data, type)
 }
 function fetchpic(img)
 {
-	fetch(img.dataset.url).then(response => response.arrayBuffer()).then(function(data)
-	{
-		img.src = unpack(data, true);
-	});
+	fetch(img.dataset.url).then(response => response.arrayBuffer()).then(unpack);
 }
 function initdata()
 {

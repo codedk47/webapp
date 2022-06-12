@@ -129,25 +129,23 @@ class webapp_echo_html extends webapp_implementation
 		$form->button('Sign In', 'submit');
 		return $form;
 	}
-	static function frame(webapp_echo_html $context):webapp_html
+	static function frame(webapp_echo_html $context)//:webapp_html
 	{
 		if ($context instanceof webapp_echo_html)
 		{
 			unset($context->xml->head->link, $context->xml->body->div);
-			$context->xml->body['style'] = $context->xml->html['style'] = 'height:100%;margin:0';
+			$context->xml->body['style'] = $context->xml['style'] = 'height:100%;margin:0;overflow:hidden';
 			$context = $context->xml->body;
 		}
 		
-		$frame = $context->append('iframe', [
-			'frameborder' => 0,
-			'loading' => 'lazy',
-			'width' => '100%',
-			'height' => '100%',
-			'src' => 'about:blank',
-			'src' => '?a1',
-			'data-src' => 'http://192.168.0.119/'
-		]);
-		return $frame;
+		// $frame = $context->append('iframe', [
+		// 	'frameborder' => 0,
+		// 	'loading' => 'lazy',
+		// 	'width' => '100%',
+		// 	//'height' => '100%',
+		// 	'src' => 'about:blank'
+		// ]);
+		// return $frame;
 	}
 }
 class webapp_echo_json extends ArrayObject implements Stringable
