@@ -60,21 +60,21 @@ window.addEventListener('DOMContentLoaded', function()
 	}
 
 	
-	const xhr = new XMLHttpRequest;
-	xhr.open('get', source);
-	xhr.responseType = 'arraybuffer';
-	xhr.onload = () => {
-		console.log( xhr.getAllResponseHeaders() )
-		loader(unpack(xhr.response))
-	};
-	xhr.send(null);
+	// const xhr = new XMLHttpRequest;
+	// xhr.open('get', source);
+	// xhr.responseType = 'arraybuffer';
+	// xhr.onload = () => {
+	// 	console.log( xhr.getAllResponseHeaders() )
+	// 	loader(unpack(xhr.response))
+	// };
+	// xhr.send(null);
 
 
-	// fetch(source, options).then(response => {
+	fetch(source, options).then(response => {
 
-	// 	console.log(Array.from(response.headers.values()))
-	// 	return response.arrayBuffer()
-	// }).then(unpack).then(loader);
+		console.log(Array.from(response.headers.values()))
+		return response.arrayBuffer()
+	}).then(unpack).then(loader);
 	
 });
 
