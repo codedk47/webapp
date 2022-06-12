@@ -138,14 +138,14 @@ class webapp_echo_html extends webapp_implementation
 			$context = $context->xml->body;
 		}
 		
-		// $frame = $context->append('iframe', [
-		// 	'frameborder' => 0,
-		// 	'loading' => 'lazy',
-		// 	'width' => '100%',
-		// 	//'height' => '100%',
-		// 	'src' => 'about:blank'
-		// ]);
-		// return $frame;
+		$frame = $context->append('iframe', [
+			'frameborder' => 0,
+			'loading' => 'lazy',
+			'width' => '100%',
+			'height' => '100%',
+			'src' => 'about:blank'
+		]);
+		return $frame;
 	}
 }
 class webapp_echo_json extends ArrayObject implements Stringable
