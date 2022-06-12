@@ -1,52 +1,102 @@
-function fapp(src)
+window.addEventListener('DOMContentLoaded', function()
 {
-	const fapp = document.querySelector('iframe');
-	// fapp.contentWindow.addEventListener('DOMContentLoaded', function()
-	// {
-	// 	console.log('load')
-	// 	fapp.contentWindow.addEventListener('click', function(event)
-	// 	{
-	// 		const target = event.target || event.srcElement;
-	// 		if (target.tagName === 'A')
-	// 		{
-	// 			event.preventDefault();
-	// 			URL.revokeObjectURL(fapp.src);//静态方法用来释放一个之前已经存在的、通过调用 URL.createObjectURL() 创建的 URL 对象
-	// 			fetch(src + target.getAttribute('href')).then(response => response.blob()).then(function(data)
-	// 			{
-	// 				fapp.src = URL.createObjectURL(data);
-	// 				//console.log(data);
-	// 				//fapp.contentWindow.document.write(html);
-	// 				// fapp.contentWindow.document.close();
-	// 				// console.log(html)
-	// 			})
-	// 		}
-	// 	});
-	// }, true);
-	function loaded()
+	if (top !== self)
 	{
-		console.log(122);
-		fapp.contentWindow.addEventListener('click', function(event)
+		console.log('app loaded')
+		return window.addEventListener('click', function(event)
 		{
-			console.log(1);
+			if (event.target.tagName === 'A')
+			{
+				event.preventDefault();
+				top.postMessage(event.target.href);
+			}
 		});
 	}
-	fapp.onclick = a => console.log(a);
-	fetch(src).then(response => response.blob()).then(function(data)
-	{
-		const aa = fapp.contentWindow.document;
-		fapp.src = URL.createObjectURL(data);
-		fapp.contentWindow.addEventListener('DOMContentLoaded', function(){
-			console.log(123);
-		});
-		//setInterval(()=>console.log(aa === fapp.contentWindow.document), 1)
-		//while (aa === fapp.contentWindow.document);
-		
-		//return fapp.contentWindow.document;
-	});
+	const fapp = document.querySelector('iframe'), options = {
+		headers: {
+			'Authorization': 'Bearer 1231231',
+			'Content-Type': 'binary'
+		}
+	};
 
-	
+
+
+	// console.log('main loaded')
+	// window.addEventListener('message', function(event)
+	// {
+	// 	alert(event.data)
+	// 	console.log(event)
+	// });
+
+
+
+	// fetch(fapp.dataset.src, options).then(response => response.arrayBuffer()).then(unpack)
+	// .then(data => fapp.src = `data:text/html;base64,${btoa(String.fromCharCode(...data))}`);
+})
+
+
+function fapp(source)
+{
+	// window.addEventListener('message', function(event)
+	// {
+	// 	console.log(event)
+	// });
+
+
+
+	return;
+	const fapp = document.querySelector('iframe'), options = {
+		headers: {
+			'Authorization': 'Bearer 1231231',
+			'Content-Type': 'binary'
+		}
+	};
+	function listen(event)
+	{
+		console.log(event)
+		const target = event.target || event.srcElement;
+		if (target.tagName === 'A')
+		{
+			event.preventDefault();
+			//URL.revokeObjectURL(fapp.src);//静态方法用来释放一个之前已经存在的、通过调用 URL.createObjectURL() 创建的 URL 对象
+			fetch(source + target.getAttribute('href'), options).then(response => response.arrayBuffer()).then(unpack).then(loader);
+		}
+	}
+	function detect(document)
+	{
+		console.log('loaded');
+		if (document === fapp.contentDocument)
+		{
+			return setTimeout(detect, 0, document);
+		}
+		//console.log('gggggggggggggggggggg');
+		fapp.contentWindow.addEventListener('click', listen);
+		
+	}
+
+	function loader(data)
+	{
+		//setTimeout(detect, 0, fapp.contentDocument);
+		//fapp.src = URL.createObjectURL(new Blob([data.buffer], {type: 'text/html; charset=utf-8'}));
+		fapp.src = `data:text/html;base64,${btoa(String.fromCharCode(...data))}`;
+		// fapp.contentWindow.addEventListener('DOMContentLoaded', function(){
+		// 	console.log(111111111111)
+		// });
+	}
+	fetch(source, options).then(response => response.arrayBuffer()).then(unpack).then(loader);
 }
-function unpack(data, type)
+function unpack(data)
+{
+	const key = new Uint8Array(data.slice(0, 8));
+	const buffer = new Uint8Array(data.slice(8));
+	for (let i = 0; i < buffer.length; ++i)
+	{
+		buffer[i] = buffer[i] ^ key[i % 8];
+	}
+	return buffer;
+}
+
+function aa(data, type)
 {
 	const key = new Uint8Array(data.slice(0, 8));
 	const buffer = new Uint8Array(data.slice(8));
@@ -65,6 +115,22 @@ function fetchpic(img)
 		img.src = unpack(data, true);
 	});
 }
+function initdata()
+{
+	//document.querySelectorAll('img[data-src]')
+	// document.querySelectorAll('meta').forEach(function(img)
+	// {
+	// 	console.log(img)
+	// });
+}
+
+
+
+
+
+
+
+
 function request(method, url, body = null)
 {
 	return new Promise(function(resolve, reject)
@@ -78,8 +144,4 @@ function request(method, url, body = null)
 		xhr.onerror = () => reject(xhr);
 		xhr.send(body);
 	});
-}
-function init()
-{
-	document.querySelectorAll('img[data-src]')
 }

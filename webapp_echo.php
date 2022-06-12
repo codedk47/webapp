@@ -140,9 +140,12 @@ class webapp_echo_html extends webapp_implementation
 		
 		$frame = $context->append('iframe', [
 			'frameborder' => 0,
+			'loading' => 'lazy',
 			'width' => '100%',
 			'height' => '100%',
-			'src' => 'about:blank'
+			'src' => 'about:blank',
+			'src' => '?a1',
+			'data-src' => 'http://192.168.0.119/'
 		]);
 		return $frame;
 	}
