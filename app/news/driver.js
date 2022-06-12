@@ -8,16 +8,16 @@ window.addEventListener('DOMContentLoaded', function()
 			if (event.target.tagName === 'A')
 			{
 				event.preventDefault();
-				top.postMessage(event.target.href);
+				top.postMessage(event.target.href, '*');
 			}
 		});
 	}
-	const fapp = document.querySelector('iframe'), options = {
-		headers: {
-			'Authorization': 'Bearer 1231231',
-			'Content-Type': 'binary'
-		}
-	};
+	// const fapp = document.querySelector('iframe'), options = {
+	// 	headers: {
+	// 		'Authorization': 'Bearer 1231231',
+	// 		'Content-Type': 'binary'
+	// 	}
+	// };
 
 
 
