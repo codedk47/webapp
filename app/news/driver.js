@@ -65,6 +65,10 @@ function aaa(data)
 }
 function driver(path, method, body, then)
 {
+	if (body)
+	{
+		body = typeof body === 'string' ? body : JSON.stringify(body);
+	}
 	top.postMessage({path, method: method || 'GET', body, then: then});
 	return false;
 }
@@ -79,12 +83,42 @@ window.addEventListener('DOMContentLoaded', async function()
 			{
 				if (entry.isIntersecting)
 				{
-					viewport.unobserve(entry.target);
-					loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream').then(blob => entry.target.src = URL.createObjectURL(blob));
+					if (entry.target === lazy)
+					{
+					
+						loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {
+							headers: {'Content-Type': 'application/data-stream'}
+						}, 'text/plain').then(function(data){
+							if (data)
+							{
+								const renderer = document.createElement('template');
+								renderer.innerHTML = data;
+								renderer.content.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
+								lazy.parentNode.insertBefore(renderer.content, lazy);
+								console.log(lazy.dataset.page)
+							}
+							else
+							{
+								viewport.unobserve(lazy.parentNode.removeChild(lazy));
+								console.log('delete')
+							}
+							
+						});
+					}
+					else
+					{
+						viewport.unobserve(entry.target);
+						loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream').then(blob => entry.target.src = URL.createObjectURL(blob));
+					}
+					
 				}
 			});
-		});
+		}), lazy = document.querySelector('[data-lazy]');
 		document.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
+		if (lazy)
+		{
+			viewport.observe(lazy);
+		}
 
 		window.addEventListener('message', event => self[event.data.then](event.data.data));
 		return document.addEventListener('click', event =>
@@ -108,6 +142,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	}, initreq = Object.assign({'Account-Init': 0}, headers);
 	if (location.hash.substring(1))
 	{
+		ifa.querySelectorAll
 		initreq['Unit-Code'] = headers['Unit-Code'] = location.hash.substring(1, 5);
 	}
 	if (location.hash.substring(5))
@@ -143,13 +178,11 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	window.addEventListener('message', event =>
 	{
-		const options = {method: event.data.method, headers};
-		if (event.data.body)
-		{
-			options.body = typeof event.data.body === 'string' ? event.data.body : JSON.stringify(event.data.body);
-		}
+		const options = {headers, method: event.data.method, body: event.data.body};
 		if (event.data.then)
 		{
+			console.log(options)
+			return;
 			loader(source + event.data.path, options, 'text/plain').then(function(data){
 				ifa.contentWindow.postMessage({data, then: event.data.then}, [data]);
 			});
