@@ -12,6 +12,11 @@ async function loader(source, options, type)
 		{
 			break;
 		}
+		if (/^text/i.test(response.headers.get('content-type')))
+		{
+			buffer[buffer.length] = read.value;
+			continue;
+		}
 		if (len < 8)
 		{
 			//console.log('keyload...')
@@ -42,21 +47,46 @@ async function loader(source, options, type)
 		buffer[buffer.length] = read.value;
 	}
 	//console.log('payload finish')
-	return new Blob(buffer, {type});
+	const blob = new Blob(buffer, {type});
+	switch (type)
+	{
+		case 'application/json': return JSON.parse(await blob.text());
+		case 'text/plain': return blob.text();
+		default: return blob;
+	}
 }
-function driver(path, method, body, type)
+function getimg(img)
 {
-	top.postMessage({path, method: method || 'get', body, type});
+	loader(img.dataset.src, null, 'application/octet-stream').then(blob => img.src = URL.createObjectURL(blob));
+}
+function aaa(data)
+{
+	console.log(data)
+}
+function driver(path, method, body, then)
+{
+	top.postMessage({path, method: method || 'GET', body, then: then});
 	return false;
 }
 window.addEventListener('DOMContentLoaded', async function()
 {
 	if (top !== self)
 	{
-		// document.querySelectorAll('img[data-src]').forEach(function(img)
-		// {
-		// 	loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream').then(blob => img.src = URL.createObjectURL(blob));
-		// });
+		console.log('app loaded');
+		const viewport = new IntersectionObserver(entries =>
+		{
+			entries.forEach(entry =>
+			{
+				if (entry.isIntersecting)
+				{
+					viewport.unobserve(entry.target);
+					loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream').then(blob => entry.target.src = URL.createObjectURL(blob));
+				}
+			});
+		});
+		document.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
+
+		window.addEventListener('message', event => self[event.data.then](event.data.data));
 		return document.addEventListener('click', event =>
 		{
 			for (let target = event.target; target.parentNode; target = target.parentNode)
@@ -70,23 +100,28 @@ window.addEventListener('DOMContentLoaded', async function()
 			}
 		});
 	}
-
-
-
-//			'Authorization': 'Bearer 1231231',
-
 	const
 	ifa = document.querySelector('iframe'),
 	source = ifa.dataset.app,
 	headers = {
-		'Content-Type': 'application/data-stream',
-		'Unit-Code': /^\w{4}$/.test(location.search.substring(1, 5)) ? location.search.substring(1, 5) : ''
+		'Content-Type': 'application/data-stream'
 	}, initreq = Object.assign({'Account-Init': 0}, headers);
+	if (location.hash.substring(1))
+	{
+		initreq['Unit-Code'] = headers['Unit-Code'] = location.hash.substring(1, 5);
+	}
+	if (location.hash.substring(5))
+	{
+		await loader(`${source}?api/user`, {headers}, 'text/plain').then(result =>
+		{
+			console.log(result)
+		});
+	}
 	if (window.localStorage.getItem('account') === null)
 	{
-		await loader(`${source}?api/user`, {headers}).then(blob => blob.text()).then(data =>
+		await loader(`${source}?api/user`, {headers}, 'application/json').then(result =>
 		{
-			window.localStorage.setItem('account', JSON.parse(data).data);
+			window.localStorage.setItem('account', result.data);
 			initreq['Account-Init'] = 1;
 		});
 	}
@@ -97,7 +132,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	initreq.Authorization = headers.Authorization = `Bearer ${window.localStorage.getItem('account')}`;
 
 
-	console.log( headers, initreq )
+	console.log( headers, initreq, location )
 
 
 	function render(data)
@@ -108,10 +143,24 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	window.addEventListener('message', event =>
 	{
-		console.log(event.data)
-		loader(source + event.data.path, {headers}).then(blob => blob.text()).then(render);
+		const options = {method: event.data.method, headers};
+		if (event.data.body)
+		{
+			options.body = typeof event.data.body === 'string' ? event.data.body : JSON.stringify(event.data.body);
+		}
+		if (event.data.then)
+		{
+			loader(source + event.data.path, options, 'text/plain').then(function(data){
+				ifa.contentWindow.postMessage({data, then: event.data.then}, [data]);
+			});
+		}
+		else{
+			loader(source + event.data.path, options, 'text/plain').then(render);
+		}
+		
+
 	});
-	loader(source, {headers: initreq}).then(blob => blob.text()).then(render);
+	loader(source, {headers: initreq}, 'text/plain').then(render);
 });
 
 

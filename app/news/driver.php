@@ -1,6 +1,10 @@
 <?php
 class news_driver extends webapp
 {
+	function unitcode():string
+	{
+		return is_string($unitcode = $this->request_header('Unit-Code')) && preg_match('/\w{4}/', $unitcode) ? $unitcode : '0000';
+	}
 	//控制端远程调用接口（请勿非本地调用）
 	function post_sync(string $method)
 	{
