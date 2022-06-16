@@ -163,22 +163,35 @@ class news_driver extends webapp
 		//var_dump($result);
 		return [];
 	}
-
-
+	//账号操作
+	function request_account(?string &$signature = NULL):array
+	{
+		$signature = $this->request_authorization();
+		return $this->authorization(fn(string $username, string $password) => [$username, $password]);
+	}
+	function account():array
+	{
+		return $this->request_account($signature)
+			&& is_object($account = $this->get("account/{$signature}"))
+			&& isset($account->account)
+				? [...$account->account->getattr(),
+					'favorites' => (string)$account->account->favorites,
+					'historys' => (string)$account->account->historys] : [];
+	}
 
 
 
 
 
 	//一下是实验测试函数
-	function account(string $signature = NULL):array
-	{
-		return is_object($account = $this->get($signature === NULL ? 'register' : "account/{$signature}")) && isset($account->account)
-			? [...$account->account->getattr(),
-			'favorites' => (string)$account->account->favorites,
-			'historys' => (string)$account->account->historys
-			] : [];
-	}
+	// function account(string $signature = NULL):array
+	// {
+	// 	return is_object($account = $this->get($signature === NULL ? 'register' : "account/{$signature}")) && isset($account->account)
+	// 		? [...$account->account->getattr(),
+	// 		'favorites' => (string)$account->account->favorites,
+	// 		'historys' => (string)$account->account->historys
+	// 		] : [];
+	// }
 	function play(string $resource, string $signature):array
 	{
 		return is_object($play = $this->get("play/{$resource}{$signature}")) && isset($play->play) ? $play->play->getattr() : [];

@@ -57,19 +57,16 @@ async function loader(source, options, type)
 }
 function getimg(img)
 {
-	loader(img.dataset.src, null, 'application/octet-stream').then(blob => img.src = URL.createObjectURL(blob));
+	loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream').then(blob => img.src = URL.createObjectURL(blob));
+	//loader( img.dataset.src, null, 'application/octet-stream').then(blob => img.src = URL.createObjectURL(blob));
 }
 function aaa(data)
 {
 	console.log(data)
 }
-function driver(path, method, body, then)
+function driver(path, body)
 {
-	if (body)
-	{
-		body = typeof body === 'string' ? body : JSON.stringify(body);
-	}
-	top.postMessage({path, method: method || 'GET', body, then: then});
+	top.postMessage({path, body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null});
 	return false;
 }
 window.addEventListener('DOMContentLoaded', async function()
@@ -85,10 +82,8 @@ window.addEventListener('DOMContentLoaded', async function()
 				{
 					if (entry.target === lazy)
 					{
-					
-						loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {
-							headers: {'Content-Type': 'application/data-stream'}
-						}, 'text/plain').then(function(data){
+						loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers: {'Content-Type': 'application/data-stream'}}, 'text/plain').then(data =>
+						{
 							if (data)
 							{
 								const renderer = document.createElement('template');
@@ -108,19 +103,15 @@ window.addEventListener('DOMContentLoaded', async function()
 					else
 					{
 						viewport.unobserve(entry.target);
-						loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream').then(blob => entry.target.src = URL.createObjectURL(blob));
+						getimg(entry.target);
 					}
 					
 				}
 			});
 		}), lazy = document.querySelector('[data-lazy]');
+		lazy && viewport.observe(lazy);
 		document.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
-		if (lazy)
-		{
-			viewport.observe(lazy);
-		}
-
-		window.addEventListener('message', event => self[event.data.then](event.data.data));
+		document.querySelectorAll('[class~="back"]').forEach(back => back.onclick = () => driver(-1));
 		return document.addEventListener('click', event =>
 		{
 			for (let target = event.target; target.parentNode; target = target.parentNode)
@@ -135,14 +126,14 @@ window.addEventListener('DOMContentLoaded', async function()
 		});
 	}
 	const
+	historys = [],
 	ifa = document.querySelector('iframe'),
-	source = ifa.dataset.app,
+	source = historys[historys.length] = ifa.dataset.app,
 	headers = {
 		'Content-Type': 'application/data-stream'
 	}, initreq = Object.assign({'Account-Init': 0}, headers);
 	if (location.hash.substring(1))
 	{
-		ifa.querySelectorAll
 		initreq['Unit-Code'] = headers['Unit-Code'] = location.hash.substring(1, 5);
 	}
 	if (location.hash.substring(5))
@@ -176,22 +167,23 @@ window.addEventListener('DOMContentLoaded', async function()
 		ifa.contentDocument.write(data);
 		ifa.contentDocument.close();
 	}
+
+	history.pushState(null, document.title, location.href);
+	history.back();
+	history.forward();
+	window.onpopstate = () => history.go(1);
 	window.addEventListener('message', event =>
 	{
-		const options = {headers, method: event.data.method, body: event.data.body};
-		if (event.data.then)
+		const url = typeof event.data.path === 'string' ? source + event.data.path : (
+			typeof event.data.path === 'number'
+				? historys[Math.max(0, Math.min(9, historys.length - 1 + event.data.path))]
+				: historys[historys.length - 1]);
+		if (historys.length > 9)
 		{
-			console.log(options)
-			return;
-			loader(source + event.data.path, options, 'text/plain').then(function(data){
-				ifa.contentWindow.postMessage({data, then: event.data.then}, [data]);
-			});
+			historys.shift();
 		}
-		else{
-			loader(source + event.data.path, options, 'text/plain').then(render);
-		}
-		
-
+		loader(historys[historys.length] = url, {headers,
+			method: event.data.body ? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
 	});
 	loader(source, {headers: initreq}, 'text/plain').then(render);
 });
