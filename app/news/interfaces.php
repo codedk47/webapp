@@ -539,12 +539,10 @@ class interfaces extends webapp
 	}
 	function post_register()
 	{
-		print_r($this->request_content());
-		return;
 		//这里也许要做频率限制
 		$rand = $this->random(16);
-		$device = $this->request_content();
-		if ($this->mysql->accounts->insert($account = [
+		$data = $this->request_content();
+		if (isset($data['device'], $data['unit']) && $this->mysql->accounts->insert($account = [
 			'uid' => $this->hash($rand, TRUE),
 			'site' => $this->site,
 			'time' => $this->time,
@@ -554,10 +552,10 @@ class interfaces extends webapp
 			'lastip' => $this->clientiphex(),
 			'device' => match (1)
 			{
-				preg_match('/windows phone/i', $device) => 'wp',
-				preg_match('/pad/i', $device) => 'pad',
-				preg_match('/iphone/i', $device) => 'ios',
-				preg_match('/android/i', $device) => 'android',
+				preg_match('/windows phone/i', $data['device']) => 'wp',
+				preg_match('/pad/i', $data['device']) => 'pad',
+				preg_match('/iphone/i', $data['device']) => 'ios',
+				preg_match('/android/i', $data['device']) => 'android',
 				default => 'pc'
 			},
 			'face' => 0,

@@ -171,9 +171,6 @@ class news_driver extends webapp
 	}
 	function account(array|string $context):array
 	{
-		var_dump($account = is_array($context)
-		? $this->post('register', $context)
-		: $this->get("account/{$context}"));
 		return is_object($account = is_array($context)
 			? $this->post('register', $context)
 			: $this->get("account/{$context}"))
