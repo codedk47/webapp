@@ -537,8 +537,10 @@ class interfaces extends webapp
 		$node->append('history')->cdata($account['history']);
 		return $node;
 	}
-	function get_register()
+	function post_register()
 	{
+		print_r($this->request_content());
+		return;
 		//这里也许要做频率限制
 		$rand = $this->random(16);
 		$device = $this->request_content();

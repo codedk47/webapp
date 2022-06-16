@@ -145,9 +145,10 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	if (window.localStorage.getItem('account') === null)
 	{
-		await loader(`${source}?api/user`, {headers}, 'application/json').then(result =>
+		await loader(`${source}?api/register`, {headers}, 'application/json').then(result =>
 		{
-			window.localStorage.setItem('account', result.data);
+			console.log(result);
+			//window.localStorage.setItem('account', result.data);
 			initreq['Account-Init'] = 1;
 		});
 	}

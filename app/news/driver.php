@@ -1,10 +1,6 @@
 <?php
 class news_driver extends webapp
 {
-	function unitcode():string
-	{
-		return is_string($unitcode = $this->request_header('Unit-Code')) && preg_match('/\w{4}/', $unitcode) ? $unitcode : '0000';
-	}
 	//控制端远程调用接口（请勿非本地调用）
 	function post_sync(string $method)
 	{
@@ -163,16 +159,21 @@ class news_driver extends webapp
 		//var_dump($result);
 		return [];
 	}
+	function request_unitcode():string
+	{
+		return is_string($unitcode = $this->request_header('Unit-Code')) && preg_match('/\w{4}/', $unitcode) ? $unitcode : '0000';
+	}
 	//账号操作
 	function request_account(?string &$signature = NULL):array
 	{
 		$signature = $this->request_authorization();
 		return $this->authorization(fn(string $username, string $password) => [$username, $password]);
 	}
-	function account():array
+	function account(array|string $context):array
 	{
-		return $this->request_account($signature)
-			&& is_object($account = $this->get("account/{$signature}"))
+		return is_object($account = is_array($context)
+			? $this->post('register', $context)
+			: $this->get("account/{$context}"))
 			&& isset($account->account)
 				? [...$account->account->getattr(),
 					'favorites' => (string)$account->account->favorites,
@@ -184,14 +185,6 @@ class news_driver extends webapp
 
 
 	//一下是实验测试函数
-	// function account(string $signature = NULL):array
-	// {
-	// 	return is_object($account = $this->get($signature === NULL ? 'register' : "account/{$signature}")) && isset($account->account)
-	// 		? [...$account->account->getattr(),
-	// 		'favorites' => (string)$account->account->favorites,
-	// 		'historys' => (string)$account->account->historys
-	// 		] : [];
-	// }
 	function play(string $resource, string $signature):array
 	{
 		return is_object($play = $this->get("play/{$resource}{$signature}")) && isset($play->play) ? $play->play->getattr() : [];
