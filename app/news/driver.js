@@ -74,6 +74,10 @@ window.addEventListener('DOMContentLoaded', async function()
 	if (top !== self)
 	{
 		console.log('app loaded');
+		self.addEventListener('message', event =>
+		{
+			console.log(event.data);
+		});
 		const viewport = new IntersectionObserver(entries =>
 		{
 			entries.forEach(entry =>
@@ -145,7 +149,8 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	if (window.localStorage.getItem('account') === null)
 	{
-		await loader(`${source}?api/register`, {headers}, 'application/json').then(result =>
+		//'application/json'
+		await loader(`${source}?api/register`, {headers}, 'text/plain').then(result =>
 		{
 			console.log(result);
 			//window.localStorage.setItem('account', result.data);
@@ -157,6 +162,7 @@ window.addEventListener('DOMContentLoaded', async function()
 		return console.log('Unauthorized');
 	}
 	initreq.Authorization = headers.Authorization = `Bearer ${window.localStorage.getItem('account')}`;
+	ifa.contentWindow.postMessage(headers);
 
 
 	console.log( headers, initreq, location )
