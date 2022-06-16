@@ -55,14 +55,9 @@ async function loader(source, options, type)
 		default: return blob;
 	}
 }
-function getimg(img)
-{
-	loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream').then(blob => img.src = URL.createObjectURL(blob));
-	//loader( img.dataset.src, null, 'application/octet-stream').then(blob => img.src = URL.createObjectURL(blob));
-}
 function aaa(data)
 {
-	console.log(data)
+	console.log(this, data)
 }
 function driver(path, body)
 {
@@ -71,89 +66,106 @@ function driver(path, body)
 }
 window.addEventListener('DOMContentLoaded', async function()
 {
+	const headers = {
+		'Content-Type': 'application/data-stream'
+	};
 	if (top !== self)
 	{
-		console.log('app loaded');
-		self.addEventListener('message', event =>
+		//console.log('app loaded');
+		self.onmessage = event => 
 		{
-			console.log(event.data);
-		});
-		const viewport = new IntersectionObserver(entries =>
-		{
-			entries.forEach(entry =>
+			self.onmessage = null;
+			Object.assign(headers, event.data);
+			const viewport = new IntersectionObserver(entries =>
 			{
-				if (entry.isIntersecting)
+				entries.forEach(entry =>
 				{
-					if (entry.target === lazy)
+					if (entry.isIntersecting)
 					{
-						loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers: {'Content-Type': 'application/data-stream'}}, 'text/plain').then(data =>
+						if (entry.target === lazy)
 						{
-							if (data)
+							loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers}, 'text/plain').then(data =>
 							{
-								const renderer = document.createElement('template');
-								renderer.innerHTML = data;
-								renderer.content.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
-								lazy.parentNode.insertBefore(renderer.content, lazy);
-								console.log(lazy.dataset.page)
-							}
-							else
-							{
-								viewport.unobserve(lazy.parentNode.removeChild(lazy));
-								console.log('delete')
-							}
-							
-						});
+								if (data)
+								{
+									const renderer = document.createElement('template');
+									renderer.innerHTML = data;
+									renderer.content.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
+									lazy.parentNode.insertBefore(renderer.content, lazy);
+									//console.log(lazy.dataset.page)
+								}
+								else
+								{
+									viewport.unobserve(lazy.parentNode.removeChild(lazy));
+									//console.log('delete')
+								}
+							});
+						}
+						else
+						{
+							viewport.unobserve(entry.target);
+							loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream')
+							//loader(entry.target.dataset.src, {headers}, 'application/octet-stream')
+								.then(blob => entry.target.src = URL.createObjectURL(blob));
+						}
 					}
-					else
+				});
+			}), lazy = document.querySelector('[data-lazy]');
+			lazy && viewport.observe(lazy);
+			document.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
+			document.querySelectorAll('[data-call]').forEach(node => node.addEventListener(node.dataset.event || 'click', event =>
+			{
+				const node = event.target;
+				if (Object.prototype.toString.call(self[node.dataset.call]) === '[object Function]')
+				{
+					loader(`http://192.168.0.119/${node.dataset.sync}`, {headers,
+						method: node.dataset.body ? 'POST' : 'GET',
+						body: node.dataset.body || null}, 'application/json').then(reslut => self[node.dataset.call].call(node, reslut));
+				}
+			}));
+			document.addEventListener('click', event =>
+			{
+				for (let target = event.target; target.parentNode; target = target.parentNode)
+				{
+					if (target.tagName === 'A' && target.hasAttribute('href') && /^javascript:/.test(target.getAttribute('href')) === false)
 					{
-						viewport.unobserve(entry.target);
-						getimg(entry.target);
+						event.preventDefault();
+						driver(target.getAttribute('href'));
+						break;
 					}
-					
 				}
 			});
-		}), lazy = document.querySelector('[data-lazy]');
-		lazy && viewport.observe(lazy);
-		document.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
-		document.querySelectorAll('[class~="back"]').forEach(back => back.onclick = () => driver(-1));
-		return document.addEventListener('click', event =>
-		{
-			for (let target = event.target; target.parentNode; target = target.parentNode)
-			{
-				if (target.tagName === 'A' && target.hasAttribute('href') && /^javascript:/.test(target.getAttribute('href')) === false)
-				{
-					event.preventDefault();
-					driver(target.getAttribute('href'));
-					break;
-				}
-			}
-		});
+			document.querySelectorAll('[class~="back"]').forEach(back => back.onclick = () => driver(-1));
+		};
+		return top.postMessage(null);
 	}
 	const
 	historys = [],
 	ifa = document.querySelector('iframe'),
 	source = historys[historys.length] = ifa.dataset.app,
-	headers = {
-		'Content-Type': 'application/data-stream'
-	}, initreq = Object.assign({'Account-Init': 0}, headers);
+	initreq = Object.assign({'Account-Init': 0}, headers);
+	function render(data)
+	{
+		ifa.contentDocument.removeChild(ifa.contentDocument.documentElement);
+		ifa.contentDocument.write(data);
+		ifa.contentDocument.close();
+	}
 	if (location.hash.substring(1))
 	{
 		initreq['Unit-Code'] = headers['Unit-Code'] = location.hash.substring(1, 5);
 	}
 	if (location.hash.substring(5))
 	{
-		await loader(`${source}?api/user`, {headers}, 'text/plain').then(result =>
-		{
-			console.log(result)
-		});
+		// await loader(`${source}?api/user`, {headers}, 'text/plain').then(result =>
+		// {
+		// 	console.log(result)
+		// });
 	}
 	if (window.localStorage.getItem('account') === null)
 	{
-		//'application/json'
-		await loader(`${source}?api/register`, {headers}, 'text/plain').then(result =>
+		await loader(`${source}?api/register`, {headers}, 'application/json').then(result =>
 		{
-			console.log(result);
-			//window.localStorage.setItem('account', result.data);
+			window.localStorage.setItem('account', result.data.signature);
 			initreq['Account-Init'] = 1;
 		});
 	}
@@ -162,63 +174,26 @@ window.addEventListener('DOMContentLoaded', async function()
 		return console.log('Unauthorized');
 	}
 	initreq.Authorization = headers.Authorization = `Bearer ${window.localStorage.getItem('account')}`;
-	ifa.contentWindow.postMessage(headers);
-
-
-	console.log( headers, initreq, location )
-
-
-	function render(data)
-	{
-		ifa.contentDocument.removeChild(ifa.contentDocument.documentElement);
-		ifa.contentDocument.write(data);
-		ifa.contentDocument.close();
-	}
-
-	history.pushState(null, document.title, location.href);
+	history.pushState(null, null, location.href);
 	history.back();
 	history.forward();
-	window.onpopstate = () => history.go(1);
+	window.addEventListener('popstate', () => history.go(1));
 	window.addEventListener('message', event =>
 	{
-		const url = typeof event.data.path === 'string' ? source + event.data.path : (
-			typeof event.data.path === 'number'
-				? historys[Math.max(0, Math.min(9, historys.length - 1 + event.data.path))]
-				: historys[historys.length - 1]);
-		if (historys.length > 9)
+		if (event.data)
 		{
-			historys.shift();
+			const url = typeof event.data.path === 'string' ? historys[historys.length] = source + event.data.path : (
+				typeof event.data.path === 'number'
+					? historys.splice(Math.max(0, Math.min(9, historys.length - 1 + event.data.path)), 1)
+					: historys[historys.length - 1]);
+			if (historys.length > 9)
+			{
+				historys.shift();
+			}
+			loader(url, {headers,
+				method: event.data.body ? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
 		}
-		loader(historys[historys.length] = url, {headers,
-			method: event.data.body ? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
+		ifa.contentWindow.postMessage(headers);
 	});
 	loader(source, {headers: initreq}, 'text/plain').then(render);
 });
-
-
-/*
-function unpack(data)
-{
-	const key = new Uint8Array(data.slice(0, 8));
-	const buffer = new Uint8Array(data.slice(8));
-	for (let i = 0; i < buffer.length; ++i)
-	{
-		buffer[i] = buffer[i] ^ key[i % 8];
-	}
-	return buffer;
-}
-function request(method, url, body = null)
-{
-	return new Promise(function(resolve, reject)
-	{
-		const xhr = new XMLHttpRequest;
-		xhr.open(method, url);
-		xhr.responseType = 'arraybuffer';
-		xhr.onload = () => resolve(JSON.parse(/json/.test(xhr.getResponseHeader('Content-Type'))
-			? (new TextDecoder('utf-8')).decode(new Uint8Array(xhr.response))
-			: unpack(xhr.response)));
-		xhr.onerror = () => reject(xhr);
-		xhr.send(body);
-	});
-}
-*/

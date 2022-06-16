@@ -715,35 +715,4 @@ class interfaces extends webapp
 			])->cdata($comment['content']);
 		}
 	}
-	//支付
-	function post_payment(string $signature)
-	{
-		if ($this->account($signature, $account))
-		{
-			//print_r($account);
-			print_r($this->request_content());
-		}
-		// if (is_array($input = $this->request_content())
-		// 	&& isset($input['fee'], $input['account'])) {
-		// 	print_r($input);
-		// }
-	}
-	function get_payments(string $signature)
-	{
-		if ($this->account($signature, $account))
-		{
-			$payments = $this->mysql->payments('WHERE site=?i AND account=?s', $this->site, $account['uid']);
-			foreach ($payments as $pay)
-			{
-				$this->app->xml->append('payment', [
-					'hash' => $pay['hash'],
-					'time' => $pay['time'],
-					'fee' => $pay['fee'],
-					'paytime' => $pay['paytime']
-
-				]);
-			}
-			//print_r($account);
-		}
-	}
 };
