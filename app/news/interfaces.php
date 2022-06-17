@@ -532,6 +532,7 @@ class interfaces extends webapp
 			'device' => $account['device'],
 			'phone' => $account['phone'],
 			'face' => $account['face'],
+			'unit' => '0000',
 			'name' => $account['name']
 		]);
 		$node->append('favorite')->cdata($account['favorite']);
