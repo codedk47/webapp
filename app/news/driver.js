@@ -1,3 +1,4 @@
+const apphead = {};
 async function loader(source, options, type)
 {
 	const
@@ -55,27 +56,25 @@ async function loader(source, options, type)
 		default: return blob;
 	}
 }
-function aaa(data)
+async function caller(path, body, type)
 {
-	console.log(this, data)
+	return loader(path, {method: body ? 'POST' : 'GET', headers: apphead,
+		body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null}, type || 'application/json');
 }
-function driver(path, body)
+function router(path, body)
 {
 	top.postMessage({path, body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null});
 	return false;
 }
 window.addEventListener('DOMContentLoaded', async function()
 {
-	const headers = {
-		'Content-Type': 'application/data-stream'
-	};
 	if (top !== self)
 	{
 		//console.log('app loaded');
 		self.onmessage = event => 
 		{
 			self.onmessage = null;
-			Object.assign(headers, event.data);
+			Object.assign(apphead, event.data);
 			const viewport = new IntersectionObserver(entries =>
 			{
 				entries.forEach(entry =>
@@ -84,7 +83,7 @@ window.addEventListener('DOMContentLoaded', async function()
 					{
 						if (entry.target === lazy)
 						{
-							loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers}, 'text/plain').then(data =>
+							loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers: apphead}, 'text/plain').then(data =>
 							{
 								if (data)
 								{
@@ -105,7 +104,7 @@ window.addEventListener('DOMContentLoaded', async function()
 						{
 							viewport.unobserve(entry.target);
 							loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream')
-							//loader(entry.target.dataset.src, {headers}, 'application/octet-stream')
+							//loader(entry.target.dataset.src, {headers: apphead}, 'application/octet-stream')
 								.then(blob => entry.target.src = URL.createObjectURL(blob));
 						}
 					}
@@ -113,16 +112,6 @@ window.addEventListener('DOMContentLoaded', async function()
 			}), lazy = document.querySelector('[data-lazy]');
 			lazy && viewport.observe(lazy);
 			document.querySelectorAll('img[data-src]').forEach(img => viewport.observe(img));
-			document.querySelectorAll('[data-call]').forEach(node => node.addEventListener(node.dataset.event || 'click', event =>
-			{
-				const node = event.target;
-				if (Object.prototype.toString.call(self[node.dataset.call]) === '[object Function]')
-				{
-					loader(`http://192.168.0.119/${node.dataset.sync}`, {headers,
-						method: node.dataset.body ? 'POST' : 'GET',
-						body: node.dataset.body || null}, 'application/json').then(reslut => self[node.dataset.call].call(node, reslut));
-				}
-			}));
 			document.addEventListener('click', event =>
 			{
 				for (let target = event.target; target.parentNode; target = target.parentNode)
@@ -130,12 +119,12 @@ window.addEventListener('DOMContentLoaded', async function()
 					if (target.tagName === 'A' && target.hasAttribute('href') && /^javascript:|^blob:/.test(target.getAttribute('href')) === false)
 					{
 						event.preventDefault();
-						driver(target.getAttribute('href'));
+						router(target.getAttribute('href'));
 						break;
 					}
 				}
 			});
-			document.querySelectorAll('[class~="back"]').forEach(back => back.onclick = () => driver(-1));
+			document.querySelectorAll('[class~="back"]').forEach(back => back.onclick = () => router(-1));
 		};
 		return top.postMessage(null);
 	}
@@ -143,6 +132,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	historys = [],
 	ifa = document.querySelector('iframe'),
 	source = historys[historys.length] = ifa.dataset.app,
+	headers = {'Content-Type': 'application/data-stream'},
 	initreq = Object.assign({'Account-Init': 0}, headers);
 	function render(data)
 	{
