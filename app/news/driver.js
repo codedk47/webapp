@@ -127,7 +127,7 @@ window.addEventListener('DOMContentLoaded', async function()
 			{
 				for (let target = event.target; target.parentNode; target = target.parentNode)
 				{
-					if (target.tagName === 'A' && target.hasAttribute('href') && /^javascript:/.test(target.getAttribute('href')) === false)
+					if (target.tagName === 'A' && target.hasAttribute('href') && /^javascript:|^blob:/.test(target.getAttribute('href')) === false)
 					{
 						event.preventDefault();
 						driver(target.getAttribute('href'));
