@@ -83,7 +83,7 @@ window.addEventListener('DOMContentLoaded', async function()
 					{
 						if (entry.target === lazy)
 						{
-							loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers: apphead}, 'text/plain').then(data =>
+							loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers: self.apphead}, 'text/plain').then(data =>
 							{
 								if (data)
 								{
@@ -131,7 +131,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	const
 	historys = [],
 	ifa = document.querySelector('iframe'),
-	source = historys[historys.length] = ifa.dataset.app,
+	entry = historys[historys.length] = ifa.dataset.entry,
 	headers = {'Content-Type': 'application/data-stream'},
 	initreq = Object.assign({'Account-Init': 0}, headers);
 	function render(data)
@@ -146,14 +146,14 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	if (location.hash.substring(5))
 	{
-		// await loader(`${source}?api/user`, {headers}, 'text/plain').then(result =>
+		// await loader(`${entry}?api/user`, {headers}, 'text/plain').then(result =>
 		// {
 		// 	console.log(result)
 		// });
 	}
 	if (window.localStorage.getItem('account') === null)
 	{
-		await loader(`${source}?api/register`, {headers}, 'application/json').then(result =>
+		await loader(`${entry}?api/register`, {headers}, 'application/json').then(result =>
 		{
 			window.localStorage.setItem('account', result.data.signature);
 			initreq['Account-Init'] = 1;
@@ -172,7 +172,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		if (event.data)
 		{
-			const url = typeof event.data.path === 'string' ? historys[historys.length] = source + event.data.path : (
+			const url = typeof event.data.path === 'string' ? historys[historys.length] = entry + event.data.path : (
 				typeof event.data.path === 'number'
 					? historys.splice(Math.max(0, Math.min(9, historys.length - 1 + event.data.path)), 1)
 					: historys[historys.length - 1]);
@@ -185,5 +185,5 @@ window.addEventListener('DOMContentLoaded', async function()
 		}
 		ifa.contentWindow.postMessage(headers);
 	});
-	loader(source, {headers: initreq}, 'text/plain').then(render);
+	loader(entry + ifa.dataset.query, {headers: initreq}, 'text/plain').then(render);
 });
