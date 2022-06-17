@@ -1,4 +1,3 @@
-const apphead = {};
 async function loader(source, options, type)
 {
 	const
@@ -58,7 +57,7 @@ async function loader(source, options, type)
 }
 async function caller(path, body, type)
 {
-	return loader(path, {method: body ? 'POST' : 'GET', headers: apphead,
+	return loader(path, {method: body ? 'POST' : 'GET', headers: self.apphead,
 		body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null}, type || 'application/json');
 }
 function router(path, body)
@@ -70,11 +69,12 @@ window.addEventListener('DOMContentLoaded', async function()
 {
 	if (top !== self)
 	{
+		self.apphead = {};
 		//console.log('app loaded');
 		self.onmessage = event => 
 		{
 			self.onmessage = null;
-			Object.assign(apphead, event.data);
+			Object.assign(self.apphead, event.data);
 			const viewport = new IntersectionObserver(entries =>
 			{
 				entries.forEach(entry =>
