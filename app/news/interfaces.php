@@ -531,6 +531,7 @@ class interfaces extends webapp
 			'lastip' => $account['lastip'],
 			'device' => $account['device'],
 			'phone' => $account['phone'],
+			'face' => $account['face'],
 			'name' => $account['name']
 		]);
 		$node->append('favorite')->cdata($account['favorite']);
