@@ -531,10 +531,11 @@ class interfaces extends webapp
 			'balance' => $account['balance'],
 			'lasttime' => $account['lasttime'],
 			'lastip' => $account['lastip'],
-			'device' => $account['device'],
-			'phone' => $account['phone'],
+			'device' => $account['device'],			
 			'face' => $account['face'],
 			'unit' => '0000',
+			'code' => $account['code'],
+			'phone' => $account['phone'],
 			'name' => $account['name']
 		]);
 		$node->append('favorite')->cdata($account['favorite']);
@@ -564,6 +565,7 @@ class interfaces extends webapp
 			},
 			'face' => 0,
 			'unit' => $data['unit'],
+			'code' => '',
 			'phone' => '',
 			'pwd' => random_int(100000, 999999),
 			'name' => $this->hash($rand),
@@ -590,10 +592,11 @@ class interfaces extends webapp
 	{
 		$input = $this->request_content();
 		$update = [];
-		foreach (['face', 'phone', 'pwd', 'name'] as $allow)
+		foreach (['face', 'code', 'phone', 'pwd', 'name'] as $allow)
 		{
 			if (array_key_exists($allow, $input) && match ($allow) {
 				'face' => $input[$allow] > -1 && $input[$allow] < 256,
+				'code' => strlen($input[$allow]) === 10 && $this->mysql->accounts('WHERE uid=?s limit 1', $input[$allow])->array(),
 				'phone', 'pwd', => strlen($input[$allow]) < 17,
 				'name' => $this->strlen($input[$allow]) < 17,
 				default => FALSE}) {
@@ -602,7 +605,9 @@ class interfaces extends webapp
 		}
 		if ($update
 			&& $this->account($signature, $account)
-			&& $this->mysql->accounts('WHERE site=?i AND uid=?s AND pwd=?s LIMIT 1', $this->site, $account['uid'], $account['pwd'])->update($update)) {
+			&& $this->mysql->accounts('WHERE site=?i AND uid=?s AND pwd=?s' . (
+				array_key_exists('code', $update) ? ' AND code=""' : ''
+			) . ' LIMIT 1', $this->site, $account['uid'], $account['pwd'])->update($update)) {
 			$this->account_xml($update + $account);
 		}
 	}
