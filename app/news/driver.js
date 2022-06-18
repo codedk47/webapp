@@ -65,6 +65,17 @@ function router(path, body)
 	top.postMessage({path, body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null});
 	return false;
 }
+// function screen()
+// {
+// 	html2canvas(document.querySelector('iframe').contentDocument.body).then(canvas => {
+// 		canvas.toBlob(blob => {
+// 			const anchor = document.createElement('a');
+// 			anchor.href = URL.createObjectURL(blob);
+// 			anchor.download = 'screen.png';
+// 			anchor.click();
+// 		}, 'image/png');
+// 	});
+// }
 window.addEventListener('DOMContentLoaded', async function()
 {
 	if (top !== self)
@@ -151,28 +162,40 @@ window.addEventListener('DOMContentLoaded', async function()
 		// 	console.log(result)
 		// });
 	}
-	if (window.localStorage.getItem('account') === null)
+	if (localStorage.getItem('account') === null)
 	{
 		await loader(`${entry}?api/register`, {headers}, 'application/json').then(result =>
 		{
-			window.localStorage.setItem('account', result.data.signature);
+			localStorage.setItem('account', result.data.signature);
 			initreq['Account-Init'] = 1;
 		});
 	}
-	if (window.localStorage.getItem('account') === null)
+	if (localStorage.getItem('account') === null)
 	{
 		return console.log('Unauthorized');
 	}
-	initreq.Authorization = headers.Authorization = `Bearer ${window.localStorage.getItem('account')}`;
-	history.pushState(null, null, location.href);
-	history.back();
-	history.forward();
-	window.addEventListener('popstate', () => history.go(1));
+	initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
+
+	if (ifa.dataset.query.length)
+	{
+		localStorage.setItem('query', ifa.dataset.query);
+	}
+	else
+	{
+		if (localStorage.getItem('query'))
+		{
+			ifa.dataset.query = localStorage.getItem('query');
+		}
+	}
+	history.pushState(null, null, `${location.origin}${location.pathname}`);
+	// history.back();
+	// history.forward();
+	// window.addEventListener('popstate', () => history.go(1));
 	window.addEventListener('message', event =>
 	{
 		if (event.data)
 		{
-			const url = typeof event.data.path === 'string' ? historys[historys.length] = entry + event.data.path : (
+			const query = typeof event.data.path === 'string' ? historys[historys.length] = event.data.path : (
 				typeof event.data.path === 'number'
 					? historys.splice(Math.max(0, Math.min(9, historys.length - 1 + event.data.path)), 1)
 					: historys[historys.length - 1]);
@@ -180,10 +203,14 @@ window.addEventListener('DOMContentLoaded', async function()
 			{
 				historys.shift();
 			}
-			loader(url, {headers,
+			localStorage.setItem('query', query);
+			loader(entry + query, {headers,
 				method: event.data.body ? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
 		}
 		ifa.contentWindow.postMessage(headers);
 	});
+
+
+
 	loader(entry + ifa.dataset.query, {headers: initreq}, 'text/plain').then(render);
 });

@@ -169,11 +169,11 @@ class news_driver extends webapp
 		$signature = $this->request_authorization();
 		return $this->authorization(fn(string $username, string $password) => [$username, $password]);
 	}
-	function account(array|string $context):array
+	function account(array|string $context, array $update = []):array
 	{
 		return is_object($account = is_array($context)
 			? $this->post('register', $context)
-			: $this->get("account/{$context}"))
+			: ($update ? $this->post("account/{$context}", $update) : $this->get("account/{$context}")))
 			&& isset($account->account)
 				? [...$account->account->getattr(),
 					'favorite' => (string)$account->account->favorites,

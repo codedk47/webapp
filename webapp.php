@@ -467,7 +467,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			? static::authorize($this->request_authorization(), $authenticate)
 			: $this->admin($this->request_authorization());
 	}
-
+	function strlen($text):int
+	{
+		return iconv_strlen($text, $this['app_charset']);
+	}
 	//---------------------
 
 

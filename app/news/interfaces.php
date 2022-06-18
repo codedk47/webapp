@@ -459,6 +459,7 @@ class interfaces extends webapp
 			'hash' => $resource['hash'],
 			'time' => $resource['time'],
 			'duration' => $resource['duration'],
+			'type' => $resource['type'],
 			'tags' => $resource['tags'],
 			'actors' => $resource['actors'],
 			'require' => $data['require'] ?? 0,
@@ -492,7 +493,8 @@ class interfaces extends webapp
 			'level' => $tag['level'],
 			'count' => $tag['count'],
 			'click' => $tag['click'],
-			'name' => $tag['name']
+			'name' => $tag['name'],
+			'alias' => $tag['alias']
 		]);
 	}
 	function get_tags(string $type = NULL, int $page = 1, int $size = 1000)
@@ -561,6 +563,7 @@ class interfaces extends webapp
 				default => 'pc'
 			},
 			'face' => 0,
+			'unit' => $data['unit'],
 			'phone' => '',
 			'pwd' => random_int(100000, 999999),
 			'name' => $this->hash($rand),
@@ -581,6 +584,26 @@ class interfaces extends webapp
 		if ($this->account($signature, $account))
 		{
 			$this->account_xml($account, $signature);
+		}
+	}
+	function post_account(string $signature)
+	{
+		$input = $this->request_content();
+		$update = [];
+		foreach (['face', 'phone', 'pwd', 'name'] as $allow)
+		{
+			if (array_key_exists($allow, $input) && match ($allow) {
+				'face' => $input[$allow] > -1 && $input[$allow] < 256,
+				'phone', 'pwd', => strlen($input[$allow]) < 17,
+				'name' => $this->strlen($input[$allow]) < 17,
+				default => FALSE}) {
+				$update[$allow] = $input[$allow];
+			}
+		}
+		if ($update
+			&& $this->account($signature, $account)
+			&& $this->mysql->accounts('WHERE site=?i AND uid=?s AND pwd=?s LIMIT 1', $this->site, $account['uid'], $account['pwd'])->update($update)) {
+			$this->account_xml($update + $account);
 		}
 	}
 	function post_report(string $signature)
