@@ -140,16 +140,35 @@ window.addEventListener('DOMContentLoaded', async function()
 		return top.postMessage(null);
 	}
 	const
-	historys = [],
-	ifa = document.querySelector('iframe'),
-	entry = historys[historys.length] = ifa.dataset.entry,
+	routers = JSON.parse(localStorage.getItem('routers')) || [],
+	frame = document.querySelector('iframe'),
+	entry = frame.dataset.entry,
 	headers = {'Content-Type': 'application/data-stream'},
 	initreq = Object.assign({'Account-Init': 0}, headers);
+	function log(query)
+	{
+		if (typeof query !== 'string')
+		{
+			query = typeof query === 'number'
+				? (routers.length > 1 ? routers.splice(-1 + query)[0] : routers[0])
+				: routers[routers.length];
+		}
+		if (routers.length === 0 || routers[routers.length - 1] !== query)
+		{
+			routers[routers.length] = query;
+			if (routers.length > 10)
+			{
+				routers.shift();
+			}
+			localStorage.setItem('routers', JSON.stringify(routers));
+		}
+		return entry + query;
+	}
 	function render(data)
 	{
-		ifa.contentDocument.removeChild(ifa.contentDocument.documentElement);
-		ifa.contentDocument.write(data);
-		ifa.contentDocument.close();
+		frame.contentDocument.removeChild(frame.contentDocument.documentElement);
+		frame.contentDocument.write(data);
+		frame.contentDocument.close();
 	}
 	if (location.hash.substring(1))
 	{
@@ -176,41 +195,22 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
 
-	if (ifa.dataset.query.length)
+	if (frame.dataset.query.length === 0)
 	{
-		localStorage.setItem('query', ifa.dataset.query);
-	}
-	else
-	{
-		if (localStorage.getItem('query'))
-		{
-			ifa.dataset.query = localStorage.getItem('query');
-		}
+		frame.dataset.query = routers[routers.length - 1] ?? '';
 	}
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
-	// history.back();
-	// history.forward();
-	// window.addEventListener('popstate', () => history.go(1));
+	history.back();
+	history.forward();
+	window.addEventListener('popstate', () => history.go(1));
 	window.addEventListener('message', event =>
 	{
 		if (event.data)
 		{
-			const query = typeof event.data.path === 'string' ? historys[historys.length] = event.data.path : (
-				typeof event.data.path === 'number'
-					? historys.splice(Math.max(0, Math.min(9, historys.length - 1 + event.data.path)), 1)
-					: historys[historys.length - 1]);
-			if (historys.length > 9)
-			{
-				historys.shift();
-			}
-			localStorage.setItem('query', query);
-			loader(entry + query, {headers,
+			loader(log(event.data.path), {headers,
 				method: event.data.body ? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
 		}
-		ifa.contentWindow.postMessage(headers);
+		frame.contentWindow.postMessage(headers);
 	});
-
-
-
-	loader(entry + ifa.dataset.query, {headers: initreq}, 'text/plain').then(render);
+	//loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
 });
