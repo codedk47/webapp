@@ -4,6 +4,8 @@ API
 GET ?ads 获取广告
 GET ?tags 获取标签
 GET ?resources 获取资源
+GET ?settags 获取合集栏目
+GET ?setvods 获取合集节目
 
 账号操作
 POST ?register [device,unit] 注册账号

@@ -205,12 +205,9 @@ window.addEventListener('DOMContentLoaded', async function()
 	window.addEventListener('popstate', () => history.go(1));
 	window.addEventListener('message', event =>
 	{
-		if (event.data)
-		{
-			loader(log(event.data.path), {headers,
-				method: event.data.body ? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
-		}
-		frame.contentWindow.postMessage(headers);
+		event.data ? loader(log(event.data.path), {headers,
+			method: event.data.body ? 'POST' : 'GET', body: event.data.body},
+			'text/plain').then(render) : frame.contentWindow.postMessage(headers);
 	});
-	//loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
+	loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
 });

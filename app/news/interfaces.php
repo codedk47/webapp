@@ -506,7 +506,45 @@ class interfaces extends webapp
 			$this->tag_xml($tag);
 		}
 	}
-
+	//合集
+	function settag_xml(array $data)
+	{
+		$node = $this->xml->append('settag', [
+			'hash' => $data['hash'],
+			'sort' => $data['sort'],
+			'name' => $data['name'],
+			'seat' => $data['seat']
+		]);
+		$node->cdata($data['vods']);
+		return $node;
+	}
+	function get_settags(string $null = NULL, int $page = 1, int $size = 1000)
+	{
+		foreach ($this->mysql->settags('WHERE site=?i ORDER BY sort asc', $this->site)->paging($page, $size) as $settag)
+		{
+			$this->settag_xml($settag);
+		}
+	}
+	function setvod_xml(array $data)
+	{
+		$node = $this->xml->append('setvod', [
+			'hash' => $data['hash'],
+			'time' => $data['time'],
+			'view' => $data['view'],
+			'name' => $data['name'],
+			'tags' => $data['tags']
+		]);
+		$node->append('describe')->cdata($data['describe']);
+		$node->append('resources')->cdata($data['resources']);
+		return $node;
+	}
+	function get_setvods(string $null = NULL, int $page = 1, int $size = 1000)
+	{
+		foreach ($this->mysql->setvods('WHERE site=?i ORDER BY time desc', $this->site)->paging($page, $size) as $settag)
+		{
+			$this->setvod_xml($settag);
+		}
+	}
 
 
 
