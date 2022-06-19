@@ -345,8 +345,11 @@ STYLE);
 		$form->field('count', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
 		$form->field('click', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
 
+		$form->fieldset('seat');
+		$form->field('seat', 'text', ['style' => 'width:40rem']);
+
 		$form->fieldset('alias');
-		$form->field('alias', 'text', ['style' => 'width:42rem', 'required' => NULL]);
+		$form->field('alias', 'text', ['style' => 'width:40rem', 'required' => NULL]);
 
 		$form->fieldset();
 		$form->button('Submit', 'submit');
@@ -421,13 +424,15 @@ STYLE);
 				'onclick' => 'return confirm(`Delete Tag ${this.dataset.name}`)',
 				'data-name' => $tag['name']]);
 			$table->cell()->append('a', [$tag['hash'], 'href' => "?admin/tag-update,hash:{$tag['hash']}"]);
+			$table->cell(date('Y-m-d H:i:s', $tag['time']));
 			$table->cell($tag['level']);
 			$table->cell(number_format($tag['count']));
 			$table->cell(number_format($tag['click']));
+			$table->cell($tag['seat']);
 			$table->cell()->append('a', [$tag['name'], 'href' => "?admin/resources,search:{$tag['hash']}"]);
 			$table->cell($tag['alias']);
 		});
-		$table->fieldset('❌', 'hash', 'level', 'count', 'click', 'name', 'alias');
+		$table->fieldset('❌', 'hash', 'time', 'level', 'count', 'click', 'seat', 'name', 'alias');
 		$table->header('Found %d item', $table->count());
 		$table->button('Create Tag', ['onclick' => 'location.href="?admin/tag-create"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
@@ -439,6 +444,12 @@ STYLE);
 		$form = new webapp_form($ctx);
 		$form->fieldset('封面图片');
 		$form->field('cover', 'file');
+		$form->field('type', 'select', ['options' => [
+			'long' => '长视频',
+			'short' => '短视频',
+			'live' => '假直播',
+			'movie' => '电影'
+		]]);
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
@@ -463,7 +474,21 @@ STYLE);
 	}
 	function get_resource_update(string $hash)
 	{
-		$this->form_resource($this->main)->echo($this->webapp->resource_get($hash));
+		if ($resource = $this->webapp->resource_get($hash))
+		{
+			if ($resource['sync'] === 'finished')
+			{
+				$this->xml->head->append('script', ['src' => '/webapp/app/news/hls.js']);
+				$this->main->append('video', ['Sorry, your browser doesn\'t support embedded videos.',
+					'data-src' => sprintf("https://fasd.fasdfasd.com/%s/{$resource['hash']}", date('ym', $resource['time'])),
+					'width' => 854,
+					'height' => 480,
+					'playsinline' => NULL,
+					'controls' => NULL
+				]);
+			}
+			$this->form_resource($this->main)->echo($resource);
+		}
 	}
 	function post_resource_upload()
 	{
@@ -499,24 +524,35 @@ STYLE);
 			}
 		}
 		$cond[0] .= ' ORDER BY time DESC';
-		$table = $this->main->table($this->webapp->mysql->resources(...$cond)->paging($page), function($table, $res)
+		$table = $this->main->table($this->webapp->mysql->resources(...$cond)->paging($page), function($table, $res, $type)
 		{
 			$table->row();
-			$table->cell()->append('a', ['❌', 'href' => "?admin/resource-delete,hash:{$res['hash']}"]);
+			$table->cell(['width' => 'width:100%;'])->append('a', ['❌',
+				'href' => "?admin/resource-delete,hash:{$res['hash']}",
+				'onclick' => 'return confirm(`Delete Resource ${this.dataset.hash}`)',
+				'data-hash' => $res['hash']
+			]);
 			$table->cell()->append('a', [$res['hash'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
 			$table->cell(date('Y-m-d', $res['time']));
 			$table->cell(date('G:i:s', $res['duration'] + 57600));
+			$table->cell($type[$res['type']]);
 			$data = json_decode($res['data'], TRUE)[$this->webapp->site] ?? [];
 			$table->cell([-2 => '下架', -1 => '会员', 0 => '免费'][$require = $data['require'] ?? 0] ?? $require);
-			
 			$table->cell(number_format($data['favorite']));
 			$table->cell(number_format($data['view']));
 			$table->cell(number_format($data['like']));
-			$table->cell()->append('a', [$data['name'], 'href' => 'javascript:;']);
-		});
-		$table->fieldset('❌', 'hash', 'time', 'duration', 'require', 'favorite', 'view', 'like', 'name');
+			$table->cell()->append('div', [
+				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
+		}, ['long' => '长视频', 'short' => '短视频', 'live' => '直播', 'movie' => '电影']);
+		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name');
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resources', ['onclick' => 'location.href="?admin/resource-upload"']);
+		// $table->bar->select([
+		// 	'finished' => '完成',
+		// 	'waiting' => '等待',
+		// 	'exception' => '异常'
+		// ])->setattr(['onchange' => 'g({sync:this.value})'])->selected($sync);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->bar->select([
 			'finished' => '完成',
@@ -577,9 +613,19 @@ STYLE);
 			$table->cell(date('Y-m-d', $acc['lasttime']));
 			$table->cell($this->webapp->hexip($acc['lastip']));
 			$table->cell($acc['device']);
+			$table->cell($acc['unit']);
+			if ($acc['code'])
+			{
+				$table->cell()->append('a', [$acc['code'], 'href' => "?admin/accounts,search:{$acc['code']}"]);
+			}
+			else
+			{
+				$table->cell();
+			}
 			$table->cell($acc['phone']);
+			$table->cell($acc['name']);
 		});
-		$table->fieldset('uid', 'time', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'phone');
+		$table->fieldset('uid', 'time', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'unit', 'code', 'phone', 'name');
 		$table->header('Found %d item', $table->count());
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
@@ -592,8 +638,8 @@ STYLE);
 			$table->row();
 			$table->cell()->append('a', ['❌',
 				'href' => "{$this->webapp['app_resdomain']}?deletead/{$ad['hash']}",
-				'onclick' => 'return confirm(`Delete Ad ${this.dataset.uid}`) && anchor(this)',
-				'data-auth' => $auth, 'data-uid' => $ad['name']]);
+				'onclick' => 'return confirm(`Delete Ad ${this.dataset.name}`) && anchor(this)',
+				'data-auth' => $auth, 'data-name' => $ad['name']]);
 			$table->cell()->append('a', [$ad['hash'], 'href' => "?admin/ad-update,hash:{$ad['hash']}"]);
 			$table->cell($ad['name']);
 			$table->cell($ad['seat']);

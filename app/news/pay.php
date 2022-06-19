@@ -49,7 +49,7 @@ final class webapp_pay_test implements webapp_pay
 		return TRUE;
 	}
 }
-final class webapp_pay_changjiang implements webapp_pay
+final class webapp_pay_cj implements webapp_pay
 {
 	static function paytype():array
 	{
@@ -215,15 +215,8 @@ final class webapp_router_pay extends webapp_echo_xml
 		$form = new webapp_form($this->webapp);
 		//授权认证（现在使用webapp内部认证。以后公开后另外使用）
 		$form->field('pay_auth', 'text', ['required' => NULL]);
-		//支付名称
-		$channels = [];
-		foreach ($this->webapp['app_pay'] as $channel => $context)
-		{
-			$channels[$channel] = $context['name'];
-		}
-		$form->field('pay_name', 'select', ['options' => $channels, 'required' => NULL]);
 		//支付类型
-		$form->field('pay_type', 'text', ['required' => NULL]);
+		$form->field('pay_type', 'text', ['pattern' => '[a-z]+@.+', 'required' => NULL]);
 		//付款说明
 		$form->field('pay_desc', 'text', ['maxlength' => NULL]);
 		//订单编号
@@ -251,13 +244,14 @@ final class webapp_router_pay extends webapp_echo_xml
 			//这里正对内部订单
 			$order['pay_user'] = intval($auth[2]);
 
-			if (array_key_exists($order['pay_name'], $this->webapp['app_pay']) === FALSE
-				|| $this->webapp['app_pay'][$order['pay_name']]['open'] === FALSE) {
+			[$pay_name, $pay_type] = explode('@', $order['pay_type']);
+			if (array_key_exists($pay_name, $this->webapp['app_pay']) === FALSE
+				|| $this->webapp['app_pay'][$pay_name]['open'] === FALSE) {
 				$error = '支付名称不存在！';
 				break;
 			}
-			$channel = "webapp_pay_{$order['pay_name']}";
-			if (array_key_exists($order['pay_type'], $channel::paytype()) === FALSE)
+			$channel = "webapp_pay_{$pay_type}";
+			if (array_key_exists($pay_type, $channel::paytype()) === FALSE)
 			{
 				$error = '支付类型不存在！';
 				break;
@@ -292,10 +286,12 @@ final class webapp_router_pay extends webapp_echo_xml
 		{
 			if ($context['open'])
 			{
-				$pay = $this->xml->append('pay', ['value' => $channel, 'name' => $context['name']]);
 				foreach ("webapp_pay_{$channel}"::paytype() as $type => $name)
 				{
-					$pay->append('type', ['value' => $type, 'name' => $name]);
+					$this->xml->append('pay', [
+						'type' => "{$channel}@{$type}",
+						'name' => "{$channel}({$name})"
+					]);
 				}
 			}
 		}

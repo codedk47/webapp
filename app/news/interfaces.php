@@ -60,14 +60,14 @@ class interfaces extends webapp
 		$ffmpeg = static::lib('ffmpeg/interface.php');
 		foreach ($this->mysql->resources('WHERE sync="waiting" ORDER BY time ASC') as $resource)
 		{
-			$day = date('Ymd', $resource['time']);
+			$day = date('ym', $resource['time']);
 			$cut = $ffmpeg("{$this['app_respredir']}/{$resource['hash']}");
 			echo "{$resource['hash']}: {$day}\n";
 			if ($cut->m3u8($outdir = "{$this['app_resoutdir']}/{$day}/{$resource['hash']}"))
 			{
 				$this->maskfile("{$outdir}/play.m3u8", "{$outdir}/play");
 				if (is_file("{$this['app_respredir']}/{$resource['hash']}.cover")
-					? webapp_image::from("{$this['app_respredir']}/{$resource['hash']}.cover")->jpeg("{$outdir}/cover.jpg")
+					? webapp_image::from("{$this['app_respredir']}/{$resource['hash']}.cover")->jpeg("{$outdir}/cover.jpg", 100)
 					: $cut->jpeg("{$outdir}/cover.jpg")) {
 					$this->maskfile("{$outdir}/cover.jpg", "{$outdir}/cover");
 				}
@@ -317,7 +317,7 @@ class interfaces extends webapp
 		$form->field('piccover', 'file', ['accept' => 'image/*']);
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
-		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
+		$form->field('actors', 'text', ['value' => $this->admin[0], 'required' => NULL]);
 		$form->fieldset('tags');
 		$tags = $this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->column('name', 'hash');
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
@@ -363,8 +363,8 @@ class interfaces extends webapp
 			$this->site, $data['require'] ?? 0, $this->site, $data['name'] ?? ''];
 		if ($this->admin[2])
 		{
-			$update[0] .= ',tags=?s,actors=?s';
-			array_push($update, $data['tags'], $data['actors']);
+			$update[0] .= ',type=?s,tags=?s,actors=?s';
+			array_push($update, $data['type'], $data['tags'], $data['actors']);
 		}
 		return $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s LIMIT 1', $this->site, $hash)->update(...$update);
 	}
@@ -373,7 +373,10 @@ class interfaces extends webapp
 	{
 		if (is_string($resource))
 		{
-			$resource = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s LIMIT 1', $this->site, $resource)->array();
+			if (empty($resource = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s LIMIT 1', $this->site, $resource)->array()))
+			{
+				return [];
+			}
 		}
 		$resource += json_decode($resource['data'], TRUE)[$this->site] ?? [
 			'require' => 0,
@@ -470,13 +473,13 @@ class interfaces extends webapp
 		$node->cdata($data['name']);
 		return $node;
 	}
-	function get_resources(string $tag = NULL, int $page = 1, int $size = 1000)
+	function get_resources(string $type = NULL, int $page = 1, int $size = 1000)
 	{
 		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished"', $this->site];
-		if ($tag)
+		if ($type)
 		{
-			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
-			$cond[] = $tag;
+			$cond[0] .= ' AND type=?s';
+			$cond[] = $type;
 		}
 		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
 		$this->app->xml->setattr($resources->paging);
@@ -490,9 +493,11 @@ class interfaces extends webapp
 	{
 		return $this->xml->append('tag', [
 			'hash' => $tag['hash'],
+			'time' => $tag['time'],
 			'level' => $tag['level'],
 			'count' => $tag['count'],
 			'click' => $tag['click'],
+			'seat' => $tag['seat'],
 			'name' => $tag['name'],
 			'alias' => $tag['alias']
 		]);

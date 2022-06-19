@@ -135,7 +135,6 @@ window.addEventListener('DOMContentLoaded', async function()
 					}
 				}
 			});
-			document.querySelectorAll('[class~="back"]').forEach(back => back.onclick = () => router(-1));
 		};
 		return top.postMessage(null);
 	}
