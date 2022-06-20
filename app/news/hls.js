@@ -27758,7 +27758,7 @@ var XhrLoader = /*#__PURE__*/function () {
               {
                 buffer[i] = buffer[i] ^ key[i % 8];
               }
-              data = String.fromCharCode.apply(null, buffer);
+              data = new TextDecoder().decode(buffer);
               len = buffer.length;
             }
             else

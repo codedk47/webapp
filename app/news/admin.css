@@ -1,0 +1,92 @@
+/* html,body,body>div{
+	height:100%;
+}
+body>div,main::before{
+	background-image: url('/webapp/res/ps/kynny.original_5BMO6X9.jpg');
+	background-position: center top;
+	background-size: cover;
+	background-attachment: fixed;
+	background-repeat: repeat-x;
+}
+header{
+	display: none;
+}
+main::before{
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	filter: blur(.4rem);
+	z-index: -1;
+	margin: -4rem;
+}
+main{
+	position: relative;
+	padding: 2rem;
+	margin: auto auto !important;
+	box-shadow: 0 .5rem 2rem rgb(27, 31, 35);
+	border-radius: .4rem;
+	box-sizing: border-box;
+	overflow: hidden;
+	z-index: 1;
+
+}
+form{
+	min-width: 10rem !important;
+}
+form>fieldset>legend{
+	color: white;
+	padding-bottom: 1rem;
+}
+button{
+	width: 100%;
+} */
+ul.restag{
+	padding:0;
+	width:70rem;
+	display:flex;
+	align-content: flex-start;
+	flex-flow:wrap;
+	list-style-type:none;
+	gap:.3rem;
+}
+ul.restag>li{
+	flex:0 0 6rem;
+}
+ul.restag>li>label{
+	padding:.3rem;
+	border-radius:.3rem;
+	white-space:nowrap;
+}
+ul.restag>li>label:hover{
+	background:whitesmoke;
+}
+ul.restag>li>label:active{
+	background:gainsboro;
+}
+
+ul.tagvod{
+	padding:0;
+	width:55rem;
+	display:flex;
+	align-content: flex-start;
+	flex-flow:wrap;
+	list-style-type:none;
+	gap:.3rem;
+}
+ul.tagvod>li{
+	flex:0 0 6rem;
+}
+ul.tagvod>li>label{
+	padding:.3rem;
+	border-radius:.3rem;
+	white-space:nowrap;
+}
+ul.tagvod>li>label:hover{
+	background:whitesmoke;
+}
+ul.tagvod>li>label:active{
+	background:gainsboro;
+}

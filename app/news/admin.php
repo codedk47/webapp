@@ -16,53 +16,6 @@ class webapp_router_admin extends webapp_echo_html
 				}
 				else
 				{
-// 					$this->xml->head->append('style', <<<'STYLE'
-// html,body,body>div{
-// 	height:100%;
-// }
-// body>div,main::before{
-// 	background-image: url('/webapp/res/ps/kynny.original_5BMO6X9.jpg');
-// 	background-position: center top;
-// 	background-size: cover;
-// 	background-attachment: fixed;
-// 	background-repeat: repeat-x;
-// }
-// header{
-// 	display: none;
-// }
-// main::before{
-// 	content: '';
-// 	position: absolute;
-// 	top: 0;
-// 	left: 0;
-// 	right: 0;
-// 	bottom: 0;
-// 	filter: blur(.4rem);
-// 	z-index: -1;
-// 	margin: -4rem;
-// }
-// main{
-// 	position: relative;
-// 	padding: 2rem;
-// 	margin: auto auto !important;
-// 	box-shadow: 0 .5rem 2rem rgb(27, 31, 35);
-// 	border-radius: .4rem;
-// 	box-sizing: border-box;
-// 	overflow: hidden;
-// 	z-index: 1;
-
-// }
-// form{
-// 	min-width: 10rem !important;
-// }
-// form>fieldset>legend{
-// 	color: white;
-// 	padding-bottom: 1rem;
-// }
-// button{
-// 	width: 100%;
-// }
-// STYLE);
 					webapp_echo_html::form_sign_in($this->main);
 				}
 				return $webapp->response_status(200);
@@ -70,48 +23,21 @@ class webapp_router_admin extends webapp_echo_html
 			$this->main->setattr(['Unauthorized', 'style' => 'font-size:2rem']);
 			return $webapp->response_status(401);
 		}
-
-		$this->xml->head->append('style', <<<'STYLE'
-ul.restag{
-	padding:0;
-	width:70rem;
-	display:flex;
-	align-content: flex-start;
-	flex-flow:wrap;
-	list-style-type:none;
-	gap:.3rem;
-}
-ul.restag>li{
-	flex:0 0 6rem;
-}
-ul.restag>li>label{
-	padding:.3rem;
-	border-radius:.3rem;
-	white-space:nowrap;
-}
-ul.restag>li>label:hover{
-	background:whitesmoke;
-}
-ul.restag>li>label:active{
-	background:gainsboro;
-}
-STYLE);
+		$this->xml->head->append('link', ['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/news/admin.css']);
 		$this->xml->head->append('script', ['src' => '/webapp/app/news/admin.js']);
 		$nav = $this->nav([
 			['Home', '?admin'],
-			['Status', [
-				['Unitstats', '?admin/unitstats'],
-				
-			]],
-			['Pending', [
-				['Reports', '?admin/reports'],
-				['Comments', '?admin/comments'],
-				['Runstatus', '?admin/runstatus']
-			]],
 			['Tags', '?admin/tags'],
 			['Resources', '?admin/resources'],
 			['Accounts', '?admin/accounts'],
-			['Ads', '?admin/ads']
+			['Ads', '?admin/ads'],
+			['Extensions', [
+				['Reports', '?admin/reports'],
+				['Comments（暂时没用）', '?admin/comments'],
+				['Set Tags', '?admin/settags'],
+				['Set Vods', '?admin/setvods'],
+				['Runstatus', '?admin/runstatus']
+			]]
 		]);
 		if ($webapp->admin[2])
 		{
@@ -159,46 +85,11 @@ STYLE);
 			?? $this->webapp->request_referer('?'));
 		return 302;
 	}
+	//统计
 	function post_home()
 	{
 	}
-	function get_home(string $search = NULL, int $page = 1)
-	{
-		$cond = ['where site=?i', $this->webapp->site];
-		if (is_string($search))
-		{
-			if (strlen($search) === 10 && trim($search, webapp::key) === '')
-			{
-				$cond[0] .= ' and account=?s';
-				$cond[] = $search;
-			}
-			else
-			{
-				$search = urldecode($search);
-				$cond[0] .= ' and `describe` like ?s';
-				$cond[] = "%{$search}%";
-			}
-		}
-		$cond[0] .= ' order by time desc';
-		$table = $this->main->table($this->webapp->mysql->reports(...$cond)->paging($page), function($table, $rep)
-		{
-			$table->row();
-			$table->cell()->append('a', [$rep['promise'],
-				'href' => "?admin/resolve,hash:{$rep['hash']}",
-				'style' => "color:red"]);
-
-			$table->cell(date('Y-m-d\\TH:i:s', $rep['time']));
-			$table->cell($this->webapp->hexip($rep['ip']));
-			$table->cell()->append('a', [$rep['account'], 'href' => "?admin/accounts,search:{$rep['account']}"]);
-			$table->cell($rep['describe']);
-		});
-		$table->fieldset('promise', 'time', 'ip', 'account', 'describe');
-		$table->header('Reports, Found %d item', $table->count());
-		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
-		$table->paging($this->webapp->at(['page' => '']));
-	}
-	//统计
-	function get_unitstats(string $ym = '')
+	function get_home(string $ym = '')
 	{
 		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode(',', date('Y,m'));
 		$fields = [
@@ -263,77 +154,6 @@ STYLE);
 				}
 			}
 		}
-	}
-	function get_runstatus()
-	{
-		$table = $this->main->table();
-		$table->fieldset('Name', 'Value');
-		$table->header('Front app running status');
-		$table->xml->setattr(['style' => 'margin-right:1rem']);
-		$sync = $this->webapp->sync();
-		if (is_object($status = $sync->goto("{$sync->path}?pull/runstatus")->content()))
-		{
-			foreach ($status->getattr() as $name => $value)
-			{
-				$table->row();
-				$table->cell($name);
-				$table->cell($value);
-			}
-		}
-
-		if ($this->webapp->admin[2])
-		{
-			$table = $this->main->table();
-			$table->fieldset('Name', 'Value');
-			$table->header('Data synchronize running status');
-			$table->row();
-			$table->cell('os_http_connections');
-			$table->cell(intval(shell_exec('netstat -ano | find ":80" /c')));
-			
-			foreach ($this->webapp->mysql('SELECT * FROM performance_schema.GLOBAL_STATUS WHERE VARIABLE_NAME IN(?S)', [
-				//'Aborted_clients',
-				//'Aborted_connects',//接到MySQL服务器失败的次数
-				'Queries',//总查询
-				'Slow_queries',//慢查询
-				'Max_used_connections',//高峰连接数量
-				'Max_used_connections_time',//高峰连接时间
-				'Threads_cached',
-				'Threads_connected',//打开的连接数
-				'Threads_created',//创建过的线程数
-				'Threads_running',//激活的连接数
-				'Uptime',//已经运行的时长
-			]) as $stat) {
-				$table->row();
-				$table->cell('mysql_' . strtolower($stat['VARIABLE_NAME']));
-				$table->cell($stat['VARIABLE_VALUE']);
-			}
-		}
-	}
-	//评论
-	function get_comments(string $search = NULL, int $page = 1)
-	{
-		$cond = ['WHERE site=?i', $this->webapp->site];
-		$cond[0] .= ' ORDER BY time DESC';
-		$table = $this->main->table($this->webapp->mysql->comments(...$cond)->paging($page, 12), function($table, $comm)
-		{
-			$table->row();
-			$table->cell()->append('a', ['❌', 'href' => "#"]);
-			$table->cell(date('Y-m-d\\Th:i:s', $comm['time']));
-			$table->cell()->append('a', [$comm['resource'], 'href' => "?admin/resources,search:{$comm['resource']}"]);
-			$table->cell()->append('a', [$comm['account'], 'href' => "?admin/accounts,search:{$comm['account']}"]);
-			$table->cell()->append('a', ['✅', 'href' => "#"]);
-			$table->row();
-			$table->cell(['colspan' => 5])->append('pre', [$comm['content'], 'style' => 'margin:0']);
-
-		});
-		$table->fieldset('❌', 'time', 'resource', 'account', '✅');
-		$table->header('Found %d item', $table->count());
-		$table->bar->select([
-			'' => '全部评论',
-			'等待审核',
-			'审核通过'
-		])->setattr(['onchange' => 'g({status:this.value?this.value:null})'])->selected($this->webapp->query['status'] ?? '');
-		$table->paging($this->webapp->at(['page' => '']));
 	}
 	//标签
 	function form_tag($ctx):webapp_form
@@ -454,7 +274,7 @@ STYLE);
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
 		$form->fieldset('tags');
-		$tags = $this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->column('name', 'hash');
+		$tags = $this->webapp->mysql->tags('ORDER BY time ASC')->column('name', 'hash');
 		$form->field('tags', 'checkbox', ['options' => $tags], 
 			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
@@ -480,7 +300,7 @@ STYLE);
 			{
 				$this->xml->head->append('script', ['src' => '/webapp/app/news/hls.js']);
 				$this->main->append('video', ['Sorry, your browser doesn\'t support embedded videos.',
-					'data-src' => sprintf("https://fasd.fasdfasd.com/%s/{$resource['hash']}", date('ym', $resource['time'])),
+					'data-src' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}", date('ym', $resource['time'])),
 					'width' => 854,
 					'height' => 480,
 					'playsinline' => NULL,
@@ -523,6 +343,12 @@ STYLE);
 				array_push($cond, $search = urldecode($search), $this->webapp->site, "%{$search}%");
 			}
 		}
+		if (strlen($type = $this->webapp->query['type'] ?? ''))
+		{
+			$cond[0] .= ' AND type=?s';
+			$cond[] = $type;
+		}
+		
 		$cond[0] .= ' ORDER BY time DESC';
 		$table = $this->main->table($this->webapp->mysql->resources(...$cond)->paging($page), function($table, $res, $type)
 		{
@@ -548,12 +374,14 @@ STYLE);
 		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name');
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resources', ['onclick' => 'location.href="?admin/resource-upload"']);
-		// $table->bar->select([
-		// 	'finished' => '完成',
-		// 	'waiting' => '等待',
-		// 	'exception' => '异常'
-		// ])->setattr(['onchange' => 'g({sync:this.value})'])->selected($sync);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->bar->select([
+			'' => '全部',
+			'long' => '长视频',
+			'short' => '短视频',
+			'live' => '假直播',
+			'movie' => '电影'
+		])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select([
 			'finished' => '完成',
 			'waiting' => '等待',
@@ -664,6 +492,290 @@ STYLE);
 	{
 		$this->webapp->form_ad($this->main, $hash)->echo($this->webapp->mysql->ads('where site=?i and hash=?s', $this->webapp->site, $hash)->array());
 	}
+	//================Extensions================
+	//报告
+	function get_reports(string $search = NULL, int $page = 1)
+	{
+		$cond = ['where site=?i', $this->webapp->site];
+		if (is_string($search))
+		{
+			if (strlen($search) === 10 && trim($search, webapp::key) === '')
+			{
+				$cond[0] .= ' and account=?s';
+				$cond[] = $search;
+			}
+			else
+			{
+				$search = urldecode($search);
+				$cond[0] .= ' and `describe` like ?s';
+				$cond[] = "%{$search}%";
+			}
+		}
+		$cond[0] .= ' order by time desc';
+		$table = $this->main->table($this->webapp->mysql->reports(...$cond)->paging($page), function($table, $rep)
+		{
+			$table->row();
+			$table->cell()->append('a', [$rep['promise'],
+				'href' => "?admin/resolve,hash:{$rep['hash']}",
+				'style' => "color:red"]);
+
+			$table->cell(date('Y-m-d\\TH:i:s', $rep['time']));
+			$table->cell($this->webapp->hexip($rep['ip']));
+			$table->cell()->append('a', [$rep['account'], 'href' => "?admin/accounts,search:{$rep['account']}"]);
+			$table->cell($rep['describe']);
+		});
+		$table->fieldset('promise', 'time', 'ip', 'account', 'describe');
+		$table->header('Reports, Found %d item', $table->count());
+		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->paging($this->webapp->at(['page' => '']));
+	}
+	//评论
+	function get_comments(string $search = NULL, int $page = 1)
+	{
+		$cond = ['WHERE site=?i', $this->webapp->site];
+		$cond[0] .= ' ORDER BY time DESC';
+		$table = $this->main->table($this->webapp->mysql->comments(...$cond)->paging($page, 12), function($table, $comm)
+		{
+			$table->row();
+			$table->cell()->append('a', ['❌', 'href' => "#"]);
+			$table->cell(date('Y-m-d\\Th:i:s', $comm['time']));
+			$table->cell()->append('a', [$comm['resource'], 'href' => "?admin/resources,search:{$comm['resource']}"]);
+			$table->cell()->append('a', [$comm['account'], 'href' => "?admin/accounts,search:{$comm['account']}"]);
+			$table->cell()->append('a', ['✅', 'href' => "#"]);
+			$table->row();
+			$table->cell(['colspan' => 5])->append('pre', [$comm['content'], 'style' => 'margin:0']);
+
+		});
+		$table->fieldset('❌', 'time', 'resource', 'account', '✅');
+		$table->header('Found %d item', $table->count());
+		$table->bar->select([
+			'' => '全部评论',
+			'等待审核',
+			'审核通过'
+		])->setattr(['onchange' => 'g({status:this.value?this.value:null})'])->selected($this->webapp->query['status'] ?? '');
+		$table->paging($this->webapp->at(['page' => '']));
+	}
+	//合集标签
+	function form_settag($ctx):webapp_form
+	{
+		$form = new webapp_form($ctx);
+		$form->fieldset('sort / name / seat');
+		$form->field('sort', 'number', ['value' => 0, 'min' => 0, 'required' => NULL]);
+		$form->field('name', 'text', ['required' => NULL]);
+		$form->field('seat', 'text');
+		$form->fieldset('vods');
+		$tags = $this->webapp->mysql->setvods('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash');
+		$form->field('vods', 'checkbox', ['options' => $tags], 
+			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'tagvod';
+		$form->fieldset();
+		$form->button('Submit', 'submit');
+		return $form;
+	}
+	function post_settag_create()
+	{
+		if ($this->form_settag($this->webapp)->fetch($data)
+			&& $this->webapp->mysql->settags->insert($data += [
+				'hash' => $this->webapp->randhash(TRUE),
+				'site' => $this->webapp->site,
+				'time' => $this->webapp->time])
+			&& $this->webapp->call('saveSettag', $this->webapp->settag_xml($data))) {
+			return $this->okay('?admin/settags');
+		}
+		$this->warn('合集标签创建失败！');
+	}
+	function get_settag_create()
+	{
+		$this->form_settag($this->main);
+	}
+	function get_settag_delete(string $hash)
+	{
+		if ($this->webapp->call('delSettag', $hash)
+			&& $this->webapp->mysql->settags->delete('WHERE site=?s AND hash=?s', $this->webapp->site, $hash)) {
+			return $this->okay('?admin/settags');
+		}
+		$this->warn('合集标签删除失败！');
+	}
+	function post_settag_update(string $hash)
+	{
+		if ($this->form_settag($this->webapp)->fetch($data)
+			&& $this->webapp->mysql->settags('WHERE site=?s AND hash=?s LIMIT 1', $this->webapp->site, $hash)->update($data)
+			&& ($newdata = $this->webapp->mysql->settags('WHERE site=?s AND hash=?s LIMIT 1', $this->webapp->site, $hash)->array())
+			&& $this->webapp->call('saveSettag', $this->webapp->settag_xml($newdata))) {
+			return $this->okay('?admin/settags');
+		}
+		$this->warn('合集标签更新失败！');
+	}
+	function get_settag_update(string $hash)
+	{
+		if ($data = $this->webapp->mysql->settags('WHERE hash=?s LIMIT 1', $hash)->array())
+		{
+			$this->form_settag($this->main)->echo($data);
+		}
+	}
+	function get_settags()
+	{
+		$count = 0;
+		$table = $this->main->table($this->webapp->mysql->settags(
+			'WHERE site=?i ORDER BY sort ASC', $this->webapp->site), function($table, $tag) use(&$count)
+		{
+			++$count;
+			$table->row();
+			$table->cell()->append('a', ['❌',
+				'href' => "?admin/settag-delete,hash:{$tag['hash']}",
+				'onclick' => 'return confirm(`Delete Settag ${this.dataset.name}`)',
+				'data-name' => $tag['name']]);
+			$table->cell()->append('a', [$tag['hash'], 'href' => "?admin/settag-update,hash:{$tag['hash']}"]);
+			$table->cell(date('Y-m-d H:i:s', $tag['time']));
+			$table->cell($tag['sort']);
+			$table->cell($tag['name']);
+			$table->cell($tag['seat']);
+			$table->cell($tag['vods'] ? floor(strlen($tag['vods']) / 12) : 0);
+		});
+		$table->fieldset('❌', 'hash', 'time', 'sort', 'name', 'seat', 'count');
+		$table->header('Found %d item', $count);
+		$table->button('Create Set Tag', ['onclick' => 'location.href="?admin/settag-create"']);
+	}
+	//合集资源
+	function form_setvod($ctx)
+	{
+		$form = new webapp_form($ctx);
+		$form->fieldset('name');
+		$form->field('name', 'text', ['required' => NULL]);
+
+		$form->fieldset('describe');
+		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述', 'required' => NULL]);
+
+		$form->fieldset('tags');
+		$tags = $this->webapp->mysql->tags('ORDER BY time ASC', $this->webapp->site)->column('name', 'hash');
+		$form->field('tags', 'checkbox', ['options' => $tags], 
+			fn($v,$i)=>$i?join($v):str_split($v,4))['class'] = 'restag';
+
+		$form->fieldset('resources');
+		$form->field('resources', 'text', [
+			'style' => 'width:60rem',
+			'placeholder' => '请输入展示的资源哈希用逗号间隔',
+			'pattern' => '[0-9A-Z]{12}(,[0-9A-Z]{12})*',
+			'required' => NULL
+		], fn($v,$i)=>$i?join(explode(',',$v)):join(',',str_split($v,12)));
+
+		$form->fieldset();
+		$form->button('Submit', 'submit');
+		return $form;
+	}
+	function post_setvod_create()
+	{
+		if ($this->form_setvod($this->webapp)->fetch($data)
+			&& $this->webapp->mysql->setvods->insert($data += [
+				'hash' => $this->webapp->randhash(),
+				'site' => $this->webapp->site,
+				'time' => $this->webapp->time,
+				'view' => 0])
+			&& $this->webapp->call('saveSetvod', $this->webapp->setvod_xml($data))) {
+			return $this->okay('?admin/setvods');
+		}
+		$this->warn('合集资源创建失败！');
+	}
+	function get_setvod_create()
+	{
+		$this->form_setvod($this->main);
+	}
+	function get_setvod_delete(string $hash)
+	{
+		if ($this->webapp->call('delSetvod', $hash)
+			&& $this->webapp->mysql->setvods->delete('WHERE site=?s AND hash=?s', $this->webapp->site, $hash)) {
+			return $this->okay('?admin/setvods');
+		}
+		$this->warn('合集资源删除失败！');
+	}
+	function post_setvod_update(string $hash)
+	{
+		if ($this->form_setvod($this->webapp)->fetch($data)
+			&& $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->update($data)
+			&& ($newdata = $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->array())
+			&& $this->webapp->call('saveSetvod', $this->webapp->setvod_xml($newdata))) {
+			return $this->okay('?admin/setvods');
+		}
+		$this->warn('合集资源更新失败！');
+	}
+	function get_setvod_update(string $hash)
+	{
+		if ($data = $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->array())
+		{
+			$this->form_setvod($this->main)->echo($data);
+		}
+	}
+	function get_setvods()
+	{
+		$count = 0;
+		$table = $this->main->table($this->webapp->mysql->setvods(
+			'WHERE site=?i ORDER BY view DESC', $this->webapp->site), function($table, $vod) use(&$count)
+		{
+			++$count;
+			$table->row();
+			$table->cell()->append('a', ['❌',
+				'href' => "?admin/setvod-delete,hash:{$vod['hash']}",
+				'onclick' => 'return confirm(`Delete Setvod ${this.dataset.name}`)',
+				'data-name' => $vod['name']]);
+			$table->cell()->append('a', [$vod['hash'], 'href' => "?admin/setvod-update,hash:{$vod['hash']}"]);
+			$table->cell(date('Y-m-d H:i:s', $vod['time']));
+			$table->cell($vod['view']);
+			$table->cell($vod['resources'] ? floor(strlen($vod['resources']) / 12) : 0);
+			$table->cell($vod['name']);
+			$table->cell($vod['describe']);
+		});
+		$table->fieldset('❌', 'hash', 'time', 'view', 'count', 'name', 'describe');
+		$table->header('Found %d item', $count);
+		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
+	}
+
+
+	//运行
+	function get_runstatus()
+	{
+		$table = $this->main->table();
+		$table->fieldset('Name', 'Value');
+		$table->header('Front app running status');
+		$table->xml->setattr(['style' => 'margin-right:1rem']);
+		$sync = $this->webapp->sync();
+		if (is_object($status = $sync->goto("{$sync->path}?pull/runstatus")->content()))
+		{
+			foreach ($status->getattr() as $name => $value)
+			{
+				$table->row();
+				$table->cell($name);
+				$table->cell($value);
+			}
+		}
+
+		if ($this->webapp->admin[2])
+		{
+			$table = $this->main->table();
+			$table->fieldset('Name', 'Value');
+			$table->header('Data synchronize running status');
+			$table->row();
+			$table->cell('os_http_connections');
+			$table->cell(intval(shell_exec('netstat -ano | find ":80" /c')));
+			
+			foreach ($this->webapp->mysql('SELECT * FROM performance_schema.GLOBAL_STATUS WHERE VARIABLE_NAME IN(?S)', [
+				//'Aborted_clients',
+				//'Aborted_connects',//接到MySQL服务器失败的次数
+				'Queries',//总查询
+				'Slow_queries',//慢查询
+				'Max_used_connections',//高峰连接数量
+				'Max_used_connections_time',//高峰连接时间
+				'Threads_cached',
+				'Threads_connected',//打开的连接数
+				'Threads_created',//创建过的线程数
+				'Threads_running',//激活的连接数
+				'Uptime',//已经运行的时长
+			]) as $stat) {
+				$table->row();
+				$table->cell('mysql_' . strtolower($stat['VARIABLE_NAME']));
+				$table->cell($stat['VARIABLE_VALUE']);
+			}
+		}
+	}
+	//================Extensions================
 	//Admin
 	function form_admin($ctx):webapp_form
 	{

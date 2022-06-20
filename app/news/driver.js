@@ -80,12 +80,14 @@ window.addEventListener('DOMContentLoaded', async function()
 {
 	if (top !== self)
 	{
-		self.apphead = {};
+		const origin = top.document.querySelector('iframe').dataset.entry, headers = {};
+		console.log(origin);
+		//self.apphead = {};
 		//console.log('app loaded');
 		self.onmessage = event => 
 		{
 			self.onmessage = null;
-			Object.assign(self.apphead, event.data);
+			Object.assign(headers, event.data);
 			const viewport = new IntersectionObserver(entries =>
 			{
 				entries.forEach(entry =>
@@ -94,7 +96,7 @@ window.addEventListener('DOMContentLoaded', async function()
 					{
 						if (entry.target === lazy)
 						{
-							loader(`http://192.168.0.119/${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers: self.apphead}, 'text/plain').then(data =>
+							loader(`${origin}${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers}, 'text/plain').then(data =>
 							{
 								if (data)
 								{
@@ -114,8 +116,7 @@ window.addEventListener('DOMContentLoaded', async function()
 						else
 						{
 							viewport.unobserve(entry.target);
-							loader('http://192.168.0.155/cover1.bin', null, 'application/octet-stream')
-							//loader(entry.target.dataset.src, {headers: apphead}, 'application/octet-stream')
+							loader(entry.target.dataset.src, null, 'application/octet-stream')
 								.then(blob => entry.target.src = URL.createObjectURL(blob));
 						}
 					}
@@ -144,12 +145,13 @@ window.addEventListener('DOMContentLoaded', async function()
 	entry = frame.dataset.entry,
 	headers = {'Content-Type': 'application/data-stream'},
 	initreq = Object.assign({'Account-Init': 0}, headers);
+	let transitionend;
 	function log(query)
 	{
 		if (typeof query !== 'string')
 		{
 			query = typeof query === 'number'
-				? (routers.length > 1 ? routers.splice(-1 + query)[0] : routers[0])
+				? (routers.length ? routers.splice(-1 + query)[0] : '')
 				: routers[routers.length];
 		}
 		if (routers.length === 0 || routers[routers.length - 1] !== query)
@@ -198,15 +200,27 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		frame.dataset.query = routers[routers.length - 1] ?? '';
 	}
+	frame.addEventListener('transitionend', event => {
+		console.log(event.target.style.opacity)
+
+	});
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
 	history.back();
 	history.forward();
 	window.addEventListener('popstate', () => history.go(1));
 	window.addEventListener('message', event =>
 	{
-		event.data ? loader(log(event.data.path), {headers,
-			method: event.data.body ? 'POST' : 'GET', body: event.data.body},
-			'text/plain').then(render) : frame.contentWindow.postMessage(headers);
+		if (event.data)
+		{
+			frame.style.opacity = 0;
+			loader(log(event.data.path), {headers, method: event.data.body
+				? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
+		}
+		else
+		{
+			frame.style.opacity = 1;
+			frame.contentWindow.postMessage(headers);
+		}
 	});
 	loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
 });
