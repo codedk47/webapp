@@ -566,7 +566,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form->fieldset('vods');
 		$tags = $this->webapp->mysql->setvods('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash');
 		$form->field('vods', 'checkbox', ['options' => $tags], 
-			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'tagvod';
+			fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'tagvod';
 		$form->fieldset();
 		$form->button('Submit', 'submit');
 		return $form;

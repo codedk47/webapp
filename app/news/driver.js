@@ -140,7 +140,7 @@ window.addEventListener('DOMContentLoaded', async function()
 		return top.postMessage(null);
 	}
 	const
-	routers = JSON.parse(localStorage.getItem('routers')) || [],
+	logs = JSON.parse(localStorage.getItem('logs')) || [],
 	frame = document.querySelector('iframe'),
 	entry = frame.dataset.entry,
 	headers = {'Content-Type': 'application/data-stream'},
@@ -151,17 +151,17 @@ window.addEventListener('DOMContentLoaded', async function()
 		if (typeof query !== 'string')
 		{
 			query = typeof query === 'number'
-				? (routers.length ? routers.splice(-1 + query)[0] : '')
-				: routers[routers.length];
+				? (logs.length ? logs.splice(-1 + query)[0] : '')
+				: logs[logs.length];
 		}
-		if (routers.length === 0 || routers[routers.length - 1] !== query)
+		if (logs.length === 0 || logs[logs.length - 1] !== query)
 		{
-			routers[routers.length] = query;
-			if (routers.length > 10)
+			logs[logs.length] = query;
+			if (logs.length > 10)
 			{
-				routers.shift();
+				logs.splice(1, 1);
 			}
-			localStorage.setItem('routers', JSON.stringify(routers));
+			localStorage.setItem('logs', JSON.stringify(logs));
 		}
 		return entry + query;
 	}
@@ -198,7 +198,7 @@ window.addEventListener('DOMContentLoaded', async function()
 
 	if (frame.dataset.query.length === 0)
 	{
-		frame.dataset.query = routers[routers.length - 1] ?? '';
+		frame.dataset.query = logs[logs.length - 1] ?? '';
 	}
 	frame.addEventListener('transitionend', event => {
 		console.log(event.target.style.opacity)
