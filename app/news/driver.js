@@ -65,6 +65,7 @@ function router(path, body)
 	top.postMessage({path, body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null});
 	return false;
 }
+
 // function screen()
 // {
 // 	html2canvas(document.querySelector('iframe').contentDocument.body).then(canvas => {
@@ -80,8 +81,26 @@ window.addEventListener('DOMContentLoaded', async function()
 {
 	if (top !== self)
 	{
-		const origin = top.document.querySelector('iframe').dataset.entry, headers = {};
-		console.log(origin);
+		const
+		//video = document.querySelector('video'),
+		origin = top.document.querySelector('iframe').dataset.entry,
+		headers = {};
+		// if (video)
+		// {
+		// 	loader(`${video.dataset.src}/cover`, null, 'application/octet-stream').then(blob => video.poster = URL.createObjectURL(blob));
+		// 	if (Hls.isSupported())
+		// 	{
+		// 		const hls = new Hls;
+		// 		hls.attachMedia(video);
+		// 		hls.loadSource(`${video.dataset.src}/play`);
+		// 		console.log(video.dataset.src);
+		// 	}
+		// 	else
+		// 	{
+
+		// 	}
+		// }
+		//console.log(origin);
 		//self.apphead = {};
 		//console.log('app loaded');
 		self.onmessage = event => 
@@ -200,10 +219,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		frame.dataset.query = logs[logs.length - 1] ?? '';
 	}
-	frame.addEventListener('transitionend', event => {
-		console.log(event.target.style.opacity)
-
-	});
+	//let load;
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
 	history.back();
 	history.forward();
@@ -212,15 +228,23 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		if (event.data)
 		{
-			frame.style.opacity = 0;
+			//frame.style.opacity = 0;
 			loader(log(event.data.path), {headers, method: event.data.body
 				? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
 		}
 		else
 		{
-			frame.style.opacity = 1;
+			//frame.style.opacity = 1;
 			frame.contentWindow.postMessage(headers);
 		}
 	});
+	// frame.addEventListener('transitionend', event =>
+	// {
+	// 	if (frame.style.opacity === 0)
+	// 	{
+	// 		load.then(render);
+	// 	}
+	// });
+	frame.style.opacity = 1;
 	loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
 });
