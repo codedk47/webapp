@@ -81,32 +81,47 @@ window.addEventListener('DOMContentLoaded', async function()
 {
 	if (top !== self)
 	{
+		self.apphead = {};
 		const
-		//video = document.querySelector('video'),
 		origin = top.document.querySelector('iframe').dataset.entry,
-		headers = {};
-		// if (video)
-		// {
-		// 	loader(`${video.dataset.src}/cover`, null, 'application/octet-stream').then(blob => video.poster = URL.createObjectURL(blob));
-		// 	if (Hls.isSupported())
-		// 	{
-		// 		const hls = new Hls;
-		// 		hls.attachMedia(video);
-		// 		hls.loadSource(`${video.dataset.src}/play`);
-		// 		console.log(video.dataset.src);
-		// 	}
-		// 	else
-		// 	{
-
-		// 	}
-		// }
+		video = document.querySelector('video');
+		if (self.Hls && video)
+		{
+			//video.disablePictureInPicture = true;
+			loader(`${video.dataset.src}/cover`, null, 'application/octet-stream').then(blob => video.poster = URL.createObjectURL(blob));
+			if (Hls.isSupported())
+			{
+				const hls = new Hls;
+				hls.attachMedia(video);
+				hls.loadSource(`${video.dataset.src}/play`);
+				console.log(video.dataset.src);
+			}
+			else
+			{
+				const hls = document.createElement('source');
+				hls.type = 'application/x-mpegURL';
+				hls.src = `${video.dataset.src}/play.m3u8`;
+				video.appendChild(hls);
+			}
+			window.addEventListener("orientationchange", () =>
+			{
+				if (screen.orientation.angle)
+				{
+					//竖屏
+				}
+				else
+				{
+					//横屏
+				}
+			});
+		}
 		//console.log(origin);
 		//self.apphead = {};
 		//console.log('app loaded');
 		self.onmessage = event => 
 		{
 			self.onmessage = null;
-			Object.assign(headers, event.data);
+			Object.assign(self.apphead, event.data);
 			const viewport = new IntersectionObserver(entries =>
 			{
 				entries.forEach(entry =>
@@ -115,7 +130,7 @@ window.addEventListener('DOMContentLoaded', async function()
 					{
 						if (entry.target === lazy)
 						{
-							loader(`${origin}${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers}, 'text/plain').then(data =>
+							loader(`${origin}${lazy.dataset.lazy},page:${++lazy.dataset.page}`, {headers : self.apphead}, 'text/plain').then(data =>
 							{
 								if (data)
 								{
@@ -164,7 +179,6 @@ window.addEventListener('DOMContentLoaded', async function()
 	entry = frame.dataset.entry,
 	headers = {'Content-Type': 'application/data-stream'},
 	initreq = Object.assign({'Account-Init': 0}, headers);
-	let transitionend;
 	function log(query)
 	{
 		if (typeof query !== 'string')
@@ -219,7 +233,14 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		frame.dataset.query = logs[logs.length - 1] ?? '';
 	}
-	//let load;
+	let load;
+	frame.addEventListener('transitionend', event =>
+	{
+		if (frame.style.opacity == 0)
+		{
+			load.then(render);
+		}
+	});
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
 	history.back();
 	history.forward();
@@ -228,23 +249,15 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		if (event.data)
 		{
-			//frame.style.opacity = 0;
-			loader(log(event.data.path), {headers, method: event.data.body
-				? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
+			frame.style.opacity = 0;
+			load = loader(log(event.data.path), {headers, method: event.data.body
+				? 'POST' : 'GET', body: event.data.body}, 'text/plain');
 		}
 		else
 		{
-			//frame.style.opacity = 1;
+			frame.style.opacity = 1;
 			frame.contentWindow.postMessage(headers);
 		}
 	});
-	// frame.addEventListener('transitionend', event =>
-	// {
-	// 	if (frame.style.opacity === 0)
-	// 	{
-	// 		load.then(render);
-	// 	}
-	// });
-	frame.style.opacity = 1;
 	loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
 });
