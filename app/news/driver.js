@@ -233,14 +233,14 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		frame.dataset.query = logs[logs.length - 1] ?? '';
 	}
-	let load;
-	frame.addEventListener('transitionend', event =>
-	{
-		if (frame.style.opacity == 0)
-		{
-			load.then(render);
-		}
-	});
+	// let load;
+	// frame.addEventListener('transitionend', event =>
+	// {
+	// 	if (frame.style.opacity == 0)
+	// 	{
+	// 		load.then(render);
+	// 	}
+	// });
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
 	history.back();
 	history.forward();
@@ -249,13 +249,13 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		if (event.data)
 		{
-			frame.style.opacity = 0;
-			load = loader(log(event.data.path), {headers, method: event.data.body
-				? 'POST' : 'GET', body: event.data.body}, 'text/plain');
+			//frame.style.opacity = 0;
+			loader(log(event.data.path), {headers, method: event.data.body
+				? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
 		}
 		else
 		{
-			frame.style.opacity = 1;
+			//frame.style.opacity = 1;
 			frame.contentWindow.postMessage(headers);
 		}
 	});
