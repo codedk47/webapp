@@ -94,7 +94,7 @@ window.addEventListener('DOMContentLoaded', async function()
 				const hls = new Hls;
 				hls.attachMedia(video);
 				hls.loadSource(`${video.dataset.src}/play`);
-				console.log(video.dataset.src);
+				//console.log(video.dataset.src);
 			}
 			else
 			{
@@ -122,6 +122,8 @@ window.addEventListener('DOMContentLoaded', async function()
 		{
 			self.onmessage = null;
 			Object.assign(self.apphead, event.data);
+			self.init && self.init();
+			self.init = null;
 			const viewport = new IntersectionObserver(entries =>
 			{
 				entries.forEach(entry =>

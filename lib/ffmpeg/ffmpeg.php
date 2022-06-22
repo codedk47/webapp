@@ -244,7 +244,7 @@ class ffmpeg
 			&& file_put_contents($keycode = "{$dirname}/keycode", random_bytes(16))
 			&& file_put_contents($keyinfo = "{$dirname}/keyinfo", join("\n", ['keycode', $keycode, bin2hex(random_bytes(16))]))
 			&& is_string($option = $this->v_quality(in_array($quality, $qualityable = $this->v_qualityable(), TRUE) ? $quality : end($qualityable)))
-			&& $this($option, "-hls_key_info_file \"{$keyinfo}\"", "-hls_segment_filename \"{$dirname}/%04d.ts\" \"{$dirname}/play.m3u8\"") === 0
+			&& $this($option, "-hls_key_info_file \"{$keyinfo}\"", "-hls_segment_filename \"{$dirname}/dx%04d\" \"{$dirname}/play.m3u8\"") === 0
 			&& unlink($keyinfo);
 	}
 }
