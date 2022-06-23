@@ -283,10 +283,11 @@ class webapp_router_admin extends webapp_echo_html
 	function post_resource_update(string $hash)
 	{
 		if ($this->form_resource($this->webapp)->fetch($resource)
-			&& ($res = $this->webapp->resource_get($hash))
-			&& $res['sync'] === 'finished'
+			&& $this->webapp->mysql->resources('WHERE hash=?s AND sync="finished" LIMIT 1', $hash)->array()
 			&& $this->webapp->resource_update($hash, $resource)
-			&& $this->webapp->call('saveRes', $this->webapp->resource_xml($resource + $res))) {
+			&& ($resource = $this->webapp->mysql->resources('WHERE hash=?s LIMIT 1', $hash)->array())
+			&& $this->webapp->call('saveRes', $this->webapp->resource_xml($resource))) {
+			$sync = 'finished';
 			if ($piccover = $this->webapp->request_uploadedfile('piccover', 1)[0] ?? [])
 			{
 				//这里可能要加资源归属权后才能修改图片
@@ -298,10 +299,10 @@ class webapp_router_admin extends webapp_echo_html
 					'type' => 'application/octet-stream',
 					'data' => file_get_contents($piccover['file'])
 				])->content()) && isset($object->resource)) {
-				$res['sync'] = 'waiting';
+				$sync = 'waiting';
 				};
 			}
-			return $this->okay("?admin/resources,sync:{$res['sync']},search:{$hash}");
+			return $this->okay("?admin/resources,sync:{$sync},search:{$hash}");
 		}
 		$this->warn('资源更新失败，请确认资源同步状态完成！');
 	}
