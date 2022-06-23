@@ -28,6 +28,18 @@ class interfaces extends webapp
 			}
 		}
 		$sync = $this->sync();
+
+
+		$content = $sync->goto("{$sync->path}?sync/{$method}", [
+			'method' => 'POST',
+			'type' => 'application/json',
+			'data' => $params
+		])->content();
+
+		var_dump($content);
+		return false;
+
+
 		return is_string($content = $sync->goto("{$sync->path}?sync/{$method}", [
 			'method' => 'POST',
 			'type' => 'application/json',
