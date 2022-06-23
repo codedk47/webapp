@@ -26,9 +26,7 @@ class webapp_client implements Stringable, Countable
 	function __construct(public readonly string $socket, array $options = [])
 	{
 		$this->timeout = $options['timeout'] ?? 4;
-		$this->flags = STREAM_CLIENT_CONNECT | (array_key_exists('persistent', $options)
-			? ($options['persistent'] ? STREAM_CLIENT_PERSISTENT : 0)
-			: STREAM_CLIENT_PERSISTENT);
+		$this->flags = $options['flags'] ?? STREAM_CLIENT_CONNECT;
 		$this->buffer = fopen('php://memory', 'r+');
 		$this->reconnect();
 	}
