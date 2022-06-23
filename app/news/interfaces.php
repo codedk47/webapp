@@ -63,9 +63,11 @@ class interfaces extends webapp
 			$day = date('ym', $resource['time']);
 			if (is_dir($outdir = "{$this['app_resoutdir']}/{$day}/{$resource['hash']}"))
 			{
-				copy("{$outdir}/cover.jpg", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover.jpg")
-				&& copy("{$outdir}/cover", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover")
-				&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"');
+				echo "{$resource['hash']}: update -- ",
+					copy("{$outdir}/cover.jpg", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover.jpg")
+						&& copy("{$outdir}/cover", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover")
+						&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"') ? "OK" : "NO",
+				"\n";
 				continue;
 			}
 			$cut = $ffmpeg("{$this['app_respredir']}/{$resource['hash']}");
