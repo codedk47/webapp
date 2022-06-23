@@ -2,7 +2,7 @@ async function loader(source, options, type)
 {
 	//`${source}?${Math.random()}`.replace('https://keniubila.com/','https://test.ymmbc3.com/')
 	const
-	response = await fetch(`${source}?${Math.random()}`, options || null),
+	response = await fetch(source, options || null),
 	reader = response.body.getReader(),
 	key = new Uint8Array(8),
 	buffer = [];

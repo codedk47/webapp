@@ -61,9 +61,16 @@ class interfaces extends webapp
 		foreach ($this->mysql->resources('WHERE sync="waiting" ORDER BY time ASC') as $resource)
 		{
 			$day = date('ym', $resource['time']);
+			if (is_dir($outdir = "{$this['app_resoutdir']}/{$day}/{$resource['hash']}"))
+			{
+				copy("{$outdir}/cover.jpg", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover.jpg")
+				&& copy("{$outdir}/cover", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover")
+				&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"');
+				continue;
+			}
 			$cut = $ffmpeg("{$this['app_respredir']}/{$resource['hash']}");
 			echo "{$resource['hash']}: {$day}\n";
-			if ($cut->m3u8($outdir = "{$this['app_resoutdir']}/{$day}/{$resource['hash']}"))
+			if ($cut->m3u8($outdir))
 			{
 				$this->maskfile("{$outdir}/play.m3u8", "{$outdir}/play");
 				if (is_file("{$this['app_respredir']}/{$resource['hash']}.cover")
@@ -133,6 +140,17 @@ class interfaces extends webapp
 			break;
 		}
 	}
+	function packer(string $data):string
+	{
+		$bin = random_bytes(8);
+		$key = array_map(ord(...), str_split($bin));
+		$length = strlen($data);
+		for ($i = 0; $i < $length; ++$i)
+		{
+			$data[$i] = chr(ord($data[$i]) ^ $key[$i % 8]);
+		}
+		return $bin . $data;
+	}
 	function maskfile(string $src, string $dst):bool
 	{
 		$bin = random_bytes(8);
@@ -177,12 +195,6 @@ class interfaces extends webapp
 	}
 
 	//-----------------------------------------------------------------------------------------------------
-
-
-	function get_test()
-	{
-		print_r( $this->mysql->resources->array() );
-	}
 	function get_home()
 	{
 		$this->app->xml->comment(file_get_contents(__DIR__.'/interfaces.txt'));
@@ -474,6 +486,21 @@ class interfaces extends webapp
 		]);
 		$node->cdata($data['name']);
 		return $node;
+	}
+	function get_updatecover(string $hash)
+	{
+		if (($resource = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s', $this->site, $hash)->array())
+			&& $resource['sync'] === 'finished') {
+			$ym = date('ym', $resource['time']);
+			if (is_dir($dir = "{$this['app_resoutdir']}/{$ym}/{$resource['hash']}") || mkdir($dir, recursive: TRUE))
+			{
+				if (file_put_contents("{$dir}/cover.jpg", $this->request_content()) !== FALSE
+					&& $this->maskfile("{$dir}/cover.jpg", "{$dir}/cover")
+					&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $hash)->update('sync="waiting"')) {
+					$this->resource_xml($resource);
+				}
+			}
+		}
 	}
 	function get_resources(string $type = NULL, int $page = 1, int $size = 1000)
 	{

@@ -265,7 +265,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$form = new webapp_form($ctx);
 		$form->fieldset('封面图片');
-		$form->field('cover', 'file');
+		$form->field('piccover', 'file');
 		$form->field('type', 'select', ['options' => $this->webapp['app_restype']]);
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
@@ -283,11 +283,26 @@ class webapp_router_admin extends webapp_echo_html
 	function post_resource_update(string $hash)
 	{
 		if ($this->form_resource($this->webapp)->fetch($resource)
+			&& ($res = $this->webapp->resource_get($hash))
+			&& $res['sync'] === 'finished'
 			&& $this->webapp->resource_update($hash, $resource)
-			&& $this->webapp->call('saveRes', $this->webapp->resource_xml($this->webapp->resource_get($hash)))) {
-			return $this->okay("?admin/resources,search:{$hash}");
+			&& $this->webapp->call('saveRes', $this->webapp->resource_xml($res))) {
+			if ($piccover = $this->webapp->request_uploadedfile('piccover', 1)[0] ?? [])
+			{
+				if (is_object($object = webapp_client_http::open("{$this->webapp['app_resdomain']}/?updatecover/{$hash}", [
+					'autoretry' => 2,
+					'headers' => [
+						'Authorization' => 'Bearer ' . $this->webapp->signature($this->webapp['admin_username'], $this->webapp['admin_password'])
+					],
+					'type' => 'application/octet-stream',
+					'data' => file_get_contents($piccover['file'])
+				])->content()) && isset($object->resource)) {
+					$res['sync'] = 'waiting';
+				};
+			}
+			return $this->okay("?admin/resources,sync:{$res['sync']},search:{$hash}");
 		}
-		$this->warn('资源更新失败！');
+		$this->warn('资源更新失败，请确认资源同步状态完成！');
 	}
 	function get_resource_update(string $hash)
 	{
@@ -304,7 +319,8 @@ class webapp_router_admin extends webapp_echo_html
 					'controls' => NULL
 				]);
 			}
-			$this->form_resource($this->main)->echo($resource);
+			$form = $this->form_resource($this->main);
+			$form->echo($resource);
 		}
 	}
 	function post_resource_upload()
