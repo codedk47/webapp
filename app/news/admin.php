@@ -289,6 +289,7 @@ class webapp_router_admin extends webapp_echo_html
 			&& $this->webapp->call('saveRes', $this->webapp->resource_xml($res))) {
 			if ($piccover = $this->webapp->request_uploadedfile('piccover', 1)[0] ?? [])
 			{
+				//这里可能要加资源归属权后才能修改图片
 				if (is_object($object = webapp_client_http::open("{$this->webapp['app_resdomain']}/?updatecover/{$hash}", [
 					'autoretry' => 2,
 					'headers' => [
@@ -297,7 +298,7 @@ class webapp_router_admin extends webapp_echo_html
 					'type' => 'application/octet-stream',
 					'data' => file_get_contents($piccover['file'])
 				])->content()) && isset($object->resource)) {
-					$res['sync'] = 'waiting';
+				$res['sync'] = 'waiting';
 				};
 			}
 			return $this->okay("?admin/resources,sync:{$res['sync']},search:{$hash}");

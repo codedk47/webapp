@@ -66,8 +66,7 @@ class interfaces extends webapp
 				echo "{$resource['hash']}: update -- ",
 					copy("{$outdir}/cover.jpg", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover.jpg")
 						&& copy("{$outdir}/cover", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover")
-						&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"')
-						&& $this->call('saveRes', $this->resource_xml($this->resource_get($resource))) ? "OK" : "NO",
+						&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"') ? "OK" : "NO",
 				"\n";
 				continue;
 			}
@@ -83,8 +82,7 @@ class interfaces extends webapp
 				}
 				echo exec("xcopy \"{$outdir}/*\" \"{$this['app_resdstdir']}/{$day}/{$resource['hash']}/\" /E /C /I /F /Y", $output, $code), ":{$code}\n";
 				if ($code === 0
-					&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"')
-					&& $this->call('saveRes', $this->resource_xml($this->resource_get($resource)))) {
+					&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"'))
 					unlink("{$this['app_respredir']}/{$resource['hash']}");
 					is_file("{$this['app_respredir']}/{$resource['hash']}.cover")
 						&& unlink("{$this['app_respredir']}/{$resource['hash']}.cover");
