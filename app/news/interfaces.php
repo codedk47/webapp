@@ -32,7 +32,7 @@ class interfaces extends webapp
 			'method' => 'POST',
 			'type' => 'application/json',
 			'data' => $params
-		])->content()) && preg_match('/^(SUCCESS|OK)/i', $content) ? TRUE : $content;
+		])->content()) && preg_match('/^(SUCCESS|OK)/i', $content) ? TRUE : $content === '';
 	}
 	function pull(string $router):iterable
 	{
