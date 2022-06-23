@@ -286,7 +286,7 @@ class webapp_router_admin extends webapp_echo_html
 			&& ($res = $this->webapp->resource_get($hash))
 			&& $res['sync'] === 'finished'
 			&& $this->webapp->resource_update($hash, $resource)
-			&& $this->webapp->call('saveRes', $this->webapp->resource_xml($res))) {
+			&& $this->webapp->call('saveRes', $this->webapp->resource_xml($resource + $res))) {
 			if ($piccover = $this->webapp->request_uploadedfile('piccover', 1)[0] ?? [])
 			{
 				//这里可能要加资源归属权后才能修改图片
