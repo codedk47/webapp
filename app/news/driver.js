@@ -1,7 +1,8 @@
 async function loader(source, options, type)
 {
+	//`${source}?${Math.random()}`.replace('https://keniubila.com/','https://test.ymmbc3.com/')
 	const
-	response = await fetch(source, options || null),
+	response = await fetch(`${source}?${Math.random()}`, options || null),
 	reader = response.body.getReader(),
 	key = new Uint8Array(8),
 	buffer = [];
@@ -221,6 +222,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		await loader(`${entry}?api/register`, {headers}, 'application/json').then(result =>
 		{
+			console.log(result)
 			localStorage.setItem('account', result.data.signature);
 			initreq['Account-Init'] = 1;
 		});
@@ -233,7 +235,7 @@ window.addEventListener('DOMContentLoaded', async function()
 
 	if (frame.dataset.query.length === 0)
 	{
-		frame.dataset.query = logs[logs.length - 1] ?? '';
+		frame.dataset.query = logs[logs.length - 1] || '';
 	}
 	// let load;
 	// frame.addEventListener('transitionend', event =>

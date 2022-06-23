@@ -315,9 +315,10 @@ class interfaces extends webapp
 		$form->fieldset('资源文件 / 封面图片');
 		$form->field('resource', 'file', ['accept' => 'video/mp4', 'required' => NULL]);
 		$form->field('piccover', 'file', ['accept' => 'image/*']);
+		$form->field('type', 'select', ['options' => $this->webapp['app_restype']]);
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
-		$form->field('actors', 'text', ['value' => $this->admin[0], 'required' => NULL]);
+		$form->field('actors', 'text', ['value' => $form->echo ? $this->admin[0] : NULL, 'required' => NULL]);
 		$form->fieldset('tags');
 		$tags = $this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->column('name', 'hash');
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
@@ -334,6 +335,7 @@ class interfaces extends webapp
 			'hash' => $data['hash'],
 			'time' => $this->time,
 			'duration' => $data['duration'],
+			'type' => $data['type'],
 			'sync' => 'waiting',
 			'site' => $this->site,
 			'data' => json_encode([$this->site => [
@@ -619,15 +621,16 @@ class interfaces extends webapp
 	}
 	function get_signature(string $uid)
 	{
-		if ($account = $this->mysql->accounts('WHERE uid=?s AND site=?i', $uid, $this->site)->array())
+		if ($account = $this->mysql->accounts('WHERE site=?i AND uid=?s ', $this->site, $uid)->array())
 		{
 			$this->account_xml($account);
 		}
 	}
 	function get_account(string $signature)
 	{
-		if ($this->account($signature, $account))
-		{
+		if ($this->account($signature, $account)
+			&& $this->mysql->accounts('WHERE site=?i AND uid=?s', $this->site, $account['uid'])
+				->update(['lasttime' => $this->time, 'lastip' => $this->clientiphex])) {
 			$this->account_xml($account, $signature);
 		}
 	}

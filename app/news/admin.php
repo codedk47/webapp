@@ -24,7 +24,7 @@ class webapp_router_admin extends webapp_echo_html
 			return $webapp->response_status(401);
 		}
 		$this->xml->head->append('link', ['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/news/admin.css']);
-		$this->xml->head->append('script', ['src' => '/webapp/app/news/admin.js']);
+		$this->xml->head->append('script', ['src' => '/webapp/app/news/admin.min.js']);
 		$nav = $this->nav([
 			['Home', '?admin'],
 			['Tags', '?admin/tags'],
@@ -67,7 +67,9 @@ class webapp_router_admin extends webapp_echo_html
 		return $this->webapp->authorize($signature, function(string $uid, string $pwd, int $st):array
 		{
 			if ($st > $this->webapp->time(-$this->webapp['admin_expire'])
-				&& ($admin = $this->webapp->mysql->admin('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->array())) {
+				&& ($admin = $this->webapp->mysql->admin('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->array())
+				&& $this->webapp->mysql->admin('WHERE uid=?s LIMIT 1', $uid)
+					->update(['lasttime' => $this->webapp->time, 'lastip' => $this->webapp->clientiphex])) {
 					$this->webapp->site = $admin['site'];
 					$this->webapp->admin = [$admin['uid'], $admin['pwd'], FALSE];
 					return $admin;
@@ -264,12 +266,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form = new webapp_form($ctx);
 		$form->fieldset('封面图片');
 		$form->field('cover', 'file');
-		$form->field('type', 'select', ['options' => [
-			'long' => '长视频',
-			'short' => '短视频',
-			'live' => '假直播',
-			'movie' => '电影'
-		]]);
+		$form->field('type', 'select', ['options' => $this->webapp['app_restype']]);
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
@@ -298,7 +295,7 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			if ($resource['sync'] === 'finished')
 			{
-				$this->xml->head->append('script', ['src' => '/webapp/app/news/hls.js']);
+				$this->xml->head->append('script', ['src' => '/webapp/app/news/hls.min.js']);
 				$this->main->append('video', ['Sorry, your browser doesn\'t support embedded videos.',
 					'data-src' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}", date('ym', $resource['time'])),
 					'width' => 854,
