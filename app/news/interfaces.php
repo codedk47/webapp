@@ -82,7 +82,7 @@ class interfaces extends webapp
 				}
 				echo exec("xcopy \"{$outdir}/*\" \"{$this['app_resdstdir']}/{$day}/{$resource['hash']}/\" /E /C /I /F /Y", $output, $code), ":{$code}\n";
 				if ($code === 0
-					&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"'))
+					&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"')) {
 					unlink("{$this['app_respredir']}/{$resource['hash']}");
 					is_file("{$this['app_respredir']}/{$resource['hash']}.cover")
 						&& unlink("{$this['app_respredir']}/{$resource['hash']}.cover");
