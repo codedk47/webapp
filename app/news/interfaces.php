@@ -13,7 +13,7 @@ class interfaces extends webapp
 	}
 	function sync():webapp_client_http
 	{
-		return $this->sync[$this->site] ??= (new webapp_client_http("http://{$this['app_site'][$this->site]}/", ['autoretry' => 2]))->headers([
+		return $this->sync[$this->site] ??= (new webapp_client_http("http://{$this['app_site'][$this->site]}/index.php", ['autoretry' => 2]))->headers([
 			'Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password']),
 			'X-Client-IP' => $this->clientip
 		]);
