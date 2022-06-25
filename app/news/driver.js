@@ -84,7 +84,7 @@ window.addEventListener('DOMContentLoaded', async function()
 		self.apphead = {};
 		self.entry = top.document.querySelector('iframe').dataset.entry;
 		const video = document.querySelector('video');
-		if (self.Hls && video)
+		if (video && video.dataset.src && self.Hls)
 		{
 			video.autoplay = true;
 			//video.playsinline = true;
