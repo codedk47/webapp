@@ -83,6 +83,14 @@ class interfaces extends webapp
 				echo exec("xcopy \"{$outdir}/*\" \"{$this['app_resdstdir']}/{$day}/{$resource['hash']}/\" /E /C /I /F /Y", $output, $code), ":{$code}\n";
 				if ($code === 0
 					&& $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])->update('sync="finished"')) {
+					foreach (explode(',', $resource['site']) as $site)
+					{
+						if (array_key_exists($site, $this['app_site']))
+						{
+							$this->site = $site;
+							$this->call('saveRes', $this->resource_xml($this->resource_get($resource)));
+						}
+					}
 					unlink("{$this['app_respredir']}/{$resource['hash']}");
 					is_file("{$this['app_respredir']}/{$resource['hash']}.cover")
 						&& unlink("{$this['app_respredir']}/{$resource['hash']}.cover");

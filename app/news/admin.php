@@ -385,7 +385,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell()->append('div', [
 				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
 			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
-		}, ['long' => '长视频', 'short' => '短视频', 'live' => '直播', 'movie' => '电影']);
+		}, ['long' => '长视频', 'short' => '短视频', 'live' => '假直播', 'movie' => '电影']);
 		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name');
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resources', ['onclick' => 'location.href="?admin/resource-upload"']);

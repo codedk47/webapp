@@ -66,7 +66,6 @@ function router(path, body)
 	top.postMessage({path, body: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null});
 	return false;
 }
-
 // function screen()
 // {
 // 	html2canvas(document.querySelector('iframe').contentDocument.body).then(canvas => {
@@ -86,11 +85,45 @@ window.addEventListener('DOMContentLoaded', async function()
 		const
 		origin = top.document.querySelector('iframe').dataset.entry,
 		video = document.querySelector('video');
+		if (self.aaa)
+		{
+			console.log(self.aaa);
+		}
+		else{
+			console.log('no-aaa');
+			self.aaa = 'aaa';
+		}
 		if (self.Hls && video)
 		{
-			//video.disablePictureInPicture = true;
+			// video.playsinline = true;
+			video.muted = true;
+			video.autoplay = true;
+			
+			// video.disablePictureInPicture = true;
 			loader(`${video.dataset.src}/cover`, null, 'application/octet-stream').then(blob => video.poster = URL.createObjectURL(blob));
-			if (Hls.isSupported())
+
+			video.addEventListener('click', event =>
+			{
+				video.muted = false;
+				video.play();
+				console.log(video.muted )
+			});
+			video.addEventListener('canplaythrough', event =>
+			{
+				if (top.fetchevent)
+				{
+					video.dispatchEvent(top.fetchevent)
+
+					console.log(top.fetchevent);
+				}
+				//console.log(top.fetchevent)
+				//console.log(video.dispatchEvent(top.fetchevent));
+				//video.dispatchEvent(top.fetchevent);
+				//video.removeAttribute('muted');
+			});
+			
+
+			if (self.MediaSource || Hls.isSupported())
 			{
 				const hls = new Hls;
 				hls.attachMedia(video);
@@ -102,19 +135,20 @@ window.addEventListener('DOMContentLoaded', async function()
 				const hls = document.createElement('source');
 				hls.type = 'application/x-mpegURL';
 				hls.src = `${video.dataset.src}/play.m3u8`;
+				video.muted = true;
 				video.appendChild(hls);
 			}
-			window.addEventListener("orientationchange", () =>
-			{
-				if (screen.orientation.angle)
-				{
-					//竖屏
-				}
-				else
-				{
-					//横屏
-				}
-			});
+			// window.addEventListener("orientationchange", () =>
+			// {
+			// 	if (screen.orientation.angle)
+			// 	{
+			// 		//竖屏
+			// 	}
+			// 	else
+			// 	{
+			// 		//横屏
+			// 	}
+			// });
 		}
 		//console.log(origin);
 		//self.apphead = {};
@@ -169,6 +203,7 @@ window.addEventListener('DOMContentLoaded', async function()
 					{
 						event.preventDefault();
 						router(target.getAttribute('href'));
+						top.fetchevent = event;
 						break;
 					}
 				}
@@ -201,11 +236,39 @@ window.addEventListener('DOMContentLoaded', async function()
 		}
 		return entry + query;
 	}
+	// frame.addEventListener('transitionend', event =>
+	// {
+	// 	alert(1)
+	// });
 	function render(data)
 	{
-		frame.contentDocument.removeChild(frame.contentDocument.documentElement);
-		frame.contentDocument.write(data);
-		frame.contentDocument.close();
+		// frame.onload = () =>
+		// {
+		// 	frame.onload = null;
+		// 	frame.contentDocument.open();
+		// 	frame.contentDocument.write(data);
+		// 	frame.contentDocument.close();
+		// }
+		// frame.style.visibility = 'hidden';
+		// frame.src = 'about:blank';
+
+
+
+		frame.style.opacity = 0;
+		frame.ontransitionend = () =>
+		{
+			frame.ontransitionend = null;
+			frame.onload = () =>
+			{
+				frame.onload = null;
+				//frame.contentDocument.removeChild(frame.contentDocument.documentElement);
+				frame.contentDocument.open();
+				frame.contentDocument.write(data);
+				frame.contentDocument.close();
+			}
+			frame.src = 'about:blank';
+			//frame.contentWindow.location.reload();//iOS Safari 闪屏
+		};
 	}
 	if (location.hash.substring(1))
 	{
@@ -232,19 +295,10 @@ window.addEventListener('DOMContentLoaded', async function()
 		return console.log('Unauthorized');
 	}
 	initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
-
 	if (frame.dataset.query.length === 0)
 	{
 		frame.dataset.query = logs[logs.length - 1] || '';
 	}
-	// let load;
-	// frame.addEventListener('transitionend', event =>
-	// {
-	// 	if (frame.style.opacity == 0)
-	// 	{
-	// 		load.then(render);
-	// 	}
-	// });
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
 	history.back();
 	history.forward();
@@ -253,13 +307,14 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		if (event.data)
 		{
-			//frame.style.opacity = 0;
+			
 			loader(log(event.data.path), {headers, method: event.data.body
 				? 'POST' : 'GET', body: event.data.body}, 'text/plain').then(render);
 		}
 		else
 		{
-			//frame.style.opacity = 1;
+			frame.style.opacity = 1;
+			//frame.style.visibility = 'visible';
 			frame.contentWindow.postMessage(headers);
 		}
 	});
