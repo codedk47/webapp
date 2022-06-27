@@ -385,7 +385,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell()->append('div', [
 				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
 			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
-		}, ['long' => '长视频', 'short' => '短视频', 'live' => '假直播', 'movie' => '电影']);
+		}, $this->webapp['app_restype']);
 		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name');
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resources', ['onclick' => 'location.href="?admin/resource-upload"']);
@@ -646,7 +646,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell($tag['seat']);
 			$table->cell($tag['vods'] ? floor(strlen($tag['vods']) / 12) : 0);
 		});
-		$table->fieldset('❌', 'hash', 'time', 'sort', 'name', 'seat', 'count');
+		$table->fieldset('❌', 'hash', 'time', 'sort', 'name', 'seat', '固定VOD数');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Tag', ['onclick' => 'location.href="?admin/settag-create"']);
 	}
@@ -654,8 +654,10 @@ class webapp_router_admin extends webapp_echo_html
 	function form_setvod($ctx)
 	{
 		$form = new webapp_form($ctx);
-		$form->fieldset('name');
+		$form->fieldset('name / sort / type');
 		$form->field('name', 'text', ['required' => NULL]);
+		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
+		$form->field('type', 'select', ['options' => $this->webapp['app_restype'], 'required' => NULL]);
 
 		$form->fieldset('describe');
 		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述', 'required' => NULL]);
@@ -723,7 +725,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$count = 0;
 		$table = $this->main->table($this->webapp->mysql->setvods(
-			'WHERE site=?i ORDER BY view DESC', $this->webapp->site), function($table, $vod) use(&$count)
+			'WHERE site=?i ORDER BY view DESC', $this->webapp->site), function($table, $vod, $type) use(&$count)
 		{
 			++$count;
 			$table->row();
@@ -734,11 +736,13 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell()->append('a', [$vod['hash'], 'href' => "?admin/setvod-update,hash:{$vod['hash']}"]);
 			$table->cell(date('Y-m-d H:i:s', $vod['time']));
 			$table->cell($vod['view']);
+			$table->cell($vod['sort']);
+			$table->cell($type[$vod['type']]);
 			$table->cell($vod['resources'] ? floor(strlen($vod['resources']) / 12) : 0);
 			$table->cell($vod['name']);
 			$table->cell($vod['describe']);
-		});
-		$table->fieldset('❌', 'hash', 'time', 'view', 'count', 'name', 'describe');
+		}, $this->webapp['app_restype']);
+		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', '固定RES数', 'name', 'describe');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
 	}

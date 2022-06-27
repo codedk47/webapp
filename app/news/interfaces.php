@@ -367,7 +367,8 @@ class interfaces extends webapp
 				'name' => $data['name']
 			]], JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE),
 			'tags' => $data['tags'],
-			'actors' => $data['actors']
+			'actors' => $data['actors'],
+			'name' => $data['name']
 		]);
 	}
 	function resource_delete(string $hash):bool
