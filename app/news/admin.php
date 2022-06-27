@@ -801,10 +801,10 @@ class webapp_router_admin extends webapp_echo_html
 	function form_admin($ctx):webapp_form
 	{
 		$form = new webapp_form($ctx);
-		$form->fieldset('uid:pwd');
-
+		$form->fieldset('uid / pwd / name');
 		$form->field('uid', 'number', ['min' => 1000, 'required' => NULL]);
 		$form->field('pwd', 'text', ['required' => NULL]);
+		$form->field('name', 'text', ['required' => NULL]);
 		if ($form->echo)
 		{
 			$form->echo([
@@ -812,7 +812,6 @@ class webapp_router_admin extends webapp_echo_html
 				'pwd' => random_int(100000, 999999)
 			]);
 		}
-
 		$form->fieldset();
 		$form->button('Create Administrator', 'submit');
 		return $form;
@@ -850,11 +849,12 @@ class webapp_router_admin extends webapp_echo_html
 				'onclick' => 'return confirm(`Delete Admin ${this.dataset.uid}`)',
 				'data-uid' => $admin['uid']]);
 			$table->cell("{$admin['uid']}:{$admin['pwd']}");
+			$table->cell($admin['name']);
 			$table->cell(date('Y-m-d\\TH:i:s', $admin['time']));
 			$table->cell(date('Y-m-d\\TH:i:s', $admin['lasttime']));
 			$table->cell($this->webapp->hexip($admin['lastip']));
 		});
-		$table->fieldset('❌', 'uid:pwd', 'time', 'lasttime', 'lastip' );
+		$table->fieldset('❌', 'uid:pwd', 'name', 'time', 'lasttime', 'lastip' );
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Admin', 'onclick' => 'location.href="?admin/admin-create"']);
 		$table->paging($this->webapp->at(['page' => '']));
