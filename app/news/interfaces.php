@@ -387,8 +387,8 @@ class interfaces extends webapp
 			$this->site, $data['require'] ?? 0, $this->site, $data['name'] ?? ''];
 		if ($this->admin[2])
 		{
-			$update[0] .= ',type=?s,tags=?s,actors=?s';
-			array_push($update, $data['type'], $data['tags'], $data['actors']);
+			$update[0] .= ',type=?s,tags=?s,actors=?s,name=?s';
+			array_push($update, $data['type'], $data['tags'], $data['actors'], $data['name']);
 		}
 		return $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s LIMIT 1', $this->site, $hash)->update(...$update);
 	}
@@ -402,12 +402,14 @@ class interfaces extends webapp
 				return [];
 			}
 		}
+		$name = $resource['name'];
+		unset($resource['name']);
 		$resource += json_decode($resource['data'], TRUE)[$this->site] ?? [
 			'require' => 0,
 			'favorite' => 0,
 			'view' => 0,
 			'like' => 0,
-			'name' => ''];
+			'name' => $name];
 		return $resource;
 	}
 
@@ -418,7 +420,7 @@ class interfaces extends webapp
 		$sites[] = $site;
 		return $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource['hash'])
 			->update('site=?s,data=JSON_SET(data,\'$."?i"\',JSON_OBJECT("require",?i,"favorite",0,"view",0,"like",0,"name",?s))',
-			join(',', array_unique($sites)), $site, intval($value['require'] ?? 0), $value['name'] ?? '');
+			join(',', array_unique($sites)), $site, intval($value['require'] ?? 0), $value['name'] ?? $resource['name']);
 	}
 	function options_resourceupload()
 	{
@@ -575,6 +577,8 @@ class interfaces extends webapp
 			'hash' => $data['hash'],
 			'time' => $data['time'],
 			'view' => $data['view'],
+			'sort' => $data['sort'],
+			'type' => $data['type'],
 			'name' => $data['name'],
 			'tags' => $data['tags']
 		]);
