@@ -1,23 +1,32 @@
-customElements.define('webapp-video', class extends HTMLVideoElement
+customElements.define('webapp-video', class extends HTMLElement
 {
+	#video;
 	#model;
 	#open;
 	#close;
+	#require;
 	#playurl;
-	#playtime;
+	#playtime = 0;
 	constructor()
 	{
 		super();
-		this.playsinline = true;
-		this.disablepictureinpicture = true;
+		this.#video = document.createElement('video');
+		this.#video.setAttribute('width', '100%');
+		this.#video.setAttribute('autoplay', true);
+		this.#video.setAttribute('playsinline', true);
+		this.#video.setAttribute('disablepictureinpicture', true);
+		this.#video.controls = true;
+		
+		
 		if (window.MediaSource && window.Hls)
 		{
+			//this.#require = this.dataset.require;
 			
 			this.#model = window.hls instanceof window.Hls ? window.hls : window.hls = new window.Hls;
 			this.#open = (url) =>
 			{
 				this.#model.loadSource(url);
-				this.#model.attachMedia(this);
+				this.#model.attachMedia(this.#video);
 				// return new Promise((resolve, reject) =>
 				// {
 				// 	this.#model.attachMedia(this.#video);
@@ -27,23 +36,24 @@ customElements.define('webapp-video', class extends HTMLVideoElement
 			};
 			this.#close = () =>
 			{
-				this.#model.detachMedia(this);
+				this.#model.detachMedia(this.#video);
 			};
 		}
 		else
 		{
-			if (this.canPlayType('application/vnd.apple.mpegurl')
-				|| this.canPlayType('application/x-mpegURL')) {
-				this.#model = this;
+			if (this.#video.canPlayType('application/vnd.apple.mpegurl')
+				|| this.#video.canPlayType('application/x-mpegURL')) {
+				this.#model = this.#video;
 				this.#open = (url) =>
 				{
-					this.src = url;
+					
+					this.#video.src = url;
 				};
 				this.#close = () =>
 				{
-					this.pause();
+					this.#video.pause();
 					this.#open('');
-					this.load();
+					this.#video.load();
 				};
 			}
 			else
@@ -52,6 +62,7 @@ customElements.define('webapp-video', class extends HTMLVideoElement
 				this.#close = () => null;
 			}
 		}
+		
 	}
 	open(url)
 	{
@@ -72,15 +83,16 @@ customElements.define('webapp-video', class extends HTMLVideoElement
 
 
 		this.currentTime = this.#playtime;
-		this.play();
+		this.#video.play();
 	}
 	connectedCallback()
 	{
-		const open = this.getAttribute('open');
-		if (open)
+		this.appendChild(this.#video);
+		if (this.dataset.load)
 		{
-			loader(`${open}/cover`, null, 'application/octet-stream').then(blob => this.poster = URL.createObjectURL(blob));
-			this.#playurl = `${open}/${this.#model instanceof HTMLVideoElement ? 'play.m3u8' : 'play'}`;
+		
+			loader(`${this.dataset.load}/cover`, null, 'application/octet-stream').then(blob => this.#video.poster = URL.createObjectURL(blob));
+			this.#playurl = `${this.dataset.load}/${this.#model instanceof HTMLVideoElement ? 'play.m3u8' : 'play'}`;
 			if (this.preload !== 'none')
 			{
 				this.open(this.#playurl);
@@ -91,237 +103,153 @@ customElements.define('webapp-video', class extends HTMLVideoElement
 	{
 		this.#close();
 	}
-}, {extends: 'video'});
-/*
-customElements.define('webapp-video', class extends HTMLElement
+});
+document.head.appendChild(document.createElement('style')).textContent = `
+webapp-slide{
+	height: 90%;
+	display: block;
+	position: relative;
+	overflow: hidden;
+}
+webapp-slide>div{
+	position: absolute;
+}
+webapp-slide>div.shifting{
+	transition: top .4s;
+}
+webapp-slide>div>webapp-video{
+	display: block;
+	position: relative;
+}
+webapp-slide>div>webapp-video>video{
+	height: 100%;
+	object-fit: fill;
+}`;
+customElements.define('webapp-slide', class extends HTMLElement
 {
-	#style;
-	#video;
-	#bar;
-	#range;
-	#togglescreen;
-	#togglemuted;
+	#load;
+	#page = 1;
+	#template;
+	#height;
+	#slide;
 
+	//#control;
+	
+	
+	
 
-	#model;
-	#open;
-	#close;
-	#playtime = 0;
-	#playurl;
+	#index = 0;
+	#shift = true;
+	#position = {
+
+	};
 	constructor()
 	{
 		super();
-		this.#style = document.createElement('style');
-		this.#style.textContent = `
-			:host{
-				background: white;
-				display: block;
-				overflow: hidden;
-				position: relative;
-				border: 1px solid black;
-			}
-			:host>video{
-
-			}
-			:host>div{
-				display: flex;
-			}
-			:host>div>input[type=range]{
-				
-				width: 100%;
-				margin: 0;
-			}
-
-		`;
-
-		this.#video = document.createElement('video');
-		this.#video.setAttribute('autoplay', true);
-		this.#video.setAttribute('playsinline', true);
-		this.#video.setAttribute('controlslist', 'nodownload');
-		
-		this.#video.setAttribute('disablepictureinpicture', true);
-		this.#video.setAttribute('disableRemotePlayback', true);
-		this.#video.setAttribute('width', '100%');
-		this.#video.setAttribute('height', '100%');
-	
-
-		if (window.MediaSource && window.Hls)
+		this.#load = this.dataset.load;
+		this.#slide = document.createElement('div');
+		this.#slide.style.top = '0px';
+		this.#slide.addEventListener('transitionend', () =>
+		{
+			this.#slide.classList.remove('shifting');
+			this.#shift = false;
+		});
+		this.addEventListener('touchstart', event =>
 		{
 			
-			this.#model = window.hls instanceof window.Hls ? window.hls : window.hls = new window.Hls;
-			this.#open = (url) =>
-			{
-				// this.#model.loadSource(url);
-				// this.#model.attachMedia(this.#video);
-				return new Promise((resolve, reject) =>
-				{
-					this.#model.attachMedia(this.#video);
-					this.#model.once(window.Hls.Events.MANIFEST_PARSED, () => resolve(this));
-					this.#model.once(window.Hls.Events.MEDIA_ATTACHED, () => this.#model.loadSource(url));
-				});
-			};
-			this.#close = () =>
-			{
-				this.#model.detachMedia(this.#video);
-			};
-		}
-		else
+			if (this.#shift) return;
+			this.#position.offset = this.#slide.offsetTop;
+			this.#position.start = event.clientY || event.touches[0].clientY;
+		});
+		this.addEventListener('touchmove', event =>
 		{
-			if (this.#video.canPlayType('application/vnd.apple.mpegurl')
-				|| this.#video.canPlayType('application/x-mpegURL')) {
-				this.#model = this.#video;
-				this.#open = (url) =>
+			event.preventDefault();
+			if (this.#shift) return;
+			this.#position.move = event.clientY || event.touches[0].clientY;
+			this.#slide.style.top = `${this.#position.offset + this.#position.move - this.#position.start}px`;
+		});
+		this.addEventListener('touchend', event =>
+		{
+			console.log(this.#shift)
+			if (this.#shift) return;
+			const direction = this.#position.start - this.#position.move, index = this.#index;
+			if (Math.abs(direction) > 100)
+			{
+				if (direction < 0)
 				{
-					alert(url)
-					this.#model.src = url;
-				};
-				this.#close = () =>
+					if (this.#index)
+					{
+						--this.#index;
+					}
+				}
+				if (direction > 0)
 				{
-					this.#model.pause();
-					this.#open('');
-					this.#model.load();
-				};
+					if (this.#index < this.#slide.children.length - 1)
+					{
+						++this.#index;
+					}
+					else
+					{
+						// this.#shift = true;
+						// this.#loaddata();
+					}
+				}
 			}
-			else
+			
+			const top = this.#index * this.#height;
+			
+
+			console.log(parseInt(this.#slide.style.top) );
+
+
+			if (parseInt(this.#slide.style.top) === -top) return;
+			this.#shift = true;
+			this.#slide.classList.add('shifting');
+			this.#slide.style.top = `-${top}px`;
+
+			this.#slide.childNodes[this.#index].resume();
+
+		});
+
+		
+	}
+	#createvideo(data)
+	{
+		const
+		video = document.createElement('webapp-video');
+		video.style.height = `${this.#height}px`;
+		video.preload = 'none';
+		//video.controls = true;
+		video.dataset.load = data.path;
+
+		video.appendChild(document.importNode(this.#template.content, true));
+
+
+		this.#slide.appendChild(video);
+	}
+	#loaddata()
+	{
+		loader(`${this.#load}${this.#page++}`, {headers: {'Content-Type': 'application/data-stream'}}, 'application/json').then(result =>
+		{
+			result.data.data.forEach(data =>
 			{
-				this.#open = (url) => console.log(`cant open ${url}`);
-				this.#close = () => null;
-			}
-		}
-
-		this.#bar = document.createElement('div');
-
-		this.#togglemuted = document.createElement('button');
-		this.#togglemuted.textContent = 'muted';
-		this.#togglemuted.addEventListener('click', () => {
-			this.#video.muted = !this.#video.muted;
+				this.#createvideo(data);
+			});
+			this.#shift = false;
+			return this.#index;
+		}).then(index => {
+			
+			console.log(this.#slide.childNodes[index].resume())
 		});
-
-		this.#range = document.createElement('input');
-		this.#range.type = 'range';
-		this.#range.step = 'any';
-		this.#range.value = 0;
-		this.#range.min = 0;
-		this.#range.max = 1;
-
-
-		this.#togglescreen = document.createElement('button');
-		this.#togglescreen.textContent = 'full';
-		this.#togglescreen.addEventListener('click', () => {
-			this.#video.requestFullscreen();
-		});
-
-		this.#bar.append(this.#togglemuted, this.#range, this.#togglescreen);
-
-
-		this.#video.addEventListener('contextmenu', event => event.preventDefault());
-		this.#video.addEventListener('timeupdate', () =>
-		{
-			this.#range.value = (this.#playtime = this.#video.currentTime) / this.#video.duration;
-		});
-		//this.#video.addEventListener('loadedmetadata', () => this.#playable = true);
-		this.#video.addEventListener('click', () =>
-		{
-			if (this.#video.duration) this.#video.paused ? this.#video.play() : this.#video.pause();
-		});
-		this.#range.addEventListener('mousedown', () =>
-		{
-			if (this.#video.duration) this.#video.pause();
-		});
-		this.#range.addEventListener('mouseup', () =>
-		{
-			if (this.#video.duration) this.#video.play();
-		});
-		this.#range.addEventListener('change', () =>
-		{
-			if (this.#video.duration) this.#video.currentTime = this.#video.duration * this.#range.value;
-		});
-		this.attachShadow({mode: 'closed'}).append(this.#style, this.#video, this.#bar);
 	}
-	poster(url)
-	{
-		this.#video.poster = url;
-	}
-	open(url)
-	{
-		this.#open(this.#playurl = url);
-	}
-	suspend()
-	{
-		this.#close();
-	}
-	resume()
-	{
-		this.#open(this.#playurl);
-
-		// this.#video.onloadedmetadata = ()=>{
-		// 	alert(1)
-		// };
-
-
-
-		this.#video.currentTime = this.#playtime;
-		this.#video.play();
-	}
-// 下面4个方法为常用生命周期
 	connectedCallback()
 	{
-		const open = this.getAttribute('open'), preload = this.getAttribute('preload');
-		if (open)
+		this.appendChild(this.#slide);
+		requestAnimationFrame(() =>
 		{
-			loader(`${open}/cover`, null, 'application/octet-stream').then(blob => this.poster(URL.createObjectURL(blob)));
-			this.#playurl = `${open}/${this.#model instanceof HTMLElement ? 'play.m3u8' : 'play'}`;
-			if (preload !== 'none')
-			{
-				this.open(this.#playurl);
-			}
-		}
-		//console.log('自定义元素加入页面');
-		// 执行渲染更新
-		//this._updateRendering();
+			this.#template = this.firstElementChild;
+			this.#height = this.offsetHeight;
+			this.#load && this.#loaddata();
+		});
 	}
-
-  disconnectedCallback() {
-    // 本例子该生命周期未使用，占位示意
-    console.log('自定义元素从页面移除');
-  }
-  adoptedCallback() {
-    // 本例子该生命周期未使用，占位示意
-    console.log('自定义元素转移到新页面');
-  }
-
-  attributeChangedCallback(name, oldValue, newValue) {
-    console.log('自定义元素属性发生变化');
-    // this._rows = newValue;
-    // // 执行渲染更新
-    // this._updateRendering();
-  }
-
-  // 设置直接get/set rows属性的方法
-  get rows() {
-
-    return this._rows;
-  }
-  set rows(v) {
-    this.setAttribute('rows', v);
-  }
-
-  _updateRendering() {
-    // 根据变化的属性，改变组件的UI
-    // var shadow = this.shadowRoot;
-    // var childNodes = shadow.childNodes;
-    // var rows = this._rows;
-    // for (var i = 0; i < childNodes.length; i++) {
-    //   if (childNodes[i].nodeName === 'STYLE') {
-    //     childNodes[i].textContent = `div {
-    //       display: -webkit-box;
-    //       -webkit-line-clamp: ${rows};
-    //       -webkit-box-orient: vertical;
-    //       overflow: hidden;
-    //     }`;
-    //   }
-    // }
-  }
-
 });
-*/
