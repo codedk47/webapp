@@ -276,7 +276,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('tags', 'checkbox', ['options' => $tags], 
 			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
-		$form->field('require', 'number', ['min' => -1, 'required' => NULL]);
+		$form->field('require', 'number', ['min' => -2, 'required' => NULL]);
 		$form->fieldset();
 		$form->button('Update Resource', 'submit');
 		return $form;
@@ -641,7 +641,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell($tag['seat']);
 			$table->cell($tag['vods'] ? floor(strlen($tag['vods']) / 12) : 0);
 		});
-		$table->fieldset('❌', 'hash', 'time', 'sort', 'name', 'seat', '固定VOD数');
+		$table->fieldset('❌', 'hash', 'time', 'sort', 'name', 'seat', 'VOD');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Tag', ['onclick' => 'location.href="?admin/settag-create"']);
 	}
@@ -745,7 +745,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell($vod['name']);
 			$table->cell($vod['describe']);
 		}, $this->webapp['app_restype'], ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小']);
-		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', '固定RES数', 'name', 'describe');
+		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'RES', 'name', 'describe');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
 		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
