@@ -276,7 +276,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('tags', 'checkbox', ['options' => $tags], 
 			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
-		$form->field('require', 'number', ['min' => -2, 'required' => NULL]);
+		$form->field('require', 'number', ['min' => -1, 'required' => NULL]);
 		$form->fieldset();
 		$form->button('Update Resource', 'submit');
 		return $form;
