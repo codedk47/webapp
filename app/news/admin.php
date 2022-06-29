@@ -179,9 +179,10 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function post_tag_create()
 	{
+		
 		if ($this->webapp->admin[2]
 			&& $this->form_tag($this->webapp)->fetch($tag)
-			&& $this->webapp->mysql->tags->insert($tag += ['hash' => substr($this->webapp->randhash(TRUE), 6)])
+			&& $this->webapp->mysql->tags->insert($tag += ['hash' => substr($this->webapp->randhash(TRUE), 6), 'time' => $this->webapp->time])
 			&& $this->webapp->call('saveTag', $this->webapp->tag_xml($tag))) {
 			return $this->okay("?admin/tags,search:{$tag['hash']}");
 		}
