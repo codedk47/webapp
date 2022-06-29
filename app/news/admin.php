@@ -391,13 +391,7 @@ class webapp_router_admin extends webapp_echo_html
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resources', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
-		$table->bar->select([
-			'' => '全部',
-			'long' => '长视频',
-			'short' => '短视频',
-			'live' => '假直播',
-			'movie' => '电影'
-		])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
+		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select([
 			'finished' => '完成',
 			'waiting' => '等待',
@@ -706,13 +700,13 @@ class webapp_router_admin extends webapp_echo_html
 		}
 		$this->warn('合集资源删除失败！');
 	}
-	function post_setvod_update(string $hash)
+	function post_setvod_update(string $hash, string $type = NULL)
 	{
 		if ($this->form_setvod($this->webapp)->fetch($data)
 			&& $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->update($data)
 			&& ($newdata = $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->array())
 			&& $this->webapp->call('saveSetvod', $this->webapp->setvod_xml($newdata))) {
-			return $this->okay('?admin/setvods');
+			return $this->okay("?admin/setvods,type:{$type}");
 		}
 		$this->warn('合集资源更新失败！');
 	}
@@ -723,11 +717,17 @@ class webapp_router_admin extends webapp_echo_html
 			$this->form_setvod($this->main)->echo($data);
 		}
 	}
-	function get_setvods()
+	function get_setvods(string $type = NULL)
 	{
+		$cond = ['WHERE site=?i', $this->webapp->site];
+		if (is_string($type) && strlen($type))
+		{
+			$cond[0] .= ' AND type=?s';
+			$cond[] = $type;
+		}
+		$cond[0] .= ' ORDER BY view DESC';
 		$count = 0;
-		$table = $this->main->table($this->webapp->mysql->setvods(
-			'WHERE site=?i ORDER BY view DESC', $this->webapp->site), function($table, $vod, $type, $viewtype) use(&$count)
+		$table = $this->main->table($this->webapp->mysql->setvods(...$cond), function($table, $vod, $type, $viewtype) use(&$count)
 		{
 			++$count;
 			$table->row();
@@ -735,7 +735,7 @@ class webapp_router_admin extends webapp_echo_html
 				'href' => "?admin/setvod-delete,hash:{$vod['hash']}",
 				'onclick' => 'return confirm(`Delete Setvod ${this.dataset.name}`)',
 				'data-name' => $vod['name']]);
-			$table->cell()->append('a', [$vod['hash'], 'href' => "?admin/setvod-update,hash:{$vod['hash']}"]);
+			$table->cell()->append('a', [$vod['hash'], 'href' => "?admin/setvod-update,hash:{$vod['hash']},type:{$vod['type']}"]);
 			$table->cell(date('Y-m-d H:i:s', $vod['time']));
 			$table->cell($vod['view']);
 			$table->cell($vod['sort']);
@@ -748,6 +748,7 @@ class webapp_router_admin extends webapp_echo_html
 		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', '固定RES数', 'name', 'describe');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
+		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 	}
 
 
