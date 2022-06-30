@@ -4,7 +4,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	//#promise = new Promise(resolve => this.#resolve = resolve);
 	#video = document.createElement('video');
 	#model;
-	
+
 	#open;
 	#suspend;
 	#resume;
@@ -23,12 +23,15 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.setAttribute('playsinline', true);
 		this.#video.setAttribute('disablepictureinpicture', true);
 		this.#video.muted = true;
+		//this.#video.preload = 'none';
 		this.#video.autoplay = true;
 		this.#video.controls = true;
 		this.#video.controlsList = 'nodownload';
 		
 		this.#video.addEventListener('timeupdate', () =>
 		{
+			//this.style.height = `${this.#video.offsetHeight}px`;
+			this.style.height = `${this.#video.offsetHeight}px`;
 			if (this.#require && this.#video.currentTime > 10 && this.display && 0)
 			{
 				this.#video.currentTime = 10;
@@ -37,6 +40,9 @@ customElements.define('webapp-video', class extends HTMLElement
 				//this.#suspend();
 			}
 		});
+		// this.#video.addEventListener('play', ()=>{
+		// 	this.style.height = `${this.#video.offsetHeight}px`;
+		// });
 
 
 		if (window.MediaSource && window.Hls)
@@ -255,7 +261,7 @@ customElements.define('webapp-slide', class extends HTMLElement
 		{
 			loader(`${this.#load}${this.#page++}`, {headers: {'Content-Type': 'application/data-stream'}}, 'application/json').then(result =>
 			{
-				result.data.data.forEach(data =>
+				result.data.data.forEach((data, index) =>
 				{
 					const
 					video = document.createElement('webapp-video');
@@ -270,6 +276,10 @@ customElements.define('webapp-slide', class extends HTMLElement
 						video.display = this.#require;
 					
 					}
+					if (index === 0 && this.#index === 0)
+					{
+						video.setAttribute('autoplay', true);
+					}
 					
 					
 					
@@ -278,7 +288,6 @@ customElements.define('webapp-slide', class extends HTMLElement
 					//video.controls = true;
 
 					//console.log(this.#template.cloneNode(true));
-			
 					video.appendChild(document.importNode(this.#template.content, true));
 					this.#slide.appendChild(video);
 					if (this.#callback)
@@ -286,11 +295,8 @@ customElements.define('webapp-slide', class extends HTMLElement
 						this.#callback.call(video, data);
 					}
 				});
-
-				return this.#index;
-			}).then(index => {
+				
 				this.#shift = false;
-				this.#slide.childNodes[index].resume();
 			});
 		}
 	}

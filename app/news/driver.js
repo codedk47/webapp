@@ -154,9 +154,10 @@ window.addEventListener('DOMContentLoaded', async function()
 				? (logs.length ? logs.splice(-1 + query)[0] : '')
 				: logs[logs.length];
 		}
-		if (logs.length === 0 || logs[logs.length - 1] !== query)
+		const path = query.split(',', 1)[0];
+		if (logs.length === 0 || logs[logs.length - 1] !== path)
 		{
-			logs[logs.length] = query;
+			logs[logs.length] = path;
 			if (logs.length > 10)
 			{
 				logs.splice(1, 1);
