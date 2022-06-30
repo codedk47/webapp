@@ -31,7 +31,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.addEventListener('timeupdate', () =>
 		{
 			//this.style.height = `${this.#video.offsetHeight}px`;
-			this.style.height = `${this.#video.offsetHeight}px`;
+			//this.style.height = `${this.#video.offsetHeight}px`;
 			if (this.#require && this.#video.currentTime > 10 && this.display && 0)
 			{
 				this.#video.currentTime = 10;
