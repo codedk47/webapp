@@ -165,8 +165,12 @@ class news_driver extends webapp
 	//账号操作
 	function request_account(?string &$signature = NULL):array
 	{
-		$signature = $this->request_authorization();
-		return $this->authorization(fn(string $username, string $password) => [$username, $password]);
+		$authenticate = fn(string $username, string $password) => [$username, $password];
+		if ($signature = $this->request_authorization())
+		{
+			return $this->authorization($authenticate);
+		}
+		return $this->authorize($signature = $this->request_cookie('account'), $authenticate);
 	}
 	function account(array|string $context, array $update = []):array
 	{

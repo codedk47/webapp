@@ -82,43 +82,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		self.apphead = {};
 		self.entry = top.document.querySelector('iframe').dataset.entry;
-		const video = document.querySelector('video');
-		if (video && video.dataset.src && self.Hls)
-		{
-			video.autoplay = true;
-			//video.playsinline = true;
-			//video.disablePictureInPicture = true;
-			loader(`${video.dataset.src}/cover`, null, 'application/octet-stream').then(blob => video.poster = URL.createObjectURL(blob));
-			if (self.MediaSource || Hls.isSupported())
-			{
-				const hls = new Hls;
-				hls.attachMedia(video);
-				hls.loadSource(`${video.dataset.src}/play`);
-				//console.log(video.dataset.src);
-			}
-			else
-			{
-				if (video.canPlayType('application/x-mpegURL'))
-				{
-					const hls = document.createElement('source');
-					hls.type = 'application/x-mpegURL';
-					hls.src = `${video.dataset.src}/play.m3u8`;
-					video.muted = true;
-					video.appendChild(hls);
-				}
-			}
-			// window.addEventListener("orientationchange", () =>
-			// {
-			// 	if (screen.orientation.angle)
-			// 	{
-			// 		//竖屏
-			// 	}
-			// 	else
-			// 	{
-			// 		//横屏
-			// 	}
-			// });
-		}
+		
 		self.onmessage = event => 
 		{
 			self.onmessage = null;
@@ -254,6 +218,7 @@ window.addEventListener('DOMContentLoaded', async function()
 			if (result.data.signature)
 			{
 				localStorage.setItem('account', result.data.signature);
+				document.cookie = `account=${result.data.signature}`;
 				initreq['Account-Init'] = 1;
 			}
 		});
@@ -262,6 +227,8 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		return console.log('Unauthorized');
 	}
+	
+	document.cookie = `account=${localStorage.getItem('account')}`;
 	initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
 	if (frame.dataset.query.length === 0)
 	{

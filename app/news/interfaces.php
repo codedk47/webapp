@@ -662,6 +662,7 @@ class interfaces extends webapp
 				&& strlen($data['code']) === 10
 				&& preg_match('/^(balance)\:(\d+)$/', $data['gift'], $gift)
 				&& $this->mysql->accounts('WHERE uid=?s limit 1', $data['code'])->update('?a=?a+?i', $gift[1], $gift[1], $gift[2])
+				
 				&& $this->mysql->accounts('WHEW uid=?s LIMIT 1', $account['uid'])->update('code=?s', $data['code'])) {
 				$account['code'] = $data['code'];
 			}

@@ -21,14 +21,11 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.setAttribute('width', '100%');
 		this.#video.setAttribute('playsinline', true);
 		this.#video.setAttribute('disablepictureinpicture', true);
-
+		this.#video.muted = true;
 		this.#video.autoplay = true;
 		this.#video.controls = true;
 		this.#video.controlsList = 'nodownload';
-		this.#video.addEventListener('click', () =>
-		{
-			this.#video.paused ? this.#video.play() : this.#video.pause();
-		});
+		
 		this.#video.addEventListener('timeupdate', () =>
 		{
 			if (0 && this.#require && this.#video.currentTime > 30)
@@ -40,6 +37,7 @@ customElements.define('webapp-video', class extends HTMLElement
 
 		if (window.MediaSource && window.Hls)
 		{
+			//alert('MediaSource')
 			this.#model = new window.Hls;
 			this.#open = (url) =>
 			{
@@ -77,7 +75,10 @@ customElements.define('webapp-video', class extends HTMLElement
 			if (this.#video.canPlayType('application/vnd.apple.mpegurl')
 				|| this.#video.canPlayType('application/x-mpegURL')) {
 				this.#model = this.#video;
-				
+				this.#video.addEventListener('click', () =>
+				{
+					this.#video.paused ? this.#video.play() : this.#video.pause();
+				});
 				this.#video.addEventListener('canplay', () =>
 				{
 					this.#video.currentTime = this.#playtime;
@@ -85,6 +86,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				});
 				this.#open = (url) =>
 				{
+					
 					this.#playurl = url;
 					if (this.autoplay)
 					{
@@ -166,6 +168,7 @@ webapp-slide>div>webapp-video>video{
 
 customElements.define('webapp-slide', class extends HTMLElement
 {
+	#callback;
 	#template;
 	#height;
 	#load;
@@ -259,23 +262,27 @@ customElements.define('webapp-slide', class extends HTMLElement
 
 					//console.log(this.#template.cloneNode(true));
 			
-			
 					video.appendChild(document.importNode(this.#template.content, true));
-			
-			
 					this.#slide.appendChild(video);
+					if (this.#callback)
+					{
+						this.#callback.call(video, data);
+					}
 				});
 
 				return this.#index;
-			}).then(index => {
-				this.#shift = false;
-				console.log(this.#slide.childNodes[index].resume())
-			});
+			})
+			this.#shift = false;
+			// .then(index => {
+			// 	this.#shift = false;
+			// 	console.log(this.#slide.childNodes[index].resume())
+			// });
 		}
 	}
 	connectedCallback()
 	{
 		this.appendChild(this.#slide);
+		this.#callback = window[this.dataset.callback];
 		requestAnimationFrame(() =>
 		{
 			this.#template = this.querySelector('template');
@@ -285,3 +292,68 @@ customElements.define('webapp-slide', class extends HTMLElement
 		});
 	}
 });
+function wplayload(path)
+{
+	// console.log( /URI="(?!http:\/\/)[^"]+"/.test('#EXT-X-KEY:METHOD=AES-128,URI="keycode",IV=0xc59ffe73bd982d39619e12a51e484194') )
+	// console.log( '#EXT-X-KEY:METHOD=AES-128,URI="keycode",IV=0xc59ffe73bd982d39619e12a51e484194' )
+
+	//
+	//console.log( '#EXT-X-KEY:METHOD=AES-128,URI="keycode",IV=0xc59ffe73bd982d39619e12a51e484194'.match(/URI="([^"]+)"/)[1] );
+
+
+	loader(`${path}/play`, null, 'text/plain').then(a=>
+	{
+		const s = a.split('\n');
+		for (let i = 0; i < s.length; ++i)
+		{
+			switch (true)
+			{
+				case s[i].startsWith('#EXT-X-KEY'):
+					if (/URI="(?!http:\/\/)[^"]+"/.test(s[i]))
+					{
+						s[i] = s[i].replace(/URI="([^"]+)"/, `URI="${path}/$1"`);
+					}
+					break;
+				case s[i].startsWith('#EXTINF'):
+					if (/^(?!http:\/\/)/.test(s[++i]))
+					{
+						s[i] = `${path}/${s[i]}`;
+					}
+					break;
+			}
+		}
+
+
+		const aa = s.join('\n');
+		
+
+		console.log(aa);
+
+
+
+		const vv = document.body.appendChild( document.createElement('video') );
+
+		vv.controls = true;
+		vv.src = URL.createObjectURL(new Blob([aa], {type: 'application/vnd.apple.mpegurl'}));
+
+
+		// a.split("\n").forEach(p=>{
+
+		// 	// switch (p.substring(0, 10))
+		// 	// {
+		// 	// 	case '#EXT-X-KEY':
+
+		// 	// }
+		// 	// if (p.substring(0, 10) === '#EXT-X-KEY')
+		// 	// {
+		// 	// 	console.log('#EXT-X-KEY')
+		// 	// }
+
+		// 	console.log(p)
+		// })
+
+
+
+		
+	})
+}
