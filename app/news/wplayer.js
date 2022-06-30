@@ -42,10 +42,13 @@ customElements.define('webapp-video', class extends HTMLElement
 		{
 			//alert('MediaSource')
 			this.#model = new window.Hls;
-			this.#open = (url) =>
+			this.#open = (data) =>
 			{
+				this.#playurl = URL.createObjectURL(new Blob([data], {type: 'application/x-mpegURL'}));
+
+				
 				this.#model.config.autoStartLoad = this.autoplay;
-				this.#model.loadSource(this.#playurl = url);
+				this.#model.loadSource(this.#playurl);
 				this.#model.attachMedia(this.#video);
 
 
@@ -87,10 +90,11 @@ customElements.define('webapp-video', class extends HTMLElement
 					this.#video.currentTime = this.#playtime;
 		
 				});
-				this.#open = (url) =>
+				this.#open = (data) =>
 				{
 					
-					this.#playurl = url;
+					
+					this.#playurl = `data:application/vnd.apple.mpegurl;base64,${btoa(data)}`;
 					if (this.autoplay)
 					{
 						this.#video.src = this.#playurl;
@@ -139,7 +143,29 @@ customElements.define('webapp-video', class extends HTMLElement
 		{
 			this.#require = this.dataset.require;
 			loader(`${this.#load}/cover`, null, 'application/octet-stream').then(blob => this.#video.poster = URL.createObjectURL(blob));
-			this.#open(`${this.#load}/${this.#model instanceof HTMLVideoElement ? 'play.m3u8' : 'play'}`);
+			loader(`${this.#load}/play`, null, 'text/plain').then(data =>
+			{
+				const m3u8 = data.split('\n');
+				for (let i = 0; i < m3u8.length; ++i)
+				{
+					switch (true)
+					{
+						case m3u8[i].startsWith('#EXT-X-KEY'):
+							if (/URI="(?!http:\/\/)[^"]+"/.test(m3u8[i]))
+							{
+								m3u8[i] = m3u8[i].replace(/URI="([^"]+)"/, `URI="${this.#load}/$1"`);
+							}
+							break;
+						case m3u8[i].startsWith('#EXTINF'):
+							if (/^(?!http:\/\/)/.test(m3u8[++i]))
+							{
+								m3u8[i] = `${this.#load}/${m3u8[i]}`;
+							}
+							break;
+					}
+				}
+				this.#open(m3u8.join('\n'));
+			});
 		}
 	}
 	disconnectedCallback()
@@ -304,80 +330,3 @@ customElements.define('webapp-slide', class extends HTMLElement
 		});
 	}
 });
-function wplayload(path)
-{
-	// console.log( /URI="(?!http:\/\/)[^"]+"/.test('#EXT-X-KEY:METHOD=AES-128,URI="keycode",IV=0xc59ffe73bd982d39619e12a51e484194') )
-	// console.log( '#EXT-X-KEY:METHOD=AES-128,URI="keycode",IV=0xc59ffe73bd982d39619e12a51e484194' )
-
-	//
-	//console.log( '#EXT-X-KEY:METHOD=AES-128,URI="keycode",IV=0xc59ffe73bd982d39619e12a51e484194'.match(/URI="([^"]+)"/)[1] );
-
-
-	loader(`${path}/play`, null, 'text/plain').then(a=>
-	{
-		const s = a.split('\n');
-		for (let i = 0; i < s.length; ++i)
-		{
-			switch (true)
-			{
-				case s[i].startsWith('#EXT-X-KEY'):
-					if (/URI="(?!http:\/\/)[^"]+"/.test(s[i]))
-					{
-						s[i] = s[i].replace(/URI="([^"]+)"/, `URI="${path}/$1"`);
-					}
-					break;
-				case s[i].startsWith('#EXTINF'):
-					if (/^(?!http:\/\/)/.test(s[++i]))
-					{
-						s[i] = `${path}/${s[i]}`;
-					}
-					break;
-			}
-		}
-
-
-		const aa = s.join('\n');
-		
-
-		//console.log(aa);
-
-
-
-		const vv = document.body.appendChild( document.createElement('video') );
-
-		vv.controls = true;
-	
-		vv.type= "application/x-mpegURL";
-		vv.src = `data:application/vnd.apple.mpegurl;base64,${btoa(aa)}`;
-		vv.load();
-
-		
-
-		//console.log()
-
-
-
-
-		//vv.src = URL.createObjectURL(new Blob([aa], {type: 'application/vnd.apple.mpegurl'}));
-		// vv.load()
-
-		// a.split("\n").forEach(p=>{
-
-		// 	// switch (p.substring(0, 10))
-		// 	// {
-		// 	// 	case '#EXT-X-KEY':
-
-		// 	// }
-		// 	// if (p.substring(0, 10) === '#EXT-X-KEY')
-		// 	// {
-		// 	// 	console.log('#EXT-X-KEY')
-		// 	// }
-
-		// 	console.log(p)
-		// })
-
-
-
-		
-	})
-}
