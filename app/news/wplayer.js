@@ -28,9 +28,12 @@ customElements.define('webapp-video', class extends HTMLElement
 		
 		this.#video.addEventListener('timeupdate', () =>
 		{
-			if (0 && this.#require && this.#video.currentTime > 30)
+			if (this.#require && this.#video.currentTime > 10 && this.display && 0)
 			{
+				this.#video.currentTime = 10;
 				this.#video.pause();
+				this.display.show();
+				//this.#suspend();
 			}
 		});
 
@@ -168,11 +171,12 @@ webapp-slide>div>webapp-video>video{
 
 customElements.define('webapp-slide', class extends HTMLElement
 {
-	#callback;
 	#template;
+	#callback;
+	#require;
 	#height;
 	#load;
-	#page = 1;
+	#page;
 	#slide = document.createElement('div');
 	#index = 0;
 	#shift = true;
@@ -253,7 +257,12 @@ customElements.define('webapp-slide', class extends HTMLElement
 					video.style.height = `${this.#height}px`;
 					video.dataset.load = data.path;
 					video.dataset.require = data.require;
-			
+					if (data.require && this.#require)
+					{
+						video.display = this.#require;
+					
+					}
+					
 					
 					
 					
@@ -271,23 +280,26 @@ customElements.define('webapp-slide', class extends HTMLElement
 				});
 
 				return this.#index;
-			})
-			this.#shift = false;
-			// .then(index => {
-			// 	this.#shift = false;
-			// 	console.log(this.#slide.childNodes[index].resume())
-			// });
+			}).then(index => {
+				this.#shift = false;
+				this.#slide.childNodes[index].resume();
+			});
 		}
 	}
 	connectedCallback()
 	{
 		this.appendChild(this.#slide);
 		this.#callback = window[this.dataset.callback];
+		if (this.dataset.display)
+		{
+			this.#require = document.querySelector(this.dataset.display);
+		}
 		requestAnimationFrame(() =>
 		{
 			this.#template = this.querySelector('template');
 			this.#height = this.offsetHeight;
 			this.#load = this.dataset.load;
+			this.#page = this.dataset.page || 1;
 			this.loaddata();
 		});
 	}
@@ -327,15 +339,27 @@ function wplayload(path)
 		const aa = s.join('\n');
 		
 
-		console.log(aa);
+		//console.log(aa);
 
 
 
 		const vv = document.body.appendChild( document.createElement('video') );
 
 		vv.controls = true;
-		vv.src = URL.createObjectURL(new Blob([aa], {type: 'application/vnd.apple.mpegurl'}));
+	
+		vv.type= "application/x-mpegURL";
+		vv.src = `data:application/vnd.apple.mpegurl;base64,${btoa(aa)}`;
+		vv.load();
 
+		
+
+		//console.log()
+
+
+
+
+		//vv.src = URL.createObjectURL(new Blob([aa], {type: 'application/vnd.apple.mpegurl'}));
+		// vv.load()
 
 		// a.split("\n").forEach(p=>{
 

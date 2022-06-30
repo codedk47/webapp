@@ -48,7 +48,7 @@ if (PHP_SAPI === 'cli')
 		{
 			header($value);
 		}
-		function response_cookie(string ...$values):void
+		function response_cookie(float|string ...$values):void
 		{
 			setcookie(...$values);
 		}
@@ -154,7 +154,7 @@ else
 		{
 			header($value);
 		}
-		function response_cookie(string ...$values):void
+		function response_cookie(float|string ...$values):void
 		{
 			setcookie(...$values);
 		}

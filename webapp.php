@@ -18,7 +18,7 @@ interface webapp_io
 	function response_sent():bool;
 	function response_status(int $code):void;
 	function response_header(string $value):void;
-	function response_cookie(string ...$values):void;
+	function response_cookie(float|string ...$values):void;
 	function response_content(string $data):bool;
 	function response_sendfile(string $filename):bool;
 }
