@@ -625,6 +625,7 @@ class interfaces extends webapp
 			'phone' => $account['phone'],
 			'name' => $account['name']
 		]);
+		$node->append('invite')->cdata($account['invite']);
 		$node->append('favorite')->cdata($account['favorite']);
 		$node->append('history')->cdata($account['history']);
 		return $node;
@@ -642,16 +643,14 @@ class interfaces extends webapp
 			'balance' => 0,
 			'lasttime' => $this->time,
 			'lastip' => $this->clientiphex(),
-			'device' => match (1)
-			{
+			'device' => is_string($data['device']) ? match (1) {
 				preg_match('/windows phone/i', $data['device']) => 'wp',
 				preg_match('/pad/i', $data['device']) => 'pad',
 				preg_match('/iphone/i', $data['device']) => 'ios',
 				preg_match('/android/i', $data['device']) => 'android',
-				default => 'pc'
-			},
+				default => 'pc'} : 'pc',
 			'face' => 0,
-			'unit' => $data['unit'],
+			'unit' => is_string($data['unit']) && strlen($data['unit']) === 4 ? $data['unit'] : '',
 			'code' => '',
 			'phone' => '',
 			'pwd' => random_int(100000, 999999),
@@ -659,6 +658,13 @@ class interfaces extends webapp
 			'invite' => '',
 			'favorite' => '',
 			'history' => ''])) {
+			if (isset($data['code'], $data['gift'])
+				&& strlen($data['code']) === 10
+				&& preg_match('/^(balance)\:(\d+)$/', $data['gift'], $gift)
+				&& $this->mysql->accounts('WHERE uid=?s limit 1', $data['code'])->update('?a=?a+?i', $gift[1], $gift[1], $gift[2])
+				&& $this->mysql->accounts('WHEW uid=?s LIMIT 1', $account['uid'])->update('code=?s', $data['code'])) {
+				$account['code'] = $data['code'];
+			}
 			$this->account_xml($account);
 		}
 	}

@@ -251,8 +251,11 @@ window.addEventListener('DOMContentLoaded', async function()
 		await loader(`${entry}?api/register`, {headers}, 'application/json').then(result =>
 		{
 			console.log(result)
-			localStorage.setItem('account', result.data.signature);
-			initreq['Account-Init'] = 1;
+			if (result.data.signature)
+			{
+				localStorage.setItem('account', result.data.signature);
+				initreq['Account-Init'] = 1;
+			}
 		});
 	}
 	if (localStorage.getItem('account') === null)
