@@ -4,6 +4,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	//#promise = new Promise(resolve => this.#resolve = resolve);
 	#video = document.createElement('video');
 	#model;
+	
 	#open;
 	#suspend;
 	#resume;
@@ -11,7 +12,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	
 	#load;
 	#require;
-	#playurl;
+	#playdata;
 	#playtime = 0;
 	autoplay;
 	controls = false;
@@ -40,20 +41,13 @@ customElements.define('webapp-video', class extends HTMLElement
 
 		if (window.MediaSource && window.Hls)
 		{
-			//alert('MediaSource')
 			this.#model = new window.Hls;
 			this.#open = (data) =>
 			{
-				this.#playurl = URL.createObjectURL(new Blob([data], {type: 'application/x-mpegURL'}));
-
-				
+				this.#playdata = URL.createObjectURL(new Blob([data], {type: 'application/x-mpegURL'}));
 				this.#model.config.autoStartLoad = this.autoplay;
-				this.#model.loadSource(this.#playurl);
+				this.#model.loadSource(this.#playdata);
 				this.#model.attachMedia(this.#video);
-
-
-
-				// this.#playurl = 
 				// return new Promise((resolve, reject) =>
 				// {
 				// 	this.#model.attachMedia(this.#video);
@@ -85,27 +79,17 @@ customElements.define('webapp-video', class extends HTMLElement
 				{
 					this.#video.paused ? this.#video.play() : this.#video.pause();
 				});
-				this.#video.addEventListener('canplay', () =>
-				{
-					this.#video.currentTime = this.#playtime;
-		
-				});
+				// this.#video.addEventListener('canplay', () =>
+				// {
+				// 	this.#video.currentTime = this.#playtime;
+				// });
 				this.#open = (data) =>
 				{
-					
-					
-					this.#playurl = `data:application/vnd.apple.mpegurl;base64,${btoa(data)}`;
+					this.#playdata = `data:application/vnd.apple.mpegurl;base64,${btoa(data)}`;
 					if (this.autoplay)
 					{
-						this.#video.src = this.#playurl;
+						this.#video.src = this.#playdata;
 					}
-					
-					// this.#video.src = url;
-					// this.#video.addEventListener('loadedmetadata', ()=>{
-					// 	//this.#video.pause();
-					// 	alert(1)
-					// })
-					
 				};
 				this.#suspend = () =>
 				{
@@ -113,8 +97,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				};
 				this.#resume = () =>
 				{
-					this.#video.src = this.#playurl;
-					
+					this.#video.src = this.#playdata;
 				};
 				this.#close = this.#suspend;
 			}
@@ -124,7 +107,6 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#close = this.#resume = this.#suspend = () => null;
 			}
 		}
-		
 	}
 	suspend()
 	{
