@@ -656,6 +656,7 @@ class interfaces extends webapp
 			'phone' => '',
 			'pwd' => random_int(100000, 999999),
 			'name' => $this->hash($rand),
+			'invite' => '',
 			'favorite' => '',
 			'history' => ''])) {
 			$this->account_xml($account);
