@@ -179,8 +179,9 @@ class news_driver extends webapp
 			: ($update ? $this->post("account/{$context}", $update) : $this->get("account/{$context}")))
 			&& isset($account->account)
 				? [...$account->account->getattr(),
-					'favorite' => (string)$account->account->favorites,
-					'history' => (string)$account->account->historys] : [];
+					'resources' => (string)$account->account->resources,
+					'favorite' => (string)$account->account->favorite,
+					'history' => (string)$account->account->history] : [];
 	}
 
 
