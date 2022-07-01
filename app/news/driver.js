@@ -174,7 +174,14 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		frame.onload = () =>
 		{
-			frame.onload = null;
+			frame.onload = () =>
+			{
+				//alert(frame.contentDocument.body.childNodes.length)
+				if (frame.contentDocument.body.childNodes.length === 0)
+				{
+					loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
+				}
+			};
 			frame.contentDocument.open();
 			frame.contentDocument.write(data);
 			frame.contentDocument.close();
@@ -226,7 +233,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	if (localStorage.getItem('account') === null)
 	{
-		return console.log('Unauthorized');
+		return alert('Unauthorized');
 	}
 	
 	document.cookie = `account=${localStorage.getItem('account')}`;
@@ -235,10 +242,14 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		frame.dataset.query = logs[logs.length - 1] || '';
 	}
+
+
+
+
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
-	history.back();
-	history.forward();
-	window.addEventListener('popstate', () => history.go(1));
+	// history.back();
+	// history.forward();
+	//window.addEventListener('popstate', event => console.log(event));
 	window.addEventListener('message', event =>
 	{
 		if (event.data)

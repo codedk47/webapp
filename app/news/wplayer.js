@@ -14,8 +14,6 @@ customElements.define('webapp-video', class extends HTMLElement
 	#require;
 	#playdata;
 	#playtime = 0;
-	autoplay;
-	controls = false;
 	constructor()
 	{
 		super();
@@ -23,12 +21,11 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.setAttribute('height', '100%');
 		this.#video.setAttribute('playsinline', true);
 		this.#video.setAttribute('disablepictureinpicture', true);
-		//this.#video.muted = true;
-		//this.#video.preload = 'none';
-		this.#video.autoplay = true;
-		this.#video.controls = true;
-		this.#video.controlsList = 'nodownload';
 		//this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
+		this.#video.controlsList = 'nodownload';
+		//this.#video.preload = 'none';
+		
+		
 		
 		this.#video.addEventListener('timeupdate', () =>
 		{
@@ -53,7 +50,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			this.#open = (data) =>
 			{
 				this.#playdata = URL.createObjectURL(new Blob([data], {type: 'application/x-mpegURL'}));
-				this.#model.config.autoStartLoad = this.autoplay;
+				this.#model.config.autoStartLoad = this.#video.autoplay;
 				this.#model.loadSource(this.#playdata);
 				this.#model.attachMedia(this.#video);
 				// return new Promise((resolve, reject) =>
@@ -94,7 +91,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#open = (data) =>
 				{
 					this.#playdata = `data:application/vnd.apple.mpegurl;base64,${btoa(data)}`;
-					if (this.autoplay)
+					if (this.#video.autoplay)
 					{
 						this.#video.src = this.#playdata;
 					}
@@ -126,8 +123,10 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	connectedCallback()
 	{
-		this.autoplay = this.hasAttribute('autoplay');
-		this.controls = this.hasAttribute('controls');
+		//this.hasAttribute('weblive');
+		this.#video.muted = this.hasAttribute('muted');
+		this.#video.autoplay = this.hasAttribute('autoplay');
+		this.#video.controls = this.hasAttribute('controls');
 		this.appendChild(this.#video);
 		if (this.#load = this.dataset.load)
 		{

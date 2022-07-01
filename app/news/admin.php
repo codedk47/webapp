@@ -318,8 +318,9 @@ class webapp_router_admin extends webapp_echo_html
 				$this->main->append('webapp-video', [
 					'style' => 'display:block;width:854px;height:480px',
 					'data-load' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}", date('ym', $resource['time'])),
+					'muted' => NULL,
 					'autoplay' => NULL,
-					'data-attr' => '{asd:1,wewe:1}'
+					'controls' => NULL
 				]);
 			}
 			$form = $this->form_resource($this->main);

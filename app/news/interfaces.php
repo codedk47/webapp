@@ -655,7 +655,7 @@ class interfaces extends webapp
 			'phone' => '',
 			'pwd' => random_int(100000, 999999),
 			'name' => $this->hash($rand),
-			'invite' => '',
+			'resources' => '',
 			'favorite' => '',
 			'history' => ''])) {
 			if (isset($data['code'], $data['gift'])
