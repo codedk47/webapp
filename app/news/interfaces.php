@@ -716,12 +716,14 @@ class interfaces extends webapp
 	}
 	function report_xml(array $report)
 	{
-		return $this->xml->append('report', [
+		$node = $this->xml->append('report', [
 			'hash' => $report['hash'],
 			'time' => $report['time'],
 			'promise' => $report['promise'],
 			'account' => $report['account']
-		])->cdata($report['describe']);
+		]);
+		$node->cdata($report['describe']);
+		return $node;
 	}
 	function get_reports(string $null = NULL, int $page = 1, int $size = 1000)
 	{
