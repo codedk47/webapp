@@ -49,6 +49,10 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return $this->use_result()->fetch_array($mode) ?? [];
 	}
+	function fetch(?array &$data, int $mode = MYSQLI_ASSOC):bool
+	{
+		return boolval($data = $this->array($mode));
+	}
 	function value(int $index = 0):NULL|int|float|string
 	{
 		return $this->array(MYSQLI_NUM)[$index];
@@ -383,6 +387,10 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	function array(int $mode = MYSQLI_ASSOC):array
 	{
 		return $this->getIterator()->array($mode);
+	}
+	function fetch(?array &$data, int $mode = MYSQLI_ASSOC):bool
+	{
+		return $this->getIterator()->fetch($data, $mode);
 	}
 	function value(int $index = 0):?string
 	{

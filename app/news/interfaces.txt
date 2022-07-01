@@ -3,6 +3,7 @@ API
 数据拉取
 GET ?ads 获取广告
 GET ?tags 获取标签
+GET ?reports 获取报告
 GET ?resources 获取资源
 GET ?settags 获取合集栏目
 GET ?setvods 获取合集节目

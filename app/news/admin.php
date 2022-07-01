@@ -32,7 +32,7 @@ class webapp_router_admin extends webapp_echo_html
 			['Accounts', '?admin/accounts'],
 			['Ads', '?admin/ads'],
 			['Extensions', [
-				['Reports', '?admin/reports'],
+				['Reports（通告，报告，合并通用 ψ(｀∇´)ψ）', '?admin/reports'],
 				['Comments（暂时没用）', '?admin/comments'],
 				['Set Tags', '?admin/settags'],
 				['Set Vods', '?admin/setvods'],
@@ -179,7 +179,6 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function post_tag_create()
 	{
-		
 		if ($this->webapp->admin[2]
 			&& $this->form_tag($this->webapp)->fetch($tag)
 			&& $this->webapp->mysql->tags->insert($tag += ['hash' => substr($this->webapp->randhash(TRUE), 6), 'time' => $this->webapp->time])
@@ -390,7 +389,7 @@ class webapp_router_admin extends webapp_echo_html
 		}, $this->webapp['app_restype']);
 		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name');
 		$table->header('Found %d item', $table->count());
-		$table->button('Upload Resources', ['onclick' => 'location.href="?admin/resource-upload"']);
+		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select([
@@ -505,6 +504,34 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	//================Extensions================
 	//报告
+	function form_report($ctx):webapp_form
+	{
+		$form = new webapp_form($ctx);
+		$form->fieldset('describe');
+		$form->field('describe', 'text', ['style' => 'width:740px', 'placeholder' => '通知内容', 'required' => NULL]);
+		$form->fieldset();
+		$form->button('Notification', 'submit');
+		return $form;
+	}
+	function post_report_create()
+	{
+		if ($this->form_report($this->webapp)->fetch($data)
+			&& $this->webapp->mysql->reports->insert($data += [
+				'hash' => $this->webapp->randhash(TRUE),
+				'site' => $this->webapp->site,
+				'time' => $this->webapp->time,
+				'ip' => $this->webapp->clientiphex,
+				'promise' => 'resolved',
+				'account' => NULL])
+			&& $this->webapp->call('saveRep', $this->webapp->report_xml($data))) {
+			return $this->okay('?admin/reports');
+		}
+		$this->warn('通告发布失败！');
+	}
+	function get_report_create()
+	{
+		$this->form_report($this->main);
+	}
 	function get_reports(string $search = NULL, int $page = 1)
 	{
 		$cond = ['where site=?i', $this->webapp->site];
@@ -526,17 +553,25 @@ class webapp_router_admin extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->reports(...$cond)->paging($page), function($table, $rep)
 		{
 			$table->row();
-			$table->cell()->append('a', [$rep['promise'],
-				'href' => "?admin/resolve,hash:{$rep['hash']}",
-				'style' => "color:red"]);
-
+			// $table->cell()->append('a', [$rep['promise'],
+			// 	'href' => "?admin/resolve,hash:{$rep['hash']}",
+			// 	'style' => "color:red"]);
+			$table->cell($rep['promise']);
 			$table->cell(date('Y-m-d\\TH:i:s', $rep['time']));
 			$table->cell($this->webapp->hexip($rep['ip']));
-			$table->cell()->append('a', [$rep['account'], 'href' => "?admin/accounts,search:{$rep['account']}"]);
+			if ($rep['account'])
+			{
+				$table->cell()->append('a', [$rep['account'], 'href' => "?admin/accounts,search:{$rep['account']}"]);
+			}
+			else
+			{
+				$table->cell('管理通告');
+			}
 			$table->cell($rep['describe']);
 		});
 		$table->fieldset('promise', 'time', 'ip', 'account', 'describe');
 		$table->header('Reports, Found %d item', $table->count());
+		$table->button('Create Report', ['onclick' => 'location.href="?admin/report-create"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}

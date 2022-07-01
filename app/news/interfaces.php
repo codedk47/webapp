@@ -630,6 +630,15 @@ class interfaces extends webapp
 		$node->append('history')->cdata($account['history']);
 		return $node;
 	}
+	function account_bind_code(string $code, string $gift):bool
+	{
+		return strlen($code) === 10
+			&& preg_match('/^(expire|balance)\:(\d+)$/', $gift, $value)
+			&& $this->mysql->accounts('WHERE uid=?s limit 1', $code)->fetch($acc)
+			&& $this->mysql->accounts('WHERE uid=?s LIMIT 1', $acc['uid'])->update(...$value[1] === 'expire'
+				? ['expire=?i', ($acc['expire'] < $this->time ? $this->time : $acc['expire']) + $value[2]]
+				: ['?a+=?i', $value[1], $value[2]]);
+	}
 	function post_register()
 	{
 		//这里也许要做频率限制
@@ -659,11 +668,9 @@ class interfaces extends webapp
 			'favorite' => '',
 			'history' => ''])) {
 			if (isset($data['code'], $data['gift'])
-				&& strlen($data['code']) === 10
-				&& preg_match('/^(balance)\:(\d+)$/', $data['gift'], $gift)
-				&& $this->mysql->accounts('WHERE uid=?s limit 1', $data['code'])->update('?a=?a+?i', $gift[1], $gift[1], $gift[2])
-				
-				&& $this->mysql->accounts('WHEW uid=?s LIMIT 1', $account['uid'])->update('code=?s', $data['code'])) {
+				&& is_string($data['code'])
+				&& is_string($data['gift'])
+				&& $this->account_bind_code($data['code'], $data['gift'])) {
 				$account['code'] = $data['code'];
 			}
 			$this->account_xml($account);
@@ -692,7 +699,7 @@ class interfaces extends webapp
 		{
 			if (array_key_exists($allow, $input) && match ($allow) {
 				'face' => $input[$allow] > -1 && $input[$allow] < 256,
-				'code' => strlen($input[$allow]) === 10 && $this->mysql->accounts('WHERE uid=?s limit 1', $input[$allow])->array(),
+				'code' => isset($input['gift']) && $this->account_bind_code($input['code'], $input['gift']),
 				'phone', 'pwd', => strlen($input[$allow]) < 17,
 				'name' => $this->strlen($input[$allow]) < 17,
 				default => FALSE}) {
@@ -705,6 +712,22 @@ class interfaces extends webapp
 				array_key_exists('code', $update) ? ' AND code=""' : ''
 			) . ' LIMIT 1', $this->site, $account['uid'], $account['pwd'])->update($update)) {
 			$this->account_xml($update + $account);
+		}
+	}
+	function report_xml(array $report)
+	{
+		return $this->xml->append('report', [
+			'hash' => $report['hash'],
+			'time' => $report['time'],
+			'promise' => $report['promise'],
+			'account' => $report['account']
+		])->cdata($report['describe']);
+	}
+	function get_reports(string $null = NULL, int $page = 1, int $size = 1000)
+	{
+		foreach ($this->mysql->reports('WHERE site=?i ORDER BY time desc', $this->site)->paging($page, $size) as $report)
+		{
+			$this->report_xml($report);
 		}
 	}
 	function post_report(string $signature)
