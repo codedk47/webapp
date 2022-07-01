@@ -618,14 +618,14 @@ class interfaces extends webapp
 			'balance' => $account['balance'],
 			'lasttime' => $account['lasttime'],
 			'lastip' => $account['lastip'],
-			'device' => $account['device'],			
+			'device' => $account['device'],
 			'face' => $account['face'],
-			'unit' => '0000',
+			'unit' => $account['unit'],
 			'code' => $account['code'],
 			'phone' => $account['phone'],
 			'name' => $account['name']
 		]);
-		$node->append('invite')->cdata($account['invite']);
+		$node->append('resources')->cdata($account['resources']);
 		$node->append('favorite')->cdata($account['favorite']);
 		$node->append('history')->cdata($account['history']);
 		return $node;
