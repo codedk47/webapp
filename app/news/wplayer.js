@@ -20,18 +20,20 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		super();
 		this.#video.setAttribute('width', '100%');
+		this.#video.setAttribute('height', '100%');
 		this.#video.setAttribute('playsinline', true);
 		this.#video.setAttribute('disablepictureinpicture', true);
-		this.#video.muted = true;
+		//this.#video.muted = true;
 		//this.#video.preload = 'none';
 		this.#video.autoplay = true;
 		this.#video.controls = true;
 		this.#video.controlsList = 'nodownload';
+		//this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
 		
 		this.#video.addEventListener('timeupdate', () =>
 		{
 			//this.style.height = `${this.#video.offsetHeight}px`;
-			this.style.height = `${this.#video.offsetHeight}px`;
+			//this.style.height = `${this.#video.offsetHeight}px`;
 			if (this.#require && this.#video.currentTime > 10 && this.display && 0)
 			{
 				this.#video.currentTime = 10;
@@ -160,6 +162,17 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		this.#close();
 	}
+	
+	// set muted(value)
+	// {
+
+	// }
+	// get $()
+	// {
+	// 	return new Proxy(this, {
+
+	// 	});
+	// }
 });
 document.head.appendChild(document.createElement('style')).textContent = `
 webapp-slide{

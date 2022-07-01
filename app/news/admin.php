@@ -314,12 +314,12 @@ class webapp_router_admin extends webapp_echo_html
 			if ($resource['sync'] === 'finished')
 			{
 				$this->xml->head->append('script', ['src' => '/webapp/app/news/hls.min.js']);
-				$this->main->append('video', ['Sorry, your browser doesn\'t support embedded videos.',
-					'data-src' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}", date('ym', $resource['time'])),
-					'width' => 854,
-					'height' => 480,
-					'playsinline' => NULL,
-					'controls' => NULL
+				$this->xml->head->append('script', ['src' => '/webapp/app/news/wplayer.js']);
+				$this->main->append('webapp-video', [
+					'style' => 'display:block;width:854px;height:480px',
+					'data-load' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}", date('ym', $resource['time'])),
+					'autoplay' => NULL,
+					'data-attr' => '{asd:1,wewe:1}'
 				]);
 			}
 			$form = $this->form_resource($this->main);

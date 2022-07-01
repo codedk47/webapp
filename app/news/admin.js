@@ -69,74 +69,60 @@ function anchor(a)
 	xhr.send(a.dataset.body);
 	return false;
 }
-window.addEventListener('DOMContentLoaded', function()
+async function loader(source, options, type)
 {
-	async function loader(source, type)
+	const
+	response = await fetch(source, options || null),
+	reader = response.body.getReader(),
+	key = new Uint8Array(8),
+	buffer = [];
+	for (let read, len = 0, offset = 0;;)
 	{
-		const
-		response = await fetch(source),
-		reader = response.body.getReader(),
-		key = new Uint8Array(8),
-		buffer = [];
-		for (let read, len = 0, offset = 0;;)
+		read = await reader.read();
+		if (read.done)
 		{
-			read = await reader.read();
-			if (read.done)
+			break;
+		}
+		if (/^text/i.test(response.headers.get('content-type')))
+		{
+			buffer[buffer.length] = read.value;
+			continue;
+		}
+		if (len < 8)
+		{
+			//console.log('keyload...')
+			let i = 0;
+			while (i < read.value.length)
 			{
-				break;
-			}
-			if (/^text/i.test(response.headers.get('content-type')))
-			{
-				buffer[buffer.length] = read.value;
-				continue;
+				key[len++] = read.value[i++];
+				//console.log('keyload-' + i)
+				if (len > 7)
+				{
+					//console.log('keyloaded over')
+					break;
+				}
 			}
 			if (len < 8)
 			{
-				//console.log('keyload...')
-				let i = 0;
-				while (i < read.value.length)
-				{
-					key[len++] = read.value[i++];
-					//console.log('keyload-' + i)
-					if (len > 7)
-					{
-						//console.log('keyloaded over')
-						break;
-					}
-				}
-				if (len < 8)
-				{
-					//console.log('keyload contiune')
-					continue;
-				}
-				//console.log('keyloaded finish')
-				read.value = read.value.slice(i);
+				//console.log('keyload contiune')
+				continue;
 			}
-			//console.log('payload...')
-			for (let i = 0; i < read.value.length; ++i)
-			{
-				read.value[i] = read.value[i] ^ key[offset++ % 8];
-			}
-			buffer[buffer.length] = read.value;
+			//console.log('keyloaded finish')
+			read.value = read.value.slice(i);
 		}
-		//console.log('payload finish')
-		const blob = new Blob(buffer, {type});
-		switch (type)
+		//console.log('payload...')
+		for (let i = 0; i < read.value.length; ++i)
 		{
-			case 'application/json': return JSON.parse(await blob.text());
-			case 'text/plain': return blob.text();
-			default: return blob;
+			read.value[i] = read.value[i] ^ key[offset++ % 8];
 		}
+		buffer[buffer.length] = read.value;
 	}
-	const video = document.querySelector('video');
-	if (video && video.dataset.src)
+	//console.log('payload finish')
+	const blob = new Blob(buffer, {type});
+	switch (type)
 	{
-		loader(`${video.dataset.src}/cover`, 'application/octet-stream').then(blob => video.poster = URL.createObjectURL(blob));
-		if(Hls.isSupported())
-		{
-			const hls = new Hls();
-			hls.attachMedia(video);
-			hls.loadSource(`${video.dataset.src}/play`);
-		}
+		case 'application/json': return JSON.parse(await blob.text());
+		case 'text/plain': return blob.text();
+		default: return blob;
 	}
-});
+}
