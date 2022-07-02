@@ -580,6 +580,7 @@ class interfaces extends webapp
 			'sort' => $data['sort'],
 			'type' => $data['type'],
 			'viewtype' => $data['viewtype'],
+			'ad' => $data['ad'],
 			'name' => $data['name'],
 			'tags' => $data['tags']
 		]);
