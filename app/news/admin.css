@@ -66,6 +66,7 @@ ul.restag>li>label:hover{
 ul.restag>li>label:active{
 	background:gainsboro;
 }
+
 ul.mo{
 	padding:0;
 	width:58rem;
@@ -89,3 +90,28 @@ ul.mo>li>label:hover{
 ul.mo>li>label:active{
 	background:gainsboro;
 }
+
+ul.ad{
+	padding:0;
+	width:58rem;
+	display:flex;
+	align-content: flex-start;
+	flex-flow:wrap;
+	list-style-type:none;
+	gap:1rem;
+}
+ul.ad>li{
+	flex:0 0 18rem;
+}
+ul.ad>li>label{
+	padding:.3rem;
+	border-radius:.3rem;
+	white-space:nowrap;
+}
+ul.ad>li>label:hover{
+	background:whitesmoke;
+}
+ul.ad>li>label:active{
+	background:gainsboro;
+}
+

@@ -217,6 +217,7 @@ class interfaces extends webapp
 		$form->xml['onsubmit'] = 'return upres(this)';
 		$form->xml['data-auth'] = $this->signature($this['admin_username'], $this['admin_password'], (string)$this->site);
 
+		$form->fieldset();
 		$form->field('ad', 'file', ['accept' => 'image/*']);
 
 		$form->fieldset('名称跳转');
@@ -232,10 +233,13 @@ class interfaces extends webapp
 		$form->fieldset('每周几显示，空为时间内展示');
 		$form->field('weekset', 'checkbox', ['options' => [
 			'星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']],
-			fn($v,$i)=>$i?join(',',$v):explode(',',$v));
+			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'mo';
+		$form->fieldset('广告显示位置');
 		$form->field('seat', 'checkbox', ['options' => [
-			'位置0', '位置1', '位置2', '位置3', '位置4', '位置5', '位置7', '位置8', '位置9',]],
-			fn($v,$i)=>$i?join(',',$v):explode(',',$v));
+			'开屏（大概尺寸是手机竖立尺寸）',
+			'播放页面（大概尺寸470x120）',
+			'预留位置2', '预留位置3', '预留位置4', '预留位置5', '预留位置7', '预留位置8', '预留位置9',]],
+			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'ad';
 
 		$form->fieldset('展示方式：小于0点击次数，大于0展示次数');
 		$form->field('count', 'number', ['value' => 0, 'required' => NULL]);

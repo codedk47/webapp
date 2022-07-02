@@ -129,6 +129,7 @@ window.addEventListener('DOMContentLoaded', async function()
 				{
 					if (target.tagName === 'A'
 						&& target.hasAttribute('href')
+						&& target.hasAttribute('target') === false
 						&& /^javascript:|^blob:/.test(target.getAttribute('href')) === false) {
 						router(target.getAttribute('href'));
 						event.preventDefault();
@@ -264,5 +265,85 @@ window.addEventListener('DOMContentLoaded', async function()
 			frame.contentWindow.postMessage(headers);
 		}
 	});
-	loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
+	new Promise(resolve =>
+	{
+		if (window.name) return resolve();
+		loader(`${entry}?api/screen`, {headers}, 'application/json').then(screen =>
+		{
+			if (screen.data === null) return resolve(window.name = 'app');
+			const fdoc = frame.contentDocument,
+			fdiv = fdoc.createElement('div'),
+			ftxt = fdoc.createTextNode('??'),
+			ftimer = seconds =>
+			{
+				if (seconds > -1)
+				{
+					ftxt.nodeValue = `${seconds}s`;
+					ftimer.tid = setTimeout(ftimer, 1000, --seconds);
+				}
+				else
+				{
+					fdoc.onclick = null;
+					resolve(window.name = 'app');
+				}
+			};
+			fdiv.textContent = '正在进入';
+			fdiv.appendChild(ftxt);
+			fdoc.onclick = event =>
+			{
+				if (event.target !== fdiv)
+				{
+					fdoc.onclick = null;
+					clearTimeout(ftimer.tid);
+					resolve(window.name = 'app');
+					window.open(`${entry}${screen.data.query}`);
+				}
+			};
+			fdoc.head.appendChild(fdoc.createElement('style')).textContent = `
+			body,div::before{
+				background-position: center;
+				background-size: cover;
+				background-attachment: fixed;
+				background-repeat: no-repeat;
+			}
+			div::before{
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				filter: blur(1rem);
+				z-index: -1;
+				margin: -2rem;
+			}
+			div{
+				width: 80%;
+				position: fixed;
+				left: 0;
+				right: 0;
+				bottom: 10%;
+				margin: 0 auto;
+				padding: 1rem .4rem;
+				box-shadow: 0 .5rem 2rem rgb(27, 31, 35);
+				border-radius: .6rem;
+				overflow: hidden;
+				z-index: 1;
+				font-family: consolas, monospace;
+				font-weight: bold;
+				font-size: 1.4rem;
+				text-align: center;
+				text-shadow: black 1px 1px;
+				letter-spacing: .4rem;
+				color: white;
+				cursor: pointer;
+			}`;
+			loader(screen.data.src, null, 'application/octet-stream').then(blob =>
+			{
+				fdoc.styleSheets[0].insertRule(`body,div::before{background-image:url(${URL.createObjectURL(blob)})}`, 0);
+				fdoc.body.appendChild(fdiv);
+				ftimer(screen.data.seconds);
+			});
+		});
+	}).then(() => loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render));
 });

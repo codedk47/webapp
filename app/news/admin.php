@@ -507,7 +507,15 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function get_ad_update(string $hash)
 	{
-		$this->webapp->form_ad($this->main, $hash)->echo($this->webapp->mysql->ads('where site=?i and hash=?s', $this->webapp->site, $hash)->array());
+		if ($this->webapp->mysql->ads('where site=?i and hash=?s', $this->webapp->site, $hash)->fetch($ad))
+		{
+			$this->webapp->form_ad($this->main, $hash)->echo($ad)->xml->fieldset->setattr([
+				'style' => 'display:block;width:480px;height:280px;border:.1rem solid black;',
+				'data-src' => "{$this->webapp['app_resoutput']}/news/{$ad['hash']}"
+			])->append('script')->cdata('const pic = document.querySelector("fieldset[data-src]");
+			loader(pic.dataset.src,null,"application/octet-stream").then(b=>pic.style.background=`center/contain no-repeat url(${URL.createObjectURL(b)}) silver`)');
+			
+		}
 	}
 	//================Extensions================
 	//报告
