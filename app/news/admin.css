@@ -66,27 +66,26 @@ ul.restag>li>label:hover{
 ul.restag>li>label:active{
 	background:gainsboro;
 }
-
-ul.tagvod{
+ul.mo{
 	padding:0;
-	width:55rem;
+	width:58rem;
 	display:flex;
 	align-content: flex-start;
 	flex-flow:wrap;
 	list-style-type:none;
 	gap:.3rem;
 }
-ul.tagvod>li{
-	flex:0 0 6rem;
+ul.mo>li{
+	flex:0 0 8rem;
 }
-ul.tagvod>li>label{
+ul.mo>li>label{
 	padding:.3rem;
 	border-radius:.3rem;
 	white-space:nowrap;
 }
-ul.tagvod>li>label:hover{
+ul.mo>li>label:hover{
 	background:whitesmoke;
 }
-ul.tagvod>li>label:active{
+ul.mo>li>label:active{
 	background:gainsboro;
 }

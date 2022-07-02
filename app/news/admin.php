@@ -469,9 +469,16 @@ class webapp_router_admin extends webapp_echo_html
 		$table->paging($this->webapp->at(['page' => '']));
 	}
 	//广告
-	function get_ads()
+	function get_ads(string $search = NULL)
 	{
-		$table = $this->main->table($this->webapp->mysql->ads('where site=?i order by time desc', $this->webapp->site), function($table, $ad, $week, $auth)
+		$cond = ['where site=?i', $this->webapp->site];
+		if ($search)
+		{
+			$cond[0] .= ' and hash=?s';
+			$cond[] = $search;
+		}
+		$cond[0] .= ' order by time desc';
+		$table = $this->main->table($this->webapp->mysql->ads(...$cond), function($table, $ad, $week, $auth)
 		{
 			$table->row();
 			$table->cell()->append('a', ['❌',
@@ -605,14 +612,18 @@ class webapp_router_admin extends webapp_echo_html
 	function form_settag($ctx):webapp_form
 	{
 		$form = new webapp_form($ctx);
-		$form->fieldset('sort / name / seat');
+		$form->fieldset('sort / name');
 		$form->field('sort', 'number', ['value' => 0, 'min' => 0, 'required' => NULL]);
 		$form->field('name', 'text', ['required' => NULL]);
-		$form->field('seat', 'text');
+		
 		$form->fieldset('vods');
 		$tags = $this->webapp->mysql->setvods('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash');
 		$form->field('vods', 'checkbox', ['options' => $tags], 
-			fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'tagvod';
+			fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'mo';
+
+		$form->fieldset('ads');
+		$ads = $this->webapp->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash');
+		$form->field('ads', 'checkbox', ['options' => $ads], fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'mo';
 		$form->fieldset();
 		$form->button('Submit', 'submit');
 		return $form;
@@ -674,10 +685,10 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(date('Y-m-d H:i:s', $tag['time']));
 			$table->cell($tag['sort']);
 			$table->cell($tag['name']);
-			$table->cell($tag['seat']);
+			$table->cell($tag['ads'] ? floor(strlen($tag['ads']) / 12) : 0);
 			$table->cell($tag['vods'] ? floor(strlen($tag['vods']) / 12) : 0);
 		});
-		$table->fieldset('❌', 'hash', 'time', 'sort', 'name', 'seat', 'VOD');
+		$table->fieldset('❌', 'hash', 'time', 'sort', 'name', 'ads', 'VOD');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Tag', ['onclick' => 'location.href="?admin/settag-create"']);
 	}
@@ -685,11 +696,13 @@ class webapp_router_admin extends webapp_echo_html
 	function form_setvod($ctx)
 	{
 		$form = new webapp_form($ctx);
-		$form->fieldset('name / sort / type / viewtype');
+		$form->fieldset('name / sort / type / viewtype / ad');
 		$form->field('name', 'text', ['required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 		$form->field('type', 'select', ['options' => $this->webapp['app_restype'], 'required' => NULL]);
 		$form->field('viewtype', 'select', ['options' => ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小'], 'required' => NULL]);
+		$form->field('ad', 'select', ['options' => ['' => '请选择展示广告']
+			+ $this->webapp->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash')]);
 
 		$form->fieldset('describe');
 		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述', 'required' => NULL]);
@@ -777,11 +790,19 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell($vod['sort']);
 			$table->cell($type[$vod['type']]);
 			$table->cell($viewtype[$vod['viewtype']]);
+			if ($vod['ad'])
+			{
+				$table->cell()->append('a', [$vod['ad'], 'href' => "?admin/ads,search:{$vod['ad']}"]);
+			}
+			else
+			{
+				$table->cell('无广告');
+			}
 			$table->cell($vod['resources'] ? floor(strlen($vod['resources']) / 12) : 0);
 			$table->cell($vod['name']);
 			$table->cell($vod['describe']);
 		}, $this->webapp['app_restype'], ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小']);
-		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'RES', 'name', 'describe');
+		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'ad', 'RES', 'name', 'describe');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
 		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);

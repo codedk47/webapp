@@ -558,10 +558,10 @@ class interfaces extends webapp
 		$node = $this->xml->append('settag', [
 			'hash' => $data['hash'],
 			'sort' => $data['sort'],
-			'name' => $data['name'],
-			'seat' => $data['seat']
+			'name' => $data['name']
 		]);
-		$node->cdata($data['vods']);
+		$node->append('ads')->cdata($data['ads']);
+		$node->append('vods')->cdata($data['vods']);
 		return $node;
 	}
 	function get_settags(string $null = NULL, int $page = 1, int $size = 1000)
