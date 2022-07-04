@@ -37,6 +37,7 @@ class webapp_router_admin extends webapp_echo_html
 				['Set Tags（设置首页标签，包含哪些点播）', '?admin/settags'],
 				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
 				['Stat Bills（统计账单，包括资源购买）', '?admin/statbills'],
+				['Orders（支付中心，订单数据）', '?admin/orders'],
 				['Runstatus（服务器状态，轻点）', '?admin/runstatus']
 			]]
 		]);
@@ -967,7 +968,15 @@ SQL;
 		$table->bar->select(['undef' => '未定义'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select($tops)->setattr(['onchange' => 'g({top:this.value})'])->selected($top);
 	}
-
+	//订单
+	function get_orders()
+	{
+		//if ($this->webapp->admin[2] === FALSE)
+		//{
+			$this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
+		//}
+		
+	}
 	//运行
 	function get_runstatus()
 	{
