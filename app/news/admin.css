@@ -43,6 +43,23 @@ form>fieldset>legend{
 button{
 	width: 100%;
 } */
+table[class*=-stateven] td{
+	min-width: 2.4rem;
+	padding: .2rem;
+}
+table[class*=-stateven]>tbody>tr:not(:first-child):nth-child(odd){
+	background-color:lightblue;
+}
+table[class*=-stateven]>tbody>tr:nth-child(2)>td:first-child{
+	letter-spacing: 1rem;
+	text-align: center;
+	font-weight: bold;
+}
+table[class*=-stateven]>tbody>tr:first-child>td:not(:first-child),
+table[class*=-stateven]>tbody>tr:not(:first-child):nth-child(odd)>td,
+table[class*=-stateven]>tbody>tr:nth-child(even)>td:not(:first-child){
+	text-align: right;
+}
 ul.restag{
 	padding:0;
 	width:70rem;

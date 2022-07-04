@@ -32,11 +32,12 @@ class webapp_router_admin extends webapp_echo_html
 			['Accounts', '?admin/accounts'],
 			['Ads', '?admin/ads'],
 			['Extensions', [
-				['Reports（通告，报告，合并通用 ψ(｀∇´)ψ）', '?admin/reports'],
-				['Comments（暂时没用）', '?admin/comments'],
-				['Set Tags', '?admin/settags'],
-				['Set Vods', '?admin/setvods'],
-				['Runstatus', '?admin/runstatus']
+				['Reports（通告、报告，合并通用 ψ(｀∇´)ψ）', '?admin/reports'],
+				['Comments（评论记录，暂时没用）', '?admin/comments'],
+				['Set Tags（设置首页标签，包含哪些点播）', '?admin/settags'],
+				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
+				['Stat Bills（统计账单，包括资源购买）', '?admin/statbills'],
+				['Runstatus（服务器状态，轻点）', '?admin/runstatus']
 			]]
 		]);
 		if ($webapp->admin[2])
@@ -815,7 +816,157 @@ class webapp_router_admin extends webapp_echo_html
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
 		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 	}
+	//账单统计
+	function get_statbills(string $type = 'undef', string $ym = '', int $top = 10)
+	{
+		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
+		$ymt = range(1, date('t', mktime(0, 0, 0, $m, 1, $y)));
+$statsql = <<<SQL
+WITH t AS (SELECT
+`describe`,
+1 as`d0`,fee as`c0`,
+IF(day=1,1,0)as`d1`,IF(day=1,fee,0)as`c1`,
+IF(day=2,1,0)as`d2`,IF(day=2,fee,0)as`c2`,
+IF(day=3,1,0)as`d3`,IF(day=3,fee,0)as`c3`,
+IF(day=4,1,0)as`d4`,IF(day=4,fee,0)as`c4`,
+IF(day=5,1,0)as`d5`,IF(day=5,fee,0)as`c5`,
+IF(day=6,1,0)as`d6`,IF(day=6,fee,0)as`c6`,
+IF(day=7,1,0)as`d7`,IF(day=7,fee,0)as`c7`,
+IF(day=8,1,0)as`d8`,IF(day=8,fee,0)as`c8`,
+IF(day=9,1,0)as`d9`,IF(day=9,fee,0)as`c9`,
+IF(day=10,1,0)as`d10`,IF(day=10,fee,0)as`c10`,
+IF(day=11,1,0)as`d11`,IF(day=11,fee,0)as`c11`,
+IF(day=12,1,0)as`d12`,IF(day=12,fee,0)as`c12`,
+IF(day=13,1,0)as`d13`,IF(day=13,fee,0)as`c13`,
+IF(day=14,1,0)as`d14`,IF(day=14,fee,0)as`c14`,
+IF(day=15,1,0)as`d15`,IF(day=15,fee,0)as`c15`,
+IF(day=16,1,0)as`d16`,IF(day=16,fee,0)as`c16`,
+IF(day=17,1,0)as`d17`,IF(day=17,fee,0)as`c17`,
+IF(day=18,1,0)as`d18`,IF(day=18,fee,0)as`c18`,
+IF(day=19,1,0)as`d19`,IF(day=19,fee,0)as`c19`,
+IF(day=20,1,0)as`d20`,IF(day=20,fee,0)as`c20`,
+IF(day=21,1,0)as`d21`,IF(day=21,fee,0)as`c21`,
+IF(day=22,1,0)as`d22`,IF(day=22,fee,0)as`c22`,
+IF(day=23,1,0)as`d23`,IF(day=23,fee,0)as`c23`,
+IF(day=24,1,0)as`d24`,IF(day=24,fee,0)as`c24`,
+IF(day=25,1,0)as`d25`,IF(day=25,fee,0)as`c25`,
+IF(day=26,1,0)as`d26`,IF(day=26,fee,0)as`c26`,
+IF(day=27,1,0)as`d27`,IF(day=27,fee,0)as`c27`,
+IF(day=28,1,0)as`d28`,IF(day=28,fee,0)as`c28`,
+IF(day=29,1,0)as`d29`,IF(day=29,fee,0)as`c29`,
+IF(day=30,1,0)as`d30`,IF(day=30,fee,0)as`c30`,
+IF(day=31,1,0)as`d31`,IF(day=31,fee,0)as`c31`
+FROM bills
+WHERE tym=?i AND type=?s)
+SELECT
+NULL as `describe`,
+IFNULL(SUM(d0),0)as`d0`,IFNULL(SUM(c0),0)as`c0`,
+IFNULL(SUM(d1),0)as`d1`,IFNULL(SUM(c1),0)as`c1`,
+IFNULL(SUM(d2),0)as`d2`,IFNULL(SUM(c2),0)as`c2`,
+IFNULL(SUM(d3),0)as`d3`,IFNULL(SUM(c3),0)as`c3`,
+IFNULL(SUM(d4),0)as`d4`,IFNULL(SUM(c4),0)as`c4`,
+IFNULL(SUM(d5),0)as`d5`,IFNULL(SUM(c5),0)as`c5`,
+IFNULL(SUM(d6),0)as`d6`,IFNULL(SUM(c6),0)as`c6`,
+IFNULL(SUM(d7),0)as`d7`,IFNULL(SUM(c7),0)as`c7`,
+IFNULL(SUM(d8),0)as`d8`,IFNULL(SUM(c8),0)as`c8`,
+IFNULL(SUM(d9),0)as`d9`,IFNULL(SUM(c9),0)as`c9`,
+IFNULL(SUM(d10),0)as`d10`,IFNULL(SUM(c10),0)as`c10`,
+IFNULL(SUM(d11),0)as`d11`,IFNULL(SUM(c11),0)as`c11`,
+IFNULL(SUM(d12),0)as`d12`,IFNULL(SUM(c12),0)as`c12`,
+IFNULL(SUM(d13),0)as`d13`,IFNULL(SUM(c13),0)as`c13`,
+IFNULL(SUM(d14),0)as`d14`,IFNULL(SUM(c14),0)as`c14`,
+IFNULL(SUM(d15),0)as`d15`,IFNULL(SUM(c15),0)as`c15`,
+IFNULL(SUM(d16),0)as`d16`,IFNULL(SUM(c16),0)as`c16`,
+IFNULL(SUM(d17),0)as`d17`,IFNULL(SUM(c17),0)as`c17`,
+IFNULL(SUM(d18),0)as`d18`,IFNULL(SUM(c18),0)as`c18`,
+IFNULL(SUM(d19),0)as`d19`,IFNULL(SUM(c19),0)as`c19`,
+IFNULL(SUM(d20),0)as`d20`,IFNULL(SUM(c20),0)as`c20`,
+IFNULL(SUM(d21),0)as`d21`,IFNULL(SUM(c21),0)as`c21`,
+IFNULL(SUM(d22),0)as`d22`,IFNULL(SUM(c22),0)as`c22`,
+IFNULL(SUM(d23),0)as`d23`,IFNULL(SUM(c23),0)as`c23`,
+IFNULL(SUM(d24),0)as`d24`,IFNULL(SUM(c24),0)as`c24`,
+IFNULL(SUM(d25),0)as`d25`,IFNULL(SUM(c25),0)as`c25`,
+IFNULL(SUM(d26),0)as`d26`,IFNULL(SUM(c26),0)as`c26`,
+IFNULL(SUM(d27),0)as`d27`,IFNULL(SUM(c27),0)as`c27`,
+IFNULL(SUM(d28),0)as`d28`,IFNULL(SUM(c28),0)as`c28`,
+IFNULL(SUM(d29),0)as`d29`,IFNULL(SUM(c29),0)as`c29`,
+IFNULL(SUM(d30),0)as`d30`,IFNULL(SUM(c30),0)as`c30`,
+IFNULL(SUM(d31),0)as`d31`,IFNULL(SUM(c31),0)as`c31`
+FROM t
+UNION ALL
+SELECT
+`describe`,
+SUM(d0)as`d0`,SUM(c0)as`c0`,
+SUM(d1)as`d1`,SUM(c1)as`c1`,
+SUM(d2)as`d2`,SUM(c2)as`c2`,
+SUM(d3)as`d3`,SUM(c3)as`c3`,
+SUM(d4)as`d4`,SUM(c4)as`c4`,
+SUM(d5)as`d5`,SUM(c5)as`c5`,
+SUM(d6)as`d6`,SUM(c6)as`c6`,
+SUM(d7)as`d7`,SUM(c7)as`c7`,
+SUM(d8)as`d8`,SUM(c8)as`c8`,
+SUM(d9)as`d9`,SUM(c9)as`c9`,
+SUM(d10)as`d10`,SUM(c10)as`c10`,
+SUM(d11)as`d11`,SUM(c11)as`c11`,
+SUM(d12)as`d12`,SUM(c12)as`c12`,
+SUM(d13)as`d13`,SUM(c13)as`c13`,
+SUM(d14)as`d14`,SUM(c14)as`c14`,
+SUM(d15)as`d15`,SUM(c15)as`c15`,
+SUM(d16)as`d16`,SUM(c16)as`c16`,
+SUM(d17)as`d17`,SUM(c17)as`c17`,
+SUM(d18)as`d18`,SUM(c18)as`c18`,
+SUM(d19)as`d19`,SUM(c19)as`c19`,
+SUM(d20)as`d20`,SUM(c20)as`c20`,
+SUM(d21)as`d21`,SUM(c21)as`c21`,
+SUM(d22)as`d22`,SUM(c22)as`c22`,
+SUM(d23)as`d23`,SUM(c23)as`c23`,
+SUM(d24)as`d24`,SUM(c24)as`c24`,
+SUM(d25)as`d25`,SUM(c25)as`c25`,
+SUM(d26)as`d26`,SUM(c26)as`c26`,
+SUM(d27)as`d27`,SUM(c27)as`c27`,
+SUM(d28)as`d28`,SUM(c28)as`c28`,
+SUM(d29)as`d29`,SUM(c29)as`c29`,
+SUM(d30)as`d30`,SUM(c30)as`c30`,
+SUM(d31)as`d31`,SUM(c31)as`c31`
+FROM t
+GROUP BY `describe`
+ORDER BY d0 DESC,c0 DESC
+LIMIT ?i
+SQL;
+		$tops = ['10' => 'TOP 10', '20' => 'TOP 20', '50' => 'TOP 50', '100' => 'TOP 100'];
+		$table = $this->main->table($this->webapp->mysql($statsql, $y . $m, $type, array_key_exists($top, $tops) ? $top : 10), function($table, $bill, $ymt)
+		{
+			$even = $table->tbody->append('tr');
+			$odd = $table->tbody->append('tr');
+			if ($bill['describe'] && preg_match('/^[0-9A-Z]{12}$/', $bill['describe']))
+			{
+				$even->append('td', ['rowspan' => 2])->append('a', [$bill['describe'], 'href' => "?admin/resource-update,hash:{$bill['describe']}"]);
+			}
+			else
+			{
+				$even->append('td', [$bill['describe'] ?? '汇总', 'rowspan' => 2]);
+			}
 
+			$even->append('td', '购买');
+			$odd->append('td', '收入');
+
+			$even->append('td', number_format($bill['d0']));
+			$odd->append('td', number_format($bill['c0']));
+
+			foreach ($ymt as $i)
+			{
+				$even->append('td', number_format($bill["d{$i}"]));
+				$odd->append('td', number_format($bill["c{$i}"]));
+			}
+		}, $ymt);
+		$table->fieldset('描述（资源）', '统计', '总和', ...$ymt);
+		$table->header('统计账单');
+		$table->xml['class'] = 'webapp-stateven';
+
+		$table->bar->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+		$table->bar->select(['undef' => '未定义'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
+		$table->bar->select($tops)->setattr(['onchange' => 'g({top:this.value})'])->selected($top);
+	}
 
 	//运行
 	function get_runstatus()

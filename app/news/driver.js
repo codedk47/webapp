@@ -76,6 +76,10 @@ function router(path, body)
 // 		}, 'image/png');
 // 	});
 // }
+function account()
+{
+	
+}
 window.addEventListener('DOMContentLoaded', async function()
 {
 	if (top !== self)
@@ -219,34 +223,42 @@ window.addEventListener('DOMContentLoaded', async function()
 		// 	console.log(result)
 		// });
 	}
-	if (localStorage.getItem('account') === null)
+	if (localStorage.getItem('account'))
 	{
-		await loader(`${entry}?api/register`, {headers}, 'application/json').then(result =>
-		{
-			console.log(result)
-			if (result.data.signature)
+		await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
+			`Bearer ${localStorage.getItem('account')}`}, headers)}, 'application/json').then(account => {
+			console.log(account);
+			if (account.data.uid === undefined)
 			{
-				localStorage.setItem('account', result.data.signature);
-				document.cookie = `account=${result.data.signature}`;
-				initreq['Account-Init'] = 1;
+				localStorage.removeItem('account');
 			}
 		});
 	}
 	if (localStorage.getItem('account') === null)
 	{
+		await loader(`${entry}?api/register`, {headers}, 'application/json').then(account =>
+		{
+			console.log(account);
+			if (account.data.signature)
+			{
+				localStorage.setItem('account', account.data.signature);
+				initreq['Account-Init'] = 1;
+			}
+		});
+	}
+	if (localStorage.getItem('account'))
+	{
+		initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
+		document.cookie = `account=${localStorage.getItem('account')}`;
+	}
+	else
+	{
 		return alert('Unauthorized');
 	}
-	
-	document.cookie = `account=${localStorage.getItem('account')}`;
-	initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
 	if (frame.dataset.query.length === 0)
 	{
 		frame.dataset.query = logs[logs.length - 1] || '';
 	}
-
-
-
-
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
 	// history.back();
 	// history.forward();

@@ -27,18 +27,18 @@ customElements.define('webapp-video', class extends HTMLElement
 		
 		
 		
-		this.#video.addEventListener('timeupdate', () =>
-		{
-			//this.style.height = `${this.#video.offsetHeight}px`;
-			//this.style.height = `${this.#video.offsetHeight}px`;
-			if (this.#require && this.#video.currentTime > 10 && this.display && 0)
-			{
-				this.#video.currentTime = 10;
-				this.#video.pause();
-				this.display.show();
-				//this.#suspend();
-			}
-		});
+		// this.#video.addEventListener('timeupdate', () =>
+		// {
+		// 	//this.style.height = `${this.#video.offsetHeight}px`;
+		// 	//this.style.height = `${this.#video.offsetHeight}px`;
+		// 	if (this.#require && this.#video.currentTime > 10 && this.display && 0)
+		// 	{
+		// 		this.#video.currentTime = 10;
+		// 		this.#video.pause();
+		// 		this.display.show();
+		// 		//this.#suspend();
+		// 	}
+		// });
 		// this.#video.addEventListener('play', ()=>{
 		// 	this.style.height = `${this.#video.offsetHeight}px`;
 		// });
@@ -283,6 +283,9 @@ customElements.define('webapp-slide', class extends HTMLElement
 					video.style.height = `${this.#height}px`;
 					video.dataset.load = data.path;
 					video.dataset.require = data.require;
+
+					this.hasAttribute('controls') && video.setAttribute('controls', true);
+		
 					if (data.require && this.#require)
 					{
 						video.display = this.#require;

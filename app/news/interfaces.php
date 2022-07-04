@@ -759,16 +759,35 @@ class interfaces extends webapp
 		}
 	}
 	
-	function bill(string $uid, int $fee, string $describe, &$bill):bool
+	function bill(string $uid, int $fee, string|array $describe, &$bill):bool
 	{
 		return $this->mysql->sync(function() use($uid, $fee, $describe, &$bill)
 		{
+			if (is_array($describe))
+			{
+				return $this->mysql->accounts('WHERE site=?i AND uid=?s', $this->site, $uid)
+						->update('balance=balance+?i,resources=CONCAT(?s,LEFT(resources,24))', $fee, $describe['hash']) > 0
+					&& $this->mysql->bills->insert($bill = [
+						'hash' => $this->randhash(TRUE),
+						'site' => $this->site,
+						'time' => $this->time,
+						'type' => $describe['type'],
+						'tym' => date('Ym', $this->time),
+						'day' => date('d', $this->time),
+						'fee' => $fee,
+						'account' => $uid,
+						'describe' => $describe['hash']
+					]);
+			}
 			return $this->mysql->accounts('WHERE site=?i AND uid=?s', $this->site, $uid)
-						->update('balance=balance???i', $fee > 0 ? '+' : '-', abs($fee)) > 0
+					->update('balance=balance+?i', $fee) > 0
 				&& $this->mysql->bills->insert($bill = [
 					'hash' => $this->randhash(TRUE),
 					'site' => $this->site,
 					'time' => $this->time,
+					'type' => 'undef',
+					'tym' => date('Ym', $this->time),
+					'day' => date('d', $this->time),
 					'fee' => $fee,
 					'account' => $uid,
 					'describe' => $describe
@@ -810,10 +829,15 @@ class interfaces extends webapp
 	{
 		if ($this->account($signature = substr($resource_signature, 12), $account))
 		{
-			$require = $this->mysql->resources('WHERE hash=?s LIMIT 1', $resource = substr($resource_signature, 0, 12))->array()['require'] ?? 0;
-			if ($require > 0 && $this->bill($account['uid'], -$require, "付费播放 {$resource}", $bill))
-			{
-				$this->xml->append('play', ['signature' => $signature, 'resource' => $resource, 'balance' => $account['balance'] - $require]);
+			$resource = $this->resource_get(substr($resource_signature, 0, 12));
+			if ($resource
+				&& $resource['require'] > 0
+				&& in_array($resource['hash'], $account['resources'] ? str_split($account['resources'], 12) : []) === FALSE
+				&& $this->bill($account['uid'], -$resource['require'], $resource, $bill)) {
+				$this->xml->append('play', [
+					'resource' => $resource['hash'],
+					'balance' => $account['balance'] - $resource['require']
+				]);
 				$this->bill_xml($bill);
 			}
 		}
