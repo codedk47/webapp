@@ -639,10 +639,9 @@ class interfaces extends webapp
 	{
 		return strlen($code) === 10
 			&& preg_match('/^(expire|balance)\:(\d+)$/', $gift, $value)
-			&& $this->mysql->accounts('WHERE uid=?s limit 1', $code)->fetch($acc)
-			&& $this->mysql->accounts('WHERE uid=?s LIMIT 1', $acc['uid'])->update(...$value[1] === 'expire'
-				? ['expire=?i', ($acc['expire'] < $this->time ? $this->time : $acc['expire']) + $value[2]]
-				: ['?a+=?i', $value[1], $value[2]]);
+			&& $this->mysql->accounts('WHERE uid=?s LIMIT 1', $code)->update(...$value[1] === 'expire'
+				? ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, $value[2]]
+				: ['?a=?a+?i', $value[1], $value[1], $value[2]]);
 	}
 	function post_register()
 	{

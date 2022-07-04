@@ -309,30 +309,62 @@ final class webapp_router_pay extends webapp_echo_xml
 		$this->xml->cdata($error ?? '未知错误');
 		$this->xml['type'] = 'error';
 	}
-	function insidebuy(string $code):bool
+	//内部订单
+	function insidebuy(array $order):bool
 	{
 		//这里根据订单号进商品行逻辑处理
-		return FALSE;
+		//{E:会员|B:金币}{YYYYMMDD}{增加数字}
+		return $order['status'] !== 'notified'
+			&& preg_match('/(E|B)(\d{8})(\d+)/', $order['order_no'], $goods)
+			&& $this->webapp->mysql->sync(fn() =>
+				$this->webapp->mysql->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->update(...match ($goods[1])
+					{
+						'E' => ['expire=IF(expire>?i,expire,?i)+?i', $this->webapp->time, $this->webapp->time, $goods[3]],
+						'B' => ['balance=balance+?i', $goods[3]],
+						default => []
+					})
+				&& $this->webapp->mysql->bills->insert([
+					'hash' => $this->webapp->randhash(TRUE),
+					'site' => $order['pay_user'],
+					'time' => $this->webapp->time,
+					'type' => 'undef',
+					'tym' => date('Ym', $this->webapp->time),
+					'day' => date('d', $this->webapp->time),
+					'fee' => intval($order['order_fee'] * 0.01),
+					'account' => $order['notify_url'],
+					'describe' => match ($goods[1])
+					{
+						'E' => sprintf('购买会员: %d天', $goods[3] / 86400),
+						'B' => sprintf('购买金币: %d个', $goods[3]),
+						default => '??'
+					}]));
 	}
 	function notify(string $name, $result)
 	{
+		// $result = [
+		// 	'status' => '1',
+		// 	'orderNo' => 'A8NU7DMJFHH9',
+		// 	'amount' => 10000
+		// ];
 		if (class_exists($channel = "webapp_pay_{$name}", FALSE)
 			&& (new $channel($this->webapp['app_pay'][$name]))->notify($result, $status)
-			&& ($order = $this->webapp->mysql->orders('WHERE hash=?s LIMIT 1', $status['hash'])->array())) {
+			&& $this->webapp->mysql->orders('WHERE hash=?s LIMIT 1', $status['hash'])->fetch($order)
+			&& $order['status'] !== 'notified') {
 			$updata = ['last' => $this->webapp->time];
-			if (is_numeric($order['pay_user']))
+			if (array_key_exists('actual_fee', $status))
 			{
+				$updata['actual_fee'] = $order['actual_fee'] = $status['actual_fee'];
+			}
+			if (is_numeric($order['pay_user'])
+				&& strlen($order['notify_url']) === 10
+				&& trim($order['notify_url'], webapp::key) === '') {
 				//内部交易处理
-				$updata['status'] = $this->insidebuy($order['order_no']) ? 'notified' : 'payed';
+				$updata['status'] = $this->insidebuy($order) ? 'notified' : 'payed';
 			}
 			else
 			{
 				$updata['status'] = 'payed';
 				//这里处理外部订单通知
-			}
-			if (array_key_exists('actual_fee', $status))
-			{
-				$updata['actual_fee'] = $status['actual_fee'];
 			}
 			if ($this->webapp->mysql->orders('WHERE hash=?s LIMIT 1', $status['hash'])->update($updata) > 0)
 			{
