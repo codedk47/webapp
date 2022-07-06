@@ -937,8 +937,8 @@ class interfaces extends webapp
 	{
 		//$this->response_header('Allow', 'OPTIONS, POST');
 		$this->response_header('Access-Control-Allow-Origin', '*');
-		$this->response_header('Access-Control-Allow-Headers', '*');
-		$this->response_header('Access-Control-Allow-Methods', '*');
+		$this->response_header('Access-Control-Allow-Headers', 'Authorization');
+		$this->response_header('Access-Control-Allow-Methods', 'POST');
 	}
 	function post_setvod(string $hash = NULL, string $type = NULL)
 	{
