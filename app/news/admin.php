@@ -513,7 +513,7 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			$this->webapp->form_ad($this->main, $hash)->echo($ad)->xml->fieldset->setattr([
 				'style' => 'display:block;width:480px;height:280px;border:.1rem solid black;',
-				'data-src' => "{$this->webapp['app_resoutput']}/news/{$ad['hash']}"
+				'data-src' => "{$this->webapp['app_resoutput']}news/{$ad['hash']}"
 			])->append('script')->cdata('const pic = document.querySelector("fieldset[data-src]");
 			loader(pic.dataset.src,null,"application/octet-stream").then(b=>pic.style.background=`center/contain no-repeat url(${URL.createObjectURL(b)}) silver`)');
 			
@@ -721,7 +721,7 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			$this->webapp->form_setvod($this->main, $hash, $type)->echo($data)->xml->fieldset->setattr([
 				'style' => 'display:block;width:480px;height:280px;border:.1rem solid black;',
-				'data-src' => "{$this->webapp['app_resoutput']}/vods/{$data['hash']}"
+				'data-src' => "{$this->webapp['app_resoutput']}vods/{$data['hash']}"
 			])->append('script')->cdata('const pic = document.querySelector("fieldset[data-src]");
 			loader(pic.dataset.src,null,"application/octet-stream").then(b=>pic.style.background=`center/contain no-repeat url(${URL.createObjectURL(b)}) silver`)');
 		}
