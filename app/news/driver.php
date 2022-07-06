@@ -126,12 +126,7 @@ class news_driver extends webapp
 		{
 			foreach ($channel->pay as $pay)
 			{
-				$types = [];
-				foreach ($pay->type as $type)
-				{
-					$types[(string)$type['value']] = (string)$type['name'];
-				}
-				$channels[(string)$pay['value']] = ['name' => (string)$pay['name'], 'type' => $types];
+				$channels[(string)$pay['type']] = (string)$pay['name'];
 			}
 		}
 		return $channels;

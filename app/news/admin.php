@@ -919,13 +919,38 @@ SQL;
 		$table->bar->select($tops)->setattr(['onchange' => 'g({top:this.value})'])->selected($top);
 	}
 	//订单
-	function get_orders()
+	function get_orders(string $platform = NULL, int $page = 1)
 	{
-		//if ($this->webapp->admin[2] === FALSE)
-		//{
+		if ($this->webapp->admin[2] === FALSE)
+		{
 			$this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
-		//}
-		
+		}
+		$cond = ['WHERE pay_user=?i', $platform ??= $this->webapp->site];
+		// if (array_key_exists('search', $this->webapp->query))
+		// {
+		// 	$cond[0] .= ' AND (hash=?s OR )';
+		// }
+
+		$cond[0] .= ' ORDER BY time DESC';
+		$table = $this->main->table($this->webapp->mysql->orders(...$cond)->paging($page, 21), function($table, $order)
+		{
+			$table->row();
+			$table->cell($order['hash']);
+			$table->cell(date('Y-m-d\\TH:i:s', $order['time']));
+			$table->cell(date('Y-m-d\\TH:i:s', $order['last']));
+			$table->cell($order['status']);
+			$table->cell(number_format($order['actual_fee'] * 0.01, 2));
+			$table->cell(number_format($order['order_fee'] * 0.01, 2));
+			$table->cell($order['pay_user']);
+			$table->cell($order['pay_name']);
+			$table->cell($order['order_no']);
+			$table->cell($order['trade_no']);
+		});
+		$table->fieldset('hash（我方订单号）', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台', '订单', '对方订单');
+		$table->header('订单数据');
+		$table->button('order stat', ['onclick' => 'location.href="?admin/orderstat"']);
+		$table->search(['value' => '', 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->paging($this->webapp->at(['page' => '']));
 	}
 	//运行
 	function get_runstatus()
