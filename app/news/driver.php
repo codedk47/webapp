@@ -150,7 +150,7 @@ class news_driver extends webapp
 			$data['data'] = (string)$result;
 			return $data;
 		}
-		//var_dump($result);
+		var_dump($result);
 		return [];
 	}
 	function request_unitcode():string

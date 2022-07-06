@@ -290,7 +290,7 @@ final class webapp_router_pay extends webapp_echo_xml
 				{
 					$this->xml->append('pay', [
 						'type' => "{$channel}@{$type}",
-						'name' => "{$channel}({$name})"
+						'name' => "{$name}"
 					]);
 				}
 			}
