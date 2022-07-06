@@ -348,7 +348,7 @@ class interfaces extends webapp
 		$tags = $this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->column('name', 'hash');
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
-		$form->field('require', 'number', ['value' => 0, 'min' => -1, 'required' => NULL]);
+		$form->field('require', 'number', ['value' => 0, 'min' => -2, 'required' => NULL]);
 		$form->fieldset();
 		$form->button('Upload Resource', 'submit');
 		$form->button('Cancel', 'button', ['onclick' => 'xhr.abort()']);

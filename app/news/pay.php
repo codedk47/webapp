@@ -115,6 +115,7 @@ final class webapp_pay_cj implements webapp_pay
 			$order['data'] = $result['data']['payurl'];
 			return TRUE;
 		} while (0);
+		var_dump($result);
 		return FALSE;
 	}
 	function notify(mixed $result, ?array &$status):bool
@@ -244,14 +245,14 @@ final class webapp_router_pay extends webapp_echo_xml
 			//这里正对内部订单
 			$order['pay_user'] = intval($auth[2]);
 
-			[$pay_name, $pay_type] = explode('@', $order['pay_type']);
-			if (array_key_exists($pay_name, $this->webapp['app_pay']) === FALSE
-				|| $this->webapp['app_pay'][$pay_name]['open'] === FALSE) {
+			[$order['pay_name'], $order['pay_type']] = explode('@', $order['pay_type']);
+			if (array_key_exists($order['pay_name'], $this->webapp['app_pay']) === FALSE
+				|| $this->webapp['app_pay'][$order['pay_name']]['open'] === FALSE) {
 				$error = '支付名称不存在！';
 				break;
 			}
-			$channel = "webapp_pay_{$pay_type}";
-			if (array_key_exists($pay_type, $channel::paytype()) === FALSE)
+			$channel = "webapp_pay_{$order['pay_name']}";
+			if (array_key_exists($order['pay_type'], $channel::paytype()) === FALSE)
 			{
 				$error = '支付类型不存在！';
 				break;
@@ -260,6 +261,8 @@ final class webapp_router_pay extends webapp_echo_xml
 				'hash' => $order['hash'] = $this->webapp->randhash(),
 				'time' => $this->webapp->time,
 				'last' => $this->webapp->time,
+				'tym' => date('Ym', $this->webapp->time),
+				'day' => date('d', $this->webapp->time),
 				'status' => 'unpay',
 				'actual_fee' => $order['order_fee'],
 				'order_fee' => $order['order_fee'],
@@ -290,7 +293,7 @@ final class webapp_router_pay extends webapp_echo_xml
 				{
 					$this->xml->append('pay', [
 						'type' => "{$channel}@{$type}",
-						'name' => "{$name}"
+						'name' => "{$channel}@{$type}" === 'yk@ALIPAY_H5' ? "{$name} " : $name
 					]);
 				}
 			}

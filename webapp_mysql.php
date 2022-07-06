@@ -485,9 +485,10 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	// {
 	// 	return new $this->targetname($this, $mixed);
 	// }
-	function statmonth(string $y_m, string $group, string $day, array $fields)
+	function statmonth(string $y_m, string $group, string $day, array $fields, ...$extra)
 	{
 		$days = range(0, date('t', strtotime($y_m)));
+
 		// $stat = [];
 		// foreach ($days as $i)
 		// {
@@ -509,39 +510,42 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		foreach ($days as $i)
 		{
 			$daydata = [$i
-				? $this->mysql->format('IF(??=?i,1,0)AS?a', $day, $i, "day{$i}")
-				: $this->mysql->format('1 AS?a', "day{$i}")];
-			$daycalc = [$this->mysql->format('IFNULL(SUM(?a),0)AS?a', "day{$i}", "day{$i}")];
-			$daymore = [$this->mysql->format('SUM(?a)AS?a', "day{$i}", "day{$i}")];
-			foreach ($fields as $field)
+				? $this->mysql->format('COUNT(IF(??=?i,1,NULL))AS?a', $day, $i, "\${$i}")
+				: $this->mysql->format('COUNT(1)AS?a', "\${$i}")];
+			$daycalc = [$this->mysql->format('IFNULL(SUM(?a),0)AS?a', "\${$i}", "\${$i}")];
+			$daymore = [$this->mysql->format('SUM(?a)AS?a', "\${$i}", "\${$i}")];
+
+			
+			foreach ($fields as $index => $field)
 			{
-				$daydata[] = $i
-					? $this->mysql->format('IF(??=?i,?a,0)AS?a', $day, $i, $field, "{$field}{$i}")
-					: $this->mysql->format('?aAS?a', $field, "{$field}{$i}");
-				$daycalc[] = $this->mysql->format('IFNULL(SUM(?a),0)AS?a', "{$field}{$i}", "{$field}{$i}");
-				$daymore[] = $this->mysql->format('SUM(?a)AS?a', "{$field}{$i}", "{$field}{$i}");
+				
+				$daydata[] = $this->mysql->format('??AS?a', str_replace(['{day}'], [$i], $field), "\${$index}\${$i}");
+				$daycalc[] = $this->mysql->format('IFNULL(SUM(?a),0)AS?a', "\${$index}\${$i}", "\${$index}\${$i}");
+				$daymore[] = $this->mysql->format('SUM(?a)AS?a', "\${$index}\${$i}", "\${$index}\${$i}");
 			}
+			
 			$data[] = join(',', $daydata);
 			$calc[] = join(',', $daycalc);
 			$more[] = join(',', $daymore);
 		}
 
-		$s = $this->mysql->format(join(' ', ['WITH t AS (SELECT ?a,?? FROM ?a??)',
+		$s = $this->mysql->format(join(' ', ['WITH t AS (SELECT ?a,?? FROM ?a?? GROUP BY ?a)',
 				'SELECT NULL as ?a,?? FROM t',
 				'UNION ALL',
-				'SELECT ?a,?? FROM t GROUP BY ?a LIMIT 10'
+				'SELECT ?a,?? FROM t GROUP BY ?a??'
 			]),
-			$group, join(",\n", $data), $this->tablename, (string)$this,
+			$group, join(",\n", $data), $this->tablename, (string)$this, $group,
 			$group, join(",\n", $calc),
-			$group, join(",\n", $more), $group);
-
+			$group, join(",\n", $more), $group,
+			$extra ? ' '. $this->mysql->format(...$extra) : '');
+		return ($this->mysql)($s);
 		
 
 		
-		//PRINT_R(($this->mysql)($s)->all() );
+		// PRINT_R(($this->mysql)($s)->all() );
 		
 	
-		print_r($s);
+		// print_r($s);
 	}
 	function fieldinfo()
 	{
