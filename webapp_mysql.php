@@ -485,6 +485,64 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	// {
 	// 	return new $this->targetname($this, $mixed);
 	// }
+	function statmonth(string $y_m, string $group, string $day, array $fields)
+	{
+		$days = range(0, date('t', strtotime($y_m)));
+		// $stat = [];
+		// foreach ($days as $i)
+		// {
+		// 	$stat[] = "day{$i}";
+		// 	foreach ([$fields] as $field)
+		// 	{
+		// 		$stat[] = "{$field}{$i}";
+		// 	}
+		// }
+		// print_r($stat);
+		// return;
+
+
+
+		$data = [];
+		$calc = [];
+		$more = [];
+
+		foreach ($days as $i)
+		{
+			$daydata = [$i
+				? $this->mysql->format('IF(??=?i,1,0)AS?a', $day, $i, "day{$i}")
+				: $this->mysql->format('1 AS?a', "day{$i}")];
+			$daycalc = [$this->mysql->format('IFNULL(SUM(?a),0)AS?a', "day{$i}", "day{$i}")];
+			$daymore = [$this->mysql->format('SUM(?a)AS?a', "day{$i}", "day{$i}")];
+			foreach ($fields as $field)
+			{
+				$daydata[] = $i
+					? $this->mysql->format('IF(??=?i,?a,0)AS?a', $day, $i, $field, "{$field}{$i}")
+					: $this->mysql->format('?aAS?a', $field, "{$field}{$i}");
+				$daycalc[] = $this->mysql->format('IFNULL(SUM(?a),0)AS?a', "{$field}{$i}", "{$field}{$i}");
+				$daymore[] = $this->mysql->format('SUM(?a)AS?a', "{$field}{$i}", "{$field}{$i}");
+			}
+			$data[] = join(',', $daydata);
+			$calc[] = join(',', $daycalc);
+			$more[] = join(',', $daymore);
+		}
+
+		$s = $this->mysql->format(join(' ', ['WITH t AS (SELECT ?a,?? FROM ?a??)',
+				'SELECT NULL as ?a,?? FROM t',
+				'UNION ALL',
+				'SELECT ?a,?? FROM t GROUP BY ?a LIMIT 10'
+			]),
+			$group, join(",\n", $data), $this->tablename, (string)$this,
+			$group, join(",\n", $calc),
+			$group, join(",\n", $more), $group);
+
+		
+
+		
+		//PRINT_R(($this->mysql)($s)->all() );
+		
+	
+		print_r($s);
+	}
 	function fieldinfo()
 	{
 		return ($this->mysql)('SHOW FULL COLUMNS FROM ?a', $this->tablename);

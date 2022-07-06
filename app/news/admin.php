@@ -703,53 +703,9 @@ class webapp_router_admin extends webapp_echo_html
 		$table->button('Create Set Tag', ['onclick' => 'location.href="?admin/settag-create"']);
 	}
 	//合集资源
-	function form_setvod($ctx)
-	{
-		$form = new webapp_form($ctx);
-		$form->fieldset('name / sort / type / viewtype / ad');
-		$form->field('name', 'text', ['required' => NULL]);
-		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
-		$form->field('type', 'select', ['options' => $this->webapp['app_restype'], 'required' => NULL]);
-		$form->field('viewtype', 'select', ['options' => ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小'], 'required' => NULL]);
-		$form->field('ad', 'select', ['options' => ['' => '请选择展示广告']
-			+ $this->webapp->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash')]);
-
-		$form->fieldset('describe');
-		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述', 'required' => NULL]);
-
-		$form->fieldset('tags');
-		$tags = $this->webapp->mysql->tags('ORDER BY time ASC', $this->webapp->site)->column('name', 'hash');
-		$form->field('tags', 'checkbox', ['options' => $tags], 
-			fn($v,$i)=>$i?join($v):str_split($v,4))['class'] = 'restag';
-
-		$form->fieldset('resources');
-		$form->field('resources', 'text', [
-			'style' => 'width:60rem',
-			'placeholder' => '请输入展示的资源哈希用逗号间隔',
-			'pattern' => '[0-9A-Z]{12}(,[0-9A-Z]{12})*',
-			'required' => NULL
-		], fn($v,$i)=>$i?join(explode(',',$v)):join(',',str_split($v,12)));
-
-		$form->fieldset();
-		$form->button('Submit', 'submit');
-		return $form;
-	}
-	function post_setvod_create()
-	{
-		if ($this->form_setvod($this->webapp)->fetch($data)
-			&& $this->webapp->mysql->setvods->insert($data += [
-				'hash' => $this->webapp->randhash(),
-				'site' => $this->webapp->site,
-				'time' => $this->webapp->time,
-				'view' => 0])
-			&& $this->webapp->call('saveSetvod', $this->webapp->setvod_xml($data))) {
-			return $this->okay('?admin/setvods');
-		}
-		$this->warn('合集资源创建失败！');
-	}
 	function get_setvod_create()
 	{
-		$this->form_setvod($this->main);
+		$this->webapp->form_setvod($this->main)->xml->fieldset[1]->input['required'] = NULL;
 	}
 	function get_setvod_delete(string $hash)
 	{
@@ -759,21 +715,15 @@ class webapp_router_admin extends webapp_echo_html
 		}
 		$this->warn('合集资源删除失败！');
 	}
-	function post_setvod_update(string $hash, string $type = NULL)
-	{
-		if ($this->form_setvod($this->webapp)->fetch($data)
-			&& $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->update($data)
-			&& ($newdata = $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->array())
-			&& $this->webapp->call('saveSetvod', $this->webapp->setvod_xml($newdata))) {
-			return $this->okay("?admin/setvods,type:{$type}");
-		}
-		$this->warn('合集资源更新失败！');
-	}
-	function get_setvod_update(string $hash)
+	function get_setvod_update(string $hash, string $type)
 	{
 		if ($data = $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->array())
 		{
-			$this->form_setvod($this->main)->echo($data);
+			$this->webapp->form_setvod($this->main, $hash, $type)->echo($data)->xml->fieldset->setattr([
+				'style' => 'display:block;width:480px;height:280px;border:.1rem solid black;',
+				'data-src' => "{$this->webapp['app_resoutput']}/vods/{$data['hash']}"
+			])->append('script')->cdata('const pic = document.querySelector("fieldset[data-src]");
+			loader(pic.dataset.src,null,"application/octet-stream").then(b=>pic.style.background=`center/contain no-repeat url(${URL.createObjectURL(b)}) silver`)');
 		}
 	}
 	function get_setvods(string $type = NULL)

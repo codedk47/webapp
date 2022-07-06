@@ -894,4 +894,87 @@ class interfaces extends webapp
 			])->cdata($comment['content']);
 		}
 	}
+	//Setvods
+	function form_setvod($ctx, string $hash = NULL, string $type = NULL):webapp_form
+	{
+		$form = new webapp_form($ctx, is_string($hash)
+			? "{$this['app_resdomain']}?setvod/{$hash},type:{$type}"
+			: "{$this['app_resdomain']}?setvod");
+
+		$form->xml['onsubmit'] = 'return upres(this)';
+		$form->xml['data-auth'] = $this->signature($this['admin_username'], $this['admin_password'], (string)$this->site);
+		
+		$form->fieldset('cover / name / sort / type / viewtype / ad');
+		$form->field('cover', 'file', ['accept' => 'image/*']);
+		$form->field('name', 'text', ['required' => NULL]);
+		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
+		$form->field('type', 'select', ['options' => $this['app_restype'], 'required' => NULL]);
+		$form->field('viewtype', 'select', ['options' => ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小'], 'required' => NULL]);
+		$form->field('ad', 'select', ['options' => ['' => '请选择展示广告']
+			+ $this->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->site)->column('name', 'hash')]);
+
+		$form->fieldset('describe');
+		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述', 'required' => NULL]);
+
+		$form->fieldset('tags');
+		$tags = $this->mysql->tags('ORDER BY time ASC', $this->site)->column('name', 'hash');
+		$form->field('tags', 'checkbox', ['options' => $tags], 
+			fn($v,$i)=>$i?join($v):str_split($v,4))['class'] = 'restag';
+
+		$form->fieldset('resources');
+		$form->field('resources', 'text', [
+			'style' => 'width:60rem',
+			'placeholder' => '请输入展示的资源哈希用逗号间隔',
+			'pattern' => '[0-9A-Z]{12}(,[0-9A-Z]{12})*',
+			'required' => NULL
+		], fn($v,$i)=>$i?join(explode(',',$v)):join(',',str_split($v,12)));
+
+		$form->fieldset();
+		$form->button('Submit', 'submit');
+		return $form;
+	}
+	function options_setvod()
+	{
+		$this->response_header('Allow', 'OPTIONS, POST');
+		$this->response_header('Access-Control-Allow-Origin', '*');
+		$this->response_header('Access-Control-Allow-Headers', '*');
+		$this->response_header('Access-Control-Allow-Methods', 'POST');
+	}
+	function post_setvod(string $hash = NULL, string $type = NULL)
+	{
+		$this->app('webapp_echo_json', ['code' => 0]);
+		$form = $this->form_setvod($this);
+		if ($hash)
+		{
+			if ($this->form_setvod($this)->fetch($data)
+				&& $this->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->update($data)
+				&& ($newdata = $this->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->array())
+				&& $this->call('saveSetvod', $this->setvod_xml($newdata))) {
+				if ($cover = $this->request_uploadedfile('cover')[0] ?? [])
+				{
+					$this->maskfile($cover['file'], "{$this['app_resoutdir']}/vods/{$hash}");
+				}
+				return $this->app['goto'] = "?admin/setvods,type:{$type}";
+			}
+			$this->app['errors'][] = '合集资源更新失败！';
+		}
+		else
+		{
+			$form->xml->fieldset[1]->input['required'] = NULL;
+			if ($form->fetch($data)
+				&& $this->mysql->setvods->insert($data += [
+					'hash' => $this->randhash(),
+					'site' => $this->site,
+					'time' => $this->time,
+					'view' => 0])
+				&& $this->call('saveSetvod', $this->setvod_xml($data))) {
+				if ($cover = $this->request_uploadedfile('cover')[0] ?? [])
+				{
+					$this->maskfile($cover['file'], "{$this['app_resoutdir']}/vods/{$data['hash']}");
+				}
+				return $this->app['goto'] = "?admin/setvods,type:{$data['type']}";
+			}
+			$this->app['errors'][] = '合集资源创建失败！';
+		}
+	}
 };
