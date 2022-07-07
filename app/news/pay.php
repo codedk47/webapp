@@ -341,8 +341,10 @@ final class webapp_router_pay extends webapp_echo_xml
 						'B' => sprintf('购买金币: %d个', $goods[3]),
 						default => '??'
 					}])
+				&& is_numeric($this->webapp->site = $order['pay_user'])
 				&& $this->webapp->call('saveUser', $this->webapp->account_xml($this->webapp->mysql
-					->accounts('WHERE uid=?s LIMIT 1', $order['notify_url']))->array()));
+					->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->array()))
+			);
 	}
 	function notify(string $name, $result)
 	{
