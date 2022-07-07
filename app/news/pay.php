@@ -115,14 +115,14 @@ final class webapp_pay_cj implements webapp_pay
 			$order['data'] = $result['data']['payurl'];
 			return TRUE;
 		} while (0);
-		var_dump($result);
+		//var_dump($result);
 		return FALSE;
 	}
 	function notify(mixed $result, ?array &$status):bool
 	{
 		if (is_array($result)
 			&& isset($result['status'], $result['orderId'], $result['orderAmt'])
-			&& $result['status'] === '1') {
+			&& intval($result['status']) === 1) {
 			$status = [
 				'code' => 200,
 				'type' => 'text/plain',
@@ -186,7 +186,7 @@ final class webapp_pay_yk implements webapp_pay
 	{
 		if (is_array($result)
 			&& isset($result['status'], $result['orderNo'], $result['amount'])
-			&& $result['status'] === '1') {
+			&& intval($result['status']) === 1) {
 			$status = [
 				'code' => 200,
 				'type' => 'text/plain',

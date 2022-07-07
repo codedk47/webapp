@@ -842,16 +842,15 @@ class webapp_router_admin extends webapp_echo_html
 
 	}
 	//订单
-	function get_orders(string $platform = NULL, int $page = 1)
+	function get_orders(string $search = NULL, int $page = 1)
 	{
 		if ($this->webapp->admin[2] === FALSE) return $this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
-
-		$cond = ['WHERE pay_user=?i', $platform ??= $this->webapp->site];
-		// if (array_key_exists('search', $this->webapp->query))
-		// {
-		// 	$cond[0] .= ' AND (hash=?s OR )';
-		// }
-
+		$cond = ['WHERE 1'];
+		if ($search)
+		{
+			$cond[0] .= ' AND hash=?s';
+			$cond[] = $search;
+		}
 		$cond[0] .= ' ORDER BY time DESC';
 		$table = $this->main->table($this->webapp->mysql->orders(...$cond)->paging($page, 21), function($table, $order, $status)
 		{
@@ -915,6 +914,8 @@ class webapp_router_admin extends webapp_echo_html
 						&& is_numeric($this->webapp->site = $order['pay_user'])
 						&& $this->webapp->call('saveUser', $this->webapp->account_xml($this->webapp->mysql
 							->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->array()))
+						&& ($order['status'] === 'payed' ? $this->webapp->mysql
+							->orders('WHERE hash=?s LIMIT 1', $order['hash'])->update('status="notified"') : TRUE)
 					)) {
 					return $this->okay("?admin/orders,search:{$order['hash']}");
 				}
