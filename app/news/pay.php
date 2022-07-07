@@ -348,6 +348,7 @@ final class webapp_router_pay extends webapp_echo_xml
 	}
 	function notify(string $name, $result)
 	{
+		//file_put_contents('d:/n.txt', json_encode($result, JSON_UNESCAPED_UNICODE));
 		// $result = [
 		// 	'status' => '1',
 		// 	'orderNo' => 'A8NU7DMJFHH9',
