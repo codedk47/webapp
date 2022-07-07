@@ -122,7 +122,7 @@ final class webapp_pay_cj implements webapp_pay
 	{
 		if (is_array($result)
 			&& isset($result['status'], $result['orderId'], $result['orderAmt'])
-			&& $result['status'] === 1) {
+			&& $result['status'] === '1') {
 			$status = [
 				'code' => 200,
 				'type' => 'text/plain',

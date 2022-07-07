@@ -860,18 +860,71 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(date('Y-m-d\\TH:i:s', $order['time']));
 			$table->cell(date('Y-m-d\\TH:i:s', $order['last']));
 			$table->cell([$order['status'], 'style' => "color:{$status[$order['status']]}"]);
+			$table->cell()->append('a', ['⏳',
+				'href' => "?admin/ordernotify,hash:{$order['hash']}",
+				'onclick' => 'return confirm(this.dataset.notifyurl)',
+				'data-notifyurl' => $order['notify_url']]);
 			$table->cell(number_format($order['actual_fee'] * 0.01, 2));
 			$table->cell(number_format($order['order_fee'] * 0.01, 2));
 			$table->cell($order['pay_user']);
 			$table->cell($order['pay_name']);
 			$table->cell($order['order_no']);
 			$table->cell($order['trade_no']);
+			
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
-		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台', '订单（内部产品）', '对方订单');
+		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '⌛', '实际支付', '订单价格', '商户', '平台', '订单（内部产品）', '对方订单');
 		$table->header('订单数据');
 		$table->button('order stat', ['onclick' => 'location.href="?admin/orderstat"']);
 		$table->search(['value' => '', 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
+	}
+	function get_ordernotify(string $hash)
+	{
+		do
+		{
+			$error = '订单不存在';
+			if ($this->webapp->mysql->orders('WHERE hash=?s LIMIT 1', $hash)->fetch($order) === FALSE)
+			{
+				break;
+			}
+			if (is_numeric($order['pay_user']) && strlen($order['notify_url']) === 10)
+			{
+				if (preg_match('/(E|B)(\d{8})(\d+)/', $order['order_no'], $goods)
+					&& $this->webapp->mysql->sync(fn() =>
+						$this->webapp->mysql->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->update(...match ($goods[1])
+						{
+							'E' => ['expire=IF(expire>?i,expire,?i)+?i', $this->webapp->time, $this->webapp->time, $goods[3]],
+							'B' => ['balance=balance+?i', $goods[3]],
+							default => []
+						})
+						&& $this->webapp->mysql->bills->insert([
+							'hash' => $this->webapp->randhash(TRUE),
+							'site' => $order['pay_user'],
+							'time' => $this->webapp->time,
+							'type' => 'undef',
+							'tym' => date('Ym', $this->webapp->time),
+							'day' => date('d', $this->webapp->time),
+							'fee' => intval($order['order_fee'] * 0.01),
+							'account' => $order['notify_url'],
+							'describe' => match ($goods[1])
+							{
+								'E' => sprintf('购买会员: %d天', $goods[3] / 86400),
+								'B' => sprintf('购买金币: %d个', $goods[3]),
+								default => '??'
+							}])
+						&& is_numeric($this->webapp->site = $order['pay_user'])
+						&& $this->webapp->call('saveUser', $this->webapp->account_xml($this->webapp->mysql
+							->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->array()))
+					)) {
+					return $this->okay("?admin/orders,search:{$order['hash']}");
+				}
+				$error = '内部通知失败！';
+				break;
+			}
+			//外部通知
+			$error = '外部通知失败！';
+		} while (0);
+		$this->warn($error);
 	}
 	function get_orderstat(string $ym = '')
 	{
