@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<link rel="manifest" href="manifest.json">
 	<script src="/webapp/app/news/driver.js"></script>
 	<title>app</title>
 	<style>
@@ -22,6 +23,14 @@
 	</style>
 </head>
 <body>
-	<iframe frameborder="0" loading="lazy" width="100%" height="100%" src="about:blank" data-entry="http://192.168.0.119/index.php" data-query=""></iframe>
+	<iframe frameborder="0" loading="lazy" width="100%" height="100%" src="about:blank" data-entry="/index.php" data-query=""></iframe>
 </body>
+<script>
+if ('serviceWorker' in navigator)
+{
+	navigator.serviceWorker.register('/webapp/app/news/sw.js')
+	// .then(reg => console.log(`Registration succeeded. Scope is ${reg.scope}`))
+	// .catch(error => console.error(`Registration failed with ${error}`));
+}
+</script>
 </html>
