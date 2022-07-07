@@ -880,11 +880,11 @@ class webapp_router_admin extends webapp_echo_html
 		$days = range(1, date('t', strtotime($ym)));
 
 		$stat = $this->webapp->mysql->orders('WHERE tym=?i', "{$y}{$m}")->statmonth($ym, 'pay_name', 'day', [
-			'COUNT(IF((!{day} OR day={day}) AND status="unpay",1,NULL))',
-			'COUNT(IF((!{day} OR day={day}) AND status!="unpay",1,NULL))',
-			'SUM(IF((!{day} OR day={day}) AND status!="unpay",order_fee,0))',
-			'SUM(IF((!{day} OR day={day}) AND status!="unpay",actual_fee,0))',
-			'COUNT(IF((!{day} OR day={day}) AND status="notified",1,NULL))'
+			'COUNT(IF(({day}=0 OR day={day}) AND status="unpay",1,NULL))',
+			'COUNT(IF(({day}=0 OR day={day}) AND status!="unpay",1,NULL))',
+			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",order_fee,0))',
+			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",actual_fee,0))',
+			'COUNT(IF(({day}=0 OR day={day}) AND status="notified",1,NULL))'
 		], 'ORDER BY `$1$0` DESC');
 
 		$table = $this->main->table($stat, function($table, $order, $days)
