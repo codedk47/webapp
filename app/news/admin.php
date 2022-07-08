@@ -467,7 +467,7 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			$table->row();
 			$table->cell()->append('a', [$acc['uid'], 'href' => "?admin/account-update,uid:{$acc['uid']}"]);
-			$table->cell(date('Y-m-d', $acc['time']));
+			$table->cell($acc['date']);
 			$table->cell(date('Y-m-d', $acc['expire']));
 			$table->cell(number_format($acc['balance']));
 			$table->cell(date('Y-m-d', $acc['lasttime']));
@@ -485,7 +485,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell($acc['phone']);
 			$table->cell($acc['name']);
 		});
-		$table->fieldset('uid', 'time', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'unit', 'code', 'phone', 'name');
+		$table->fieldset('uid', 'date', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'unit', 'code', 'phone', 'name');
 		$table->header('Found %d item', $table->count());
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
