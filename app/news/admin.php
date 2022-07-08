@@ -38,6 +38,7 @@ class webapp_router_admin extends webapp_echo_html
 				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
 				['Stat Bills（统计账单，包括资源购买）', '?admin/statbills'],
 				['Orders（支付中心，订单数据）', '?admin/orders'],
+				['Unitsets（单位设置）', '?admin/unitsets'],
 				['Runstatus（服务器状态，轻点）', '?admin/runstatus']
 			]]
 		]);
@@ -1091,6 +1092,72 @@ class webapp_router_admin extends webapp_echo_html
 		$table->fieldset('❌', 'uid:pwd', 'name', 'time', 'lasttime', 'lastip' );
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Admin', 'onclick' => 'location.href="?admin/admin-create"']);
+		$table->paging($this->webapp->at(['page' => '']));
+	}
+	//单位
+	function form_unitset($ctx):webapp_form
+	{
+		$form = new webapp_form($ctx);
+
+		$form->fieldset('unit / code / rate / name');
+		$form->field('unit', 'text', ['placeholder' => '单位编码4位字母数字组合', 'pattern' => '\w{4}', 'maxlength' => 4, 'required' => NULL]);
+		$form->field('code', 'text', ['value' => random_int(100000, 999999), 'required' => NULL]);
+		$form->field('rate', 'number', ['value' => 1, 'min' => 0.5, 'max' => 1, 'step' => 0.01, 'required' => NULL]);
+		$form->field('name', 'text', ['placeholder' => '单位名字描述', 'maxlength' => 128, 'required' => NULL]);
+
+		$form->fieldset('owns');
+		$unit = $this->webapp->mysql->unitsets('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('unit', 'unit');
+
+		$form->field('owns', 'checkbox', ['options' => $unit], 
+			fn($v,$i)=>$i?join($v):str_split($v,4))['class'] = 'mo';
+
+		$form->fieldset();
+		$form->button('Submit', 'submit');
+
+		return $form;
+	}
+	function post_unitset(string $unit = NULL)
+	{
+		if ($this->form_unitset($this->webapp)->fetch($data) && ($unit
+			? $this->webapp->mysql->unitsets('WHERE unit=?s LIMIT 1', $unit)->update($data)
+			: $this->webapp->mysql->unitsets->insert([
+				'site' => $this->webapp->site,
+				'time' => $this->webapp->time ] + $data))) {
+			return $this->okay('?admin/unitsets');
+		}
+		$this->warn('创建失败！');
+	}
+	function get_unitset_delete(string $unit)
+	{
+		$this->webapp->mysql->unitsets->delete('WHERE unit=?s LIMIT 1', $unit)
+			? $this->okay('?admin/unitsets')
+			: $this->warn('删除失败！');
+	}
+	function get_unitset(string $unit = NULL)
+	{
+		$this->form_unitset($this->main)->echo($unit ? $this->webapp->mysql->unitsets('WHERE unit=?s LIMIT 1', $unit)->array() : []);
+	}
+	function get_unitsets(string $search = NULL, int $page = 1)
+	{
+		$cond = ['WHERE site=?i', $this->webapp->site];
+
+		$cond[0] = ' ORDER BY time DESC';
+
+		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit)
+		{
+			$table->row();
+			$table->cell()->append('a', ['❌',
+				'href' => "?admin/unitset-delete,unit:{$unit['unit']}",
+				'onclick' => 'return confirm(`Delete Admin ${this.dataset.unit}`)',
+				'data-unit' => $unit['unit']]);
+			$table->cell(date('Y-m-d\\TH:i:s', $unit['time']));
+			$table->cell("{$unit['unit']}:{$unit['code']}");
+			$table->cell($unit['rate']);
+			$table->cell()->append('a', [$unit['name'], 'href' => "?admin/unitset,unit:{$unit['unit']}"]);
+		});
+		$table->fieldset('❌', 'time', 'unit:code', 'rate', 'name');
+		$table->header('Found ' . $table->count() . ' item');
+		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
 	//密码
