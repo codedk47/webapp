@@ -652,6 +652,7 @@ class interfaces extends webapp
 			'uid' => $this->hash($rand, TRUE),
 			'site' => $this->site,
 			'time' => $this->time,
+			'date' => date('Y-m-d', $this->time),
 			'expire' => $this->time,
 			'balance' => 0,
 			'lasttime' => $this->time,

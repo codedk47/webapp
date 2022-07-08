@@ -874,7 +874,7 @@ class webapp_router_admin extends webapp_echo_html
 		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '⌛', '实际支付', '订单价格', '商户', '平台', '订单（内部产品）', '对方订单');
 		$table->header('订单数据');
 		$table->button('order stat', ['onclick' => 'location.href="?admin/orderstat"']);
-		$table->search(['value' => '', 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
 	function get_ordernotify(string $hash)
