@@ -651,8 +651,8 @@ class interfaces extends webapp
 		if (isset($data['device'], $data['unit']) && $this->mysql->accounts->insert($account = [
 			'uid' => $this->hash($rand, TRUE),
 			'site' => $this->site,
-			'time' => $this->time,
 			'date' => date('Y-m-d', $this->time),
+			'time' => $this->time,
 			'expire' => $this->time,
 			'balance' => 0,
 			'lasttime' => $this->time,
