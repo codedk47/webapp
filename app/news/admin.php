@@ -96,69 +96,7 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function get_home(string $ym = '')
 	{
-		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode(',', date('Y,m'));
-		$fields = [
-			'pv' => ['页面访问', '#F2D7D5'],
-			'ua' => ['唯一地址', '#EBDEF0'],
-			'lu' => ['登录用户', '#D4E6F1'],
-			'ru' => ['注册用户', '#D4EFDF'],
-			'dc' => ['下载数量', '#FCF3CF'],
-			'ia' => ['激活数量', '#FDEBD0'],
-			'oc' => ['订单数量', '#FAE5D3'],
-			'op' => ['支付数量', '#F6DDCC'],
-			'ov' => ['订单金额', '#F2F3F4'],
-			'oi' => ['支付金额', '#E5E8E8']
-		];
-		$stats = ['汇总' => [$types = ['pv' => 0, 'ua' => 0, 'lu' => 0, 'ru' => 0, 'dc' => 0, 'ia' => 0, 'oc' => 0, 'op' => 0, 'ov' => 0, 'oi' => 0]]];
-		foreach ($this->webapp->mysql->unitstats('where site=?i and year=?s and month=?s order by oi desc', $this->webapp->site, $y, $m) as $stat)
-		{
-			$stats['汇总'][$stat['day']] ??= $types;
-			$stats[$stat['unit']][0] ??= $types;
-			foreach ($stats[$stat['unit']][$stat['day']] = [
-				'pv' => $stat['pv'],
-				'ua' => $stat['ua'],
-				'lu' => $stat['lu'],
-				'ru' => $stat['ru'],
-				'dc' => $stat['dc'],
-				'ia' => $stat['ia'],
-				'oc' => $stat['oc'],
-				'op' => $stat['op'],
-				'ov' => $stat['ov'],
-				'oi' => $stat['oi']] as $k => $v) {
-				$stats['汇总'][0][$k] += $v;
-				$stats['汇总'][$stat['day']][$k] += $v;
-				$stats[$stat['unit']][0][$k] += $v;
-			}
-		}
-		// print_r($stats);
-		// return;
-		$t = (int)date('t', mktime(0, 0, 0, $m, 1, $y));
-		$table = $this->main->table();
-		$table->fieldset('单位', '统计', '总计', ...range(1, $t));
-		$table->header->append('input', ['type' => 'month', 'value' => "{$y}-{$m}", 'onchange' => 'g({ym:this.value})']);
-		foreach ($stats as $unit => $stat)
-		{
-			$row = $table->row();
-			//$table->cell([$unit, 'rowspan' => 11])
-			$row->append('td', [$unit, 'rowspan' => 11, 'style' => 'background:silver']);
-			$node = [];
-			foreach ($fields as $name => $ctx)
-			{
-				$row = $table->row()->setattr(['style' => "background:{$ctx[1]}"]);
-				$row->append('td', $ctx[0]);
-				for ($i = 0; $i <= $t; ++$i)
-				{
-					$node[$i][$name] = $row->append('td', 0);
-				}
-			}
-			foreach ($stat as $day => $value)
-			{
-				foreach ($value as $field => $count)
-				{
-					$node[$day][$field][0] = number_format($count);
-				}
-			}
-		}
+
 	}
 	//标签
 	function form_tag($ctx):webapp_form
