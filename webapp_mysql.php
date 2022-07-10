@@ -485,6 +485,10 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	// {
 	// 	return new $this->targetname($this, $mixed);
 	// }
+	function dataincr(array $data, array $incr)
+	{
+		
+	}
 	function statmonth(string $y_m, string $group, string $day, array $fields, ...$extra)
 	{
 		$days = range(0, date('t', strtotime($y_m)));
@@ -538,6 +542,7 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 			$group, join(",\n", $calc),
 			$group, join(",\n", $more), $group,
 			$extra ? ' '. $this->mysql->format(...$extra) : '');
+		//var_dump($s);
 		return ($this->mysql)($s);
 		
 

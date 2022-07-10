@@ -1,6 +1,7 @@
 <?php
 require 'admin.php';
 require 'pay.php';
+require 'unit.php';
 class interfaces extends webapp
 {
 	function clientip():string
@@ -138,14 +139,13 @@ class interfaces extends webapp
 					"\n";
 			}
 
-			echo "\n-------- PULL COMMENTS --------\n";
-			foreach ($this->pull('comments') as $comment)
-			{
-				echo $comment['hash'], ' - ', 
-					$this->mysql->comments->insert($comment->getattr() + ['site' => $site, 'content' => (string)$comment]) ? 'OK' : 'NO',
-					"\n";
-
-			}
+			// echo "\n-------- PULL COMMENTS --------\n";
+			// foreach ($this->pull('comments') as $comment)
+			// {
+			// 	echo $comment['hash'], ' - ', 
+			// 		$this->mysql->comments->insert($comment->getattr() + ['site' => $site, 'content' => (string)$comment]) ? 'OK' : 'NO',
+			// 		"\n";
+			// }
 			break;
 		}
 	}
@@ -207,6 +207,53 @@ class interfaces extends webapp
 	function get_home()
 	{
 		$this->app->xml->comment(file_get_contents(__DIR__.'/interfaces.txt'));
+	}
+	function get_test()
+	{
+		
+		var_dump( $this->unitincr('0000', '2022-07-08-00', [
+			'pv' => random_int(0, 9999),
+			'ua' => random_int(0, 9999),
+			'lu' => random_int(0, 9999),
+			'ru' => random_int(0, 9999),
+			'dc' => 0,
+			'ia' => 0], 0) );
+	}
+	function unitincr(string $uint, string $date, array $incr):bool
+	{
+		$time = preg_match('/^(\d{4})-(\d{2})-(\d{2})-(\d{2})$/', $date, $pattern) ? array_slice($pattern, 1) : explode('-', $date = date('Y-m-d-H'));
+		$hour = intval($time[3]);
+		$keys = array_keys($incr);
+		$fill = array_fill(0, 24, array_combine($keys, array_fill(0, count($keys), 0)));
+		$fill[$hour] = $incr;
+		$data = [
+			'code' => "{$time[0]}{$time[1]}{$time[2]}{$uint}",
+			'site' => $this->site,
+			'date' => substr($date, 0, 10),
+			'unit' => $uint,
+			'details' => json_encode($fill)
+		];
+		$update = [];
+		$detail = [];
+		foreach ($incr as $key => $value)
+		{
+			$update[] = $this->mysql->format('?a=?a+?i', $key, $key, $value);
+			$detail[] = $this->mysql->format('\'$[?i].??\',details->>\'$[?i].??\'+?i', $hour, $key, $hour, $key, $value);
+		}
+		$update[] = $this->mysql->format('details=JSON_SET(details, ??)', join(',', $detail));
+		$status = $this->mysql->real_query('INSERT INTO unitstats SET ?v ON DUPLICATE KEY UPDATE ??', $data + $incr, join(',', $update));
+		if ($this->mysql->unitsets('WHERE unit=?s LIMIT 1', $uint)->fetch($uintdata))
+		{
+			$fake = $update = [];
+			array_pop($data);
+			foreach ($incr as $key => $value)
+			{
+				$fake[$key] = $value * $uintdata['rate'];
+				$update[] = $this->mysql->format('?a=?a+?i', $key, $key, $fake[$key]);
+			}
+			$this->mysql->real_query('INSERT INTO unitrates SET ?v ON DUPLICATE KEY UPDATE ??', $data + $fake, join(',', $update));
+		}
+		return $status;
 	}
 	//广告
 	function form_ad($ctx, string $hash = NULL):webapp_form
@@ -766,7 +813,7 @@ class interfaces extends webapp
 			if (is_array($describe))
 			{
 				return $this->mysql->accounts('WHERE site=?i AND uid=?s', $this->site, $uid)
-						->update('balance=balance+?i,resources=CONCAT(?s,LEFT(resources,24))', $fee, $describe['hash']) > 0
+						->update('balance=balance+?i,resources=CONCAT(?s,LEFT(resources,2400))', $fee, $describe['hash']) > 0
 					&& $this->mysql->bills->insert($bill = [
 						'hash' => $this->randhash(TRUE),
 						'site' => $this->site,
