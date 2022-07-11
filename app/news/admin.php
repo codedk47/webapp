@@ -96,7 +96,56 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function get_home(string $ym = '')
 	{
+		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
+		$days = range(1, date('t', strtotime($ym)));
+		$stat = $this->webapp->mysql->unitstats('WHERE left(date,7)=?s', $ym)->statmonth($ym, 'unit', 'right(date,2)', [
+			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
+			'SUM(IF({day}=0 OR right(date,2)={day},ua,0))',
+			'SUM(IF({day}=0 OR right(date,2)={day},lu,0))',
+			'SUM(IF({day}=0 OR right(date,2)={day},ru,0))',
+			// 'SUM(IF({day}=0 OR right(date,2)={day},dc,0))',
+			// 'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
+		], 'ORDER BY $1$0 DESC LIMIT 10');
+		
+		$table = $this->main->table($stat, function($table, $stat, $days)
+		{
+			$t1 = $table->tbody->append('tr');
+			$t2 = $table->tbody->append('tr');
+			$t3 = $table->tbody->append('tr');
+			$t4 = $table->tbody->append('tr');
+			// $t5 = $table->tbody->append('tr');
+			// $t6 = $table->tbody->append('tr');
 
+			$t1->append('td', [$stat['unit'] ?? '汇总', 'rowspan' => 4]);
+				
+			$t1->append('td', '浏览');
+			$t2->append('td', '独立');
+			$t3->append('td', '登录');
+			$t4->append('td', '注册');
+			// $t5->append('td', '下载');
+			// $t6->append('td', '激活');
+
+			$t1->append('td', number_format($stat['$0$0']));
+			$t2->append('td', number_format($stat['$1$0']));
+			$t3->append('td', number_format($stat['$2$0']));
+			$t4->append('td', number_format($stat['$3$0']));
+			// $t5->append('td', number_format($stat['$4$0']));
+			// $t6->append('td', number_format($stat['$5$0']));
+
+			foreach ($days as $i)
+			{
+				$t1->append('td', number_format($stat["\$0\${$i}"]));
+				$t2->append('td', number_format($stat["\$1\${$i}"]));
+				$t3->append('td', number_format($stat["\$2\${$i}"]));
+				$t4->append('td', number_format($stat["\$3\${$i}"]));
+				// $t5->append('td', number_format($stat["\$4\${$i}"]));
+				// $t6->append('td', number_format($stat["\$5\${$i}"]));
+			}
+
+		}, $days);
+		$table->fieldset('单位', '统计', '总和', ...$days);
+		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
 	function form_tag($ctx):webapp_form
