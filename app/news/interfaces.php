@@ -686,7 +686,7 @@ class interfaces extends webapp
 	{
 		return strlen($code) === 10
 			&& preg_match('/^(expire|balance)\:(\d+)$/', $gift, $value)
-			&& $this->mysql->accounts('WHERE uid=?s LIMIT 1', $code)->update(...$value[1] === 'expire'
+			&& $this->mysql->accounts('WHERE uid=?s AND phone!="" 1', $code)->update(...$value[1] === 'expire'
 				? ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, $value[2]]
 				: ['?a=?a+?i', $value[1], $value[1], $value[2]]);
 	}
