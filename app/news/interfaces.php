@@ -111,6 +111,19 @@ class interfaces extends webapp
 		foreach ($this['app_site'] as $site => $ip)
 		{
 			$this->site = $site;
+			echo "\n-------- PULL UNIT --------\n";
+			foreach ($this->pull('incr-unit') as $unit)
+			{
+				echo $unit['unit'], ' - ', 
+					$this->unitincr((string)$unit['unit'], (string)$unit['time'], [
+						'pv' => (int)$unit['pv'],
+						'ua' => (int)$unit['ip'],
+						'lu' => (int)$unit['lu'],
+						'ru' => (int)$unit['ru'],
+						'dc' => 0, 'ia' => 0]) ? 'OK' : 'NO',
+						"\n";
+			}
+
 			echo "\n-------- PULL TAGS --------\n";
 			foreach ($this->pull('incr-tag') as $tag)
 			{
@@ -146,7 +159,7 @@ class interfaces extends webapp
 			// 		$this->mysql->comments->insert($comment->getattr() + ['site' => $site, 'content' => (string)$comment]) ? 'OK' : 'NO',
 			// 		"\n";
 			// }
-			break;
+			//break;
 		}
 	}
 	function packer(string $data):string
@@ -208,17 +221,17 @@ class interfaces extends webapp
 	{
 		$this->app->xml->comment(file_get_contents(__DIR__.'/interfaces.txt'));
 	}
-	function get_test()
-	{
+	// function get_test()
+	// {
 		
-		var_dump( $this->unitincr('0000', '2022-07-08-00', [
-			'pv' => random_int(0, 9999),
-			'ua' => random_int(0, 9999),
-			'lu' => random_int(0, 9999),
-			'ru' => random_int(0, 9999),
-			'dc' => 0,
-			'ia' => 0], 0) );
-	}
+	// 	var_dump( $this->unitincr('0000', '2022-07-08-00', [
+	// 		'pv' => random_int(0, 9999),
+	// 		'ua' => random_int(0, 9999),
+	// 		'lu' => random_int(0, 9999),
+	// 		'ru' => random_int(0, 9999),
+	// 		'dc' => 0,
+	// 		'ia' => 0], 0) );
+	// }
 	function unitincr(string $uint, string $date, array $incr):bool
 	{
 		$time = preg_match('/^(\d{4})-(\d{2})-(\d{2})-(\d{2})$/', $date, $pattern) ? array_slice($pattern, 1) : explode('-', $date = date('Y-m-d-H'));

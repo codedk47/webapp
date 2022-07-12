@@ -155,7 +155,7 @@ class news_driver extends webapp
 	}
 	function request_unitcode():string
 	{
-		return is_string($unitcode = $this->request_header('Unit-Code')) && preg_match('/\w{4}/', $unitcode) ? $unitcode : '0000';
+		return is_string($unitcode = $this->request_header('Unit-Code')) && preg_match('/^\w{4}$/', $unitcode) ? $unitcode : '0000';
 	}
 	//账号操作
 	function request_account(?string &$signature = NULL):array
