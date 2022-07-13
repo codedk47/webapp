@@ -261,8 +261,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
 		$form->fieldset('tags');
-		$tags = $this->webapp->mysql->tags('ORDER BY time ASC')->column('name', 'hash');
-		$form->field('tags', 'checkbox', ['options' => $tags], 
+		$form->field('tags', 'checkbox', ['options' => $this->webapp->selecttags()], 
 			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
 		$form->field('require', 'number', ['min' => -1, 'required' => NULL]);
@@ -396,7 +395,7 @@ class webapp_router_admin extends webapp_echo_html
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
-		$table->bar->select(['' => '全部标签'] + $this->webapp->tags->column('name', 'hash'))->setattr(['onchange' => 'g({search:this.value===""?null:this.value})'])->selected($type);
+		$table->bar->select(['' => '全部标签'] + $this->webapp->selecttags())->setattr(['onchange' => 'g({search:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select(['' => '全部类型'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select([
 			'' => '任何要求',
@@ -672,8 +671,8 @@ JS);
 		$form->field('name', 'text', ['required' => NULL]);
 		
 		$form->fieldset('vods');
-		$tags = $this->webapp->mysql->setvods('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash');
-		$form->field('vods', 'checkbox', ['options' => $tags], 
+		$vods = $this->webapp->mysql->setvods('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash');
+		$form->field('vods', 'checkbox', ['options' => $vods], 
 			fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'mo';
 
 		$form->fieldset('ads');
