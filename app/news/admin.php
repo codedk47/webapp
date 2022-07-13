@@ -388,12 +388,15 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(number_format($data['like']));
 			$table->cell()->append('div', [
 				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
-			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
+			])->append('a', [$data['name'],
+			'href' => "?admin/resource-update,hash:{$res['hash']}",
+			'data-cover' => '']);
 		}, $this->webapp['app_restype']);
 		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name');
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->bar->select(['' => '全部标签'] + $this->webapp->tags->column('name', 'hash'))->setattr(['onchange' => 'g({search:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select(['' => '全部类型'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select([
 			'' => '任何要求',
@@ -408,6 +411,12 @@ class webapp_router_admin extends webapp_echo_html
 			'exception' => '异常'
 		])->setattr(['onchange' => 'g({sync:this.value})'])->selected($sync);
 		$table->paging($this->webapp->at(['page' => '']));
+		$this->main->append('script')->cdata(<<<JS
+document.querySelectorAll('table>tbody>tr>td:last-child>div>a').forEach(node =>
+{
+	console.log();
+});
+JS);
 	}
 	//账户
 	function form_account($ctx):webapp_form
