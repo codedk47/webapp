@@ -893,7 +893,7 @@ class interfaces extends webapp
 			if ($resource
 				&& $resource['require'] > 0
 				&& in_array($resource['hash'], $account['resources'] ? str_split($account['resources'], 12) : []) === FALSE
-				&& $this->bill($account['uid'], -$resource['require'], $resource, $bill)) {
+				&& $this->bill($account['uid'], $resource['require'], $resource, $bill)) {
 				$this->xml->append('play', [
 					'resource' => $resource['hash'],
 					'balance' => $account['balance'] - $resource['require']
