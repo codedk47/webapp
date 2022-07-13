@@ -80,10 +80,10 @@ customElements.define('webapp-video', class extends HTMLElement
 			if (this.#video.canPlayType('application/vnd.apple.mpegurl')
 				|| this.#video.canPlayType('application/x-mpegURL')) {
 				this.#model = this.#video;
-				this.#video.addEventListener('click', () =>
-				{
-					this.#video.paused ? this.#video.play() : this.#video.pause();
-				});
+				// this.#video.addEventListener('click', () =>
+				// {
+				// 	this.#video.paused ? this.#video.play() : this.#video.pause();
+				// });
 				// this.#video.addEventListener('canplay', () =>
 				// {
 				// 	this.#video.currentTime = this.#playtime;
