@@ -128,7 +128,7 @@ final class webapp_pay_cj implements webapp_pay
 				'type' => 'text/plain',
 				'data' => 'success',
 				'hash' => $result['orderId'],
-				'actual_fee' => $result['orderAmt']
+				'actual_fee' => $result['orderAmt'] * 100
 			];
 			return TRUE;
 		}
@@ -192,7 +192,7 @@ final class webapp_pay_yk implements webapp_pay
 				'type' => 'text/plain',
 				'data' => 'success',
 				'hash' => $result['orderNo'],
-				'actual_fee' => $result['amount']
+				'actual_fee' => $result['amount'] * 100
 			];
 			return TRUE;
 		}
