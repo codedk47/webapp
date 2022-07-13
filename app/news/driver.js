@@ -223,7 +223,7 @@ window.addEventListener('DOMContentLoaded', async function()
 			if (account.data.uid)
 			{
 				console.log('revert', account);
-				localStorage.setItem('account', account.data.signature);
+				localStorage.setItem('account', location.hash.substring(5));
 			}
 		});
 	}
@@ -233,7 +233,7 @@ window.addEventListener('DOMContentLoaded', async function()
 			`Bearer ${localStorage.getItem('account')}`}, headers)}, 'application/json').then(account => {
 			if (account.data.uid === undefined)
 			{
-				console.log('sign', account);
+				console.log('nosign', account);
 				localStorage.removeItem('account');
 			}
 		});
