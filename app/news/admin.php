@@ -426,16 +426,9 @@ document.querySelectorAll('a[data-cover]').forEach(node =>
 		{
 			this.img.style.display = 'block';
 		}
-		if (event.pageY > window.outerHeight * 0.5)
-		{
-			this.img.style.top = `${this.getBoundingClientRect().bottom - this.img.offsetHeight - this.offsetHeight}px`;
-			console.log(this.getBoundingClientRect().top)
-			
-		}
-		else
-		{
-			console.log(2)
-			this.img.style.top = `${this.getBoundingClientRect().bottom}px`;
+		this.img.style.top = event.pageY > window.outerHeight * 0.5
+			? `${this.getBoundingClientRect().bottom - this.img.offsetHeight - this.offsetHeight}px`
+			: `${this.getBoundingClientRect().bottom}px`;
 		}
 	}
 	node.onmouseleave = function()
