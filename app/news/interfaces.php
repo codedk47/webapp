@@ -830,7 +830,7 @@ class interfaces extends webapp
 			if (is_array($describe))
 			{
 				return $this->mysql->accounts('WHERE site=?i AND uid=?s', $this->site, $uid)
-						->update('balance=balance+?i,resources=CONCAT(?s,LEFT(resources,2400))', $fee, $describe['hash']) > 0
+						->update('balance=balance+?i,resources=CONCAT(?s,LEFT(resources,2400))', -$fee, $describe['hash']) > 0
 					&& $this->mysql->bills->insert($bill = [
 						'hash' => $this->randhash(TRUE),
 						'site' => $this->site,
