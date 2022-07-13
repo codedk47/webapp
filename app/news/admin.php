@@ -429,7 +429,6 @@ document.querySelectorAll('a[data-cover]').forEach(node =>
 		this.img.style.top = event.pageY > window.outerHeight * 0.5
 			? `${this.getBoundingClientRect().bottom - this.img.offsetHeight - this.offsetHeight}px`
 			: `${this.getBoundingClientRect().bottom}px`;
-		}
 	}
 	node.onmouseleave = function()
 	{
