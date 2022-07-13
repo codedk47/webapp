@@ -268,6 +268,7 @@ final class webapp_router_pay extends webapp_echo_xml
 				'order_fee' => $order['order_fee'],
 				'pay_user' => $order['pay_user'],
 				'pay_name' => $order['pay_name'],
+				'pay_type' => $order['pay_type'],
 				'order_no' => $order['order_no'],
 				'trade_no' => '',
 				'notify_url' => $order['notify_url']

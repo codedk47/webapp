@@ -855,11 +855,12 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(number_format($order['order_fee'] * 0.01, 2));
 			$table->cell($order['pay_user']);
 			$table->cell($order['pay_name']);
+			$table->cell($order['pay_type']);
 			$table->cell($order['order_no']);
 			$table->cell($order['trade_no']);
 			
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
-		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '⌛', '实际支付', '订单价格', '商户', '平台', '订单（内部产品）', '对方订单');
+		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '⌛', '实际支付', '订单价格', '商户', '平台', '类型', '订单（内部产品）', '对方订单');
 		$table->header('订单数据');
 		$table->button('order stat', ['onclick' => 'location.href="?admin/orderstat"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
