@@ -387,10 +387,10 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(number_format($data['view']));
 			$table->cell(number_format($data['like']));
 			$table->cell()->append('div', [
-				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'
+				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
 			])->append('a', [$data['name'],
 			'href' => "?admin/resource-update,hash:{$res['hash']}",
-			'data-cover' => '']);
+			'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
 		}, $this->webapp['app_restype']);
 		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name');
 		$table->header('Found %d item', $table->count());
@@ -411,10 +411,38 @@ class webapp_router_admin extends webapp_echo_html
 			'exception' => '异常'
 		])->setattr(['onchange' => 'g({sync:this.value})'])->selected($sync);
 		$table->paging($this->webapp->at(['page' => '']));
-		$this->main->append('script')->cdata(<<<JS
-document.querySelectorAll('table>tbody>tr>td:last-child>div>a').forEach(node =>
+		$this->main->append('script')->cdata(<<<'JS'
+document.querySelectorAll('a[data-cover]').forEach(node =>
 {
-	console.log();
+	node.onmouseenter = function(event)
+	{
+		if (!this.img)
+		{
+			this.img = new Image;
+			loader(this.dataset.cover, null, 'application/octet-stream').then(blob => this.img.src = URL.createObjectURL(blob));
+			this.img.style.cssText = 'position:absolute;border:.1rem solid black;max-width:300px';
+			this.parentNode.parentNode.appendChild(this.img);
+		}
+		else
+		{
+			this.img.style.display = 'block';
+		}
+		if (event.pageY > window.outerHeight * 0.5)
+		{
+			this.img.style.top = `${this.getBoundingClientRect().bottom - this.img.offsetHeight - this.offsetHeight}px`;
+			console.log(this.getBoundingClientRect().top)
+			
+		}
+		else
+		{
+			console.log(2)
+			this.img.style.top = `${this.getBoundingClientRect().bottom}px`;
+		}
+	}
+	node.onmouseleave = function()
+	{
+		this.img.style.display = 'none';
+	}
 });
 JS);
 	}
