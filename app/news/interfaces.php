@@ -596,7 +596,7 @@ class interfaces extends webapp
 	//标签
 	function selecttags():array
 	{
-		return $this->webapp->mysql->setvods('WHERE site=?i ORDER BY level ASC,count DESC,click DESC', $this->site)->column('name', 'hash');
+		return $this->mysql->tags('ORDER BY level ASC,count DESC,click DESC')->column('name', 'hash');
 	}
 	function tag_xml(array $tag):webapp_xml
 	{
