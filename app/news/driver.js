@@ -231,9 +231,9 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
 			`Bearer ${localStorage.getItem('account')}`}, headers)}, 'application/json').then(account => {
+			console.log('sign', account);
 			if (account.data.uid === undefined)
 			{
-				console.log('nosign', account);
 				localStorage.removeItem('account');
 			}
 		});
