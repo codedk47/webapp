@@ -613,7 +613,7 @@ class interfaces extends webapp
 	}
 	function get_tags(string $type = NULL, int $page = 1, int $size = 1000)
 	{
-		$tags = ($type ? $this->mysql->tags('WHERE type=?i', $type) : $this->mysql->tags)->paging($page, $size);
+		$tags = ($type ? $this->mysql->tags('WHERE type=?i ORDER BY level ASC,count DESC,click DESC', $type) : $this->mysql->tags)->paging($page, $size);
 		$this->app->xml->setattr($tags->paging);
 		foreach ($tags as $tag)
 		{

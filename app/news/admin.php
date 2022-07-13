@@ -227,7 +227,7 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			$cond[] = '??';
 		}
-		$cond[] = 'order by level asc,click desc,count desc';
+		$cond[] = 'ORDER BY level ASC,count DESC,click DESC';
 		$table = $this->main->table($this->webapp->mysql->tags(...$cond)->paging($page), function($table, $tag)
 		{
 			$table->row();
