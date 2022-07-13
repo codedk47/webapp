@@ -218,18 +218,22 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	if (location.hash.substring(5))
 	{
-		// await loader(`${entry}?api/user`, {headers}, 'text/plain').then(result =>
-		// {
-		// 	console.log(result)
-		// });
+		await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
+			`Bearer ${location.hash.substring(5)}`}, headers)}, 'application/json').then(account => {
+			if (account.data.uid)
+			{
+				console.log('revert', account);
+				localStorage.setItem('account', account.data.signature);
+			}
+		});
 	}
 	if (localStorage.getItem('account'))
 	{
 		await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
 			`Bearer ${localStorage.getItem('account')}`}, headers)}, 'application/json').then(account => {
-			console.log(account);
 			if (account.data.uid === undefined)
 			{
+				console.log('sign', account);
 				localStorage.removeItem('account');
 			}
 		});
@@ -238,9 +242,9 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		await loader(`${entry}?api/register`, {headers}, 'application/json').then(account =>
 		{
-			console.log(account);
 			if (account.data.signature)
 			{
+				console.log('register', account);
 				localStorage.setItem('account', account.data.signature);
 				initreq['Account-Init'] = 1;
 			}
