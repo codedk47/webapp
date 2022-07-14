@@ -116,8 +116,8 @@ class interfaces extends webapp
 			foreach ($this->pull('log-acc') as $acc)
 			{
 				echo $acc['hash'], ' - ', 
-					$this->mysql->accounts('WHERE hash=?s LIMIT 1', $acc['hash'])
-						->update('`favorite`=?s,`history`=?s', (string)$acc['favorite'], (string)$acc['history']) ? 'OK' : 'NO',
+					$this->mysql->accounts('WHERE hash=?s LIMIT 1', $acc['uid'])
+						->update('`favorite`=?s,`history`=?s', (string)$acc->favorite, (string)$acc->history) ? 'OK' : 'NO',
 					"\n";
 			}
 
@@ -231,14 +231,14 @@ class interfaces extends webapp
 	{
 		$this->app->xml->comment(file_get_contents(__DIR__.'/interfaces.txt'));
 	}
-	function get_test()
-	{
-		$this->site = 0;
-		foreach ($this->pull('log-acc') as $acc)
-		{
-			print_r($acc);
-		}
-	}
+	// function get_test()
+	// {
+	// 	$this->site = 0;
+	// 	foreach ($this->pull('log-acc') as $acc)
+	// 	{
+	// 		print_r($acc);
+	// 	}
+	// }
 	function unitincr(string $uint, string $date, array $incr):bool
 	{
 		$time = preg_match('/^(\d{4})-(\d{2})-(\d{2})-(\d{2})$/', $date, $pattern) ? array_slice($pattern, 1) : explode('-', $date = date('Y-m-d-H'));
