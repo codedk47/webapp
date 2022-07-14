@@ -111,6 +111,16 @@ class interfaces extends webapp
 		foreach ($this['app_site'] as $site => $ip)
 		{
 			$this->site = $site;
+
+			echo "\n-------- PULL ACC LOG --------\n";
+			foreach ($this->pull('acc-log') as $acc)
+			{
+				echo $acc['hash'], ' - ', 
+					$this->mysql->accounts('WHERE hash=?s LIMIT 1', $acc['hash'])
+						->update('`favorite`=?s,`history`=?s', (string)$acc['favorite'], (string)$acc['history']) ? 'OK' : 'NO',
+					"\n";
+			}
+
 			echo "\n-------- PULL UNIT --------\n";
 			foreach ($this->pull('incr-unit') as $unit)
 			{
