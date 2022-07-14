@@ -979,7 +979,7 @@ class interfaces extends webapp
 			+ $this->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->site)->column('name', 'hash')]);
 
 		$form->fieldset('describe');
-		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述', 'required' => NULL]);
+		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述']);
 
 		$form->fieldset('tags');
 		$tags = $this->mysql->tags('ORDER BY time ASC', $this->site)->column('name', 'hash');
