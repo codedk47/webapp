@@ -717,8 +717,8 @@ class interfaces extends webapp
 			'site' => $this->site,
 			'date' => date('Y-m-d', $this->time),
 			'time' => $this->time,
-			'expire' => $this->time,
-			'balance' => 0,
+			'expire' => $this->time + 86400,
+			'balance' => 10,
 			'lasttime' => $this->time,
 			'lastip' => $this->clientiphex(),
 			'device' => is_string($data['device']) ? match (1) {

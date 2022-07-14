@@ -14,6 +14,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	#require;
 	#playdata;
 	#playtime = 0;
+	#toggleplay = document.createElement('div');
 	constructor()
 	{
 		super();
@@ -42,8 +43,21 @@ customElements.define('webapp-video', class extends HTMLElement
 		// this.#video.addEventListener('play', ()=>{
 		// 	this.style.height = `${this.#video.offsetHeight}px`;
 		// });
+		
+		// this.#video.addEventListener('pause', event =>
+		// {
+		// 	this.#toggleplay.style.opacity = '0.4';
+		// });
+		// this.#video.addEventListener('play', event =>
+		// {
+		// 	this.#toggleplay.style.opacity = 0;
+		// });
+		
 
-
+		// this.#toggleplay.addEventListener('click', event =>
+		// {
+		// 	this.#video.paused ? this.#video.play() : this.#video.pause();
+		// });
 		if (window.MediaSource && window.Hls)
 		{
 			this.#model = new window.Hls;
@@ -84,6 +98,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				{
 					this.#video.paused ? this.#video.play() : this.#video.pause();
 				});
+
 				// this.#video.addEventListener('canplay', () =>
 				// {
 				// 	this.#video.currentTime = this.#playtime;
@@ -128,6 +143,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.autoplay = this.hasAttribute('autoplay');
 		this.#video.controls = this.hasAttribute('controls');
 		this.appendChild(this.#video);
+		this.appendChild( this.#toggleplay );
 		if (this.#load = this.dataset.load)
 		{
 			this.#require = this.dataset.require;
@@ -174,6 +190,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	// }
 });
 document.head.appendChild(document.createElement('style')).textContent = `
+
 webapp-slide{
 	height: 100%;
 	display: block;
