@@ -233,6 +233,7 @@ class interfaces extends webapp
 	}
 	function get_test()
 	{
+		$this->site = 0;
 		foreach ($this->pull('acc-log') as $acc)
 		{
 			print_r($acc);
