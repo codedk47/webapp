@@ -58,7 +58,7 @@ table[class*=-stateven]>tbody>tr>td{
 }
 ul.restag{
 	padding:0;
-	width:70rem;
+	width:80rem;
 	display:flex;
 	align-content: flex-start;
 	flex-flow:wrap;
