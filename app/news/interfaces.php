@@ -115,8 +115,8 @@ class interfaces extends webapp
 			echo "\n-------- PULL ACC LOG --------\n";
 			foreach ($this->pull('log-acc') as $acc)
 			{
-				echo $acc['hash'], ' - ', 
-					$this->mysql->accounts('WHERE hash=?s LIMIT 1', $acc['uid'])
+				echo $acc['uid'], ' - ', 
+					$this->mysql->accounts('WHERE uid=?s LIMIT 1', $acc['uid'])
 						->update('`favorite`=?s,`history`=?s', (string)$acc->favorite, (string)$acc->history) ? 'OK' : 'NO',
 					"\n";
 			}
