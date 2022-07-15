@@ -456,8 +456,8 @@ class interfaces extends webapp
 	}
 	function resource_update(string $hash, array $data):bool
 	{
-		$update = ['data=JSON_SET(data,\'$."?i".require\',?i,\'$."?i".name\',?s),tags=?s',
-			$this->site, $data['require'] ?? 0, $this->site, $data['name'] ?? '', $data['tags']];
+		$update = ['data=JSON_SET(data,\'$."?i".require\',?i,\'$."?i".name\',?s),type=?s,tags=?s',
+			$this->site, $data['require'] ?? 0, $this->site, $data['name'] ?? '', $data['type'], $data['tags']];
 		if ($this->admin[2])
 		{
 			$update[0] .= ',type=?s,tags=?s,actors=?s,name=?s';
