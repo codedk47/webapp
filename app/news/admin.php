@@ -408,8 +408,15 @@ class webapp_router_admin extends webapp_echo_html
 				default => '>-3'
 			};
 		}
-		
-		$cond[0] .= ' ORDER BY time DESC';
+
+		$cond[0] .= match ($sort = $this->webapp->query['sort'] ?? '')
+		{
+			'favorite' => $this->webapp->mysql->format(' ORDER BY data->>\'$."?i".favorite\' DESC', $this->webapp->site),
+			'view' => $this->webapp->mysql->format(' ORDER BY data->>\'$."?i".view\' DESC', $this->webapp->site),
+			'like' => $this->webapp->mysql->format(' ORDER BY data->>\'$."?i".like\' DESC', $this->webapp->site),
+			default => ' ORDER BY time DESC'
+		};
+
 		$table = $this->main->table($this->webapp->mysql->resources(...$cond)->paging($page), function($table, $res, $type)
 		{
 			$table->row();
@@ -446,6 +453,12 @@ class webapp_router_admin extends webapp_echo_html
 			'free' => '免费',
 			'play' => '收费'
 		])->setattr(['onchange' => 'g({require:this.value||null})'])->selected($require);
+		$table->bar->select([
+			'' => '最新上传',
+			'favorite' => '最多收藏',
+			'view' => '最多观看',
+			'like' => '最多点赞'
+		])->setattr(['onchange' => 'g({sort:this.value||null})'])->selected($sort);
 		$table->bar->select([
 			'finished' => '完成',
 			'waiting' => '等待',
