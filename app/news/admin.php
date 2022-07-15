@@ -133,10 +133,6 @@ class webapp_router_admin extends webapp_echo_html
 			return;
 		}
 
-
-
-
-
 		$days = range(1, date('t', strtotime($ym)));
 		$stat = $this->webapp->mysql->unitstats('WHERE left(date,7)=?s', $ym)->statmonth($ym, 'unit', 'right(date,2)', [
 			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
