@@ -115,16 +115,16 @@ class interfaces extends webapp
 			echo "\n-------- PULL ACC LOG --------\n";
 			foreach ($this->pull('log-acc') as $acc)
 			{
-				echo $acc['uid'], ' - ', 
-					$this->mysql->accounts('WHERE uid=?s LIMIT 1', $acc['uid'])
-						->update('`favorite`=?s,`history`=?s', (string)$acc->favorite, (string)$acc->history) ? 'OK' : 'NO',
+				echo $acc['uid'], ' - ',
+					$this->mysql->accounts('WHERE site=?I AND uid=?s LIMIT 1', $site, $acc['uid'])
+						->update('`favorite`=?s,`history`=?s', (string)$acc->favorite, (string)$acc->history) === 1 ? 'OK' : 'NO',
 					"\n";
 			}
 
 			echo "\n-------- PULL UNIT --------\n";
 			foreach ($this->pull('incr-unit') as $unit)
 			{
-				echo $unit['unit'], ' - ', 
+				echo $unit['unit'], ' - ',
 					$this->unitincr((string)$unit['unit'], (string)$unit['time'], [
 						'pv' => (int)$unit['pv'],
 						'ua' => (int)$unit['ip'],
@@ -137,28 +137,30 @@ class interfaces extends webapp
 			echo "\n-------- PULL TAGS --------\n";
 			foreach ($this->pull('incr-tag') as $tag)
 			{
-				echo $tag['hash'], ' - ', 
+				echo $tag['hash'], ' - ',
 					$this->mysql->tags('WHERE hash=?s LIMIT 1', $tag['hash'])
-						->update('`click`=`click`+?i', $tag['click']) ? 'OK' : 'NO',
+						->update('`click`=`click`+?i', $tag['click']) === 1 ? 'OK' : 'NO',
 					"\n";
 			}
 
 			echo "\n-------- PULL RESOURCES --------\n";
 			foreach ($this->pull('incr-res') as $resource)
 			{
-				echo $resource['hash'], ' - ', 
+				echo $resource['hash'], ' - ',
 					$this->mysql->resources('WHERE FIND_IN_SET(?s,sites) AND hash=?s LIMIT 1', $site, $resource['hash'])
-						->update('`favorite`=`favorite`+?i,`view`=`view`+?i,`like`=`like`+?i',
-						$resource['favorite'], $resource['view'], $resource['like']) ? 'OK' : 'NO',
+						->update('data=json_set(data,\'$."?i".like\',data->>\'$."?i".like\'+?i,\'$."?i".view\',data->>\'$."?i".view\'+?i,\'$."?i".favorite\',data->>\'$."?i".favorite\'+?i)',
+							$site, $site, $resource['like'],
+							$site, $site, $resource['view'],
+							$site, $site, $resource['favorite']) === 1 ? 'OK' : 'NO',
 					"\n";
 			}
 
 			echo "\n-------- PULL AD --------\n";
 			foreach ($this->pull('incr-ad') as $ad)
 			{
-				echo $ad['hash'], ' - ', 
+				echo $ad['hash'], ' - ',
 					$this->mysql->ads('WHERE site=?i AND hash=?s LIMIT 1', $site, $ad['hash'])
-						->update('`click`=`click`+?i,`view`=`view`+?i', $ad['click'], $ad['view']) ? 'OK' : 'NO',
+						->update('`click`=`click`+?i,`view`=`view`+?i', $ad['click'], $ad['view']) === 1 ? 'OK' : 'NO',
 					"\n";
 			}
 
