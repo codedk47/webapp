@@ -147,7 +147,7 @@ class interfaces extends webapp
 			foreach ($this->pull('incr-res') as $resource)
 			{
 				echo $resource['hash'], ' - ',
-					$this->mysql->resources('WHERE FIND_IN_SET(?s,sites) AND hash=?s LIMIT 1', $site, $resource['hash'])
+					$this->mysql->resources('WHERE FIND_IN_SET(?s,site) AND hash=?s LIMIT 1', $site, $resource['hash'])
 						->update('data=json_set(data,\'$."?i".like\',data->>\'$."?i".like\'+?i,\'$."?i".view\',data->>\'$."?i".view\'+?i,\'$."?i".favorite\',data->>\'$."?i".favorite\'+?i)',
 							$site, $site, $resource['like'],
 							$site, $site, $resource['view'],
