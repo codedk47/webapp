@@ -94,9 +94,49 @@ class webapp_router_admin extends webapp_echo_html
 	function post_home()
 	{
 	}
-	function get_home(string $ym = '')
+	function get_home(string $ym = '', string $unit = NULL)
 	{
 		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
+		if ($unit)
+		{
+			$hours = range(0, 23);
+			$table = $this->main->table($this->webapp->mysql->unitstats('WHERE left(date,7)=?s AND unit=?s ORDER BY date DESC', $ym, $unit), function($table, $stat)
+			{
+				$t1 = $table->tbody->append('tr');
+				$t2 = $table->tbody->append('tr');
+				$t3 = $table->tbody->append('tr');
+				$t4 = $table->tbody->append('tr');
+
+				$t1->append('td', [$stat['date'], 'rowspan' => 4]);
+
+				$t1->append('td', '浏览');
+				$t2->append('td', '独立');
+				$t3->append('td', '登录');
+				$t4->append('td', '注册');
+
+				$t1->append('td', number_format($stat['pv']));
+				$t2->append('td', number_format($stat['ua']));
+				$t3->append('td', number_format($stat['lu']));
+				$t4->append('td', number_format($stat['ru']));
+
+				foreach (json_decode($stat['details'], TRUE) as $details)
+				{
+					$t1->append('td', number_format($details['pv']));
+					$t2->append('td', number_format($details['ua']));
+					$t3->append('td', number_format($details['lu']));
+					$t4->append('td', number_format($details['ru']));
+				}
+			});
+			$table->fieldset('日期', '统计', '总和', ...$hours);
+			$table->header($unit)->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+			$table->xml['class'] = 'webapp-stateven';
+			return;
+		}
+
+
+
+
+
 		$days = range(1, date('t', strtotime($ym)));
 		$stat = $this->webapp->mysql->unitstats('WHERE left(date,7)=?s', $ym)->statmonth($ym, 'unit', 'right(date,2)', [
 			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
@@ -107,7 +147,7 @@ class webapp_router_admin extends webapp_echo_html
 			// 'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		], 'ORDER BY $1$0 DESC LIMIT 10');
 		
-		$table = $this->main->table($stat, function($table, $stat, $days)
+		$table = $this->main->table($stat, function($table, $stat, $days, $ym)
 		{
 			$t1 = $table->tbody->append('tr');
 			$t2 = $table->tbody->append('tr');
@@ -115,9 +155,15 @@ class webapp_router_admin extends webapp_echo_html
 			$t4 = $table->tbody->append('tr');
 			// $t5 = $table->tbody->append('tr');
 			// $t6 = $table->tbody->append('tr');
+			if ($stat['unit'])
+			{
+				$t1->append('td', ['rowspan' => 4])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
+			}
+			else
+			{
+				$t1->append('td', ['汇总', 'rowspan' => 4]);
+			}
 
-			$t1->append('td', [$stat['unit'] ?? '汇总', 'rowspan' => 4]);
-				
 			$t1->append('td', '浏览');
 			$t2->append('td', '独立');
 			$t3->append('td', '登录');
@@ -142,7 +188,7 @@ class webapp_router_admin extends webapp_echo_html
 				// $t6->append('td', number_format($stat["\$5\${$i}"]));
 			}
 
-		}, $days);
+		}, $days, $ym);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
 		$table->xml['class'] = 'webapp-stateven';
