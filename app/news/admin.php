@@ -264,7 +264,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('tags', 'checkbox', ['options' => $this->webapp->selecttags()], 
 			fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
-		$form->field('require', 'number', ['min' => -1, 'required' => NULL]);
+		$form->field('require', 'number', ['min' => -2, 'required' => NULL]);
 		$form->fieldset();
 		$form->button('Update Resource', 'submit');
 		return $form;
@@ -450,6 +450,12 @@ JS);
 		$form->field('expire', 'date', [],
 			fn($v, $i)=>$i?strtotime($v):date('Y-m-d', $v));
 		$form->field('balance', 'number', ['min' => 0]);
+
+		$form->fieldset('favorite');
+		$form->field('favorite', 'textarea', ['cols' => 120, 'rows' => 6]);
+
+		$form->fieldset('history');
+		$form->field('history', 'textarea', ['cols' => 120, 'rows' => 6]);
 
 		$form->fieldset();
 		$form->button('Update Account', 'submit');
