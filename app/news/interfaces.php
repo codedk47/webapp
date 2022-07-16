@@ -726,9 +726,11 @@ class interfaces extends webapp
 			'site' => $this->site,
 			'date' => date('Y-m-d', $this->time),
 			'time' => $this->time,
-			//'expire' => $this->time + 86400,
-			'expire' => mktime(23, 59, 59, 7, 16),
-			'balance' => 20,
+			//'expire' => $this->time,
+			//'balance' => 0,
+			//时间段送礼
+			'expire' => $expire = mktime(23, 59, 59, 7, 16, 2022),
+			'balance' => $expire > $this->time ? 20 : 0,
 			'lasttime' => $this->time,
 			'lastip' => $this->clientiphex(),
 			'device' => is_string($data['device']) ? match (1) {

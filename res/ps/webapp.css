@@ -86,7 +86,7 @@ ul[class|=webapp][class*=-menu] > li > details > :not(summary):first-of-type, na
   box-shadow: 0 0.5rem 2rem rgba(27, 31, 35, 0.175);
 }
 
-[class|=webapp-button], [class|=webapp-input][type=checkbox], [class|=webapp-bar] > input[type=checkbox], form[class|=webapp] > fieldset > input[type=checkbox], [class|=webapp-bar] > textarea[type=checkbox], form[class|=webapp] > fieldset > textarea[type=checkbox], [class|=webapp-input][type=radio], [class|=webapp-bar] > input[type=radio], form[class|=webapp] > fieldset > input[type=radio], [class|=webapp-bar] > textarea[type=radio], form[class|=webapp] > fieldset > textarea[type=radio], [class|=webapp-bar] > a, form[class|=webapp] > fieldset > a, [class|=webapp-bar] > button, form[class|=webapp] > fieldset > button, [class|=webapp-bar] > select, form[class|=webapp] > fieldset > select, [class|=webapp-bar] > details, form[class|=webapp] > fieldset > details {
+[class|=webapp-button], [class|=webapp-input][type=checkbox], [class|=webapp-bar] > input[type=checkbox], form[class|=webapp] > fieldset > input[type=checkbox], [class|=webapp-bar] > textarea[type=checkbox], form[class|=webapp] > fieldset > textarea[type=checkbox], table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox], [class|=webapp-input][type=radio], [class|=webapp-bar] > input[type=radio], form[class|=webapp] > fieldset > input[type=radio], [class|=webapp-bar] > textarea[type=radio], form[class|=webapp] > fieldset > textarea[type=radio], table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio], [class|=webapp-bar] > a, form[class|=webapp] > fieldset > a, [class|=webapp-bar] > button, form[class|=webapp] > fieldset > button, [class|=webapp-bar] > select, form[class|=webapp] > fieldset > select, [class|=webapp-bar] > details, form[class|=webapp] > fieldset > details, table[class|=webapp] > tfoot > tr:first-child > td:first-child > a {
   font: 1rem var(--webapp-font-sans-serif);
   color: var(--webapp-foreground);
   padding: .25rem 1rem;
@@ -96,25 +96,25 @@ ul[class|=webapp][class*=-menu] > li > details > :not(summary):first-of-type, na
   background-image: linear-gradient(-180deg, #fafbfc 0%, #eff3f6 90%);
 }
 
-[class|=webapp-button]:hover, [class|=webapp-input][type=checkbox]:hover, [class|=webapp-bar] > input[type=checkbox]:hover, form[class|=webapp] > fieldset > input[type=checkbox]:hover, [class|=webapp-bar] > textarea[type=checkbox]:hover, form[class|=webapp] > fieldset > textarea[type=checkbox]:hover, [class|=webapp-input][type=radio]:hover, [class|=webapp-bar] > input[type=radio]:hover, form[class|=webapp] > fieldset > input[type=radio]:hover, [class|=webapp-bar] > textarea[type=radio]:hover, form[class|=webapp] > fieldset > textarea[type=radio]:hover, [class|=webapp-bar] > a:hover, form[class|=webapp] > fieldset > a:hover, [class|=webapp-bar] > button:hover, form[class|=webapp] > fieldset > button:hover, [class|=webapp-bar] > select:hover, form[class|=webapp] > fieldset > select:hover, [class|=webapp-bar] > details:hover, form[class|=webapp] > fieldset > details:hover {
+[class|=webapp-button]:hover, [class|=webapp-input][type=checkbox]:hover, [class|=webapp-bar] > input[type=checkbox]:hover, form[class|=webapp] > fieldset > input[type=checkbox]:hover, [class|=webapp-bar] > textarea[type=checkbox]:hover, form[class|=webapp] > fieldset > textarea[type=checkbox]:hover, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]:hover, [class|=webapp-input][type=radio]:hover, [class|=webapp-bar] > input[type=radio]:hover, form[class|=webapp] > fieldset > input[type=radio]:hover, [class|=webapp-bar] > textarea[type=radio]:hover, form[class|=webapp] > fieldset > textarea[type=radio]:hover, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]:hover, [class|=webapp-bar] > a:hover, form[class|=webapp] > fieldset > a:hover, [class|=webapp-bar] > button:hover, form[class|=webapp] > fieldset > button:hover, [class|=webapp-bar] > select:hover, form[class|=webapp] > fieldset > select:hover, [class|=webapp-bar] > details:hover, form[class|=webapp] > fieldset > details:hover, table[class|=webapp] > tfoot > tr:first-child > td:first-child > a:hover {
   background-image: linear-gradient(-180deg, #f0f3f6 0%, #e6ecf1 90%);
   border-color: rgba(27, 31, 35, 0.35);
   text-decoration: none;
 }
 
-[class|=webapp-button]:focus, [class|=webapp-input][type=checkbox]:focus, [class|=webapp-bar] > input[type=checkbox]:focus, form[class|=webapp] > fieldset > input[type=checkbox]:focus, [class|=webapp-bar] > textarea[type=checkbox]:focus, form[class|=webapp] > fieldset > textarea[type=checkbox]:focus, [class|=webapp-input][type=radio]:focus, [class|=webapp-bar] > input[type=radio]:focus, form[class|=webapp] > fieldset > input[type=radio]:focus, [class|=webapp-bar] > textarea[type=radio]:focus, form[class|=webapp] > fieldset > textarea[type=radio]:focus, [class|=webapp-bar] > a:focus, form[class|=webapp] > fieldset > a:focus, [class|=webapp-bar] > button:focus, form[class|=webapp] > fieldset > button:focus, [class|=webapp-bar] > select:focus, form[class|=webapp] > fieldset > select:focus, [class|=webapp-bar] > details:focus, form[class|=webapp] > fieldset > details:focus {
+[class|=webapp-button]:focus, [class|=webapp-input][type=checkbox]:focus, [class|=webapp-bar] > input[type=checkbox]:focus, form[class|=webapp] > fieldset > input[type=checkbox]:focus, [class|=webapp-bar] > textarea[type=checkbox]:focus, form[class|=webapp] > fieldset > textarea[type=checkbox]:focus, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]:focus, [class|=webapp-input][type=radio]:focus, [class|=webapp-bar] > input[type=radio]:focus, form[class|=webapp] > fieldset > input[type=radio]:focus, [class|=webapp-bar] > textarea[type=radio]:focus, form[class|=webapp] > fieldset > textarea[type=radio]:focus, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]:focus, [class|=webapp-bar] > a:focus, form[class|=webapp] > fieldset > a:focus, [class|=webapp-bar] > button:focus, form[class|=webapp] > fieldset > button:focus, [class|=webapp-bar] > select:focus, form[class|=webapp] > fieldset > select:focus, [class|=webapp-bar] > details:focus, form[class|=webapp] > fieldset > details:focus, table[class|=webapp] > tfoot > tr:first-child > td:first-child > a:focus {
   box-shadow: 0 0 0 0.2rem rgba(3, 102, 214, 0.3);
   z-index: 1;
 }
 
-[class|=webapp-button]:active, [class|=webapp-input][type=checkbox]:active, [class|=webapp-bar] > input[type=checkbox]:active, form[class|=webapp] > fieldset > input[type=checkbox]:active, [class|=webapp-bar] > textarea[type=checkbox]:active, form[class|=webapp] > fieldset > textarea[type=checkbox]:active, [class|=webapp-input][type=radio]:active, [class|=webapp-bar] > input[type=radio]:active, form[class|=webapp] > fieldset > input[type=radio]:active, [class|=webapp-bar] > textarea[type=radio]:active, form[class|=webapp] > fieldset > textarea[type=radio]:active, [class|=webapp-bar] > a:active, form[class|=webapp] > fieldset > a:active, [class|=webapp-bar] > button:active, form[class|=webapp] > fieldset > button:active, [class|=webapp-bar] > select:active, form[class|=webapp] > fieldset > select:active, [class|=webapp-bar] > details:active, form[class|=webapp] > fieldset > details:active {
+[class|=webapp-button]:active, [class|=webapp-input][type=checkbox]:active, [class|=webapp-bar] > input[type=checkbox]:active, form[class|=webapp] > fieldset > input[type=checkbox]:active, [class|=webapp-bar] > textarea[type=checkbox]:active, form[class|=webapp] > fieldset > textarea[type=checkbox]:active, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]:active, [class|=webapp-input][type=radio]:active, [class|=webapp-bar] > input[type=radio]:active, form[class|=webapp] > fieldset > input[type=radio]:active, [class|=webapp-bar] > textarea[type=radio]:active, form[class|=webapp] > fieldset > textarea[type=radio]:active, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]:active, [class|=webapp-bar] > a:active, form[class|=webapp] > fieldset > a:active, [class|=webapp-bar] > button:active, form[class|=webapp] > fieldset > button:active, [class|=webapp-bar] > select:active, form[class|=webapp] > fieldset > select:active, [class|=webapp-bar] > details:active, form[class|=webapp] > fieldset > details:active, table[class|=webapp] > tfoot > tr:first-child > td:first-child > a:active {
   background-image: none;
   background-color: #e8eef2;
   border-color: rgba(27, 31, 35, 0.35);
   box-shadow: inset 0 0.15rem 0.3rem rgba(27, 31, 35, 0.15);
 }
 
-[class|=webapp-input]:not([type=checkbox]):not([type=radio]), [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]), form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]), [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]), form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]) {
+[class|=webapp-input]:not([type=checkbox]):not([type=radio]), [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]), form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]), [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]), form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]), table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio]) {
   font: 1rem var(--webapp-font-sans-serif);
   padding: .32rem .4rem;
   border: 1px solid #d1d7dc;
@@ -123,37 +123,37 @@ ul[class|=webapp][class*=-menu] > li > details > :not(summary):first-of-type, na
   text-overflow: ellipsis;
 }
 
-[class|=webapp-input]:not([type=checkbox]):not([type=radio]):focus, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):focus, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):focus, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):focus, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):focus {
+[class|=webapp-input]:not([type=checkbox]):not([type=radio]):focus, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):focus, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):focus, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):focus, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):focus, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio]):focus {
   outline: none;
   box-shadow: inset 0 1px 2px rgba(27, 31, 35, 0.075), 0 0 0 0.2rem rgba(3, 102, 214, 0.3);
   border-color: #2188fc;
   z-index: 1;
 }
 
-[class|=webapp-input]:not([type=checkbox]):not([type=radio]):invalid, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):invalid, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):invalid, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):invalid, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):invalid {
+[class|=webapp-input]:not([type=checkbox]):not([type=radio]):invalid, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):invalid, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):invalid, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):invalid, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):invalid, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio]):invalid {
   box-shadow: 0 0 0 0.2rem rgba(203, 36, 49, 0.4);
   border-color: #cb2431;
 }
 
-[class|=webapp-input]:not([type=checkbox]):not([type=radio]):disabled, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):disabled, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):disabled, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):disabled, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):disabled {
+[class|=webapp-input]:not([type=checkbox]):not([type=radio]):disabled, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):disabled, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):disabled, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):disabled, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):disabled, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio]):disabled {
   pointer-events: none;
   box-shadow: none;
   background-color: #f3f3f3;
 }
 
-[class|=webapp-input]:not([type=checkbox]):not([type=radio])::placeholder, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio])::placeholder, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio])::placeholder, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio])::placeholder, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio])::placeholder {
+[class|=webapp-input]:not([type=checkbox]):not([type=radio])::placeholder, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio])::placeholder, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio])::placeholder, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio])::placeholder, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio])::placeholder, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio])::placeholder {
   color: silver;
 }
 
-[class|=webapp-input][type=checkbox], [class|=webapp-bar] > input[type=checkbox], form[class|=webapp] > fieldset > input[type=checkbox], [class|=webapp-bar] > textarea[type=checkbox], form[class|=webapp] > fieldset > textarea[type=checkbox], [class|=webapp-input][type=radio], [class|=webapp-bar] > input[type=radio], form[class|=webapp] > fieldset > input[type=radio], [class|=webapp-bar] > textarea[type=radio], form[class|=webapp] > fieldset > textarea[type=radio] {
+[class|=webapp-input][type=checkbox], [class|=webapp-bar] > input[type=checkbox], form[class|=webapp] > fieldset > input[type=checkbox], [class|=webapp-bar] > textarea[type=checkbox], form[class|=webapp] > fieldset > textarea[type=checkbox], table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox], [class|=webapp-input][type=radio], [class|=webapp-bar] > input[type=radio], form[class|=webapp] > fieldset > input[type=radio], [class|=webapp-bar] > textarea[type=radio], form[class|=webapp] > fieldset > textarea[type=radio], table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio] {
   appearance: none;
 }
 
-[class|=webapp-input][type=checkbox]::before, [class|=webapp-bar] > input[type=checkbox]::before, form[class|=webapp] > fieldset > input[type=checkbox]::before, [class|=webapp-bar] > textarea[type=checkbox]::before, form[class|=webapp] > fieldset > textarea[type=checkbox]::before, [class|=webapp-input][type=radio]::before, [class|=webapp-bar] > input[type=radio]::before, form[class|=webapp] > fieldset > input[type=radio]::before, [class|=webapp-bar] > textarea[type=radio]::before, form[class|=webapp] > fieldset > textarea[type=radio]::before {
+[class|=webapp-input][type=checkbox]::before, [class|=webapp-bar] > input[type=checkbox]::before, form[class|=webapp] > fieldset > input[type=checkbox]::before, [class|=webapp-bar] > textarea[type=checkbox]::before, form[class|=webapp] > fieldset > textarea[type=checkbox]::before, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]::before, [class|=webapp-input][type=radio]::before, [class|=webapp-bar] > input[type=radio]::before, form[class|=webapp] > fieldset > input[type=radio]::before, [class|=webapp-bar] > textarea[type=radio]::before, form[class|=webapp] > fieldset > textarea[type=radio]::before, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]::before {
   border: 1px solid red;
 }
 
-[class|=webapp-input][type=checkbox]::after, [class|=webapp-bar] > input[type=checkbox]::after, form[class|=webapp] > fieldset > input[type=checkbox]::after, [class|=webapp-bar] > textarea[type=checkbox]::after, form[class|=webapp] > fieldset > textarea[type=checkbox]::after, [class|=webapp-input][type=radio]::after, [class|=webapp-bar] > input[type=radio]::after, form[class|=webapp] > fieldset > input[type=radio]::after, [class|=webapp-bar] > textarea[type=radio]::after, form[class|=webapp] > fieldset > textarea[type=radio]::after {
+[class|=webapp-input][type=checkbox]::after, [class|=webapp-bar] > input[type=checkbox]::after, form[class|=webapp] > fieldset > input[type=checkbox]::after, [class|=webapp-bar] > textarea[type=checkbox]::after, form[class|=webapp] > fieldset > textarea[type=checkbox]::after, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]::after, [class|=webapp-input][type=radio]::after, [class|=webapp-bar] > input[type=radio]::after, form[class|=webapp] > fieldset > input[type=radio]::after, [class|=webapp-bar] > textarea[type=radio]::after, form[class|=webapp] > fieldset > textarea[type=radio]::after, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]::after {
   content: attr(value);
 }
 
@@ -299,6 +299,10 @@ table[class|=webapp] > tbody > tr:not(.fieldset) > td {
 
 table[class|=webapp] > tfoot {
   background-color: var(--webapp-button);
+}
+
+table[class|=webapp] > tfoot > tr:first-child > td:first-child {
+  text-align: right;
 }
 
 table[class|=webapp][class*=-hover] > tbody > tr:not(.fieldset):hover {

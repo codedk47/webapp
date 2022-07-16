@@ -90,7 +90,7 @@ $danger: rgb(203, 36, 49);
 	border: 1px solid rgba($edge, .23);
 	box-shadow: 0 .5rem 2rem rgba($edge, .175);
 }
-[class|=webapp-button]{
+%webapp-button,[class|=webapp-button]{
 	font: 1rem var(--webapp-font-sans-serif);
 	color: var(--webapp-foreground);
 	padding: .25rem 1rem;
@@ -328,6 +328,15 @@ table[class|=webapp]{
 	}
 	>tfoot{
 		background-color: var(--webapp-button);
+		>tr:first-child>td:first-child{
+			text-align: right;
+		}
+		>tr:first-child>td:first-child>a{
+			@extend [class|=webapp-button];
+		}
+		>tr:first-child>td:first-child>input{
+			@extend [class|=webapp-input];
+		}
 	}
 
 
