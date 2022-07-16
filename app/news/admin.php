@@ -373,6 +373,10 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$this->webapp->form_resourceupload($this->main);
 	}
+	function get_resource_cover(string $hash)
+	{
+
+	}
 	function get_resources(string $search = NULL, int $page = 1)
 	{
 		$cond = ['WHERE FIND_IN_SET(?s,site) AND sync=?s', $this->webapp->site,
@@ -436,11 +440,11 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(number_format($data['like']));
 			$table->cell()->append('div', [
 				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
-			])->append('a', [$data['name'],
-			'href' => "?admin/resource-update,hash:{$res['hash']}",
-			'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
+			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
+			$table->cell()->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
+				'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
 		}, $this->webapp['app_restype']);
-		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name');
+		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓');
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
@@ -473,7 +477,7 @@ document.querySelectorAll('a[data-cover]').forEach(node =>
 		if (!this.img)
 		{
 			this.img = new Image;
-			loader(this.dataset.cover, null, 'application/octet-stream').then(blob => this.img.src = URL.createObjectURL(blob));
+			loader(this.dataset.cover, null, 'application/octet-stream').then(blob => this.img.src = this.href = URL.createObjectURL(blob));
 			this.img.style.cssText = 'position:absolute;border:.1rem solid black;max-width:300px';
 			this.parentNode.parentNode.appendChild(this.img);
 		}

@@ -814,8 +814,12 @@ class interfaces extends webapp
 	function post_report(string $signature)
 	{
 		if ($this->account($signature, $account)
-			&& is_string($describe = $this->request_content())
-			&& strlen($describe) > 2
+			&& is_array($contents = $this->request_content())
+			&& isset($contents['describe'])
+			&& is_string($contents['describe'])
+			&& strlen($describe = isset($contents['contact']) && is_string($contents['describe'])
+				? "{$contents['contact']}\n{$contents['describe']}"
+				: $contents['describe']) > 2
 			&& strlen($describe) < 128
 			&& $this->mysql->reports->insert($report = [
 				'hash' => $this->randhash(TRUE),
@@ -825,11 +829,7 @@ class interfaces extends webapp
 				'promise' => 'waiting',
 				'account' => $account['uid'],
 				'describe' => $describe])) {
-			$this->xml->append('report', [
-				'hash' => $report['hash'],
-				'time' => $report['time'],
-				'promise' => $report['promise']
-			])->cdata($describe);
+			$this->report_xml($report);
 		}
 	}
 	
