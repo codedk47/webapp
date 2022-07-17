@@ -595,7 +595,7 @@ JS);
 		$table->fieldset('uid', 'date', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'unit', 'code', 'phone', 'name');
 		$table->header('Found %d item', $table->count());
 		$table->bar->select(['' => '全部单位', '0000' => '内部单位'] + $this->webapp->mysql->unitsets->column('name', 'unit'))
-		->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
+			->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
@@ -989,10 +989,16 @@ JS);
 
 	}
 	//订单
-	function get_orders(string $search = NULL, int $page = 1)
+	function get_orders(string $status = 'notified', string $search = NULL, int $page = 1)
 	{
 		if ($this->webapp->admin[2] === FALSE) return $this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
-		$cond = ['WHERE 1'];
+		$cond = ['WHERE status=?s', $status];
+		if ($date = $this->webapp->query['date'] ?? date('Y-m-d'))
+		{
+			$cond[0] .= ' AND tym=?i AND day=?i';
+			$cond[] = substr($date, 0, 4) . substr($date, 5, 2);
+			$cond[] = substr($date, -2);
+		}
 		if ($search)
 		{
 			$cond[0] .= ' AND hash=?s';
@@ -1006,22 +1012,27 @@ JS);
 			$table->cell(date('Y-m-d\\TH:i:s', $order['time']));
 			$table->cell(date('Y-m-d\\TH:i:s', $order['last']));
 			$table->cell([$order['status'], 'style' => "color:{$status[$order['status']]}"]);
-			$table->cell()->append('a', ['⏳',
-				'href' => "?admin/ordernotify,hash:{$order['hash']}",
-				'onclick' => 'return confirm(this.dataset.notifyurl)',
-				'data-notifyurl' => $order['notify_url']]);
 			$table->cell(number_format($order['actual_fee'] * 0.01, 2));
 			$table->cell(number_format($order['order_fee'] * 0.01, 2));
 			$table->cell($order['pay_user']);
-			$table->cell($order['pay_name']);
-			$table->cell($order['pay_type']);
+			$table->cell("{$order['pay_name']}@{$order['pay_type']}");
 			$table->cell($order['order_no']);
 			$table->cell($order['trade_no']);
+			$table->cell()->append('a', [$order['notify_url'],
+				'href' => "?admin/ordernotify,hash:{$order['hash']}",
+				'onclick' => 'return confirm(this.dataset.notifyurl)',
+				'data-notifyurl' => $order['notify_url']]);
 			
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
-		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '⌛', '实际支付', '订单价格', '商户', '平台', '类型', '订单（内部产品）', '对方订单');
-		$table->header('订单数据');
+		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台@类型', '订单（内部产品）', '对方订单', '回调地址');
+		$table->header('找到 %s 个订单数据', $table->count());
 		$table->button('order stat', ['onclick' => 'location.href="?admin/orderstat"']);
+		$table->bar->select([
+			'notified' => 'notified',
+			'unpay' => 'unpay',
+			'payed' => 'payed'
+		])->setattr(['onchange' => 'g({status:this.value})'])->selected($status);
+		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
