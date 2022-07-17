@@ -12,11 +12,12 @@ GET ?setvods 获取合集节目
 POST ?register [device,unit] 注册账号
 GET ?signature/{账号（如：0FqvMsV_ox）} 账号信息
 GET ?account/{签名（如：iYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} 账号信息
-POST ?account/{签名（如：iYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} BODY 修改账号信息
-POST ?report/{签名（如：iYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} BODY 报告问题
+POST ?account/{签名（如：iYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} [face,code,phone,pwd,name] 修改账号信息
+POST ?report/{签名（如：iYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} [contact,describe] 报告问题
 POST ?bill/{签名（如：iYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} [fee,describe] 创建账单
 GET ?bills/{签名（如：iYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} 账单记录
 GET ?play/{资源+签名（如：001V4BE4R1TRiYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} 付费播放
+POST ?gift/{签名（如：iYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7jw4KZQEvKlX-BdTxK7pUCeqfZgiUFflgO）} [name,value] 领取礼物
 ##GET ?favorite/{资源+签名} 增加或者删除收藏这个资源
 ##GET ?history/{资源+签名} 增加观看历史记录
 
@@ -24,5 +25,3 @@ GET ?play/{资源+签名（如：001V4BE4R1TRiYWoyVI14OfIuxgn_cFHs_wC7_vyKQeVz7j
 GET ?comments/{资源（如：001V4BE4R1TR）} 获取某个资源的评论
 
 付款相关
-POST ?payment/{签名} 创建一条付款记录
-GET ?payments/{签名} 拉取付款记录

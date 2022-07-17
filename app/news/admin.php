@@ -622,11 +622,20 @@ JS);
 	}
 	//================Extensions================
 	//报告
-	function form_report($ctx):webapp_form
+	function form_report($ctx, string $hash = NULL):webapp_form
 	{
 		$form = new webapp_form($ctx);
 		$form->fieldset('describe');
-		$form->field('describe', 'text', ['style' => 'width:740px', 'placeholder' => '通知内容', 'required' => NULL]);
+		$form->field('describe', 'textarea', ['cols' => 78, 'rows' => 8, 'placeholder' => '通知内容', 'required' => NULL]);
+		if ($hash)
+		{
+			$form->fieldset('promise / content');
+			$form->field('promise', 'select', ['options' => [
+				'resolved' => '已解决',
+				'rejected' => '以拒绝'
+			]]);
+			$form->field('content', 'text', ['style' => 'width:640px', 'placeholder' => '回复内容']);
+		}
 		$form->fieldset();
 		$form->button('Notification', 'submit');
 		return $form;
@@ -650,6 +659,23 @@ JS);
 	{
 		$this->form_report($this->main);
 	}
+	function post_report(string $hash)
+	{
+		if ($this->form_report($this->webapp, $hash)->fetch($data)
+			&& $this->webapp->mysql->reports('WHERE site=?i AND hash=?s', $this->webapp->site, $hash)
+				->update('`promise`=?s,`describe`=CONCAT(`describe`,?s)', $data['promise'], strlen($data['content']) ? "\n{$data['content']}" : '')
+			&& $this->webapp->call('saveRep', $this->webapp->report_xml(
+				$this->webapp->mysql->reports('WHERE site=?i AND hash=?s', $this->webapp->site, $hash)->array()))) {
+	
+			return $this->okay('?admin/reports');
+		}
+		$this->warn('通告更新失败！');
+	}
+	function get_report(string $hash)
+	{
+		$this->form_report($this->main, $hash)->echo($this->webapp->mysql
+			->reports('WHERE site=?i AND hash=?s', $this->webapp->site, $hash)->array());
+	}
 	function get_reports(string $search = NULL, int $page = 1)
 	{
 		$cond = ['where site=?i', $this->webapp->site];
@@ -671,10 +697,21 @@ JS);
 		$table = $this->main->table($this->webapp->mysql->reports(...$cond)->paging($page), function($table, $rep)
 		{
 			$table->row();
+			if ($rep['promise'] === 'waiting')
+			{
+				$table->cell()->append('a', [$rep['promise'], 'href' => "?admin/report,hash:{$rep['hash']}"]);
+			}
+			else
+			{
+				$table->cell([$rep['promise'], 'style' => [
+					'resolved' => 'color:green',
+					'rejected' => 'color:red'][$rep['promise']]]);
+			}
+			
 			// $table->cell()->append('a', [$rep['promise'],
 			// 	'href' => "?admin/resolve,hash:{$rep['hash']}",
 			// 	'style' => "color:red"]);
-			$table->cell($rep['promise']);
+			
 			$table->cell(date('Y-m-d\\TH:i:s', $rep['time']));
 			$table->cell($this->webapp->hexip($rep['ip']));
 			if ($rep['account'])

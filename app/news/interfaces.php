@@ -712,9 +712,31 @@ class interfaces extends webapp
 	{
 		return strlen($code) === 10
 			&& preg_match('/^(expire|balance)\:(\d+)$/', $gift, $value)
-			&& $this->mysql->accounts('WHERE uid=?s AND phone!="" 1', $code)->update(...$value[1] === 'expire'
+			&& $this->mysql->accounts('WHERE uid=?s AND phone!=""', $code)->update(...$value[1] === 'expire'
 				? ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, $value[2]]
 				: ['?a=?a+?i', $value[1], $value[1], $value[2]]);
+	}
+	function post_gift(string $signature)
+	{
+		if (is_array($gift = $this->request_content())
+			&& isset($gift['name'], $gift['value'])
+			&& is_string($gift['name'])
+			&& in_array($gift['name'], ['expire', 'balance'], TRUE)
+			&& is_numeric($gift['value'])
+			&& $this->account($signature, $account)
+			&& $this->mysql->accounts('WHERE uid=?s', $account['uid'])->update(...$gift['name'] === 'expire'
+				? ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, $gift['value']]
+				: ['?a=?a+?i', $gift['name'], $gift['name'], $gift['value']])) {
+			if ($gift['name'] === 'expire')
+			{
+				$account['expire'] = ($account['expire'] > $this->time ? $account['expire'] : $this->time) + $gift['value'];
+			}
+			else
+			{
+				$account[$gift['name']] = $account[$gift['name']] + $gift['value'];
+			}
+			$this->account_xml($account);
+		}
 	}
 	function post_register()
 	{
@@ -994,8 +1016,7 @@ class interfaces extends webapp
 		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述']);
 
 		$form->fieldset('tags');
-		$tags = $this->mysql->tags('ORDER BY time ASC', $this->site)->column('name', 'hash');
-		$form->field('tags', 'checkbox', ['options' => $tags], 
+		$form->field('tags', 'checkbox', ['options' => $this->selecttags()],
 			fn($v,$i)=>$i?join($v):str_split($v,4))['class'] = 'restag';
 
 		$form->fieldset('resources');
