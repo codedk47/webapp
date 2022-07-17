@@ -538,10 +538,36 @@ JS);
 	function get_accounts($search = NULL, int $page = 1)
 	{
 		$cond = ['where site=?i', $this->webapp->site];
+		if ($uint = $this->webapp->query['unit'] ?? '')
+		{
+			$cond[0] .= ' and unit=?s';
+			$cond[] = $uint;
+		}
+		if ($date = $this->webapp->query['date'] ?? date('Y-m-d'))
+		{
+			$cond[0] .= ' and date=?s';
+			$cond[] = $date;
+		}
 		if (is_string($search))
 		{
-			$cond[0] .= is_numeric($search) ? ' and phone=?s' : ' and uid=?s';
-			$cond[] = $search;
+			if (is_numeric($search))
+			{
+				$cond[0] .= ' and phone=?s';
+				$cond[] = $search;
+			}
+			else
+			{
+				if (strlen($search) === 10 && trim($search, webapp::key) === '')
+				{
+					$cond[0] .= ' and uid=?s';
+					$cond[] = $search;
+				}
+				else
+				{
+					$cond[0] .= ' and (uid like ?s or name like ?s)';
+					array_push($cond, '%' . ($search = urldecode($search)) . '%', "%{$search}%");
+				}
+			}
 		}
 		$cond[0] .= ' order by time desc';
 		$table = $this->main->table($this->webapp->mysql->accounts(...$cond)->paging($page), function($table, $acc)
@@ -551,7 +577,7 @@ JS);
 			$table->cell($acc['date']);
 			$table->cell(date('Y-m-d', $acc['expire']));
 			$table->cell(number_format($acc['balance']));
-			$table->cell(date('Y-m-d', $acc['lasttime']));
+			$table->cell(date('Y-m-d\\TH:i:s', $acc['lasttime']));
 			$table->cell($this->webapp->hexip($acc['lastip']));
 			$table->cell($acc['device']);
 			$table->cell($acc['unit']);
@@ -568,6 +594,9 @@ JS);
 		});
 		$table->fieldset('uid', 'date', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'unit', 'code', 'phone', 'name');
 		$table->header('Found %d item', $table->count());
+		$table->bar->select(['' => '全部单位', '0000' => '内部单位'] + $this->webapp->mysql->unitsets->column('name', 'unit'))
+		->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
+		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
