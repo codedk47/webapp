@@ -267,7 +267,7 @@ final class webapp_pay_pp implements webapp_pay
 	{
 		if (is_array($result)
 			&& isset($result['status'], $result['out_trade_no'], $result['money'])
-			&& intval($result['status']) === 1) {
+			&& intval($result['status']) === 2) {
 			$status = [
 				'code' => 200,
 				'type' => 'text/plain',
