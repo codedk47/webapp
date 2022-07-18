@@ -992,10 +992,10 @@ JS);
 	function get_orders(string $status = 'notified', string $search = NULL, int $page = 1)
 	{
 		if ($this->webapp->admin[2] === FALSE) return $this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
-		$cond = ['WHERE status=?s', $status];
+		$cond = ['WHERE status=?s AND pay_name="cj"', $status];
 		if ($date = $this->webapp->query['date'] ?? date('Y-m-d'))
 		{
-			$cond[0] .= ' AND tym=?i AND day=?i AND pay_name="cj"';
+			$cond[0] .= ' AND tym=?i AND day=?i';
 			$cond[] = substr($date, 0, 4) . substr($date, 5, 2);
 			$cond[] = substr($date, -2);
 		}
