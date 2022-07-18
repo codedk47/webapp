@@ -415,9 +415,9 @@ class webapp_router_admin extends webapp_echo_html
 
 		$cond[0] .= match ($sort = $this->webapp->query['sort'] ?? '')
 		{
-			'favorite' => $this->webapp->mysql->format(' ORDER BY data->>\'$."?i".favorite\' DESC', $this->webapp->site),
-			'view' => $this->webapp->mysql->format(' ORDER BY data->>\'$."?i".view\' DESC', $this->webapp->site),
-			'like' => $this->webapp->mysql->format(' ORDER BY data->>\'$."?i".like\' DESC', $this->webapp->site),
+			'favorite' => $this->webapp->mysql->format(' ORDER BY CAST(data->>\'$."?i".favorite\' AS UNSIGNED) DESC', $this->webapp->site),
+			'view' => $this->webapp->mysql->format(' ORDER BY CAST(data->>\'$."?i".view\' AS UNSIGNED) DESC', $this->webapp->site),
+			'like' => $this->webapp->mysql->format(' ORDER BY CAST(data->>\'$."?i".like\' AS UNSIGNED) DESC', $this->webapp->site),
 			default => ' ORDER BY time DESC'
 		};
 
