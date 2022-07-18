@@ -54,7 +54,7 @@ final class webapp_pay_pp implements webapp_pay
 	static function paytype():array
 	{
 		return [
-			'808' => '微信原生1'
+			'808' => '微信原生(推荐)'
 		];
 	}
 	function __construct(array $context)
