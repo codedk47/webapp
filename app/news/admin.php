@@ -995,7 +995,7 @@ JS);
 		$cond = ['WHERE status=?s', $status];
 		if ($date = $this->webapp->query['date'] ?? date('Y-m-d'))
 		{
-			$cond[0] .= ' AND tym=?i AND day=?i';
+			$cond[0] .= ' AND tym=?i AND day=?i AND pay_name="cj"';
 			$cond[] = substr($date, 0, 4) . substr($date, 5, 2);
 			$cond[] = substr($date, -2);
 		}
