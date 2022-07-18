@@ -49,6 +49,86 @@ final class webapp_pay_test implements webapp_pay
 		return TRUE;
 	}
 }
+final class webapp_pay_pp implements webapp_pay
+{
+	static function paytype():array
+	{
+		return [
+			'808' => '微信原生1'
+		];
+	}
+	function __construct(array $context)
+	{
+		$this->ctx = $context;
+	}
+	function create(array &$order, ?string &$error):bool
+	{
+		do
+		{
+			$data = [
+				'mch_id' => $this->ctx['id'],
+				'pass_code' => $order['pay_type'],
+				'subject' => $order['order_no'],
+				'out_trade_no' => $order['hash'],
+				'amount' => $order['order_fee'] * 0.01,
+				'notify_url' => $order['notify_url'],
+				'return_url' => $order['return_url'],
+				'timestamp' => date('Y-m-d H:i:s')
+			];
+			ksort($data);
+			reset($data);
+			$query = [];
+			foreach ($data as $k => $v)
+			{
+				if ($v !== '')
+				{
+					$query[] = "{$k}={$v}";
+				}
+			}
+			$data['sign'] = strtoupper(md5(join('&', $query) . $this->ctx['key']));
+
+			if (is_array($result = webapp_client_http::open('http://www.pipi2023.com/api/unifiedorder', [
+				'method' => 'POST',
+				'type' => 'application/json',
+				'data' => $data
+				])->content()) === FALSE) {
+				break;
+			}
+			//var_dump($result);
+			if ((array_key_exists('data', $result) && array_key_exists('code', $result) && $result['code'] === 0) === FALSE)
+			{
+				$error = '远程支付失败！';
+				break;
+			}
+			$order['trade_no'] = $result['data']['trade_no'];
+			//$order['actual_fee'] = $result['money'] * 100;
+			if (array_key_exists('pay_url', $result['data']) === FALSE)
+			{
+				break;
+			}
+			$order['type'] = 'goto';
+			$order['data'] = $result['data']['pay_url'];
+			return TRUE;
+		} while (0);
+		return FALSE;
+	}
+	function notify(mixed $result, ?array &$status):bool
+	{
+		if (is_array($result)
+			&& isset($result['status'], $result['out_trade_no'], $result['money'])
+			&& intval($result['status']) === 2) {
+			$status = [
+				'code' => 200,
+				'type' => 'text/plain',
+				'data' => 'SUCCESS',
+				'hash' => $result['out_trade_no'],
+				'actual_fee' => $result['money'] * 100
+			];
+			return TRUE;
+		}
+		return FALSE;
+	}
+}
 final class webapp_pay_cj implements webapp_pay
 {
 	static function paytype():array
@@ -200,86 +280,6 @@ final class webapp_pay_yk implements webapp_pay
 		return FALSE;
 	}
 }
-final class webapp_pay_pp implements webapp_pay
-{
-	static function paytype():array
-	{
-		return [
-			'808' => '微信原生1'
-		];
-	}
-	function __construct(array $context)
-	{
-		$this->ctx = $context;
-	}
-	function create(array &$order, ?string &$error):bool
-	{
-		do
-		{
-			$data = [
-				'mch_id' => $this->ctx['id'],
-				'pass_code' => $order['pay_type'],
-				'subject' => $order['order_no'],
-				'out_trade_no' => $order['hash'],
-				'amount' => $order['order_fee'] * 0.01,
-				'notify_url' => $order['notify_url'],
-				'return_url' => $order['return_url'],
-				'timestamp' => date('Y-m-d H:i:s')
-			];
-			ksort($data);
-			reset($data);
-			$query = [];
-			foreach ($data as $k => $v)
-			{
-				if ($v !== '')
-				{
-					$query[] = "{$k}={$v}";
-				}
-			}
-			$data['sign'] = strtoupper(md5(join('&', $query) . $this->ctx['key']));
-
-			if (is_array($result = webapp_client_http::open('http://www.pipi2023.com/api/unifiedorder', [
-				'method' => 'POST',
-				'type' => 'application/json',
-				'data' => $data
-				])->content()) === FALSE) {
-				break;
-			}
-			//var_dump($result);
-			if ((array_key_exists('data', $result) && array_key_exists('code', $result) && $result['code'] === 0) === FALSE)
-			{
-				$error = '远程支付失败！';
-				break;
-			}
-			$order['trade_no'] = $result['data']['trade_no'];
-			//$order['actual_fee'] = $result['money'] * 100;
-			if (array_key_exists('pay_url', $result['data']) === FALSE)
-			{
-				break;
-			}
-			$order['type'] = 'goto';
-			$order['data'] = $result['data']['pay_url'];
-			return TRUE;
-		} while (0);
-		return FALSE;
-	}
-	function notify(mixed $result, ?array &$status):bool
-	{
-		if (is_array($result)
-			&& isset($result['status'], $result['out_trade_no'], $result['money'])
-			&& intval($result['status']) === 2) {
-			$status = [
-				'code' => 200,
-				'type' => 'text/plain',
-				'data' => 'SUCCESS',
-				'hash' => $result['out_trade_no'],
-				'actual_fee' => $result['money'] * 100
-			];
-			return TRUE;
-		}
-		return FALSE;
-	}
-}
 final class webapp_router_pay extends webapp_echo_xml
 {
 	private array $channels = [
@@ -375,7 +375,7 @@ final class webapp_router_pay extends webapp_echo_xml
 				{
 					$this->xml->append('pay', [
 						'type' => "{$channel}@{$type}",
-						'name' => "{$channel}@{$type}" === 'yk@ALIPAY_H5' ? "{$name} " : $name
+						'name' => "{$channel}@{$type}" === 'pp@808' ? "{$name} " : $name
 					]);
 				}
 			}
