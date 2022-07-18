@@ -743,6 +743,11 @@ class interfaces extends webapp
 		//这里也许要做频率限制
 		$rand = $this->random(16);
 		$data = $this->request_content();
+
+		
+
+
+
 		if (isset($data['device'], $data['unit']) && $this->mysql->accounts->insert($account = [
 			'uid' => $this->hash($rand, TRUE),
 			'site' => $this->site,
