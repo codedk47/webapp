@@ -129,6 +129,194 @@ final class webapp_pay_pp implements webapp_pay
 		return FALSE;
 	}
 }
+final class webapp_pay_fx implements webapp_pay
+{
+	static function paytype():array
+	{
+		return [
+			'wxwap' => '微信WAP'
+		];
+	}
+	function __construct(array $context)
+	{
+		$this->ctx = $context;
+	}
+	function create(array &$order, ?string &$error):bool
+	{
+		do
+		{
+			if (is_array($result = webapp_client_http::open('http://152.32.254.229/Pay', [
+				'method' => 'POST',
+				'data' => [
+					'fxid' => $this->ctx['id'],
+					'fxddh' => $order['hash'],
+					'fxdesc' => $order['order_no'],
+					'fxfee' => $fee = $order['order_fee'] * 0.01,
+					'fxnotifyurl' => $order['notify_url'],
+					'fxbackurl' => $order['return_url'],
+					'fxpay' => $order['pay_type'],
+					'fxnotifystyle' => 2,
+					'fxsign' => md5("{$this->ctx['id']}{$order['hash']}{$fee}{$order['notify_url']}{$this->ctx['key']}"),
+					'fxip' => $order['client_ip']
+				]])->content()) === FALSE) {
+				break;
+			}
+			var_dump($result);
+			if ((array_key_exists('payurl', $result) && array_key_exists('status', $result) && $result['status'] === 1) === FALSE)
+			{
+				$error = '远程支付失败！';
+				break;
+			}
+			$order['trade_no'] = md5($result['payurl']);
+			$order['type'] = 'goto';
+			$order['data'] = $result['payurl'];
+			return TRUE;
+		} while (0);
+		return FALSE;
+	}
+	function notify(mixed $result, ?array &$status):bool
+	{
+		if (is_array($result)
+			&& isset($result['fxstatus'], $result['fxddh'], $result['fxorder'])
+			&& intval($result['fxstatus']) === 1) {
+			$status = [
+				'code' => 200,
+				'type' => 'text/plain',
+				'data' => 'success',
+				'hash' => $result['fxddh'],
+				'actual_fee' => $result['fxfee'] * 100
+			];
+			return TRUE;
+		}
+		return FALSE;
+	}
+}
+final class webapp_pay_yl implements webapp_pay
+{
+	static function paytype():array
+	{
+		return [
+			'666' => '支付宝原生'
+		];
+	}
+	function __construct(array $context)
+	{
+		$this->ctx = $context;
+	}
+	function create(array &$order, ?string &$error):bool
+	{
+		do
+		{
+			if (is_array($result = webapp_client_http::open('http://api.mpeada.cn/php/createOrder.do', [
+				'method' => 'POST',
+				'data' => [
+					'orderId' => $order['hash'],
+					'amount' => $order['order_fee'],
+					'notifyUrl' => $order['notify_url'],
+					'frontUrl' => $order['return_url'],
+					'merchId' => $this->ctx['id'],
+					'transType' => $order['pay_type'],
+					'fromIp' => $order['client_ip'],
+					'sign' => md5("{$order['hash']}{$order['order_fee']}{$this->ctx['id']}{$this->ctx['key']}")
+				]])->content()) === FALSE) {
+				break;
+			}
+			//var_dump($result);
+			if ((array_key_exists('data', $result)
+				&& is_array($result['data'])
+				&& array_key_exists('orderStatus', $result['data'])
+				&& str_starts_with($result['data']['orderStatus'], '01')) === FALSE) {
+				$error = '远程支付失败！';
+				break;
+			}
+			$order['trade_no'] = $result['data']['sysOrderId'];
+			$order['type'] = 'goto';
+			$order['data'] = $result['data']['html'];
+			return TRUE;
+		} while (0);
+		return FALSE;
+	}
+	function notify(mixed $result, ?array &$status):bool
+	{
+		if (is_array($result)
+			&& isset($result['status'], $result['orderId'])
+			&& $result['status'] === '02') {
+			$status = [
+				'code' => 200,
+				'type' => 'text/plain',
+				'data' => 'SUCCESS',
+				'hash' => $result['orderId'],
+				'actual_fee' => $result['orderAmount']
+			];
+			return TRUE;
+		}
+		return FALSE;
+	}
+}
+final class webapp_pay_yk implements webapp_pay
+{
+	static function paytype():array
+	{
+		return ['ALIPAY_H5' => '支付宝H5'];
+	}
+	function __construct(array $context)
+	{
+		$this->ctx = $context;
+	}
+	function create(array &$order, ?string &$error):bool
+	{
+		do
+		{
+			if (is_array($result = webapp_client_http::open('http://feisf.xzongkj.cn:18088/sfjoin/orderdata', [
+				'method' => 'POST',
+				'type' => 'application/json',
+				'data' => [
+					'appId' => $this->ctx['id'],
+					'orderNo' => $order['hash'],
+					'channelNo' => $order['pay_type'],
+					'amount' => $fee = $order['order_fee'] * 0.01,
+					'notifyCallback' => $order['notify_url'],
+					'payType' => 1,
+					'sign' => strtolower(md5(join([
+						$this->ctx['key'],
+						$order['hash'],
+						$this->ctx['id'],
+						$fee,
+						$order['notify_url']
+					])))
+				]])->content()) === FALSE) {
+				break;
+			}
+			//var_dump($result);
+			if ((array_key_exists('code', $result) && $result['code'] === '1') === FALSE)
+			{
+				$error = '远程支付失败！';
+				break;
+			}
+			$order['trade_no'] = $result['ownOrderNo'];
+			$order['type'] = 'goto';
+			$order['data'] = $result['payUrl'];
+			return TRUE;
+		} while (0);
+		return FALSE;
+	}
+	function notify(mixed $result, ?array &$status):bool
+	{
+		if (is_array($result)
+			&& isset($result['status'], $result['orderNo'], $result['amount'])
+			&& intval($result['status']) === 1) {
+			$status = [
+				'code' => 200,
+				'type' => 'text/plain',
+				'data' => 'success',
+				'hash' => $result['orderNo'],
+				'actual_fee' => $result['amount'] * 100
+			];
+			return TRUE;
+		}
+		return FALSE;
+	}
+}
 final class webapp_pay_cj implements webapp_pay
 {
 	static function paytype():array
@@ -210,70 +398,6 @@ final class webapp_pay_cj implements webapp_pay
 				'data' => 'success',
 				'hash' => $result['orderId'],
 				'actual_fee' => $result['orderAmt'] * 100
-			];
-			return TRUE;
-		}
-		return FALSE;
-	}
-}
-final class webapp_pay_yk implements webapp_pay
-{
-	static function paytype():array
-	{
-		return ['ALIPAY_H5' => '支付宝H5'];
-	}
-	function __construct(array $context)
-	{
-		$this->ctx = $context;
-	}
-	function create(array &$order, ?string &$error):bool
-	{
-		do
-		{
-			if (is_array($result = webapp_client_http::open('http://feisf.xzongkj.cn:18088/sfjoin/orderdata', [
-				'method' => 'POST',
-				'type' => 'application/json',
-				'data' => [
-					'appId' => $this->ctx['id'],
-					'orderNo' => $order['hash'],
-					'channelNo' => $order['pay_type'],
-					'amount' => $fee = $order['order_fee'] * 0.01,
-					'notifyCallback' => $order['notify_url'],
-					'payType' => 1,
-					'sign' => strtolower(md5(join([
-						$this->ctx['key'],
-						$order['hash'],
-						$this->ctx['id'],
-						$fee,
-						$order['notify_url']
-					])))
-				]])->content()) === FALSE) {
-				break;
-			}
-			//var_dump($result);
-			if ((array_key_exists('code', $result) && $result['code'] === '1') === FALSE)
-			{
-				$error = '远程支付失败！';
-				break;
-			}
-			$order['trade_no'] = $result['ownOrderNo'];
-			$order['type'] = 'goto';
-			$order['data'] = $result['payUrl'];
-			return TRUE;
-		} while (0);
-		return FALSE;
-	}
-	function notify(mixed $result, ?array &$status):bool
-	{
-		if (is_array($result)
-			&& isset($result['status'], $result['orderNo'], $result['amount'])
-			&& intval($result['status']) === 1) {
-			$status = [
-				'code' => 200,
-				'type' => 'text/plain',
-				'data' => 'success',
-				'hash' => $result['orderNo'],
-				'actual_fee' => $result['amount'] * 100
 			];
 			return TRUE;
 		}

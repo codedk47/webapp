@@ -1013,7 +1013,7 @@ class interfaces extends webapp
 		$form->field('name', 'text', ['required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 		$form->field('type', 'select', ['options' => $this['app_restype'], 'required' => NULL]);
-		$form->field('viewtype', 'select', ['options' => ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小'], 'required' => NULL]);
+		$form->field('viewtype', 'select', ['options' => ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小', '大横图'], 'required' => NULL]);
 		$form->field('ad', 'select', ['options' => ['' => '请选择展示广告']
 			+ $this->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->site)->column('name', 'hash')]);
 

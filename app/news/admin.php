@@ -533,7 +533,13 @@ JS);
 	}
 	function get_account_update(string $uid)
 	{
-		$this->form_account($this->main)->echo($this->webapp->mysql->accounts('where site=?i and uid=?s', $this->webapp->site, $uid)->array());
+		if ($this->webapp->mysql->accounts('where site=?i and uid=?s', $this->webapp->site, $uid)->fetch($account))
+		{
+			$form = $this->form_account($this->main);
+			$form->xml->fieldset->legend = $this->webapp->signature($account['uid'], $account['pwd']);
+			$form->echo($account);
+		}
+		
 	}
 	function get_accounts($search = NULL, int $page = 1)
 	{
