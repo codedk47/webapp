@@ -543,7 +543,7 @@ JS);
 			$cond[0] .= ' and unit=?s';
 			$cond[] = $uint;
 		}
-		if ($date = $this->webapp->query['date'] ?? date('Y-m-d'))
+		if ($date = $this->webapp->query['date'] ?? '')
 		{
 			$cond[0] .= ' and date=?s';
 			$cond[] = $date;
@@ -989,15 +989,25 @@ JS);
 
 	}
 	//订单
-	function get_orders(string $status = 'notified', string $search = NULL, int $page = 1)
+	function get_orders(string $search = NULL, int $page = 1)
 	{
 		if ($this->webapp->admin[2] === FALSE) return $this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
-		$cond = ['WHERE status=?s AND pay_name="cj"', $status];
-		if ($date = $this->webapp->query['date'] ?? date('Y-m-d'))
+		$cond = ['WHERE 1'];
+		if ($pay_name = $this->webapp->query['pn'] ?? '')
+		{
+			$cond[0] .= ' AND pay_name=?s';
+			$cond[] = $pay_name;
+		}
+		if ($date = $this->webapp->query['date'] ?? '')
 		{
 			$cond[0] .= ' AND tym=?i AND day=?i';
 			$cond[] = substr($date, 0, 4) . substr($date, 5, 2);
 			$cond[] = substr($date, -2);
+		}
+		if ($status = $this->webapp->query['status'] ?? '')
+		{
+			$cond[0] .= ' AND status=?s';
+			$cond[] = $status;
 		}
 		if ($search)
 		{
@@ -1028,6 +1038,12 @@ JS);
 		$table->header('找到 %s 个订单数据', $table->count());
 		$table->button('order stat', ['onclick' => 'location.href="?admin/orderstat"']);
 		$table->bar->select([
+			'' => '全部平台',
+			'cj' => '长江',
+			'yk' => 'YK'
+		])->setattr(['onchange' => 'g({pn:this.value})'])->selected($pay_name);
+		$table->bar->select([
+			'' => '全部状态',
 			'notified' => 'notified',
 			'unpay' => 'unpay',
 			'payed' => 'payed'

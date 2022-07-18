@@ -744,8 +744,8 @@ class interfaces extends webapp
 		$rand = $this->random(16);
 		$data = $this->request_content();
 
-		
 
+		//验证码
 
 
 		if (isset($data['device'], $data['unit']) && $this->mysql->accounts->insert($account = [
