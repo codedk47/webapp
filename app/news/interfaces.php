@@ -743,46 +743,62 @@ class interfaces extends webapp
 		//这里也许要做频率限制
 		$rand = $this->random(16);
 		$data = $this->request_content();
-
-
-		//验证码
-
-
-		if (isset($data['device'], $data['unit']) && $this->mysql->accounts->insert($account = [
-			'uid' => $this->hash($rand, TRUE),
-			'site' => $this->site,
-			'date' => date('Y-m-d', $this->time),
-			'time' => $this->time,
-			'expire' => $this->time,
-			'balance' => 0,
-			//时间段送礼
-			// 'expire' => $expire = mktime(23, 59, 59, 7, 16, 2022),
-			// 'balance' => $expire > $this->time ? 20 : 0,
-			'lasttime' => $this->time,
-			'lastip' => $this->clientiphex(),
-			'device' => is_string($data['device']) ? match (1) {
-				preg_match('/windows phone/i', $data['device']) => 'wp',
-				preg_match('/pad/i', $data['device']) => 'pad',
-				preg_match('/iphone/i', $data['device']) => 'ios',
-				preg_match('/android/i', $data['device']) => 'android',
-				default => 'pc'} : 'pc',
-			'face' => 0,
-			'unit' => is_string($data['unit']) && strlen($data['unit']) === 4 ? $data['unit'] : '',
-			'code' => '',
-			'phone' => '',
-			'pwd' => random_int(100000, 999999),
-			'name' => $this->hash($rand),
-			'resources' => '',
-			'favorite' => '',
-			'history' => ''])) {
-			if (isset($data['code'], $data['gift'])
-				&& is_string($data['code'])
-				&& is_string($data['gift'])
-				&& $this->account_bind_code($data['code'], $data['gift'])) {
-				$account['code'] = $data['code'];
+		$error = '未知错误';
+		do
+		{
+			if (isset($data['random'], $data['answer'], $data['device'], $data['unit']) === FALSE)
+			{
+				$error = '缺少必要字段';
+				break;
 			}
-			$this->account_xml($account);
-		}
+			if ((is_string($data['random']) && is_string($data['answer'])) === FALSE)
+			{
+				$error = '字段类型不符合';
+				break;
+			}
+			if ($this->captcha_verify($data['random'], $data['answer']) === FALSE)
+			{
+				$error = '验证码无效或者过期';
+				break;
+			}
+			if ($this->mysql->accounts->insert($account = [
+				'uid' => $this->hash($rand, TRUE),
+				'site' => $this->site,
+				'date' => date('Y-m-d', $this->time),
+				'time' => $this->time,
+				'expire' => $this->time + 600,
+				'balance' => 0,
+				//时间段送礼
+				// 'expire' => $expire = mktime(23, 59, 59, 7, 16, 2022),
+				// 'balance' => $expire > $this->time ? 20 : 0,
+				'lasttime' => $this->time,
+				'lastip' => $this->clientiphex(),
+				'device' => match (1) {
+					preg_match('/windows phone/i', $data['device']) => 'wp',
+					preg_match('/pad/i', $data['device']) => 'pad',
+					preg_match('/iphone/i', $data['device']) => 'ios',
+					preg_match('/android/i', $data['device']) => 'android',
+					default => 'pc'},
+				'face' => 0,
+				'unit' => strlen($data['unit']) === 4 ? $data['unit'] : '',
+				'code' => '',
+				'phone' => '',
+				'pwd' => random_int(100000, 999999),
+				'name' => $this->hash($rand),
+				'resources' => '',
+				'favorite' => '',
+				'history' => ''])) {
+				if (isset($data['code'], $data['gift'])
+					&& is_string($data['code'])
+					&& is_string($data['gift'])
+					&& $this->account_bind_code($data['code'], $data['gift'])) {
+					$account['code'] = $data['code'];
+				}
+				$this->account_xml($account);
+				return;
+			}
+		} while (0);
+		$this->xml->append('error')->cdata($error);
 	}
 	function get_signature(string $uid)
 	{

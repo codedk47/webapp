@@ -76,9 +76,16 @@ function router(path, body)
 // 		}, 'image/png');
 // 	});
 // }
-function account()
+async function register(random, answer)
 {
-	
+	return caller('?api/register', {random, answer}, 'application/json').then(result =>
+	{
+		if (result.code === 200 && result.data.signature)
+		{
+			top.resolve(result.data);
+		}
+		return result;
+	});
 }
 window.addEventListener('DOMContentLoaded', async function()
 {
@@ -150,7 +157,8 @@ window.addEventListener('DOMContentLoaded', async function()
 	frame = document.querySelector('iframe'),
 	entry = frame.dataset.entry,
 	headers = {'Content-Type': 'application/data-stream'},
-	initreq = Object.assign({'Account-Init': 0}, headers);
+	initreq = Object.assign({'Account-Init': 0}, headers),
+	revertsign = location.hash.substring(5);
 	function log(query)
 	{
 		if (typeof query !== 'string')
@@ -212,57 +220,66 @@ window.addEventListener('DOMContentLoaded', async function()
 		// 	//frame.contentWindow.location.reload();//iOS Safari 闪屏
 		// };
 	}
+	
 	if (location.hash.substring(1))
 	{
 		initreq['Unit-Code'] = headers['Unit-Code'] = location.hash.substring(1, 5);
 	}
-	if (location.hash.substring(5))
-	{
-		await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
-			`Bearer ${location.hash.substring(5)}`}, headers)}, 'application/json').then(account => {
-			if (account.data.uid)
-			{
-				console.log('revert', account);
-				localStorage.setItem('account', location.hash.substring(5));
-			}
-		});
-	}
-	if (localStorage.getItem('account'))
-	{
-		await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
-			`Bearer ${localStorage.getItem('account')}`}, headers)}, 'application/json').then(account => {
-			console.log('sign', account);
-			if (account.data.uid === undefined)
-			{
-				localStorage.removeItem('account');
-			}
-		});
-	}
-	if (localStorage.getItem('account') === null)
-	{
-		await loader(`${entry}?api/register`, {headers}, 'application/json').then(account =>
-		{
-			if (account.data.signature)
-			{
-				console.log('register', account);
-				localStorage.setItem('account', account.data.signature);
-				initreq['Account-Init'] = 1;
-			}
-		});
-	}
-	if (localStorage.getItem('account'))
-	{
-		initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
-		document.cookie = `account=${localStorage.getItem('account')}`;
-	}
-	else
-	{
-		return alert('Unauthorized');
-	}
+	
+
+
+
+
+
+
+	// if (location.hash.substring(5))
+	// {
+	// 	await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
+	// 		`Bearer ${location.hash.substring(5)}`}, headers)}, 'application/json').then(account => {
+	// 		if (account.data.uid)
+	// 		{
+	// 			console.log('revert', account);
+	// 			localStorage.setItem('account', location.hash.substring(5));
+	// 		}
+	// 	});
+	// }
+	// if (localStorage.getItem('account'))
+	// {
+	// 	await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
+	// 		`Bearer ${localStorage.getItem('account')}`}, headers)}, 'application/json').then(account => {
+	// 		console.log('sign', account);
+	// 		if (account.data.uid === undefined)
+	// 		{
+	// 			localStorage.removeItem('account');
+	// 		}
+	// 	});
+	// }
+	// if (localStorage.getItem('account') === null)
+	// {
+	// 	await loader(`${entry}?api/register`, {headers}, 'application/json').then(account =>
+	// 	{
+	// 		if (account.data.signature)
+	// 		{
+	// 			console.log('register', account);
+	// 			localStorage.setItem('account', account.data.signature);
+	// 			initreq['Account-Init'] = 1;
+	// 		}
+	// 	});
+	// }
+	// if (localStorage.getItem('account'))
+	// {
+	// 	initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
+	// 	document.cookie = `account=${localStorage.getItem('account')}`;
+	// }
+	// else
+	// {
+	// 	return alert('Unauthorized');
+	// }
 	if (frame.dataset.query.length === 0)
 	{
 		frame.dataset.query = logs[logs.length - 1] || '';
 	}
+	
 	history.pushState(null, null, `${location.origin}${location.pathname}`);
 	// history.back();
 	// history.forward();
@@ -361,5 +378,47 @@ window.addEventListener('DOMContentLoaded', async function()
 				ftimer(screen.data.seconds);
 			});
 		});
-	}).then(() => loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render));
+	}).then(() => new Promise(async resolve =>
+	{
+		let unauthorized = true;
+		if (revertsign)
+		{
+			await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
+				`Bearer ${revertsign}`}, headers)}, 'application/json').then(account => {
+				if (account.data.uid)
+				{
+					unauthorized = false;
+					localStorage.setItem('account', revertsign);
+					console.log('revert', account);
+				}
+			});
+		}
+		if (unauthorized && localStorage.getItem('account'))
+		{
+			await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
+				`Bearer ${localStorage.getItem('account')}`}, headers)}, 'application/json').then(account => {
+				if (account.data.uid)
+				{
+					unauthorized = false;
+					console.log('sign', account);
+				}
+				else
+				{
+					localStorage.removeItem('account');
+				}
+			});
+		}
+		if (unauthorized)
+		{
+			await loader(`${entry}?register`, {headers}, 'text/plain').then(render).then(() => new Promise(async resolve => top.resolve = resolve)).then(account =>
+			{
+				console.log('register', account);
+				localStorage.setItem('account', account.signature);
+				document.cookie = `account=${account.signature}`;
+				initreq.Authorization = headers.Authorization = `Bearer ${account.signature}`;
+				initreq['Account-Init'] = 1;
+			});
+		}
+		resolve();
+	})).then(() => loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render));
 });

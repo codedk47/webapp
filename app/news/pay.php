@@ -87,7 +87,7 @@ final class webapp_pay_pp implements webapp_pay
 			}
 			$data['sign'] = strtoupper(md5(join('&', $query) . $this->ctx['key']));
 
-			if (is_array($result = webapp_client_http::open('http://www.pipi2023.com/api/unifiedorder', [
+			if (is_array($result = webapp_client_http::open('http://www.pipi2023.co/api/unifiedorder', [
 				'method' => 'POST',
 				'type' => 'application/json',
 				'data' => $data
