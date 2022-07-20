@@ -391,7 +391,6 @@ window.addEventListener('DOMContentLoaded', async function()
 					unauthorized = false;
 					localStorage.setItem('account', revertsign);
 					console.log('revert', account);
-					alert('revert')
 				}
 			});
 		}
@@ -403,13 +402,11 @@ window.addEventListener('DOMContentLoaded', async function()
 				{
 					unauthorized = false;
 					console.log('sign', account);
-					alert('sign')
 				}
 				else
 				{
 					localStorage.removeItem('account');
 				}
-				alert('sign111')
 			});
 		}
 		if (unauthorized)
