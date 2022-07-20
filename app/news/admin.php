@@ -1189,13 +1189,13 @@ JS);
 		if ($this->webapp->admin[2] === FALSE) return $this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
 		$form = $this->form_payaisle($this->main);
 		$form->xml['style'] = 'display:block;margin:1rem 0';
-		if ($code)
+		if ($code || $onoff)
 		{
-			$form->echo($this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $code)->array());
-		}
-		if ($onoff)
-		{
-			$this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $onoff)->update('keep=IF(keep="on","off","on")');
+			$form->echo($this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $code ?? $onoff)->array());
+			if ($onoff)
+			{
+				$this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $onoff)->update('keep=IF(keep="on","off","on")');
+			}
 		}
 		$table = $this->main->table($this->webapp->mysql->payaisle('ORDER BY sort ASC'), function($table, $pay)
 		{

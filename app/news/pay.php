@@ -491,19 +491,29 @@ final class webapp_router_pay extends webapp_echo_xml
 	}
 	function get_home()
 	{
-		foreach ($this->webapp['app_pay'] as $channel => $context)
+		foreach ($this->webapp->mysql->payaisle('WHERE keep="on" ORDER BY sort ASC') as $pay)
 		{
-			if ($context['open'])
+			foreach (explode(',', $pay['type']) as $type)
 			{
-				foreach ("webapp_pay_{$channel}"::paytype() as $type => $name)
+				if (preg_match('/^(\w+)@([^:]+):([01])/', $type, $pattern) && $pattern[3] === '1')
 				{
-					$this->xml->append('pay', [
-						'type' => "{$channel}@{$type}",
-						'name' => "{$channel}@{$type}" === 'pp@808' ? "{$name} " : $name
-					]);
+					$this->xml->append('pay', ['type' => "{$pay['code']}@{$pattern[1]}", 'name' => $pattern[2]]);
 				}
 			}
 		}
+		// foreach ($this->webapp['app_pay'] as $channel => $context)
+		// {
+		// 	if ($context['open'])
+		// 	{
+		// 		foreach ("webapp_pay_{$channel}"::paytype() as $type => $name)
+		// 		{
+		// 			$this->xml->append('pay', [
+		// 				'type' => "{$channel}@{$type}",
+		// 				'name' => "{$channel}@{$type}" === 'pp@808' ? "{$name} " : $name
+		// 			]);
+		// 		}
+		// 	}
+		// }
 	}
 	function post_home()
 	{
