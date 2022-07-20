@@ -406,9 +406,6 @@ final class webapp_pay_cj implements webapp_pay
 }
 final class webapp_router_pay extends webapp_echo_xml
 {
-	private array $channels = [
-		//111111111111111111111111
-	];
 	#为了更好的兼容回调地址请改写地址重写
 	#const notify = 'https://kenb.cloud/?pay/notify,channel:';
 	const notify = 'https://kenb.cloud/notify';
