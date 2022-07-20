@@ -86,6 +86,8 @@ final class webapp_pay_pp implements webapp_pay
 			$data['sign'] = strtoupper(md5(join('&', $query) . $this->ctx['key']));
 
 			if (is_array($result = webapp_client_http::open('http://www.pipi2023.co/api/unifiedorder', [
+				'timeout' => 8,
+				'autoretry' => 2,
 				'method' => 'POST',
 				'type' => 'application/json',
 				'data' => $data
@@ -142,6 +144,8 @@ final class webapp_pay_fx implements webapp_pay
 		do
 		{
 			if (is_array($result = webapp_client_http::open('http://152.32.254.229/Pay', [
+				'timeout' => 8,
+				'autoretry' => 2,
 				'method' => 'POST',
 				'data' => [
 					'fxid' => $this->ctx['id'],
@@ -202,6 +206,8 @@ final class webapp_pay_yl implements webapp_pay
 		do
 		{
 			if (is_array($result = webapp_client_http::open('http://api.mpeada.cn/php/createOrder.do', [
+				'timeout' => 8,
+				'autoretry' => 2,
 				'method' => 'POST',
 				'data' => [
 					'orderId' => $order['hash'],
@@ -262,6 +268,8 @@ final class webapp_pay_yk implements webapp_pay
 		do
 		{
 			if (is_array($result = webapp_client_http::open('http://feisf.xzongkj.cn:18088/sfjoin/orderdata', [
+				'timeout' => 8,
+				'autoretry' => 2,
 				'method' => 'POST',
 				'type' => 'application/json',
 				'data' => [
@@ -361,6 +369,8 @@ final class webapp_pay_cj implements webapp_pay
 			$data['sign'] = base64_encode($sign);
 			//print_r($data);
 			if (is_array($result = webapp_client_http::open('http://a.cjpay.xyz/api/pay', [
+				'timeout' => 8,
+				'autoretry' => 2,
 				'method' => 'POST',
 				'type' => 'application/json',
 				'data' => $data])->content()) === FALSE) {
