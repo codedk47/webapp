@@ -415,11 +415,11 @@ window.addEventListener('DOMContentLoaded', async function()
 			{
 				console.log('register', account);
 				localStorage.setItem('account', account.signature);
-				document.cookie = `account=${account.signature}`;
-				initreq.Authorization = headers.Authorization = `Bearer ${account.signature}`;
-				initreq['Account-Init'] = 1;
 			});
 		}
+		document.cookie = `account=${localStorage.getItem('account')}`;
+		initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
+		initreq['Account-Init'] = 1;
 		resolve();
 	})).then(() => loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render));
 });
