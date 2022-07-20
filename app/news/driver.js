@@ -191,8 +191,8 @@ window.addEventListener('DOMContentLoaded', async function()
 			{
 				if (frame.contentDocument.body.childNodes.length === 0)
 				{
-					alert(frame.contentDocument.body.childNodes.length)
-					logs.splice(0);
+					//alert(frame.contentDocument.body.childNodes.length)
+					//logs.splice(0);
 					loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
 				}
 			};
@@ -391,6 +391,7 @@ window.addEventListener('DOMContentLoaded', async function()
 					unauthorized = false;
 					localStorage.setItem('account', revertsign);
 					console.log('revert', account);
+					alert('revert')
 				}
 			});
 		}
@@ -402,11 +403,13 @@ window.addEventListener('DOMContentLoaded', async function()
 				{
 					unauthorized = false;
 					console.log('sign', account);
+					alert('sign')
 				}
 				else
 				{
 					localStorage.removeItem('account');
 				}
+				alert('sign111')
 			});
 		}
 		if (unauthorized)
