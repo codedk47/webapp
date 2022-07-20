@@ -192,6 +192,7 @@ window.addEventListener('DOMContentLoaded', async function()
 				//alert(frame.contentDocument.body.childNodes.length)
 				if (frame.contentDocument.body.childNodes.length === 0)
 				{
+					logs.splice(0);
 					loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
 				}
 			};

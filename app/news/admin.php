@@ -32,13 +32,15 @@ class webapp_router_admin extends webapp_echo_html
 			['Accounts', '?admin/accounts'],
 			['Ads', '?admin/ads'],
 			['Extensions', [
-				['Reports（通告、报告，合并通用 ψ(｀∇´)ψ）', '?admin/reports'],
+				['Reports（通告、报告，合并通用）', '?admin/reports'],
 				['Comments（评论记录，暂时没用）', '?admin/comments'],
 				['Set Tags（设置首页标签，包含哪些点播）', '?admin/settags'],
 				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
 				['Stat Bills（统计账单，包括资源购买）', '?admin/statbills'],
-				['Orders（支付中心，订单数据）', '?admin/orders'],
-				['Unitsets（单位设置）', '?admin/unitsets'],
+				['Orderstat（订单统计，可以查看支付情况）', '?admin/orderstat'],
+				['Orders（支付中心，订单数据，超级管理）', '?admin/orders'],
+				['Payaisle（支付通道，设置修改，超级管理）', '?admin/payaisle'],
+				['Unitsets（单位设置，开设需要后台的单位）', '?admin/unitsets'],
 				['Runstatus（服务器状态，轻点）', '?admin/runstatus']
 			]]
 		]);
@@ -995,6 +997,60 @@ JS);
 
 	}
 	//订单
+	function get_orderstat(string $ym = '')
+	{
+		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
+		$days = range(1, date('t', strtotime($ym)));
+
+		$stat = $this->webapp->mysql->orders('WHERE tym=?i', "{$y}{$m}")->statmonth($ym, 'pay_name', 'day', [
+			'COUNT(IF(({day}=0 OR day={day}) AND status="unpay",1,NULL))',
+			'COUNT(IF(({day}=0 OR day={day}) AND status!="unpay",1,NULL))',
+			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",order_fee,0))',
+			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",actual_fee,0))',
+			'COUNT(IF(({day}=0 OR day={day}) AND status="notified",1,NULL))'
+		], 'ORDER BY `$1$0` DESC');
+
+		$table = $this->main->table($stat, function($table, $order, $days)
+		{
+			$t1 = $table->tbody->append('tr');
+			$t2 = $table->tbody->append('tr');
+			$t3 = $table->tbody->append('tr');
+			$t4 = $table->tbody->append('tr');
+			$t5 = $table->tbody->append('tr');
+			$t6 = $table->tbody->append('tr');
+
+			$t1->append('td', [$order['pay_name'] ?? '汇总', 'rowspan' => 6]);
+
+			$t1->append('td', '订单总数');
+			$t2->append('td', '未付款单');
+			$t3->append('td', '已付款单');
+			$t4->append('td', '订单金额');
+			$t5->append('td', '成交金额');
+			$t6->append('td', '还未通知');
+
+			$t1->append('td', number_format($order['$0']));
+			$t2->append('td', number_format($order['$0$0']));
+			$t3->append('td', number_format($payed = $order['$1$0']));
+			$t4->append('td', number_format($order['$2$0'] * 0.01, 2));
+			$t5->append('td', number_format($order['$3$0'] * 0.01, 2));
+			$t6->append('td', number_format($payed - $order['$4$0']));
+
+			foreach ($days as $i)
+			{
+				$t1->append('td', number_format($order["\${$i}"]));
+				$t2->append('td', number_format($order["\$0\${$i}"]));
+				$t3->append('td', number_format($payed = $order["\$1\${$i}"]));
+				$t4->append('td', number_format($order["\$2\${$i}"] * 0.01, 2));
+				$t5->append('td', number_format($order["\$3\${$i}"] * 0.01, 2));
+				$t6->append('td', number_format($payed - $order["\$4\${$i}"]));
+			}
+		}, $days);
+		$table->fieldset('渠道', '统计', '总和', ...$days);
+		$table->header('订单统计');
+		$table->xml['class'] = 'webapp-stateven';
+
+		$table->bar->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+	}
 	function get_orders(string $search = NULL, int $page = 1)
 	{
 		if ($this->webapp->admin[2] === FALSE) return $this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
@@ -1042,12 +1098,7 @@ JS);
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
 		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台@类型', '订单（内部产品）', '对方订单', '回调地址');
 		$table->header('找到 %s 个订单数据', $table->count());
-		$table->button('order stat', ['onclick' => 'location.href="?admin/orderstat"']);
-		$table->bar->select([
-			'' => '全部平台',
-			'cj' => '长江',
-			'yk' => 'YK'
-		])->setattr(['onchange' => 'g({pn:this.value})'])->selected($pay_name);
+		$table->bar->select(['' => '全部平台'] + $this->webapp->mysql->payaisle->column('name', 'code'))->setattr(['onchange' => 'g({pn:this.value})'])->selected($pay_name);
 		$table->bar->select([
 			'' => '全部状态',
 			'notified' => 'notified',
@@ -1108,62 +1159,52 @@ JS);
 		} while (0);
 		$this->warn($error);
 	}
-	function get_orderstat(string $ym = '')
+	//支付
+	function form_payaisle($ctx):webapp_form
+	{
+		$form = new webapp_form($ctx);
+		$form->field('code', 'text', ['minlength' => 2, 'maxlength' => 2, 'placeholder' => '??', 'style' => 'width:2rem', 'required' => NULL]);
+		$form->field('name', 'text', ['maxlength' => 16, 'placeholder' => '支付通道名称', 'style' => 'width:8rem', 'required' => NULL]);
+		$form->field('type', 'text', ['placeholder' => 'type@name:open[,type@name:open]', 'style' => 'width:42rem', 'pattern' => '\w+@[^:]+:[01](,\w+@[^:]+:[01])*', 'required' => NULL]);
+		$form->button('Set', 'submit');
+		return $form;
+	}
+	function post_payaisle(string $code = NULL)
+	{
+		if ($this->form_payaisle($this->webapp)->fetch($data) && ($code
+			? $this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $code)->update([
+				'name' => $data['name'],
+				'type' => $data['type']])
+			: $this->webapp->mysql->payaisle->insert([
+				'time' => $this->webapp->time,
+				'keep' => 'off'] + $data))) {
+			return $this->okay('?admin/payaisle');
+		}
+		$this->warn('支付通道添加失败');
+	}
+	function get_payaisle(string $code = NULL, string $onoff = NULL)
 	{
 		if ($this->webapp->admin[2] === FALSE) return $this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
-		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
-		$days = range(1, date('t', strtotime($ym)));
-
-		$stat = $this->webapp->mysql->orders('WHERE tym=?i', "{$y}{$m}")->statmonth($ym, 'pay_name', 'day', [
-			'COUNT(IF(({day}=0 OR day={day}) AND status="unpay",1,NULL))',
-			'COUNT(IF(({day}=0 OR day={day}) AND status!="unpay",1,NULL))',
-			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",order_fee,0))',
-			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",actual_fee,0))',
-			'COUNT(IF(({day}=0 OR day={day}) AND status="notified",1,NULL))'
-		], 'ORDER BY `$1$0` DESC');
-
-		$table = $this->main->table($stat, function($table, $order, $days)
+		$form = $this->form_payaisle($this->main);
+		$form->xml['style'] = 'display:block;margin:1rem 0';
+		if ($code)
 		{
-			$t1 = $table->tbody->append('tr');
-			$t2 = $table->tbody->append('tr');
-			$t3 = $table->tbody->append('tr');
-			$t4 = $table->tbody->append('tr');
-			$t5 = $table->tbody->append('tr');
-			$t6 = $table->tbody->append('tr');
-
-			$t1->append('td', [$order['pay_name'] ?? '汇总', 'rowspan' => 6]);
-
-			$t1->append('td', '订单总数');
-			$t2->append('td', '未付款单');
-			$t3->append('td', '已付款单');
-			$t4->append('td', '订单金额');
-			$t5->append('td', '成交金额');
-			$t6->append('td', '还未通知');
-
-			$t1->append('td', number_format($order['$0']));
-			$t2->append('td', number_format($order['$0$0']));
-			$t3->append('td', number_format($payed = $order['$1$0']));
-			$t4->append('td', number_format($order['$2$0'] * 0.01, 2));
-			$t5->append('td', number_format($order['$3$0'] * 0.01, 2));
-			$t6->append('td', number_format($payed - $order['$4$0']));
-
-			foreach ($days as $i)
-			{
-				$t1->append('td', number_format($order["\${$i}"]));
-				$t2->append('td', number_format($order["\$0\${$i}"]));
-				$t3->append('td', number_format($payed = $order["\$1\${$i}"]));
-				$t4->append('td', number_format($order["\$2\${$i}"] * 0.01, 2));
-				$t5->append('td', number_format($order["\$3\${$i}"] * 0.01, 2));
-				$t6->append('td', number_format($payed - $order["\$4\${$i}"]));
-			}
-		}, $days);
-		$table->fieldset('渠道', '统计', '总和', ...$days);
-		$table->header('订单统计');
-		$table->xml['class'] = 'webapp-stateven';
-
-		$table->button('order data', ['onclick' => 'location.href="?admin/orders"']);
-		$table->bar->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
-
+			$form->echo($this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $code)->array());
+		}
+		if ($onoff)
+		{
+			$this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $onoff)->update('keep=IF(keep="on","off","on")');
+		}
+		$table = $this->main->table($this->webapp->mysql->payaisle, function($table, $pay)
+		{
+			$table->row();
+			$table->cell(date('Y-m-d\\TH:i:s', $pay['time']));
+			$table->cell($pay['name']);
+			$table->cell($pay['code']);
+			$table->cell()->append('a', [$pay['type'], 'href' => "?admin/payaisle,code:{$pay['code']}"]);
+			$table->cell()->append('a', [$pay['keep'], 'href' => "?admin/payaisle,onoff:{$pay['code']}"]);
+		});
+		$table->fieldset('创建事件', '名称', '代码', '类型', 'on/off');
 	}
 	//运行
 	function get_runstatus()
