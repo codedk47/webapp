@@ -1202,11 +1202,12 @@ JS);
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $pay['time']));
 			$table->cell($pay['name']);
+			$table->cell($pay['sort']);
 			$table->cell($pay['code']);
 			$table->cell()->append('a', [$pay['type'], 'href' => "?admin/payaisle,code:{$pay['code']}"]);
 			$table->cell()->append('a', [$pay['keep'], 'href' => "?admin/payaisle,onoff:{$pay['code']}"]);
 		});
-		$table->fieldset('创建事件', '名称', '代码', '类型', 'on/off');
+		$table->fieldset('创建事件', '名称', '排序', '代码', '类型', 'on/off');
 	}
 	//运行
 	function get_runstatus()
