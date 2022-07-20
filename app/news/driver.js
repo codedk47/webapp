@@ -189,9 +189,9 @@ window.addEventListener('DOMContentLoaded', async function()
 		{
 			frame.onload = () =>
 			{
-				alert(frame.contentDocument.body.childNodes.length)
 				if (frame.contentDocument.body.childNodes.length === 0)
 				{
+					alert(frame.contentDocument.body.childNodes.length)
 					logs.splice(0);
 					loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render);
 				}
