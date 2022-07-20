@@ -203,8 +203,6 @@ window.addEventListener('DOMContentLoaded', async function()
 		frame.style.visibility = 'hidden';
 		frame.src = 'about:blank';
 
-
-
 		// frame.style.opacity = 0;
 		// frame.ontransitionend = () =>
 		// {
@@ -221,7 +219,6 @@ window.addEventListener('DOMContentLoaded', async function()
 		// 	//frame.contentWindow.location.reload();//iOS Safari 闪屏
 		// };
 	}
-	
 	if (location.hash.substring(1))
 	{
 		initreq['Unit-Code'] = headers['Unit-Code'] = location.hash.substring(1, 5);
@@ -230,7 +227,6 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		frame.dataset.query = logs[logs.length - 1] || '';
 	}
-
 	window.addEventListener('message', event =>
 	{
 		if (event.data)
@@ -363,13 +359,20 @@ window.addEventListener('DOMContentLoaded', async function()
 				localStorage.setItem('account', account.signature);
 			});
 		}
-		document.cookie = `account=${localStorage.getItem('account')}`;
-		initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
-		initreq['Account-Init'] = 1;
-		history.pushState(null, null, `${location.origin}${location.pathname}`);
-		// history.back();
-		// history.forward();
-		//window.addEventListener('popstate', event => console.log(event));
-		resolve();
+		// if (localStorage.getItem('account'))
+		// {
+			document.cookie = `account=${localStorage.getItem('account')}`;
+			initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
+			initreq['Account-Init'] = 1;
+			history.pushState(null, null, `${location.origin}${location.pathname}`);
+			// history.back();
+			// history.forward();
+			//window.addEventListener('popstate', event => console.log(event));
+			resolve();
+		// }
+		// else
+		// {
+		// 	alert('Unauthorized');
+		// }
 	})).then(() => loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render));
 });
