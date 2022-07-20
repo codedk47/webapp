@@ -53,9 +53,7 @@ final class webapp_pay_pp implements webapp_pay
 {
 	static function paytype():array
 	{
-		return [
-			'808' => '微信原生(推荐)'
-		];
+		return ['808' => '微信原生'];
 	}
 	function __construct(array $context)
 	{
@@ -133,9 +131,7 @@ final class webapp_pay_fx implements webapp_pay
 {
 	static function paytype():array
 	{
-		return [
-			'wxwap' => '微信WAP'
-		];
+		return ['wxwap' => '微信WAP'];
 	}
 	function __construct(array $context)
 	{
@@ -195,9 +191,7 @@ final class webapp_pay_yl implements webapp_pay
 {
 	static function paytype():array
 	{
-		return [
-			'666' => '支付宝原生'
-		];
+		return ['666' => '支付宝原生'];
 	}
 	function __construct(array $context)
 	{
@@ -321,8 +315,7 @@ final class webapp_pay_cj implements webapp_pay
 {
 	static function paytype():array
 	{
-		return ['203' => '微信原生', 'zfbwap' => '支付宝快充'];
-		//return ['203' => '微信原生', 'wxwap' => '微信快充', 'zfbwap' => '支付宝快充'];
+		return ['203' => '微信原生', 'wxwap' => '微信快充', 'zfbwap' => '支付宝快充'];
 	}
 	function __construct(array $context)
 	{

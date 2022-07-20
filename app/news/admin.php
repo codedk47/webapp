@@ -807,10 +807,8 @@ JS);
 		$type = ['long' => '长', 'short' => '短', 'live' => '直', 'movie' => '电'];
 		foreach ($this->webapp->mysql->setvods('WHERE site=?i ORDER BY type ASC,time DESC', $this->webapp->site) as $vod)
 		{
-			
 			$vods[$vod['hash']] = "{$type[$vod['type']]}:{$vod['name']}";
 		}
-
 		$form->field('vods', 'checkbox', ['options' => $vods], 
 			fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'mo';
 
