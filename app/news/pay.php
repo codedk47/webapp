@@ -157,13 +157,13 @@ final class webapp_pay_fx implements webapp_pay
 				]])->content()) === FALSE) {
 				break;
 			}
-			//var_dump($result);
+			var_dump($result);
 			if ((array_key_exists('payurl', $result) && array_key_exists('status', $result) && $result['status'] === 1) === FALSE)
 			{
 				$error = '远程支付失败！';
 				break;
 			}
-			$order['trade_no'] = md5($result['payurl']);
+			$order['trade_no'] = $order['hash'];
 			$order['type'] = 'goto';
 			$order['data'] = $result['payurl'];
 			return TRUE;
