@@ -189,7 +189,7 @@ window.addEventListener('DOMContentLoaded', async function()
 		{
 			frame.onload = () =>
 			{
-				//alert(frame.contentDocument.body.childNodes.length)
+				alert(frame.contentDocument.body.childNodes.length)
 				if (frame.contentDocument.body.childNodes.length === 0)
 				{
 					logs.splice(0);
