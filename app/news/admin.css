@@ -81,7 +81,7 @@ ul.restag>li>label:active{
 }
 ul.mo{
 	padding:0;
-	width:58rem;
+	width:62rem;
 	display:flex;
 	align-content: flex-start;
 	flex-flow:wrap;
@@ -89,7 +89,7 @@ ul.mo{
 	gap:.3rem;
 }
 ul.mo>li{
-	flex:0 0 8rem;
+	flex:0 0 12rem;
 }
 ul.mo>li>label{
 	padding:.3rem;
