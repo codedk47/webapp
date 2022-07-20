@@ -1098,7 +1098,7 @@ JS);
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
 		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台@类型', '订单（内部产品）', '对方订单', '回调地址');
 		$table->header('找到 %s 个订单数据', $table->count());
-		$table->bar->select(['' => '全部平台'] + $this->webapp->mysql->payaisle->column('name', 'code'))->setattr(['onchange' => 'g({pn:this.value})'])->selected($pay_name);
+		$table->bar->select(['' => '全部平台'] + $this->webapp->mysql->payaisle('ORDER BY sort ASC')->column('name', 'code'))->setattr(['onchange' => 'g({pn:this.value})'])->selected($pay_name);
 		$table->bar->select([
 			'' => '全部状态',
 			'notified' => 'notified',
@@ -1163,8 +1163,9 @@ JS);
 	function form_payaisle($ctx):webapp_form
 	{
 		$form = new webapp_form($ctx);
-		$form->field('code', 'text', ['minlength' => 2, 'maxlength' => 2, 'placeholder' => '??', 'style' => 'width:2rem', 'required' => NULL]);
 		$form->field('name', 'text', ['maxlength' => 16, 'placeholder' => '支付通道名称', 'style' => 'width:8rem', 'required' => NULL]);
+		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 255, 'style' => 'width:4rem', 'required' => NULL]);
+		$form->field('code', 'text', ['minlength' => 2, 'maxlength' => 2, 'placeholder' => '??', 'style' => 'width:2rem', 'required' => NULL]);
 		$form->field('type', 'text', ['placeholder' => 'type@name:open[,type@name:open]', 'style' => 'width:42rem', 'pattern' => '\w+@[^:]+:[01](,\w+@[^:]+:[01])*', 'required' => NULL]);
 		$form->button('Set', 'submit');
 		return $form;
@@ -1173,6 +1174,7 @@ JS);
 	{
 		if ($this->form_payaisle($this->webapp)->fetch($data) && ($code
 			? $this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $code)->update([
+				'sort' => $data['sort'],
 				'name' => $data['name'],
 				'type' => $data['type']])
 			: $this->webapp->mysql->payaisle->insert([
@@ -1195,7 +1197,7 @@ JS);
 		{
 			$this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $onoff)->update('keep=IF(keep="on","off","on")');
 		}
-		$table = $this->main->table($this->webapp->mysql->payaisle, function($table, $pay)
+		$table = $this->main->table($this->webapp->mysql->payaisle('ORDER BY sort ASC'), function($table, $pay)
 		{
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $pay['time']));
