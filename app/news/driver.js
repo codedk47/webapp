@@ -226,65 +226,11 @@ window.addEventListener('DOMContentLoaded', async function()
 	{
 		initreq['Unit-Code'] = headers['Unit-Code'] = location.hash.substring(1, 5);
 	}
-	
-
-
-
-
-
-
-	// if (location.hash.substring(5))
-	// {
-	// 	await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
-	// 		`Bearer ${location.hash.substring(5)}`}, headers)}, 'application/json').then(account => {
-	// 		if (account.data.uid)
-	// 		{
-	// 			console.log('revert', account);
-	// 			localStorage.setItem('account', location.hash.substring(5));
-	// 		}
-	// 	});
-	// }
-	// if (localStorage.getItem('account'))
-	// {
-	// 	await loader(`${entry}?api/user`, {headers: Object.assign({Authorization:
-	// 		`Bearer ${localStorage.getItem('account')}`}, headers)}, 'application/json').then(account => {
-	// 		console.log('sign', account);
-	// 		if (account.data.uid === undefined)
-	// 		{
-	// 			localStorage.removeItem('account');
-	// 		}
-	// 	});
-	// }
-	// if (localStorage.getItem('account') === null)
-	// {
-	// 	await loader(`${entry}?api/register`, {headers}, 'application/json').then(account =>
-	// 	{
-	// 		if (account.data.signature)
-	// 		{
-	// 			console.log('register', account);
-	// 			localStorage.setItem('account', account.data.signature);
-	// 			initreq['Account-Init'] = 1;
-	// 		}
-	// 	});
-	// }
-	// if (localStorage.getItem('account'))
-	// {
-	// 	initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
-	// 	document.cookie = `account=${localStorage.getItem('account')}`;
-	// }
-	// else
-	// {
-	// 	return alert('Unauthorized');
-	// }
 	if (frame.dataset.query.length === 0)
 	{
 		frame.dataset.query = logs[logs.length - 1] || '';
 	}
-	
-	history.pushState(null, null, `${location.origin}${location.pathname}`);
-	// history.back();
-	// history.forward();
-	//window.addEventListener('popstate', event => console.log(event));
+
 	window.addEventListener('message', event =>
 	{
 		if (event.data)
@@ -420,6 +366,10 @@ window.addEventListener('DOMContentLoaded', async function()
 		document.cookie = `account=${localStorage.getItem('account')}`;
 		initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
 		initreq['Account-Init'] = 1;
+		history.pushState(null, null, `${location.origin}${location.pathname}`);
+		// history.back();
+		// history.forward();
+		//window.addEventListener('popstate', event => console.log(event));
 		resolve();
 	})).then(() => loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render));
 });
