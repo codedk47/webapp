@@ -154,12 +154,10 @@ function wschatinit(users, form, whoiam)
 
 			desc.appendChild(cto);
 			desc.appendChild(document.createElement('span')).textContent = `@${msg.sto}`;
-			
 
 			log.appendChild(desc);
 			log.appendChild(document.createTextNode(msg.msg));
 
-			console.log(msg);
 		}
 		chatlog.scrollTop = chatlog.scrollHeight;
 	}

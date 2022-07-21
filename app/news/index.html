@@ -106,6 +106,8 @@ function init(account)
 	window.ws.onopen = () =>
 	{
 		window.ws.send('*  ');
+		const rum = setInterval(() => window.ws.send('*  '), 10000);
+		window.ws.onerror = () => clearInterval(rum);
 	};
 	window.ws.onmessage = event =>
 	{
