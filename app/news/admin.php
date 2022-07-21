@@ -1178,7 +1178,9 @@ JS);
 	}
 	function post_payaisle(string $code = NULL)
 	{
-		if ($this->form_payaisle($this->webapp)->fetch($data) && ($code
+		if ($this->form_payaisle($this->webapp)->fetch($data)
+			&& class_exists("webapp_pay_{$data['code']}", FALSE)
+			&& ($code
 			? $this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $code)->update([
 				'sort' => $data['sort'],
 				'name' => $data['name'],
@@ -1213,7 +1215,7 @@ JS);
 			$table->cell()->append('a', [$pay['type'], 'href' => "?admin/payaisle,code:{$pay['code']}"]);
 			$table->cell()->append('a', [$pay['keep'], 'href' => "?admin/payaisle,onoff:{$pay['code']}"]);
 		});
-		$table->fieldset('创建事件', '名称', '排序', '代码', '类型', 'on/off');
+		$table->fieldset('创建时间', '名称', '排序', '代码', '类型', 'on/off');
 	}
 	//运行
 	function get_runstatus()
