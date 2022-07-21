@@ -70,7 +70,7 @@
 	</style>
 </head>
 <body>
-	<iframe frameborder="0" loading="lazy" width="100%" height="100%" src="about:blank" data-entry="http://192.168.0.119/index.php" data-query=""></iframe>
+	<iframe frameborder="0" loading="lazy" width="100%" height="100%" src="about:blank" data-entry="/index.php" data-query=""></iframe>
 	<dialog><form onsubmit="return chatsend(this)">
 		<fieldset onclick="this.parentNode.parentNode.close()">点击这里关闭在线聊天</fieldset>
 		<fieldset></fieldset>
@@ -90,10 +90,10 @@ function chatsend(form)
 	form.message.value = '';
 	return false;
 }
-function init(account)
+function inita(account)
 {
 	let id = null;
-	window.ws = new WebSocket(`ws://192.168.0.155:8014/${account}`);
+	window.ws = new WebSocket(`wss://wschat.hengnb.com:8014/${account}`);
 	window.ws.onclose = () =>
 	{
 		const
