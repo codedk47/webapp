@@ -150,7 +150,7 @@ function wschatinit(users, form, whoiam)
 			desc.appendChild(document.createElement('span')).textContent = msg.time;
 			cto.textContent = `${msg.uid}`;
 			cto.href = 'javascript:;';
-			cto.onclick = () => form.to.value = msg.uid;
+			cto.onclick = () => form.to.value = msg.id;
 
 			desc.appendChild(cto);
 			desc.appendChild(document.createElement('span')).textContent = `@${msg.sto}`;
@@ -189,7 +189,7 @@ function wschatinit(users, form, whoiam)
 				users.appendChild(user);
 			});
 		}
-		log(JSON.parse(event.data));
+		const msg = JSON.parse(event.data);
+		msg.msg && log(msg);
 	};
-	
 }

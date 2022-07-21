@@ -47,7 +47,7 @@
 		}
 		form>fieldset:nth-child(2){
 			width: 20rem;
-			height: 30rem;
+			height: 20rem;
 			overflow-y: scroll;
 			word-break: break-all;
 			word-wrap: break-word;
@@ -70,7 +70,7 @@
 	</style>
 </head>
 <body>
-	<iframe frameborder="0" loading="lazy" width="100%" height="100%" src="about:blank" data-entry="/index.php" data-query=""></iframe>
+	<iframe frameborder="0" loading="lazy" width="100%" height="100%" src="about:blank" data-entry="http://192.168.0.119/index.php" data-query=""></iframe>
 	<dialog><form onsubmit="return chatsend(this)">
 		<fieldset onclick="this.parentNode.parentNode.close()">点击这里关闭在线聊天</fieldset>
 		<fieldset></fieldset>
@@ -92,16 +92,34 @@ function chatsend(form)
 }
 function init(account)
 {
+	let id = null;
 	window.ws = new WebSocket(`ws://192.168.0.155:8014/${account}`);
+	window.ws.onclose = () =>
+	{
+		const
+		chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling,
+		chatmsg = chatlog.appendChild(document.createElement('p'));
+		chatmsg.textContent = '与聊天服务器失去链接';
+		chatmsg.style.color = 'red';
+		chatlog.scrollTop = chatlog.scrollHeight;
+	};
+	window.ws.onopen = () =>
+	{
+		window.ws.send('*  ');
+	};
 	window.ws.onmessage = event =>
 	{
 		const msg = JSON.parse(event.data);
-		if (msg.iscs || msg.sign === localStorage.getItem('account'))
+		if (id === null)
+		{
+			return id = msg.id;
+		}
+		if ((msg.iscs && (msg.sto === '*' || parseInt(msg.sto) === id)) || msg.id === id)
 		{
 			const
 			chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling,
 			chatmsg = chatlog.appendChild(document.createElement('p'));
-			chatmsg.appendChild(document.createElement('span')).textContent = `${msg.time} ${msg.uid}`;
+			chatmsg.appendChild(document.createElement('span')).textContent = `${msg.time} ${msg.id === id ? '我' : msg.uid}`;
 			chatmsg.appendChild(document.createTextNode(msg.msg));
 			if (msg.iscs)
 			{
