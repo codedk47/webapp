@@ -112,7 +112,7 @@ function init(account)
 	window.ws.onmessage = event =>
 	{
 		const msg = JSON.parse(event.data);
-		if (id === null || msg.mgs.length === 0)
+		if (id === null || msg.msg.length === 0)
 		{
 			return console.log(id = msg.id);
 		}
