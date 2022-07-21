@@ -771,6 +771,7 @@ JS);
 	//聊天
 	function get_wschat()
 	{
+		if ($this->webapp->admin[2] === FALSE) return $this->warn('目前测试试用阶段！');
 		$this->aside->append('ul', ['class' => 'wschatusers']);
 		$form = $this->main->form();
 		$form->fieldset();
