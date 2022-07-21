@@ -90,7 +90,7 @@ function chatsend(form)
 	form.message.value = '';
 	return false;
 }
-function inita(account)
+function init(account)
 {
 	let id = null;
 	window.ws = new WebSocket(`wss://wschat.hengnb.com:8014/${account}`);
