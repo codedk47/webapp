@@ -24,7 +24,7 @@ class webapp_router_admin extends webapp_echo_html
 			return $webapp->response_status(401);
 		}
 		$this->xml->head->append('link', ['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/news/admin.css']);
-		$this->xml->head->append('script', ['src' => '/webapp/app/news/admin.min.js']);
+		$this->xml->head->append('script', ['src' => '/webapp/app/news/admin.js']);
 		$nav = $this->nav([
 			['Home', '?admin'],
 			['Tags', '?admin/tags'],
@@ -33,6 +33,7 @@ class webapp_router_admin extends webapp_echo_html
 			['Ads', '?admin/ads'],
 			['Extensions', [
 				['Reports（通告、报告，合并通用）', '?admin/reports'],
+				['Web Socket Chat System（测试，试用）', '?admin/wschat'],
 				['Comments（评论记录，暂时没用）', '?admin/comments'],
 				['Set Tags（设置首页标签，包含哪些点播）', '?admin/settags'],
 				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
@@ -766,6 +767,20 @@ JS);
 		$table->button('Create Report', ['onclick' => 'location.href="?admin/report-create"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
+	}
+	//聊天
+	function get_wschat()
+	{
+		$this->aside->append('ul', ['class' => 'wschatusers']);
+		$form = $this->main->form();
+		$form->fieldset();
+		$form->field('to', 'text', ['placeholder' => 'To']);
+		$form->field('message', 'text', ['placeholder' => 'Message']);
+		$form->button('Send', 'submit');
+		$form->xml['class'] = 'webapp-wschat';
+		$form->xml['onsubmit'] = 'return false';
+		$form->xml['data-ws'] = 'ws://192.168.0.155:8014/' . $this->webapp->request_cookie($this->webapp['admin_cookie']);
+		$this->main->append('script')->cdata("wschatinit(document.querySelector('aside>ul'),document.querySelector('form'),'{$this->webapp->admin[0]}')");
 	}
 	//评论
 	function get_comments(string $search = NULL, int $page = 1)

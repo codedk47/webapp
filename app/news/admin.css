@@ -43,6 +43,37 @@ form>fieldset>legend{
 button{
 	width: 100%;
 } */
+ul.wschatusers{
+	width: 6rem;
+}
+form[class*=-wschat]{
+	padding: .4rem;
+	border: .2rem solid black;
+}
+form[class*=-wschat]>fieldset:first-child{
+	display: block !important;
+	width: 100%;
+	height: 30rem;
+	overflow-y: scroll;
+	word-break: break-all;
+	word-wrap: break-word;
+}
+form[class*=-wschat]>fieldset:first-child>p{
+	margin: 0;
+	padding-bottom: .2rem;
+}
+form[class*=-wschat]>fieldset:first-child>p>div>span:first-child{
+	padding-right: .4rem;
+}
+form[class*=-wschat]>fieldset:last-child>input:first-child{
+	width: 8rem;
+}
+form[class*=-wschat]>fieldset:last-child>input:nth-child(2){
+	width: 40rem;
+}
+form[class*=-wschat]>fieldset:last-child>button:last-child{
+	width: 6rem;
+}
 table[class*=-stateven] td{
 	min-width: 2.4rem;
 	padding: .2rem;

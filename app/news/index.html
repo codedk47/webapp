@@ -26,12 +26,92 @@
 		iframe{
 			transition: opacity .4s;
 		}
+		dialog{
+			padding: 0;
+			overflow: hidden;
+		}
+		form,fieldset{
+			width: 100%;
+			margin: 0;
+			padding: 0;
+			border: none;
+		}
+		form{
+			display: block;
+		}
+		form>fieldset:first-child{
+			text-align: center;
+			background-color: black;
+			color: white;
+			padding: .4rem 0;
+		}
+		form>fieldset:nth-child(2){
+			width: 20rem;
+			height: 30rem;
+			overflow-y: scroll;
+			word-break: break-all;
+			word-wrap: break-word;
+		}
+		form>fieldset:nth-child(2)>p{
+			margin: 0;
+			padding: .4rem;
+		}
+		form>fieldset:nth-child(2)>p>span{
+			display: block;;
+		}
+		form>fieldset:last-child>input{
+			display: block;
+			width: 20rem;
+			border: none;
+			border-top: .2rem solid black;
+			outline: none;
+			font-size: 1.4rem;
+		}
 	</style>
 </head>
 <body>
 	<iframe frameborder="0" loading="lazy" width="100%" height="100%" src="about:blank" data-entry="/index.php" data-query=""></iframe>
+	<dialog><form onsubmit="return chatsend(this)">
+		<fieldset onclick="this.parentNode.parentNode.close()">点击这里关闭在线聊天</fieldset>
+		<fieldset></fieldset>
+		<fieldset>
+			<input name="message" autocomplete="off">
+		</fieldset>
+	</form></dialog>
 </body>
 <script>
+const chatdialog = document.querySelector('dialog');
+function chatsend(form)
+{
+	const
+	chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling;
+	window.ws.send(`* ${form.message.value}`);
+	chatlog.scrollTop = chatlog.scrollHeight;
+	form.message.value = '';
+	return false;
+}
+function init(account)
+{
+	window.ws = new WebSocket(`ws://192.168.0.155:8014/${account}`);
+	window.ws.onmessage = event =>
+	{
+		const msg = JSON.parse(event.data);
+		if (msg.iscs || msg.sign === localStorage.getItem('account'))
+		{
+			const
+			chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling,
+			chatmsg = chatlog.appendChild(document.createElement('p'));
+			chatmsg.appendChild(document.createElement('span')).textContent = `${msg.time} ${msg.uid}`;
+			chatmsg.appendChild(document.createTextNode(msg.msg));
+			if (msg.iscs)
+			{
+				chatmsg.style.color = 'chocolate';
+			}
+			chatlog.scrollTop = chatlog.scrollHeight;
+			chatdialog.open || chatdialog.showModal();
+		}
+	}
+}
 if ('serviceWorker' in navigator)
 {
 	navigator.serviceWorker.register('/webapp/app/news/sw.js')

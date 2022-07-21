@@ -126,3 +126,70 @@ async function loader(source, options, type)
 		default: return blob;
 	}
 }
+function wschatinit(users, form, whoiam)
+{
+	const
+	ws = new WebSocket(form.dataset.ws),
+	chatlog = form.firstElementChild;
+	
+	function log(msg)
+	{
+		while (chatlog.childNodes.length > 200)
+		{
+			chatlog.removeChild(chatlog.firstElementChild);
+		}
+		const log = chatlog.appendChild(document.createElement('p'));
+
+		if (typeof msg === 'string')
+		{
+			log.textContent = msg;
+		}
+		else
+		{
+			const desc = document.createElement('div'), cto = document.createElement('a');
+			desc.appendChild(document.createElement('span')).textContent = msg.time;
+			cto.textContent = `${msg.uid}`;
+			cto.href = 'javascript:;';
+			cto.onclick = () => form.to.value = msg.uid;
+
+			desc.appendChild(cto);
+			desc.appendChild(document.createElement('span')).textContent = `@${msg.sto}`;
+			
+
+			log.appendChild(desc);
+			log.appendChild(document.createTextNode(msg.msg));
+
+			console.log(msg);
+		}
+		chatlog.scrollTop = chatlog.scrollHeight;
+	}
+	ws.onerror = () => log('Lost chat server connect...');
+	ws.onopen = () =>
+	{
+		log('With chat server connected!');
+		form.onsubmit = () =>
+		{
+			ws.send(`${form.to.value ? form.to.value : '*'} ${form.message.value}`);
+			form.message.value = '';
+			return false;
+		};
+		ws.send('* users');
+		setInterval(() => ws.send('* users'), 4000);
+	};
+	ws.onmessage = event =>
+	{
+		const [recv, data] = event.data.split(' ', 2);
+		if (recv === 'users')
+		{
+			users.innerHTML = '';
+			return data.split(',').forEach(id =>
+			{
+				const user = document.createElement('li');
+				user.textContent = `Socket(${id})`;
+				users.appendChild(user);
+			});
+		}
+		log(JSON.parse(event.data));
+	};
+	
+}

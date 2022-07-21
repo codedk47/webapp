@@ -368,6 +368,7 @@ window.addEventListener('DOMContentLoaded', async function()
 			// history.back();
 			// history.forward();
 			//window.addEventListener('popstate', event => console.log(event));
+			top.init && top.init(localStorage.getItem('account'));
 			resolve();
 		// }
 		// else
