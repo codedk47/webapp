@@ -114,7 +114,7 @@ function init(account)
 		const msg = JSON.parse(event.data);
 		if (id === null || msg.mgs.length === 0)
 		{
-			return id = msg.id;
+			return console.log(id = msg.id);
 		}
 		if ((msg.iscs && (msg.sto === '*' || parseInt(msg.sto) === id)) || msg.id === id)
 		{
