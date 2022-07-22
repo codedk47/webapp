@@ -148,7 +148,7 @@ function wschatinit(users, form, whoiam)
 		{
 			const desc = document.createElement('div'), cto = document.createElement('a');
 			desc.appendChild(document.createElement('span')).textContent = msg.time;
-			cto.textContent = `${msg.uid}`;
+			cto.textContent = `${msg.uid}(${msg.id})`;
 			cto.href = 'javascript:;';
 			cto.onclick = () => form.to.value = msg.id;
 
@@ -172,7 +172,7 @@ function wschatinit(users, form, whoiam)
 			return false;
 		};
 		ws.send('* users');
-		setInterval(() => ws.send('* users'), 4000);
+		setInterval(() => ws.send('* users'), 1000);
 	};
 	ws.onmessage = event =>
 	{
