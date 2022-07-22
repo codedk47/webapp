@@ -172,7 +172,7 @@ function wschatinit(users, form, whoiam)
 			return false;
 		};
 		ws.send('* users');
-		setInterval(() => ws.send('* users'), 1000);
+		setInterval(() => ws.send('* users'), 2000);
 	};
 	ws.onmessage = event =>
 	{
