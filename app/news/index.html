@@ -93,7 +93,7 @@ function chatsend(form)
 function init(account)
 {
 	let id = null;
-	window.ws = new WebSocket(`wss://wschat.hengnb.com:8014/${account}`);
+	window.ws = new WebSocket(`wss://wschat.hengnb.com:443/${account}`);
 	window.ws.onclose = () =>
 	{
 		const

@@ -707,7 +707,7 @@ class webapp_client_websocket extends webapp_client_http
 			'Connection' => 'Upgrade',
 			'Sec-WebSocket-Version' => 13,
 			'Sec-WebSocket-Key' => base64_encode(random_bytes(16))
-		]);
+		])->request('GET', $this->path);
 	}
 	function then(Closure $success, Closure $failure = NULL):static
 	{
