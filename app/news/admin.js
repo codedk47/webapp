@@ -136,7 +136,7 @@ function wschatinit(list, form, whoiam)
 	{
 		if (event.target.tagName === 'DD')
 		{
-			form.to.value = event.target.textContent.slice(10, -1);
+			form.to.value = event.target.dataset.id;
 		}
 	};
 	function log(msg)
@@ -194,6 +194,7 @@ function wschatinit(list, form, whoiam)
 				return users.forEach(id =>
 				{
 					const user = document.createElement('dd');
+					user.dataset.id = id;
 					user.textContent = userids[id] ? `${userids[id]}(${id})` : `Socket(${id})`;
 					list.appendChild(user);
 				});
