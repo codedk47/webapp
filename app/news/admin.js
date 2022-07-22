@@ -130,12 +130,13 @@ function wschatinit(list, form, whoiam)
 {
 	const
 	ws = new WebSocket(form.dataset.ws),
-	chatlog = form.firstElementChild;
+	chatlog = form.firstElementChild,
+	userids = {};
 	list.onclick = event =>
 	{
 		if (event.target.tagName === 'DD')
 		{
-			form.to.value = event.target.textContent.slice(7, -1);
+			form.to.value = event.target.textContent.slice(10, -1);
 		}
 	};
 	function log(msg)
@@ -193,12 +194,22 @@ function wschatinit(list, form, whoiam)
 				return users.forEach(id =>
 				{
 					const user = document.createElement('dd');
-					user.textContent = `Socket(${id})`;
+					user.textContent = userids[id] ? `${userids[id]}(${id})` : `Socket(${id})`;
 					list.appendChild(user);
 				});
 			}
 			const msg = JSON.parse(event.data);
-			msg.msg && log(msg);
+			if (msg.msg)
+			{
+				if (msg.msg === '加入聊天频道!')
+				{
+					userids[msg.id] = msg.uid;
+				}
+				else
+				{
+					log(msg);
+				}
+			}
 		}
 	};
 }

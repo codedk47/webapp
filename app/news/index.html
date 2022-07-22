@@ -83,17 +83,20 @@
 const chatdialog = document.querySelector('dialog');
 function chatsend(form)
 {
-	const
-	chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling;
-	window.ws.send(form.message.value);
-	chatlog.scrollTop = chatlog.scrollHeight;
-	form.message.value = '';
+	if (window.ws.readyState === 1)
+	{
+		const
+		chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling;
+		window.ws.send(form.message.value);
+		chatlog.scrollTop = chatlog.scrollHeight;
+		form.message.value = '';
+	}
 	return false;
 }
 function init(account)
 {
 	let id = null;
-	window.ws = new WebSocket(`wss://wschat.hengnb.com:443/${account}`);
+	window.ws = new WebSocket(`wss://wschat.hengnb.com/${account}`);
 	window.ws.onclose = () =>
 	{
 		const
