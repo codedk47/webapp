@@ -105,22 +105,22 @@ function init(account)
 	};
 	window.ws.onopen = () =>
 	{
-		window.ws.send('*  ');
-		const rum = setInterval(() => window.ws.send('*  '), 10000);
+		window.ws.send('');
+		const rum = setInterval(() => window.ws.send(''), 10000);
 		window.ws.onerror = () => clearInterval(rum);
 	};
 	window.ws.onmessage = event =>
 	{
 		const msg = JSON.parse(event.data);
-		if (id === null)
+		if (id === null || msg.msg.length === 0 || msg.msg === '加入聊天频道!')
 		{
-			if (msg.sign === localStorage.getItem('account'))
+			if (id === null)
 			{
+				window.ws.send('加入聊天频道!');
 				console.log(id = msg.id);
 			}
 			return;
 		}
-		if (msg.msg.length === 0) return;
 		if ((msg.iscs && (msg.sto === '*' || parseInt(msg.sto) === id)) || msg.id === id)
 		{
 			const
