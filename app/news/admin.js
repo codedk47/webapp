@@ -126,12 +126,18 @@ async function loader(source, options, type)
 		default: return blob;
 	}
 }
-function wschatinit(users, form, whoiam)
+function wschatinit(list, form, whoiam)
 {
 	const
 	ws = new WebSocket(form.dataset.ws),
 	chatlog = form.firstElementChild;
-	
+	list.onclick = event =>
+	{
+		if (event.target.tagName === 'DD')
+		{
+			form.to.value = event.target.textContent.slice(7, -1);
+		}
+	};
 	function log(msg)
 	{
 		while (chatlog.childNodes.length > 200)
@@ -179,12 +185,14 @@ function wschatinit(users, form, whoiam)
 		const [recv, data] = event.data.split(' ', 2);
 		if (recv === 'users')
 		{
-			users.innerHTML = '';
-			return data.split(',').forEach(id =>
+			const users = data.split(',');
+			list.innerHTML = '';
+			list.appendChild(document.createElement('dt')).textContent = `当前在线${users.length}人`;
+			return users.forEach(id =>
 			{
-				const user = document.createElement('li');
+				const user = document.createElement('dd');
 				user.textContent = `Socket(${id})`;
-				users.appendChild(user);
+				list.appendChild(user);
 			});
 		}
 		const msg = JSON.parse(event.data);

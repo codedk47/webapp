@@ -772,7 +772,8 @@ JS);
 	function get_wschat()
 	{
 		if ($this->webapp->admin[2] === FALSE) return $this->warn('目前测试试用阶段！');
-		$this->aside->append('ul', ['class' => 'wschatusers']);
+		$this->aside['class'] = 'wschatusers';
+		$this->aside->append('dl');
 		$form = $this->main->form();
 		$form->fieldset();
 		$form->field('to', 'text', ['placeholder' => 'To']);
@@ -781,7 +782,7 @@ JS);
 		$form->xml['class'] = 'webapp-wschat';
 		$form->xml['onsubmit'] = 'return false';
 		$form->xml['data-ws'] = 'wss://wschat.hengnb.com:8014/' . $this->webapp->request_cookie($this->webapp['admin_cookie']);
-		$this->main->append('script')->cdata("wschatinit(document.querySelector('aside>ul'),document.querySelector('form'),'{$this->webapp->admin[0]}')");
+		$this->main->append('script')->cdata("wschatinit(document.querySelector('aside>dl'),document.querySelector('form'),'{$this->webapp->admin[0]}')");
 	}
 	//评论
 	function get_comments(string $search = NULL, int $page = 1)

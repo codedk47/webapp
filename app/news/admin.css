@@ -43,8 +43,28 @@ form>fieldset>legend{
 button{
 	width: 100%;
 } */
-ul.wschatusers{
-	width: 6rem;
+aside.wschatusers{
+	width: 10rem;
+	height: 540px;
+	border: .2rem solid black;
+	overflow-y: scroll;
+}
+aside.wschatusers>dl{
+	margin: 0;
+	padding: 0;
+	
+}
+aside.wschatusers>dl>dt{
+	background-color: silver;
+}
+aside.wschatusers>dl>dd{
+	margin: 0;
+	padding-left: .2rem;
+	color: var(--webapp-anchor);
+	cursor: pointer;
+}
+aside.wschatusers>dl>dd:hover{
+	text-decoration: underline;
 }
 form[class*=-wschat]{
 	padding: .4rem;
