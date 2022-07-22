@@ -182,20 +182,23 @@ function wschatinit(list, form, whoiam)
 	};
 	ws.onmessage = event =>
 	{
-		const [recv, data] = event.data.split(' ', 2);
-		if (recv === 'users')
+		if (event.data)
 		{
-			const users = data.split(',');
-			list.innerHTML = '';
-			list.appendChild(document.createElement('dt')).textContent = `当前在线${users.length}人`;
-			return users.forEach(id =>
+			const [recv, data] = event.data.split(' ', 2);
+			if (recv === 'users')
 			{
-				const user = document.createElement('dd');
-				user.textContent = `Socket(${id})`;
-				list.appendChild(user);
-			});
+				const users = data.split(',');
+				list.innerHTML = '';
+				list.appendChild(document.createElement('dt')).textContent = `当前在线${users.length}人`;
+				return users.forEach(id =>
+				{
+					const user = document.createElement('dd');
+					user.textContent = `Socket(${id})`;
+					list.appendChild(user);
+				});
+			}
+			const msg = JSON.parse(event.data);
+			msg.msg && log(msg);
 		}
-		const msg = JSON.parse(event.data);
-		msg.msg && log(msg);
 	};
 }

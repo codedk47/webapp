@@ -111,29 +111,32 @@ function init(account)
 	};
 	window.ws.onmessage = event =>
 	{
-		const msg = JSON.parse(event.data);
-		if (id === null || msg.msg.length === 0 || msg.msg === '加入聊天频道!')
+		if (event.data)
 		{
-			if (id === null)
+			const msg = JSON.parse(event.data);
+			if (id === null || msg.msg.length === 0 || msg.msg === '加入聊天频道!')
 			{
-				window.ws.send('加入聊天频道!');
-				console.log(id = msg.id);
+				if (id === null)
+				{
+					window.ws.send('加入聊天频道!');
+					console.log(id = msg.id);
+				}
+				return;
 			}
-			return;
-		}
-		if ((msg.iscs && (msg.sto === '*' || parseInt(msg.sto) === id)) || msg.id === id)
-		{
-			const
-			chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling,
-			chatmsg = chatlog.appendChild(document.createElement('p'));
-			chatmsg.appendChild(document.createElement('span')).textContent = `${msg.time} ${msg.id === id ? '我' : msg.uid}`;
-			chatmsg.appendChild(document.createTextNode(msg.msg));
-			if (msg.iscs)
+			if ((msg.iscs && (msg.sto === '*' || parseInt(msg.sto) === id)) || msg.id === id)
 			{
-				chatmsg.style.color = 'chocolate';
+				const
+				chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling,
+				chatmsg = chatlog.appendChild(document.createElement('p'));
+				chatmsg.appendChild(document.createElement('span')).textContent = `${msg.time} ${msg.id === id ? '我' : msg.uid}`;
+				chatmsg.appendChild(document.createTextNode(msg.msg));
+				if (msg.iscs)
+				{
+					chatmsg.style.color = 'chocolate';
+				}
+				chatlog.scrollTop = chatlog.scrollHeight;
+				chatdialog.open || chatdialog.showModal();
 			}
-			chatlog.scrollTop = chatlog.scrollHeight;
-			chatdialog.open || chatdialog.showModal();
 		}
 	}
 }
