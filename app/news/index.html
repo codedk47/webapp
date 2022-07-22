@@ -85,7 +85,7 @@ function chatsend(form)
 {
 	const
 	chatlog = chatdialog.firstElementChild.firstElementChild.nextElementSibling;
-	window.ws.send(`* ${form.message.value}`);
+	window.ws.send(form.message.value);
 	chatlog.scrollTop = chatlog.scrollHeight;
 	form.message.value = '';
 	return false;
