@@ -431,7 +431,7 @@ class webapp_router_admin extends webapp_echo_html
 				'href' => "?admin/resource-delete,hash:{$res['hash']}",
 				'onclick' => 'return confirm(`Delete Resource ${this.dataset.hash}`)',
 				'data-hash' => $res['hash'],
-				'data-cover' => sprintf("http://45.113.115.135/%s/{$res['hash']}/cover", date('ym', $res['time']))
+				'data-cover' => sprintf("{$this->webapp['app_resdomain']}src/%s/{$res['hash']}/cover", date('ym', $res['time']))
 			]);
 			$table->cell()->append('a', [$res['hash'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
 			$table->cell(date('Y-m-d', $res['time']));
