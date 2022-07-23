@@ -157,7 +157,11 @@ function wschatinit(list, form, whoiam)
 			desc.appendChild(document.createElement('span')).textContent = msg.time;
 			cto.textContent = `${msg.uid}(${msg.id})`;
 			cto.href = 'javascript:;';
-			cto.onclick = () => form.to.value = msg.id;
+			cto.onclick = () =>
+			{
+				form.to.value = msg.id;
+				navigator.clipboard.writeText(msg.uid);
+			};
 
 			desc.appendChild(cto);
 			desc.appendChild(document.createElement('span')).textContent = `@${msg.sto}`;

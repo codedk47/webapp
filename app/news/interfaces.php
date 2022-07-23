@@ -1044,8 +1044,7 @@ class interfaces extends webapp
 		$form->field('resources', 'text', [
 			'style' => 'width:60rem',
 			'placeholder' => '请输入展示的资源哈希用逗号间隔',
-			'pattern' => '[0-9A-Z]{12}(,[0-9A-Z]{12})*',
-			'required' => NULL
+			'pattern' => '([0-9A-Z]{12})?(,[0-9A-Z]{12})*'
 		], fn($v,$i)=>$i?join(explode(',',$v)):join(',',str_split($v,12)));
 
 		$form->fieldset();

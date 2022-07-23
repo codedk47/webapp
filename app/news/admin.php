@@ -1096,7 +1096,7 @@ JS);
 		}
 		if ($search)
 		{
-			$cond[0] .= ' AND hash=?s';
+			$cond[0] .= strlen($search) === 10 ? ' AND notify_url=?s' : ' AND hash=?s';
 			$cond[] = $search;
 		}
 		$cond[0] .= ' ORDER BY time DESC';
