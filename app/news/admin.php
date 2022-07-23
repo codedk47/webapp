@@ -33,7 +33,7 @@ class webapp_router_admin extends webapp_echo_html
 			['Ads', '?admin/ads'],
 			['Extensions', [
 				['Reports（通告、报告，合并通用）', '?admin/reports'],
-				['Web Socket Chat System（测试，试用）', '?admin/wschat'],
+				['Web Socket Chat System（在线客服）', '?admin/wschat'],
 				['Comments（评论记录，暂时没用）', '?admin/comments'],
 				['Set Tags（设置首页标签，包含哪些点播）', '?admin/settags'],
 				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
@@ -771,7 +771,7 @@ JS);
 	//聊天
 	function get_wschat()
 	{
-		if ($this->webapp->admin[2] === FALSE) return $this->warn('目前测试试用阶段！');
+		//if ($this->webapp->admin[2] === FALSE) return $this->warn('目前测试试用阶段！');
 		$this->aside['class'] = 'wschatusers';
 		$this->aside->append('dl');
 		$form = $this->main->form();
