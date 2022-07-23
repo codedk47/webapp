@@ -782,7 +782,7 @@ JS);
 		$form->xml['class'] = 'webapp-wschat';
 		$form->xml['onsubmit'] = 'return false';
 		$form->xml['data-ws'] = 'wss://wschat.hengnb.com/' . $this->webapp->request_cookie($this->webapp['admin_cookie']);
-		$this->main->append('script')->cdata("wschatinit(document.querySelector('aside>dl'),document.querySelector('form'),'{$this->webapp->admin[0]}')");
+		$this->main->append('script')->cdata("wschatinit(document.querySelector('aside>dl'),document.querySelector('form'))");
 	}
 	//评论
 	function get_comments(string $search = NULL, int $page = 1)

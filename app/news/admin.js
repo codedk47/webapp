@@ -126,7 +126,7 @@ async function loader(source, options, type)
 		default: return blob;
 	}
 }
-function wschatinit(list, form, whoiam)
+function wschatinit(list, form)
 {
 	const
 	ws = new WebSocket(form.dataset.ws),
