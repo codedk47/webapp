@@ -430,9 +430,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(['width' => 'width:100%;'])->append('a', ['❌',
 				'href' => "?admin/resource-delete,hash:{$res['hash']}",
 				'onclick' => 'return confirm(`Delete Resource ${this.dataset.hash}`)',
-				'data-hash' => $res['hash'],
-				'data-cover' => sprintf("{$this->webapp['app_resdomain']}src/%s/{$res['hash']}/cover", date('ym', $res['time']))
-			]);
+				'data-hash' => $res['hash']]);
 			$table->cell()->append('a', [$res['hash'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
 			$table->cell(date('Y-m-d', $res['time']));
 			$table->cell(date('G:i:s', $res['duration'] + 57600));
@@ -445,10 +443,13 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell()->append('div', [
 				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
 			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
-			$table->cell()->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
+			$node = $table->cell();
+			$node->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
+				'data-cover' => sprintf("{$this->webapp['app_resdomain']}src/%s/{$res['hash']}/cover", date('ym', $res['time']))]);
+			$node->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
 				'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
 		}, $this->webapp['app_restype']);
-		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓');
+		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓❓');
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
