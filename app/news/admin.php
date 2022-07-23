@@ -444,12 +444,12 @@ class webapp_router_admin extends webapp_echo_html
 				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
 			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
 			$node = $table->cell();
-			$node->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
-				'data-cover' => sprintf("{$this->webapp['app_resdomain']}src/%s/{$res['hash']}/cover", date('ym', $res['time']))]);
+			// $node->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
+			// 	'data-cover' => sprintf("{$this->webapp['app_resdomain']}src/%s/{$res['hash']}/cover", date('ym', $res['time']))]);
 			$node->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
 				'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
 		}, $this->webapp['app_restype']);
-		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓❓');
+		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓');
 		$table->header('Found %d item', $table->count());
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
