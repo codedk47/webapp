@@ -177,4 +177,6 @@ ul.ad>li>label:hover{
 ul.ad>li>label:active{
 	background:gainsboro;
 }
-
+td.tdlinkspan>a{
+	margin: 0 .4rem;
+}

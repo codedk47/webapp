@@ -928,6 +928,14 @@ JS);
 	}
 	function get_setvods(string $type = NULL)
 	{
+		$settags = [];
+		foreach ($this->webapp->mysql->settags('ORDER BY sort ASC,time DESC') as $settag)
+		{
+			$settags[$settag['hash']] = [
+				'name' => $settag['name'],
+				'vods' => $settag['vods'] ? str_split($settag['vods'], 12) :[]
+			];
+		}
 		$cond = ['WHERE site=?i', $this->webapp->site];
 		if (is_string($type) && strlen($type))
 		{
@@ -936,7 +944,7 @@ JS);
 		}
 		$cond[0] .= ' ORDER BY view DESC';
 		$count = 0;
-		$table = $this->main->table($this->webapp->mysql->setvods(...$cond), function($table, $vod, $type, $viewtype) use(&$count)
+		$table = $this->main->table($this->webapp->mysql->setvods(...$cond), function($table, $vod, $type, $viewtype, $settags) use(&$count)
 		{
 			++$count;
 			$table->row();
@@ -961,8 +969,21 @@ JS);
 			$table->cell($vod['resources'] ? floor(strlen($vod['resources']) / 12) : 0);
 			$table->cell($vod['name']);
 			$table->cell($vod['describe']);
-		}, $this->webapp['app_restype'], ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小']);
-		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'ad', 'RES', 'name', 'describe');
+
+			$node = $table->cell(['class' => 'tdlinkspan']);
+			foreach ($settags as $hash => $settag)
+			{
+				if (in_array($vod['hash'], $settag['vods']))
+				{
+					$node->append('a', [$settag['name'], 'href' => "?admin/settag-update,hash:{$hash}"]);
+				}
+			}
+			if (count($node->children()) === 0)
+			{
+				$node->append('a', ['未设置 ', 'href' => '?admin/settag-create', 'style' => 'color:red']);
+			}
+		}, $this->webapp['app_restype'], ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小'], $settags);
+		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'ad', 'RES', 'name', 'describe', 'settags');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
 		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
