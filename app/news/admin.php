@@ -938,7 +938,7 @@ JS);
 			$cond[0] .= ' AND type=?s';
 			$cond[] = $type;
 		}
-		$cond[0] .= ' ORDER BY view DESC';
+		$cond[0] .= ' ORDER BY sort ASC,view DESC';
 		$count = 0;
 		$table = $this->main->table($this->webapp->mysql->setvods(...$cond), function($table, $vod, $type, $viewtype, $settags) use(&$count)
 		{
