@@ -604,7 +604,7 @@ JS);
 			$table->cell($acc['name']);
 		});
 		$table->fieldset('uid', 'date', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'unit', 'code', 'phone', 'name');
-		$table->header('Found %d item', $table->count());
+		$table->header('Found %s item', number_format($table->count()));
 		$table->bar->select(['' => '全部单位', '0000' => '内部单位'] + $this->webapp->mysql->unitsets->column('name', 'unit'))
 			->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
