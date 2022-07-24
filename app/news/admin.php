@@ -761,7 +761,7 @@ JS);
 			$table->cell($rep['describe']);
 		});
 		$table->fieldset('promise', 'time', 'ip', 'account', 'describe');
-		$table->header('Reports, Found %d item', $table->count());
+		$table->header('Reports, Found %s item', number_format($table->count()));
 		$table->button('Create Report', ['onclick' => 'location.href="?admin/report-create"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
@@ -1139,7 +1139,7 @@ JS);
 			
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
 		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台@类型', '订单（内部产品）', '对方订单', '回调地址');
-		$table->header('找到 %s 个订单数据', $table->count());
+		$table->header('找到 %s 个订单数据', number_format($table->count()));
 		$table->bar->select(['' => '全部平台'] + $this->webapp->mysql->payaisle('ORDER BY sort ASC')->column('name', 'code'))->setattr(['onchange' => 'g({pn:this.value})'])->selected($pay_name);
 		$table->bar->select([
 			'' => '全部状态',
