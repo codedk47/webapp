@@ -290,7 +290,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell($tag['alias']);
 		});
 		$table->fieldset('❌', 'hash', 'time', 'level', 'count', 'click', 'seat', 'name', 'alias');
-		$table->header('Found %d item', $table->count());
+		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Create Tag', ['onclick' => 'location.href="?admin/tag-create"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
@@ -375,10 +375,6 @@ class webapp_router_admin extends webapp_echo_html
 	function get_resource_upload()
 	{
 		$this->webapp->form_resourceupload($this->main);
-	}
-	function get_resource_cover(string $hash)
-	{
-
 	}
 	function get_resources(string $search = NULL, int $page = 1)
 	{
@@ -824,7 +820,7 @@ JS);
 
 		$vods = [];
 		$type = ['long' => '长', 'short' => '短', 'live' => '直', 'movie' => '电'];
-		foreach ($this->webapp->mysql->setvods('WHERE site=?i ORDER BY type ASC,time DESC', $this->webapp->site) as $vod)
+		foreach ($this->webapp->mysql->setvods('WHERE site=?i ORDER BY type ASC,sort ASC,time DESC', $this->webapp->site) as $vod)
 		{
 			$vods[$vod['hash']] = "{$type[$vod['type']]}:{$vod['name']}";
 		}
