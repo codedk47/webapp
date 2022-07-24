@@ -983,7 +983,7 @@ JS);
 				$node->append('a', ['未设置 ', 'href' => '?admin/settag-create', 'style' => 'color:red']);
 			}
 		}, $this->webapp['app_restype'], ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小'], $settags);
-		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'ad', 'RES', 'name', 'describe', 'settags');
+		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'ad', 'RES', 'name', 'describe', '首页标签');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
 		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
