@@ -957,7 +957,7 @@ JS);
 			$table->cell($vod['view']);
 			$table->cell($vod['sort']);
 			$table->cell($type[$vod['type']]);
-			$table->cell($viewtype[$vod['viewtype']]);
+			$table->cell($viewtype[$vod['viewtype']] ?? $vod['viewtype']);
 			if ($vod['ad'])
 			{
 				$table->cell()->append('a', [$vod['ad'], 'href' => "?admin/ads,search:{$vod['ad']}"]);
@@ -1051,9 +1051,8 @@ JS);
 		$stat = $this->webapp->mysql->orders('WHERE tym=?i', "{$y}{$m}")->statmonth($ym, 'pay_name', 'day', [
 			'COUNT(IF(({day}=0 OR day={day}) AND status="unpay",1,NULL))',
 			'COUNT(IF(({day}=0 OR day={day}) AND status!="unpay",1,NULL))',
-			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",order_fee,0))',
-			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",actual_fee,0))',
-			'COUNT(IF(({day}=0 OR day={day}) AND status="notified",1,NULL))'
+			'SUM(IF({day}=0 OR day={day},order_fee,0))',
+			'SUM(IF(({day}=0 OR day={day}) AND status!="unpay",actual_fee,0))'
 		], 'ORDER BY `$1$0` DESC');
 
 		$table = $this->main->table($stat, function($table, $order, $days)
@@ -1072,14 +1071,14 @@ JS);
 			$t3->append('td', '已付款单');
 			$t4->append('td', '订单金额');
 			$t5->append('td', '成交金额');
-			$t6->append('td', '还未通知');
+			$t6->append('td', '成功几率');
 
 			$t1->append('td', number_format($order['$0']));
 			$t2->append('td', number_format($order['$0$0']));
-			$t3->append('td', number_format($payed = $order['$1$0']));
+			$t3->append('td', number_format($order['$1$0']));
 			$t4->append('td', number_format($order['$2$0'] * 0.01, 2));
 			$t5->append('td', number_format($order['$3$0'] * 0.01, 2));
-			$t6->append('td', number_format($payed - $order['$4$0']));
+			$t6->append('td', sprintf('%0.1f%%', $order['$1$0'] / $order['$0'] * 100));
 
 			foreach ($days as $i)
 			{
@@ -1088,7 +1087,8 @@ JS);
 				$t3->append('td', number_format($payed = $order["\$1\${$i}"]));
 				$t4->append('td', number_format($order["\$2\${$i}"] * 0.01, 2));
 				$t5->append('td', number_format($order["\$3\${$i}"] * 0.01, 2));
-				$t6->append('td', number_format($payed - $order["\$4\${$i}"]));
+				$t6->append('td', sprintf('%0.1f%%', $order["\${$i}"] ? $order["\$1\${$i}"] / $order["\${$i}"] * 100 : 0));
+				//$t6->append('td', number_format($payed - $order["\$4\${$i}"]));
 			}
 		}, $days);
 		$table->fieldset('渠道', '统计', '总和', ...$days);
