@@ -323,7 +323,13 @@ final class webapp_pay_cj implements webapp_pay
 {
 	static function paytype():array
 	{
-		return ['203' => '微信原生', 'wxwap' => '微信快充', '102' => '支付宝商场原生', 'zfbwap' => '支付宝快充'];
+		return [
+			'203' => '微信原生',		//30 50 100 200
+			'wxwap' => '微信快充',		//30 50 100 200
+			'102' => '支付宝商场',		//10-500
+			'105' => '支付宝原生',		//10-500
+			'zfbwap' => '支付宝快充'	//30 50 100 200
+		];
 	}
 	function __construct(array $context)
 	{
