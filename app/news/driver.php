@@ -167,11 +167,12 @@ class news_driver extends webapp
 		}
 		return $this->authorize($signature = $this->request_cookie('account'), $authenticate);
 	}
-	function account(array|string $context, array $update = []):array
+	function account(array|string $context, array|string &$update = NULL):array
 	{
 		return is_object($account = is_array($context)
 			? $this->post('register', $context)
 			: ($update ? $this->post("account/{$context}", $update) : $this->get("account/{$context}")))
+			&& ($update = isset($account->error) ? (string)$account->error : (string)$account['status'])
 			&& isset($account->account)
 				? [...$account->account->getattr(),
 					'resources' => (string)$account->account->resources,

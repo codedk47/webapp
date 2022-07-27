@@ -324,7 +324,7 @@ final class webapp_pay_cj implements webapp_pay
 	static function paytype():array
 	{
 		return [
-			'203' => '微信原生',		//30 50 100 200
+			'203' => '微信原生',		//30-500
 			'wxwap' => '微信快充',		//30 50 100 200
 			'102' => '支付宝商场',		//10-500
 			'105' => '支付宝原生',		//10-500

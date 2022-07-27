@@ -743,15 +743,15 @@ class interfaces extends webapp
 		//这里也许要做频率限制
 		$rand = $this->random(16);
 		$data = $this->request_content();
-		$error = '未知错误';
+		$error = '账号已存在';
 		do
 		{
-			if (isset($data['random'], $data['answer'], $data['device'], $data['unit']) === FALSE)
+			if (isset($data['random'], $data['answer'], $data['name'], $data['pwd'], $data['device'], $data['unit']) === FALSE)
 			{
 				$error = '缺少必要字段';
 				break;
 			}
-			if ((is_string($data['random']) && is_string($data['answer'])) === FALSE)
+			if ((is_string($data['random']) && is_string($data['answer']) && is_string($data['name']) && is_string($data['pwd'])) === FALSE)
 			{
 				$error = '字段类型不符合';
 				break;
@@ -759,6 +759,17 @@ class interfaces extends webapp
 			if ($this->captcha_verify($data['random'], $data['answer']) === FALSE)
 			{
 				$error = '验证码无效或者过期';
+				break;
+			}
+			if ($this->mysql->accounts('WHERE name=?s LIMIT 1', $data['name'])->fetch($account))
+			{
+				if ($account['pwd'] === $data['pwd'])
+				{
+					$this->xml['status'] = 'sign-in';
+					$this->account_xml($account);
+					return;
+				}
+				$error = '密码错误';
 				break;
 			}
 			if ($this->mysql->accounts->insert($account = [
@@ -794,6 +805,7 @@ class interfaces extends webapp
 					&& $this->account_bind_code($data['code'], $data['gift'])) {
 					$account['code'] = $data['code'];
 				}
+				$this->xml['status'] = 'sign-up';
 				$this->account_xml($account);
 				return;
 			}
