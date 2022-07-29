@@ -247,7 +247,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$tag = $this->webapp->mysql->tags('where hash=?s', $hash)->array();
 		if ($tag
-			&& $this->webapp->admin[2]
+			&& ($this->webapp->admin[2] || $this->webapp->admin[0] === 1002)
 			&& $this->form_tag($this->webapp)->fetch($tag)
 			&& $this->webapp->mysql->tags('where hash=?s', $hash)->update($tag)
 			&& $this->webapp->call('saveTag', $this->webapp->tag_xml($tag))) {
