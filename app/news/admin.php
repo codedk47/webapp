@@ -1067,7 +1067,7 @@ JS);
 			$t3->append('td', '已付款单');
 			$t4->append('td', '订单金额');
 			$t5->append('td', '成交金额');
-			$t6->append('td', '成功几率');
+			$t6->append('td', '支付几率');
 
 			$t1->append('td', number_format($order['$0']));
 			$t2->append('td', number_format($order['$0$0']));
