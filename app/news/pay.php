@@ -53,7 +53,10 @@ final class webapp_pay_pp implements webapp_pay
 {
 	static function paytype():array
 	{
-		return ['808' => '微信原生', '906' => '支付宝通道'];
+		return [
+			'808' => '微信原生',	//30-500
+			'906' => '支付宝通道'	//1-500
+		];
 	}
 	function __construct(array $context)
 	{
@@ -133,7 +136,9 @@ final class webapp_pay_fx implements webapp_pay
 {
 	static function paytype():array
 	{
-		return ['wxwap' => '微信WAP'];
+		return [
+			'wxwap' => '微信WAP'	//10-500
+		];
 	}
 	function __construct(array $context)
 	{
@@ -195,7 +200,9 @@ final class webapp_pay_yl implements webapp_pay
 {
 	static function paytype():array
 	{
-		return ['666' => '支付宝原生'];
+		return [
+			'666' => '支付宝原生'	//10-300
+		];
 	}
 	function __construct(array $context)
 	{
@@ -257,7 +264,9 @@ final class webapp_pay_yk implements webapp_pay
 {
 	static function paytype():array
 	{
-		return ['ALIPAY_H5' => '支付宝H5'];
+		return [
+			'ALIPAY_H5' => '支付宝H5'	//30 50 100 150 200 300
+		];
 	}
 	function __construct(array $context)
 	{
@@ -324,10 +333,10 @@ final class webapp_pay_cj implements webapp_pay
 	static function paytype():array
 	{
 		return [
-			'203' => '微信原生',		//30-500
-			'wxwap' => '微信快充',		//30 50 100 200
 			'102' => '支付宝商场',		//10-500
 			'105' => '支付宝原生',		//10-500
+			'203' => '微信原生',		//10-500
+			'wxwap' => '微信快充',		//30 50 100 200
 			'zfbwap' => '支付宝快充'	//30 50 100 200
 		];
 	}
@@ -499,11 +508,15 @@ final class webapp_router_pay extends webapp_echo_xml
 	{
 		foreach ($this->webapp->mysql->payaisle('WHERE keep="on" ORDER BY sort ASC') as $pay)
 		{
-			foreach (explode(',', $pay['type']) as $type)
+			foreach (explode("\r\n", $pay['type']) as $type)
 			{
-				if (preg_match('/^(\w+)@([^:]+):([01])/', $type, $pattern) && $pattern[3] === '1')
+				if (preg_match('/([01])#(\w+)\[(\d+(?:\,\d+)*)\]([^\r]+)/', $type, $pattern) && intval($pattern[1]))
 				{
-					$this->xml->append('pay', ['type' => "{$pay['code']}@{$pattern[1]}", 'name' => $pattern[2]]);
+					$this->xml->append('pay', [
+						'type' => "{$pay['code']}@{$pattern[2]}",
+						'valve' => $pattern[3],
+						'name' => $pattern[1] === '2' ? "{$pattern[4]} " :$pattern[4]
+					]);
 				}
 			}
 		}

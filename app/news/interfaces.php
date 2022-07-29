@@ -425,6 +425,7 @@ class interfaces extends webapp
 	}
 	function resource_create(array $data):bool
 	{
+		$name = webapp::lib('hanzi/interface.php')($data['name']);
 		return $this->mysql->resources->insert([
 			'hash' => $data['hash'],
 			'time' => $this->time,
@@ -437,11 +438,11 @@ class interfaces extends webapp
 				'favorite' => 0,
 				'view' => 0,
 				'like' => 0,
-				'name' => $data['name']
+				'name' => $name
 			]], JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE),
 			'tags' => $data['tags'],
 			'actors' => $data['actors'],
-			'name' => $data['name']
+			'name' => $name
 		]);
 	}
 	function resource_delete(string $hash):bool
@@ -456,12 +457,13 @@ class interfaces extends webapp
 	}
 	function resource_update(string $hash, array $data):bool
 	{
+		$name = webapp::lib('hanzi/interface.php')($data['name']);
 		$update = ['data=JSON_SET(data,\'$."?i".require\',?i,\'$."?i".name\',?s),type=?s,tags=?s',
-			$this->site, $data['require'] ?? 0, $this->site, $data['name'] ?? '', $data['type'], $data['tags']];
+			$this->site, $data['require'] ?? 0, $this->site, $name, $data['type'], $data['tags']];
 		if ($this->admin[2])
 		{
 			$update[0] .= ',type=?s,tags=?s,actors=?s,name=?s';
-			array_push($update, $data['type'], $data['tags'], $data['actors'], $data['name']);
+			array_push($update, $data['type'], $data['tags'], $data['actors'], $name);
 		}
 		return $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s LIMIT 1', $this->site, $hash)->update(...$update);
 	}
@@ -746,6 +748,7 @@ class interfaces extends webapp
 		$error = '账号已存在';
 		do
 		{
+			$data['name'] = $data['pwd'] = '';
 			if (isset($data['random'], $data['answer'], $data['name'], $data['pwd'], $data['device'], $data['unit']) === FALSE)
 			{
 				$error = '缺少必要字段';
@@ -761,17 +764,17 @@ class interfaces extends webapp
 				$error = '验证码无效或者过期';
 				break;
 			}
-			if ($this->mysql->accounts('WHERE name=?s LIMIT 1', $data['name'])->fetch($account))
-			{
-				if ($account['pwd'] === $data['pwd'])
-				{
-					$this->xml['status'] = 'sign-in';
-					$this->account_xml($account);
-					return;
-				}
-				$error = '密码错误';
-				break;
-			}
+			// if ($this->mysql->accounts('WHERE name=?s LIMIT 1', $data['name'])->fetch($account))
+			// {
+			// 	if ($account['pwd'] === $data['pwd'])
+			// 	{
+			// 		$this->xml['status'] = 'sign-in';
+			// 		$this->account_xml($account);
+			// 		return;
+			// 	}
+			// 	$error = '密码错误';
+			// 	break;
+			// }
 			if ($this->mysql->accounts->insert($account = [
 				'uid' => $this->hash($rand, TRUE),
 				'site' => $this->site,
@@ -794,6 +797,8 @@ class interfaces extends webapp
 				'unit' => strlen($data['unit']) === 4 ? $data['unit'] : '',
 				'code' => '',
 				'phone' => '',
+				// 'pwd' => $data['pwd'],
+				// 'name' => $data['name'],
 				'pwd' => random_int(100000, 999999),
 				'name' => $this->hash($rand),
 				'resources' => '',

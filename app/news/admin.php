@@ -1208,8 +1208,15 @@ JS);
 		$form->field('name', 'text', ['maxlength' => 16, 'placeholder' => '支付通道名称', 'style' => 'width:8rem', 'required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 255, 'style' => 'width:4rem', 'required' => NULL]);
 		$form->field('code', 'text', ['minlength' => 2, 'maxlength' => 2, 'placeholder' => '??', 'style' => 'width:2rem', 'required' => NULL]);
-		$form->field('type', 'text', ['placeholder' => 'type@name:open[,type@name:open]', 'style' => 'width:42rem', 'pattern' => '\w+@[^:]+:[01](,\w+@[^:]+:[01])*', 'required' => NULL]);
 		$form->button('Set', 'submit');
+		$form->fieldset();
+		$form->field('type', 'textarea', [
+			'placeholder' => 'type@name:open[,type@name:open]',
+			'cols' => 60,
+			'rows' => 8,
+			'pattern' => '[01]#\w+\[\d+(\,\d+)*\][^\r]+(\r\n[01]#\w+\[\d+(\,\d+)*\][^\r]+)*',
+			'required' => NULL
+		]);
 		return $form;
 	}
 	function post_payaisle(string $code = NULL)

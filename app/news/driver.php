@@ -126,7 +126,7 @@ class news_driver extends webapp
 		{
 			foreach ($channel->pay as $pay)
 			{
-				$channels[(string)$pay['type']] = (string)$pay['name'];
+				$channels[(string)$pay['type']] = [(string)$pay['valve'], (string)$pay['name']];
 			}
 		}
 		return $channels;
@@ -189,10 +189,4 @@ class news_driver extends webapp
 	{
 		return is_object($play = $this->get("play/{$resource}{$signature}")) && isset($play->play) ? $play->play->getattr() : [];
 	}
-	function payment(string $signature, array $data)
-	{
-		print_r( $this->post("payment/{$signature}", $data) );
-	}
-
-	
 }
