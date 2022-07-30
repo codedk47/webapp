@@ -240,8 +240,8 @@ class interfaces extends webapp
 	}
 	function get_test()
 	{
-		var_dump($this->site = 0);
-		var_dump($this->accountsss('nNKiKkHCJKINcy_Ygq5179NWRWAsG_T-ulL6-enTb0gfYwLqgsUMRmY9b4cg8RSbzw8', $acc), $acc);
+		// var_dump($this->site = 0);
+		// var_dump($this->accountsss('nNKiKkHCJKINcy_Ygq5179NWRWAsG_T-ulL6-enTb0gfYwLqgsUMRmY9b4cg8RSbzw8', $acc), $acc);
 	}
 	function unitincr(string $uint, string $date, array $incr):bool
 	{
