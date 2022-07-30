@@ -172,7 +172,7 @@ class news_driver extends webapp
 		return is_object($account = is_array($context)
 			? $this->post('register', $context)
 			: ($update ? $this->post("account/{$context}", $update) : $this->get("account/{$context}")))
-			&& ($update = isset($account->error) ? (string)$account->error : (string)$account['status'])
+			&& (($update = isset($account->error) ? (string)$account->error : (string)$account['status']) || TRUE)
 			&& isset($account->account)
 				? [...$account->account->getattr(),
 					'resources' => (string)$account->account->resources,
