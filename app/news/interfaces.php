@@ -240,7 +240,7 @@ class interfaces extends webapp
 	}
 	function get_test()
 	{
-		var_dump($this->site);
+		var_dump($this->site = 0);
 		var_dump($this->accountsss('xG6cLm97pFlt0IORFbsttr_WePCZQBuLvMn2B2QFnNPPWFWxyrjV0pYx7StABhsRY9C', $acc), $acc);
 	}
 	function unitincr(string $uint, string $date, array $incr):bool
