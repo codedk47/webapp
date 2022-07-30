@@ -629,4 +629,48 @@ final class webapp_router_pay extends webapp_echo_xml
 	{
 		$this->notify($channel, $this->webapp->request_content());
 	}
+	function form_payname($ctx, $name):webapp_form|bool
+	{
+		$form = new webapp_form($ctx);
+
+		if ($this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $name)->fetch($data))
+		{
+			foreach(explode("\r\n", $data['type']) as $index => $type)
+			{
+				if (preg_match('/([01])#(\w+)\[(\d+(?:\,\d+)*)\]([^\r]+)/', $type, $pattern))
+				{
+					$form->fieldset();
+					$form->field("S{$index}", 'select', ['options' => ['关闭', '开启'], 'required' => NULL])->selected($pattern[1]);
+					$form->field("C{$index}", 'text', ['value' => $pattern[2], 'style' => 'width:4rem', 'placeholder' => '通道', 'required' => NULL]);
+					$form->field("V{$index}", 'text', ['value' => $pattern[3], 'style' => 'width:14rem', 'placeholder' => '可支付金额', 'required' => NULL]);
+					$form->field("N{$index}", 'text', ['value' => $pattern[4], 'style' => 'width:10rem', 'placeholder' => '通道名称', 'required' => NULL]);
+				}
+			}
+			$form->fieldset();
+			$form->button('提交更新', 'submit');
+			if ($form->echo === FALSE && $form->fetch($data))
+			{
+				$contents = [];
+				for ($i = 0; $i <= $index; ++$i)
+				{
+					$contents[] = sprintf('%d#%s[%s]%s', $data["S{$i}"], $data["C{$i}"], $data["V{$i}"], $data["N{$i}"]);
+				}
+				$this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $name)->update('type=?s', join("\r\n", $contents));
+			}
+		}
+		return $form;
+	}
+	function post_set(string $name)
+	{
+		$this->form_payname($this->webapp, $this->webapp->decrypt($name));
+		$this->webapp->response_location("?pay/set,name:{$name}");
+	}
+	function get_set(string $name)
+	{
+		if ($payname = $this->webapp->decrypt($name))
+		{
+			$this->form_payname($this->webapp->app('webapp_echo_html')->main, $payname);
+			$this->webapp->app->footer[0] = '';
+		}
+	}
 }
