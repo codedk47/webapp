@@ -233,9 +233,15 @@ class interfaces extends webapp
 	{
 		$this->app->xml->comment(file_get_contents(__DIR__.'/interfaces.txt'));
 	}
+	function accountsss(string $signature, &$account):bool
+	{
+		return boolval($account = $this->authorize($signature, fn(string $uid, string $pwd):array
+			=> $this->mysql->accounts('WHERE site=?i AND uid=?s AND pwd=?s LIMIT 1', $this->site, $uid, $pwd)->array()));
+	}
 	function get_test()
 	{
-		var_dump($this->account('xG6cLm97pFlt0IORFbsttr_WePCZQBuLvMn2B2QFnNPPWFWxyrjV0pYx7StABhsRY9C', $acc), $acc);
+		var_dump($this->site);
+		var_dump($this->accountsss('xG6cLm97pFlt0IORFbsttr_WePCZQBuLvMn2B2QFnNPPWFWxyrjV0pYx7StABhsRY9C', $acc), $acc);
 	}
 	function unitincr(string $uint, string $date, array $incr):bool
 	{
