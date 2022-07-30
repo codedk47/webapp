@@ -642,7 +642,7 @@ final class webapp_router_pay extends webapp_echo_xml
 					$form->fieldset();
 					$form->field("S{$index}", 'select', ['options' => ['关闭', '开启'], 'required' => NULL])->selected($pattern[1]);
 					$form->field("C{$index}", 'text', ['value' => $pattern[2], 'style' => 'width:4rem', 'placeholder' => '通道', 'required' => NULL]);
-					$form->field("V{$index}", 'text', ['value' => $pattern[3], 'style' => 'width:14rem', 'placeholder' => '可支付金额', 'required' => NULL]);
+					$form->field("V{$index}", 'text', ['value' => $pattern[3], 'style' => 'width:14rem', 'pattern' => '\d+(,\d+)*', 'placeholder' => '可支付金额', 'required' => NULL]);
 					$form->field("N{$index}", 'text', ['value' => $pattern[4], 'style' => 'width:10rem', 'placeholder' => '通道名称', 'required' => NULL]);
 				}
 			}
