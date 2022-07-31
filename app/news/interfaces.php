@@ -750,33 +750,32 @@ class interfaces extends webapp
 		$error = '账号已存在';
 		do
 		{
-			$data['name'] = $data['pwd'] = '';
-			if (isset($data['random'], $data['answer'], $data['name'], $data['pwd'], $data['device'], $data['unit']) === FALSE)
+			if (isset($data['device'], $data['unit']) === FALSE)
 			{
 				$error = '缺少必要字段';
 				break;
 			}
-			if ((is_string($data['random']) && is_string($data['answer']) && is_string($data['name']) && is_string($data['pwd'])) === FALSE)
+			if (isset($data['phone']) && is_string($data['phone']))
 			{
-				$error = '字段类型不符合';
-				break;
+				$phone = $data['phone'];
+				if ($this->mysql->accounts('WHERE phone=?s LIMIT 1', $phone)->fetch($account))
+				{
+					$this->xml['status'] = 'sign-in';
+					$this->account_xml($account);
+					return;
+				}
 			}
-			if ($this->captcha_verify($data['random'], $data['answer']) === FALSE)
+			else
 			{
-				$error = '验证码无效或者过期';
-				break;
+				if ((isset($data['random'], $data['answer'])
+					&& is_string($data['random'])
+					&& is_string($data['answer'])
+					&& $this->captcha_verify($data['random'], $data['answer'])) === FALSE) {
+					$error = '验证码无效或者过期';
+					break;
+				}
+				$phone = NULL;
 			}
-			// if ($this->mysql->accounts('WHERE name=?s LIMIT 1', $data['name'])->fetch($account))
-			// {
-			// 	if ($account['pwd'] === $data['pwd'])
-			// 	{
-			// 		$this->xml['status'] = 'sign-in';
-			// 		$this->account_xml($account);
-			// 		return;
-			// 	}
-			// 	$error = '密码错误';
-			// 	break;
-			// }
 			if ($this->mysql->accounts->insert($account = [
 				'uid' => $this->hash($rand, TRUE),
 				'site' => $this->site,
@@ -798,9 +797,7 @@ class interfaces extends webapp
 				'face' => 0,
 				'unit' => strlen($data['unit']) === 4 ? $data['unit'] : '',
 				'code' => '',
-				'phone' => '',
-				// 'pwd' => $data['pwd'],
-				// 'name' => $data['name'],
+				'phone' => $phone,
 				'pwd' => random_int(100000, 999999),
 				'name' => $this->hash($rand),
 				'resources' => '',
@@ -821,7 +818,7 @@ class interfaces extends webapp
 	}
 	function get_signature(string $uid)
 	{
-		if ($account = $this->mysql->accounts('WHERE site=?i AND uid=?s ', $this->site, $uid)->array())
+		if ($this->mysql->accounts('WHERE site=?i AND uid=?s ', $this->site, $uid)->fetch($account))
 		{
 			$this->account_xml($account);
 		}

@@ -150,7 +150,7 @@ class news_driver extends webapp
 			$data['data'] = (string)$result;
 			return $data;
 		}
-		var_dump($result);
+		//var_dump($result);
 		return [];
 	}
 	function request_unitcode():string
@@ -169,15 +169,17 @@ class news_driver extends webapp
 	}
 	function account(array|string $context, array|string &$update = NULL):array
 	{
-		return is_object($account = is_array($context)
-			? $this->post('register', $context)
-			: ($update ? $this->post("account/{$context}", $update) : $this->get("account/{$context}")))
-			&& (($update = isset($account->error) ? (string)$account->error : (string)$account['status']) || TRUE)
-			&& isset($account->account)
-				? [...$account->account->getattr(),
-					'resources' => (string)$account->account->resources,
-					'favorite' => (string)$account->account->favorite,
-					'history' => (string)$account->account->history] : [];
+		if (is_object($account = is_array($context)
+				? $this->post('register', $context)
+				: ($update ? $this->post("account/{$context}", $update) : $this->get("account/{$context}")))
+			&& isset($account->account)) {
+			$update = isset($account->error) ? (string)$account->error : (string)$account['status'];
+			return [...$account->account->getattr(),
+				'resources' => (string)$account->account->resources,
+				'favorite' => (string)$account->account->favorite,
+				'history' => (string)$account->account->history];
+		}
+		return [];
 	}
 
 
