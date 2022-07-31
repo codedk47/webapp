@@ -76,9 +76,9 @@ function router(path, body)
 // 		}, 'image/png');
 // 	});
 // }
-async function register(random, answer, name, pwd)
+async function register(random, answer)
 {
-	return caller('?api/register', {random, answer, name, pwd}, 'application/json').then(result =>
+	return caller('?api/register', {random, answer}, 'application/json').then(result =>
 	{
 		if (result.code === 200 && result.data.signature)
 		{
