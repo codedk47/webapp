@@ -405,9 +405,9 @@ class interfaces extends webapp
 	function form_resourceupload($ctx):webapp_form
 	{
 		$form = new webapp_form($ctx, "{$this['app_resdomain']}?resourceupload");
-		$form->xml['onsubmit'] = 'return upres(this)';
+		$form->xml['onsubmit'] = 'return mupres(this)';
 		$form->xml['data-auth'] = $this->signature($this['admin_username'], $this['admin_password'], (string)$this->site);
-		$form->progress()->setattr(['style' => 'width:100%']);
+		//$form->progress()->setattr(['style' => 'width:100%']);
 		$form->fieldset('资源文件 / 封面图片');
 		$form->field('resource', 'file', ['accept' => 'video/mp4', 'required' => NULL]);
 		$form->field('piccover', 'file', ['accept' => 'image/*']);
@@ -423,6 +423,7 @@ class interfaces extends webapp
 		$form->fieldset();
 		$form->button('Upload Resource', 'submit');
 		$form->button('Cancel', 'button', ['onclick' => 'xhr.abort()']);
+		$form->xml['class'] = 'webapp-mrp';
 		return $form;
 	}
 	function resource_create(array $data):bool

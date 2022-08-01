@@ -20,6 +20,41 @@ function urlencode(data)
 		'@': '%40',
 		'~': '%7E'}[escape]));
 }
+function mrp(e)
+{
+	if (e.parentNode.parentNode.childNodes.length <= 20)
+	{
+		e.parentNode.parentNode.appendChild(document.createElement('dd')).appendChild(e.nextElementSibling.cloneNode(true));
+	}
+	else
+	{
+		alert('目前只支持同时20个上传任务');
+	}
+}
+function mupres(e)
+{
+	const progress = Array.from(e.getElementsByTagName('progress'));
+	xhr.open(e.method, e.action);
+	xhr.setRequestHeader('Authorization', `Bearer ${e.dataset.auth}`);
+	xhr.upload.onprogress = event => event.lengthComputable && progress.forEach(e => e.value = event.loaded / event.total);
+	xhr.responseType = 'json';
+	xhr.onload = () => {
+		if (Object.keys(xhr.response.errors).length)
+		{
+			alert(Object.values(xhr.response.errors).join("\n"));
+			progress.value = 0;
+		}
+		else
+		{
+			if (xhr.response.goto)
+			{
+				e.parentNode.parentNode.remove();
+			}
+		}
+	};
+	xhr.send(new FormData(e));
+	return e.parentNode.open = false;
+}
 function upres(e)
 {
 	const progress = Array.from(e.getElementsByTagName('progress'));

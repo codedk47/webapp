@@ -73,6 +73,31 @@ aside.wschatusers>dl>dd{
 aside.wschatusers>dl>dd:hover{
 	text-decoration: underline;
 }
+dl.mrp,
+dl.mrp>dt,
+dl.mrp>dd{
+	margin: 0;
+	padding: 0;
+}
+dl.mrp>dd{
+	margin-top: .2rem;
+}
+dl.mrp>dt>details{
+	display: none;
+}
+dl.mrp>dd>details{
+	display: inline-block;
+	border: .1rem solid black;
+}
+dl.mrp>dd>details>summary{
+	padding: 0 .4rem;
+}
+dl.mrp>dd>details>summary>progress{
+	width: 78rem;
+}
+dl.mrp>dd>details>form{
+	padding: 1rem;
+}
 form[class*=-wschat]{
 	padding: .4rem;
 	border: .2rem solid black;

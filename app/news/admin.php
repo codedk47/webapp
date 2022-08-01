@@ -374,7 +374,14 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function get_resource_upload()
 	{
-		$this->webapp->form_resourceupload($this->main);
+		$dl = $this->main->append('dl')->setattr(['class' => 'mrp']);
+		$dt = $dl->append('dt');
+		$dt->append('button', ['添加上传任务', 'onclick' => 'mrp(this)']);
+
+		$details = $dt->details('')->setattr(['open' => NULL]);
+		$details->summary->progress();
+		$this->webapp->form_resourceupload($details);
+
 	}
 	function get_resources(string $search = NULL, int $page = 1)
 	{
