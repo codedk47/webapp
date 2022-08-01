@@ -403,7 +403,7 @@ final class webapp_pay_cj implements webapp_pay
 			$order['data'] = $result['data']['payurl'];
 			return TRUE;
 		} while (0);
-		var_dump($error);
+		//var_dump($error);
 		return FALSE;
 	}
 	function notify(mixed $result, ?array &$status):bool
