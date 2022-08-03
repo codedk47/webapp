@@ -4,7 +4,7 @@ class webapp_router_admin extends webapp_echo_html
 	function __construct(interfaces $webapp)
 	{
 		parent::__construct($webapp);
-		if (empty($this->admin()) && $webapp->method !== 'get_resource_cover')
+		if (empty($this->admin()))
 		{
 			if (str_ends_with($webapp->method, 't_home'))
 			{
@@ -448,7 +448,7 @@ class webapp_router_admin extends webapp_echo_html
 			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
 			$table->cell()->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
 				'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
-			$table->cell()->append('a', ['下载预览', 'href' => "{$this->webapp['app_resdomain']}?admin/resource-cover,hash:{$res['hash']}"]);
+			$table->cell()->append('a', ['下载预览', 'href' => "{$this->webapp['app_resdomain']}?resourcepreview/{$res['hash']}"]);
 		}, $this->webapp['app_restype']);
 		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓', '下载预览');
 		$table->header('Found %s item', number_format($table->count()));
@@ -501,23 +501,6 @@ document.querySelectorAll('a[data-cover]').forEach(node =>
 	}
 });
 JS);
-	}
-	function get_resource_cover(string $hash)
-	{
-		if ($this->webapp->mysql->resources('WHERE hash=?s LIMIT 1', $hash)->fetch($res))
-		{
-			$zip = new ZipArchive;
-			$m3u8 = sprintf("{$this->webapp['app_resoutdir']}/%s/{$res['hash']}/play.m3u8", date('ym', $res['time']));
-			var_dump($m3u8);
-			return;
-			if (webapp::lib('ffmpeg/interface.php')($m3u8)->preview($dirname = "D:/preview/{$res['hash']}", 30)
-				&& $zip->open("{$dirname}/preview.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
-				$zip->addGlob("{$dirname}/*.jpg", GLOB_BRACE, ['remove_all_path' => TRUE]);
-				$zip->close();
-				$this->webapp->response_content_download("{$res['hash']}.zip");
-				$this->webapp->response_sendfile("{$dirname}/preview.zip");
-			}
-		}
 	}
 	//账户
 	function form_account($ctx):webapp_form

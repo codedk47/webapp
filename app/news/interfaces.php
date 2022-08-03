@@ -559,6 +559,23 @@ class interfaces extends webapp
 		}
 		isset($filename) && is_file($filename) && unlink($filename);
 	}
+	function get_resourcepreview(string $hash)
+	{
+		if ($this->mysql->resources('WHERE hash=?s LIMIT 1', $hash)->fetch($res))
+		{
+			$zip = new ZipArchive;
+			$m3u8 = sprintf("{$this['app_resoutdir']}/%s/{$res['hash']}/play.m3u8", date('ym', $res['time']));
+			var_dump($m3u8);
+			return;
+			if (webapp::lib('ffmpeg/interface.php')($m3u8)->preview($dirname = "D:/preview/{$res['hash']}", 30)
+				&& $zip->open("{$dirname}/preview.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
+				$zip->addGlob("{$dirname}/*.jpg", GLOB_BRACE, ['remove_all_path' => TRUE]);
+				$zip->close();
+				$this->response_content_download("{$res['hash']}.zip");
+				$this->response_sendfile("{$dirname}/preview.zip");
+			}
+		}
+	}
 	function resource_xml(array $resource):webapp_xml
 	{
 		$data = json_decode($resource['data'], TRUE)[$this->site] ?? [];
