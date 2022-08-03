@@ -565,8 +565,6 @@ class interfaces extends webapp
 		{
 			$zip = new ZipArchive;
 			$m3u8 = sprintf("{$this['app_resoutdir']}/%s/{$res['hash']}/play.m3u8", date('ym', $res['time']));
-			var_dump($m3u8);
-			return;
 			if (webapp::lib('ffmpeg/interface.php')($m3u8)->preview($dirname = "D:/preview/{$res['hash']}", 30)
 				&& $zip->open("{$dirname}/preview.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
 				$zip->addGlob("{$dirname}/*.jpg", GLOB_BRACE, ['remove_all_path' => TRUE]);
