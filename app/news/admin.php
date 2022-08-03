@@ -448,9 +448,9 @@ class webapp_router_admin extends webapp_echo_html
 			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
 			$table->cell()->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
 				'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
-			$table->cell()->append('a', ['下载多封面', 'href' => "?admin/resource-cover,hash:{$res['hash']}"]);
+			$table->cell()->append('a', ['下载预览', 'href' => "?admin/resource-cover,hash:{$res['hash']}"]);
 		}, $this->webapp['app_restype']);
-		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓', '下载多封面');
+		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓', '下载预览');
 		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
@@ -508,6 +508,8 @@ JS);
 		{
 			$zip = new ZipArchive;
 			$m3u8 = sprintf("{$this->webapp['app_resoutdir']}/%s/{$res['hash']}/play.m3u8", date('ym', $res['time']));
+			var_dump($m3u8);
+			return;
 			if (webapp::lib('ffmpeg/interface.php')($m3u8)->preview($dirname = "D:/preview/{$res['hash']}", 30)
 				&& $zip->open("{$dirname}/preview.zip", ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
 				$zip->addGlob("{$dirname}/*.jpg", GLOB_BRACE, ['remove_all_path' => TRUE]);
