@@ -35,11 +35,11 @@ class ffmpeg
 		]
 	];
 	private $format = [], $audio = [], $video = [], $fixed = 1, $options, $filename, $output;
-	function __construct(string $filename, string $option = '-hide_banner -loglevel error -stats -y')
+	function __construct(string $filename, string $option = '-hide_banner -loglevel error -stats -y -allowed_extensions ALL')
 	{
 		$this->options = [$option];
 		$this->filename = realpath($filename);
-		if ($probe = json_decode(shell_exec(static::ffprobe . " -v quiet -print_format json -show_format -show_streams \"{$this->filename}\""), TRUE))
+		if ($probe = json_decode(shell_exec(static::ffprobe . " -allowed_extensions ALL -v quiet -print_format json -show_format -show_streams \"{$this->filename}\""), TRUE))
 		{
 			$this->format = $probe['format'];
 			foreach ($probe['streams'] as $stream)
@@ -154,6 +154,12 @@ class ffmpeg
 	function jpeg(string $filename, int $quality = 2):bool
 	{
 		return $this(sprintf('-qscale:v %d -frames:v 1 -f image2 "%s"', $quality & 0x1f, $filename)) === 0;
+	}
+	function preview(string $outdir, int $count = 10, int $quality = 2):bool
+	{
+		return ($dirname = $this->mkdir($outdir))
+			&& $this(sprintf('-qscale:v %d -frames:v %d -r %f -f image2 "%s/%%d.jpg"',
+				$quality & 0x1f, $count, 1 / floor($this->duration / $count), $dirname)) === 0;
 	}
 	//视频质量选项
 	private function v_quality(int $type, bool $strict = FALSE)
