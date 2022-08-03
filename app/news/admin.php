@@ -4,7 +4,7 @@ class webapp_router_admin extends webapp_echo_html
 	function __construct(interfaces $webapp)
 	{
 		parent::__construct($webapp);
-		if (empty($this->admin()))
+		if (empty($this->admin()) && $webapp->method !== 'get_resource_cover')
 		{
 			if (str_ends_with($webapp->method, 't_home'))
 			{
