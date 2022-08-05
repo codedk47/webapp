@@ -35,11 +35,11 @@ class ffmpeg
 		]
 	];
 	private $format = [], $audio = [], $video = [], $fixed = 1, $options, $filename, $output;
-	function __construct(string $filename, string $option = '-hide_banner -loglevel error -stats -y -allowed_extensions ALL')
+	function __construct(string $filename, string $option = '-hide_banner -loglevel error -stats -y')
 	{
 		$this->options = [$option];
 		$this->filename = realpath($filename);
-		if ($probe = json_decode(shell_exec(static::ffprobe . " -allowed_extensions ALL -v quiet -print_format json -show_format -show_streams \"{$this->filename}\""), TRUE))
+		if ($probe = json_decode(shell_exec(static::ffprobe . " -v quiet -print_format json -show_format -show_streams \"{$this->filename}\""), TRUE))
 		{
 			$this->format = $probe['format'];
 			foreach ($probe['streams'] as $stream)
