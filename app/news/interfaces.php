@@ -415,9 +415,24 @@ class interfaces extends webapp
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => $form->echo ? $this->admin[0] : NULL, 'required' => NULL]);
-		$form->fieldset('tags');
-		$tags = $this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->column('name', 'hash');
+		
+		
+		$form->fieldset('tags（从小到大排列）');
+		$tagc = [];
+		$tags = [];
+		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+		{
+			$tagc[$tag['hash']] = $tag['level'];
+			$tags[$tag['hash']] = $tag['name'];
+		}
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
+
+		foreach ($form->fieldset->xpath('ul/li') as $li)
+		{
+			$level = (string)$li->label->input['value'];
+			$li['class'] = "level{$tagc[$level]}";
+		}
+
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
 		$form->field('require', 'number', ['value' => 0, 'min' => -2, 'required' => NULL]);
 		$form->fieldset();

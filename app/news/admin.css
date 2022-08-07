@@ -162,6 +162,12 @@ ul.restag>li>label:hover{
 ul.restag>li>label:active{
 	background:gainsboro;
 }
+ul.restag>li.level0{color:brown;}
+ul.restag>li.level1{color:blueviolet;}
+ul.restag>li.level7{color:chocolate;}
+ul.restag>li.level8{color:darkslategray;}
+ul.restag>li.level9{color:green;}
+ul.restag>li.level10{color:deeppink;}
 ul.mo{
 	padding:0;
 	width:62rem;
