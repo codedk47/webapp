@@ -148,7 +148,7 @@ final class webapp_pay_fx implements webapp_pay
 	{
 		do
 		{
-			if (is_array($result = webapp_client_http::open('http://152.32.254.229/Pay', [
+			if (is_array($result = webapp_client_http::open('http://154.55.138.250/Pay', [
 				'timeout' => 8,
 				'autoretry' => 2,
 				'method' => 'POST',
