@@ -1083,9 +1083,26 @@ class interfaces extends webapp
 		$form->fieldset('describe');
 		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述']);
 
-		$form->fieldset('tags');
-		$form->field('tags', 'checkbox', ['options' => $this->selecttags()],
-			fn($v,$i)=>$i?join($v):str_split($v,4))['class'] = 'restag';
+		// $form->fieldset('tags');
+		// $form->field('tags', 'checkbox', ['options' => $this->selecttags()],
+		// 	fn($v,$i)=>$i?join($v):str_split($v,4))['class'] = 'restag';
+
+		$form->fieldset('tags（从小到大排列）');
+		$tagc = [];
+		$tags = [];
+		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+		{
+			$tagc[$tag['hash']] = $tag['level'];
+			$tags[$tag['hash']] = $tag['name'];
+		}
+		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
+	
+		foreach ($form->fieldset->xpath('ul/li') as $li)
+		{
+			$level = (string)$li->label->input['value'];
+			$li['class'] = "level{$tagc[$level]}";
+		}
+
 
 		$form->fieldset('resources');
 		$form->field('resources', 'text', [
