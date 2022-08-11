@@ -33,7 +33,7 @@ function mrp(e)
 }
 function mupres(e)
 {
-	const progress = Array.from(e.parentNode.getElementsByTagName('progress'));
+	const xhr = new XMLHttpRequest, progress = Array.from(e.parentNode.getElementsByTagName('progress'));
 	xhr.open(e.method, e.action);
 	xhr.setRequestHeader('Authorization', `Bearer ${e.dataset.auth}`);
 	xhr.upload.onprogress = event => event.lengthComputable && progress.forEach(e => e.value = event.loaded / event.total);

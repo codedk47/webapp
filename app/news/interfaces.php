@@ -437,7 +437,7 @@ class interfaces extends webapp
 		$form->field('require', 'number', ['value' => 0, 'min' => -2, 'required' => NULL]);
 		$form->fieldset();
 		$form->button('Upload Resource', 'submit');
-		$form->button('Cancel', 'button', ['onclick' => 'xhr.abort()']);
+		
 		$form->xml['class'] = 'webapp-mrp';
 		return $form;
 	}
