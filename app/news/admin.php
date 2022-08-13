@@ -137,6 +137,25 @@ class webapp_router_admin extends webapp_echo_html
 		}
 
 		$days = range(1, date('t', strtotime($ym)));
+
+		$unitorders = [NULL => array_fill(0, 32, ['count'=> 0, 'fee' => 0])];
+		foreach ($this->webapp->mysql('SELECT orders.day AS day,orders.order_fee AS fee,accounts.unit AS unit FROM orders INNER JOIN (accounts) ON (accounts.uid=orders.notify_url) WHERE orders.pay_user=?i AND orders.status!="unpay" AND tym=?i', $this->webapp->site, $y.$m) as $order)
+		{
+			++$unitorders[NULL][0]['count'];
+			$unitorders[NULL][0]['fee'] += $order['fee'];
+			++$unitorders[NULL][$order['day']]['count'];
+			$unitorders[NULL][$order['day']]['fee'] += $order['fee'];
+			if (array_key_exists($order['unit'], $unitorders) === FALSE)
+			{
+				$unitorders[$order['unit']] = array_fill(0, 32, ['count'=> 0, 'fee' => 0]);
+			}
+			++$unitorders[$order['unit']][0]['count'];
+			$unitorders[$order['unit']][0]['fee'] += $order['fee'];
+			++$unitorders[$order['unit']][$order['day']]['count'];
+			$unitorders[$order['unit']][$order['day']]['fee'] += $order['fee'];
+		}
+		//print_r($unitorders);
+
 		$stat = $this->webapp->mysql->unitstats('WHERE left(date,7)=?s', $ym)->statmonth($ym, 'unit', 'right(date,2)', [
 			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},ua,0))',
@@ -146,21 +165,21 @@ class webapp_router_admin extends webapp_echo_html
 			// 'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		], 'ORDER BY $1$0 DESC LIMIT 10');
 		
-		$table = $this->main->table($stat, function($table, $stat, $days, $ym)
+		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders)
 		{
 			$t1 = $table->tbody->append('tr');
 			$t2 = $table->tbody->append('tr');
 			$t3 = $table->tbody->append('tr');
 			$t4 = $table->tbody->append('tr');
-			// $t5 = $table->tbody->append('tr');
-			// $t6 = $table->tbody->append('tr');
+			$t5 = $table->tbody->append('tr');
+			$t6 = $table->tbody->append('tr');
 			if ($stat['unit'])
 			{
-				$t1->append('td', ['rowspan' => 4])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
+				$t1->append('td', ['rowspan' => 6])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
 			}
 			else
 			{
-				$t1->append('td', ['汇总', 'rowspan' => 4]);
+				$t1->append('td', ['汇总', 'rowspan' => 6]);
 			}
 
 			$t1->append('td', '浏览');
@@ -169,13 +188,24 @@ class webapp_router_admin extends webapp_echo_html
 			$t4->append('td', '注册');
 			// $t5->append('td', '下载');
 			// $t6->append('td', '激活');
+			$t5->append('td', '订单');
+			$t6->append('td', '金额');
 
 			$t1->append('td', number_format($stat['$0$0']));
 			$t2->append('td', number_format($stat['$1$0']));
 			$t3->append('td', number_format($stat['$2$0']));
 			$t4->append('td', number_format($stat['$3$0']));
-			// $t5->append('td', number_format($stat['$4$0']));
-			// $t6->append('td', number_format($stat['$5$0']));
+
+			if (isset($unitorders[$stat['unit']]))
+			{
+				$t5->append('td', number_format($unitorders[$stat['unit']][0]['count']));
+				$t6->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
+			}
+			else
+			{
+				$t5->append('td', 0);
+				$t6->append('td', 0);
+			}
 
 			foreach ($days as $i)
 			{
@@ -183,11 +213,21 @@ class webapp_router_admin extends webapp_echo_html
 				$t2->append('td', number_format($stat["\$1\${$i}"]));
 				$t3->append('td', number_format($stat["\$2\${$i}"]));
 				$t4->append('td', number_format($stat["\$3\${$i}"]));
+				if (isset($unitorders[$stat['unit']]))
+				{
+					$t5->append('td', number_format($unitorders[$stat['unit']][$i]['count']));
+					$t6->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * 0.01));
+				}
+				else
+				{
+					$t5->append('td', 0);
+					$t6->append('td', 0);
+				}
 				// $t5->append('td', number_format($stat["\$4\${$i}"]));
 				// $t6->append('td', number_format($stat["\$5\${$i}"]));
 			}
 
-		}, $days, $ym);
+		}, $days, $ym, $unitorders);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
 		$table->xml['class'] = 'webapp-stateven';

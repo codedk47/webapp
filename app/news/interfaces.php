@@ -630,11 +630,25 @@ class interfaces extends webapp
 			$cond[0] .= ' AND type=?s';
 			$cond[] = $type;
 		}
+		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
+		{
+			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+			$cond[] = $this->query['tag'];
+		}
 		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
 		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
 		{
 			$this->resource_xml($resource);
+		}
+	}
+	function get_mdsq()
+	{
+		$resources = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND sync="finished" AND FIND_IN_SET("MDSQ",tags)', $this->site);
+		foreach ($resources as $resource)
+		{
+			$ym = date('ym', $resource['time']);
+			$this->resource_xml($resource)['play'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/play.m3u8";
 		}
 	}
 	//标签
