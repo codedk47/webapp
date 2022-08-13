@@ -644,7 +644,7 @@ class interfaces extends webapp
 	}
 	function get_mdsq()
 	{
-		$resources = $this->mysql->resources('WHERE FIND_IN_SET(0,site) AND sync="finished" AND FIND_IN_SET("MDSQ",tags)');
+		$resources = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND sync="finished" AND FIND_IN_SET("MDSQ",tags)', $this->site);
 		foreach ($resources as $resource)
 		{
 			$ym = date('ym', $resource['time']);
