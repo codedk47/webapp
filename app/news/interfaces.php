@@ -826,7 +826,7 @@ class interfaces extends webapp
 				'site' => $this->site,
 				'date' => date('Y-m-d', $this->time),
 				'time' => $this->time,
-				'expire' => $this->time + 600,
+				'expire' => $this->time,
 				'balance' => 0,
 				//时间段送礼
 				// 'expire' => $expire = mktime(23, 59, 59, 7, 16, 2022),
