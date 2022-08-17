@@ -161,8 +161,8 @@ class webapp_router_admin extends webapp_echo_html
 			'SUM(IF({day}=0 OR right(date,2)={day},ua,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},lu,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},ru,0))',
-			// 'SUM(IF({day}=0 OR right(date,2)={day},dc,0))',
-			// 'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
+			'SUM(IF({day}=0 OR right(date,2)={day},dc,0))',
+			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		], 'ORDER BY $1$0 DESC LIMIT 10');
 		
 		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders)
@@ -173,38 +173,42 @@ class webapp_router_admin extends webapp_echo_html
 			$t4 = $table->tbody->append('tr');
 			$t5 = $table->tbody->append('tr');
 			$t6 = $table->tbody->append('tr');
+			$t7 = $table->tbody->append('tr');
+			$t8 = $table->tbody->append('tr');
 			if ($stat['unit'])
 			{
-				$t1->append('td', ['rowspan' => 6])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
+				$t1->append('td', ['rowspan' => 8])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
 			}
 			else
 			{
-				$t1->append('td', ['汇总', 'rowspan' => 6]);
+				$t1->append('td', ['汇总', 'rowspan' => 8]);
 			}
 
 			$t1->append('td', '浏览');
 			$t2->append('td', '独立');
 			$t3->append('td', '登录');
 			$t4->append('td', '注册');
-			// $t5->append('td', '下载');
-			// $t6->append('td', '激活');
-			$t5->append('td', '订单');
-			$t6->append('td', '金额');
+			$t5->append('td', '下载');
+			$t6->append('td', '激活');
+			$t7->append('td', '订单');
+			$t8->append('td', '金额');
 
 			$t1->append('td', number_format($stat['$0$0']));
 			$t2->append('td', number_format($stat['$1$0']));
 			$t3->append('td', number_format($stat['$2$0']));
 			$t4->append('td', number_format($stat['$3$0']));
+			$t5->append('td', number_format($stat['$4$0']));
+			$t6->append('td', number_format($stat['$5$0']));
 
 			if (isset($unitorders[$stat['unit']]))
 			{
-				$t5->append('td', number_format($unitorders[$stat['unit']][0]['count']));
-				$t6->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
+				$t7->append('td', number_format($unitorders[$stat['unit']][0]['count']));
+				$t8->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
 			}
 			else
 			{
-				$t5->append('td', 0);
-				$t6->append('td', 0);
+				$t7->append('td', 0);
+				$t8->append('td', 0);
 			}
 
 			foreach ($days as $i)
@@ -213,18 +217,19 @@ class webapp_router_admin extends webapp_echo_html
 				$t2->append('td', number_format($stat["\$1\${$i}"]));
 				$t3->append('td', number_format($stat["\$2\${$i}"]));
 				$t4->append('td', number_format($stat["\$3\${$i}"]));
+				$t5->append('td', number_format($stat["\$4\${$i}"]));
+				$t6->append('td', number_format($stat["\$5\${$i}"]));
 				if (isset($unitorders[$stat['unit']]))
 				{
-					$t5->append('td', number_format($unitorders[$stat['unit']][$i]['count']));
-					$t6->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * 0.01));
+					$t7->append('td', number_format($unitorders[$stat['unit']][$i]['count']));
+					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * 0.01));
 				}
 				else
 				{
-					$t5->append('td', 0);
-					$t6->append('td', 0);
+					$t7->append('td', 0);
+					$t8->append('td', 0);
 				}
-				// $t5->append('td', number_format($stat["\$4\${$i}"]));
-				// $t6->append('td', number_format($stat["\$5\${$i}"]));
+				
 			}
 
 		}, $days, $ym, $unitorders);
