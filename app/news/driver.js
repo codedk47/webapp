@@ -118,11 +118,11 @@ window.addEventListener('DOMContentLoaded', async function()
 								}
 								else
 								{
-									viewport.unobserve(lazy.parentNode.removeChild(lazy));
-									//console.log('delete')
 									const finished = document.createElement('ul');
 									finished.innerHTML = '<li>已加载全部内容</li>';
-									lazy.insertBefore(finished, lazy.nextElementSibling);
+									lazy.parentNode.insertBefore(finished, lazy.parentNode.nextElementSibling);
+									viewport.unobserve(lazy.parentNode.removeChild(lazy));
+									//console.log('delete')
 								}
 							});
 						}
