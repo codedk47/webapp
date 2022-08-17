@@ -120,8 +120,8 @@ window.addEventListener('DOMContentLoaded', async function()
 								{
 									const finished = document.createElement('ul');
 									finished.innerHTML = '<li>已加载全部内容</li>';
-									lazy.parentNode.insertBefore(finished, lazy.parentNode.nextElementSibling);
-									viewport.unobserve(lazy.parentNode.removeChild(lazy));
+									lazy.parentNode.parentNode.insertBefore(finished, lazy.parentNode.parentNode.nextElementSibling);
+									viewport.unobserve(lazy.parentNode.parentNode.removeChild(lazy));
 									//console.log('delete')
 								}
 							});
