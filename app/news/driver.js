@@ -118,10 +118,11 @@ window.addEventListener('DOMContentLoaded', async function()
 								}
 								else
 								{
-									const finished = document.createElement('ul');
-									finished.innerHTML = '<li>已加载全部内容</li>';
+									const finished = document.createElement('div');
+									finished.innerHTML = '已加载全部内容';
+									finished.style.cssText = 'text-align: center;padding: 10px 0;color: #7a7a74';
 									lazy.parentNode.parentNode.insertBefore(finished, lazy.parentNode.parentNode.nextElementSibling);
-									viewport.unobserve(lazy.parentNode.parentNode.removeChild(lazy));
+									viewport.unobserve(lazy.parentNode.removeChild(lazy));
 									//console.log('delete')
 								}
 							});
