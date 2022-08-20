@@ -109,18 +109,24 @@ class webapp_router_admin extends webapp_echo_html
 				$t2 = $table->tbody->append('tr');
 				$t3 = $table->tbody->append('tr');
 				$t4 = $table->tbody->append('tr');
+				$t5 = $table->tbody->append('tr');
+				$t6 = $table->tbody->append('tr');
 
-				$t1->append('td', [$stat['date'], 'rowspan' => 4]);
+				$t1->append('td', [$stat['date'], 'rowspan' => 6]);
 
 				$t1->append('td', '浏览');
 				$t2->append('td', '独立');
 				$t3->append('td', '登录');
 				$t4->append('td', '注册');
+				$t5->append('td', '下载');
+				$t6->append('td', '激活');
 
 				$t1->append('td', number_format($stat['pv']));
 				$t2->append('td', number_format($stat['ua']));
 				$t3->append('td', number_format($stat['lu']));
 				$t4->append('td', number_format($stat['ru']));
+				$t5->append('td', number_format($stat['dc']));
+				$t6->append('td', number_format($stat['ia']));
 
 				foreach (json_decode($stat['details'], TRUE) as $details)
 				{
@@ -128,6 +134,8 @@ class webapp_router_admin extends webapp_echo_html
 					$t2->append('td', number_format($details['ua']));
 					$t3->append('td', number_format($details['lu']));
 					$t4->append('td', number_format($details['ru']));
+					$t5->append('td', number_format($details['dc']));
+					$t6->append('td', number_format($details['ia']));
 				}
 			});
 			$table->fieldset('日期', '统计', '总和', ...$hours);
