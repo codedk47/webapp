@@ -994,13 +994,14 @@ JS);
 			loader(pic.dataset.src,null,"application/octet-stream").then(b=>pic.style.background=`center/contain no-repeat url(${URL.createObjectURL(b)}) silver`)');
 		}
 	}
-	function get_setvods(string $type = NULL, string $search = NULL)
+	function get_setvods(string $type = NULL, string $tags = NULL, string $search = NULL)
 	{
 		$settags = [];
+		$seltags = [];
 		foreach ($this->webapp->mysql->settags('ORDER BY sort ASC,time DESC') as $settag)
 		{
 			$settags[$settag['hash']] = [
-				'name' => $settag['name'],
+				'name' => $seltags[$settag['hash']] = $settag['name'],
 				'vods' => $settag['vods'] ? str_split($settag['vods'], 12) :[]
 			];
 		}
@@ -1019,8 +1020,15 @@ JS);
 		}
 		$cond[0] .= ' ORDER BY sort ASC,view DESC';
 		$count = 0;
-		$table = $this->main->table($this->webapp->mysql->setvods(...$cond), function($table, $vod, $type, $viewtype, $settags) use(&$count)
+		$table = $this->main->table($this->webapp->mysql->setvods(...$cond), function($table, $vod, $type, $viewtype, $settags, $tags) use(&$count)
 		{
+			if ($tags)
+			{
+				if (in_array($vod['hash'], $tags, TRUE) === FALSE)
+				{
+					return;
+				}
+			}
 			++$count;
 			$table->row();
 			$table->cell()->append('a', ['❌',
@@ -1057,11 +1065,12 @@ JS);
 			{
 				$node->append('a', ['未设置 ', 'href' => '?admin/settag-create', 'style' => 'color:red']);
 			}
-		}, $this->webapp['app_restype'], ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小', '大横图'], $settags);
+		}, $this->webapp['app_restype'], ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小', '大横图'], $settags, array_key_exists($tags, $settags) ? $settags[$tags]['vods'] : []);
 		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'ad', 'RES', 'name', 'describe', '首页标签');
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
 		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
+		$table->bar->select(['' => '全部'] + $seltags)->setattr(['onchange' => 'g({tags:this.value===""?null:this.value})'])->selected($tags);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 	}
 	//账单统计
