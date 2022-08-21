@@ -994,7 +994,7 @@ JS);
 			loader(pic.dataset.src,null,"application/octet-stream").then(b=>pic.style.background=`center/contain no-repeat url(${URL.createObjectURL(b)}) silver`)');
 		}
 	}
-	function get_setvods(string $type = NULL)
+	function get_setvods(string $type = NULL, string $search = NULL)
 	{
 		$settags = [];
 		foreach ($this->webapp->mysql->settags('ORDER BY sort ASC,time DESC') as $settag)
@@ -1009,6 +1009,13 @@ JS);
 		{
 			$cond[0] .= ' AND type=?s';
 			$cond[] = $type;
+		}
+		if (is_string($search) && strlen($search))
+		{
+			$search = urldecode($search);
+			$cond[0] .= ' AND (name LIKE ?s OR `describe` LIKE ?s)';
+			$cond[] = "%{$search}%";
+			$cond[] = "%{$search}%";
 		}
 		$cond[0] .= ' ORDER BY sort ASC,view DESC';
 		$count = 0;
@@ -1055,6 +1062,7 @@ JS);
 		$table->header('Found %d item', $count);
 		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
 		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
+		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 	}
 	//账单统计
 	function get_statbills(string $type = 'undef', string $ym = '', int $top = 10)
