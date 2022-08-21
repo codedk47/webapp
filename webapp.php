@@ -545,6 +545,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return $this->io->request_ip();
 	}
+	// function request_host():string
+	// {
+	// 	return $this->io->request_header('Host') ?? '';
+	// }
 	// function request_cond(string $name = 'cond'):array
 	// {
 	// 	$cond = [];
