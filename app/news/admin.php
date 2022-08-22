@@ -1464,17 +1464,19 @@ JS);
 	{
 		$form = new webapp_form($ctx);
 
-		$form->fieldset('unit / type / code / rate / name');
+		$form->fieldset('unit / code / name');
 		$form->field('unit', 'text', ['placeholder' => '单位编码4位字母数字组合', 'pattern' => '\w{4}', 'maxlength' => 4, 'required' => NULL]);
-		// $form->field('type', 'select', ['options' => [
-		// 	'cpc' => 'CPC',
-		// 	'cpa' => 'CPA',
-		// 	'cps' => 'CPS',
-		// ], 'required' => NULL]);
 		$form->field('code', 'number', ['value' => random_int(100000, 999999), 'min' => 100000, 'max' => 999999, 'required' => NULL]);
-		$form->field('rate', 'number', ['value' => 1, 'min' => 0.5, 'max' => 1, 'step' => 0.01, 'required' => NULL]);
 		$form->field('name', 'text', ['placeholder' => '单位名字描述', 'maxlength' => 128, 'required' => NULL]);
 
+		$form->fieldset('type / rate / price');
+		$form->field('type', 'select', ['options' => [
+			'cpc' => 'CPC',
+			'cpa' => 'CPA',
+			'cps' => 'CPS',
+		], 'required' => NULL]);
+		$form->field('rate', 'number', ['value' => 1, 'min' => 0.5, 'max' => 1, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
+		$form->field('price', 'number', ['value' => 0, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
 
 		$form->fieldset('owns');
 		$unit = $this->webapp->mysql->unitsets('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('unit', 'unit');
@@ -1523,10 +1525,12 @@ JS);
 				'data-unit' => $unit['unit']]);
 			$table->cell(date('Y-m-d\\TH:i:s', $unit['time']));
 			$table->cell("{$unit['unit']}:{$unit['code']}");
+			$table->cell($unit['type']);
 			$table->cell($unit['rate']);
+			$table->cell($unit['price']);
 			$table->cell()->append('a', [$unit['name'], 'href' => "?admin/unitset,unit:{$unit['unit']}"]);
 		});
-		$table->fieldset('❌', 'time', 'unit:code', 'rate', 'name');
+		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name');
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
 		$table->paging($this->webapp->at(['page' => '']));
