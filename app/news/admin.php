@@ -668,10 +668,11 @@ JS);
 			{
 				$table->cell();
 			}
+			$table->cell($acc['did']);
 			$table->cell($acc['phone']);
 			$table->cell($acc['name']);
 		});
-		$table->fieldset('uid', 'date', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'unit', 'code', 'phone', 'name');
+		$table->fieldset('uid', 'date', 'expire', 'balance', 'lasttime', 'lastip', 'device', 'unit', 'code', 'did', 'phone', 'name');
 		$table->header('Found %s item', number_format($table->count()));
 		$table->bar->select(['' => '全部单位', '0000' => '内部单位'] + $this->webapp->mysql->unitsets->column('name', 'unit'))
 			->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
@@ -1463,11 +1464,17 @@ JS);
 	{
 		$form = new webapp_form($ctx);
 
-		$form->fieldset('unit / code / rate / name');
+		$form->fieldset('unit / type / code / rate / name');
 		$form->field('unit', 'text', ['placeholder' => '单位编码4位字母数字组合', 'pattern' => '\w{4}', 'maxlength' => 4, 'required' => NULL]);
+		$form->field('type', 'select', ['options' => [
+			'cpc' => 'CPC',
+			'cpa' => 'CPA',
+			'cps' => 'CPS',
+		], 'required' => NULL]);
 		$form->field('code', 'number', ['value' => random_int(100000, 999999), 'min' => 100000, 'max' => 999999, 'required' => NULL]);
 		$form->field('rate', 'number', ['value' => 1, 'min' => 0.5, 'max' => 1, 'step' => 0.01, 'required' => NULL]);
 		$form->field('name', 'text', ['placeholder' => '单位名字描述', 'maxlength' => 128, 'required' => NULL]);
+
 
 		$form->fieldset('owns');
 		$unit = $this->webapp->mysql->unitsets('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('unit', 'unit');

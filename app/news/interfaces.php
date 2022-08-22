@@ -804,6 +804,7 @@ class interfaces extends webapp
 				$error = '缺少必要字段';
 				break;
 			}
+			$did = NULL;
 			if (isset($data['phone']) && is_string($data['phone']))
 			{
 				$phone = $data['phone'];
@@ -824,6 +825,16 @@ class interfaces extends webapp
 					break;
 				}
 				$phone = NULL;
+				if (isset($data['did']) && is_string($data['did']))
+				{
+					$did = $data['did'];
+					if ($this->mysql->accounts('WHERE did=?s LIMIT 1', $did)->fetch($account))
+					{
+						$this->xml['status'] = 'sign-in';
+						$this->account_xml($account);
+						return;
+					}
+				}
 			}
 			if ($this->mysql->accounts->insert($account = [
 				'uid' => $this->hash($rand, TRUE),
@@ -846,6 +857,7 @@ class interfaces extends webapp
 				'face' => 0,
 				'unit' => strlen($data['unit']) === 4 ? $data['unit'] : '',
 				'code' => '',
+				'did' => $did,
 				'phone' => $phone,
 				'pwd' => random_int(100000, 999999),
 				'name' => $this->hash($rand),
