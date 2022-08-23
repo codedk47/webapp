@@ -97,7 +97,7 @@ class webapp_router_admin extends webapp_echo_html
 	function post_home()
 	{
 	}
-	function get_home(string $ym = '', string $unit = NULL)
+	function get_home(string $ym = '', string $unit = NULL, string $type = NULL)
 	{
 		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
 		if ($unit)
@@ -164,7 +164,25 @@ class webapp_router_admin extends webapp_echo_html
 		}
 		//print_r($unitorders);
 
-		$stat = $this->webapp->mysql->unitstats('WHERE left(date,7)=?s', $ym)->statmonth($ym, 'unit', 'right(date,2)', [
+		$cond = ['WHERE left(date,7)=?s', $ym];
+		if ($type)
+		{
+			if ($units = $this->webapp->mysql->unitsets('WHERE type=?s', $type)->column('price', 'unit'))
+			{
+				$cond[0] .= ' AND unit IN(?S)';
+				$cond[] = array_keys($units);
+			}
+			else
+			{
+				$cond[0] .= ' AND 0';
+			}
+		}
+		else
+		{
+			$units = [];
+		}
+		
+		$stat = $this->webapp->mysql->unitstats(...$cond)->statmonth($ym, 'unit', 'right(date,2)', [
 			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},ua,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},lu,0))',
@@ -173,7 +191,7 @@ class webapp_router_admin extends webapp_echo_html
 			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		], 'ORDER BY $1$0 DESC LIMIT 10');
 		
-		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders)
+		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $units)
 		{
 			$t1 = $table->tbody->append('tr');
 			$t2 = $table->tbody->append('tr');
@@ -183,13 +201,15 @@ class webapp_router_admin extends webapp_echo_html
 			$t6 = $table->tbody->append('tr');
 			$t7 = $table->tbody->append('tr');
 			$t8 = $table->tbody->append('tr');
+			$t9 = $table->tbody->append('tr');
+			$t10 = $table->tbody->append('tr');
 			if ($stat['unit'])
 			{
-				$t1->append('td', ['rowspan' => 8])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
+				$t1->append('td', ['rowspan' => 10])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
 			}
 			else
 			{
-				$t1->append('td', ['汇总', 'rowspan' => 8]);
+				$t1->append('td', ['汇总', 'rowspan' => 10]);
 			}
 
 			$t1->append('td', '浏览');
@@ -200,6 +220,8 @@ class webapp_router_admin extends webapp_echo_html
 			$t6->append('td', '激活');
 			$t7->append('td', '订单');
 			$t8->append('td', '金额');
+			$t9->append('td', '费用');
+			$t10->append('td', '-');
 
 			$t1->append('td', number_format($stat['$0$0']));
 			$t2->append('td', number_format($stat['$1$0']));
@@ -219,6 +241,10 @@ class webapp_router_admin extends webapp_echo_html
 				$t8->append('td', 0);
 			}
 
+			$tp = $t9->append('td');
+			$t10->append('td', '-');
+			$price = $units[$stat['unit']] ?? 0;
+			$pt = 0;
 			foreach ($days as $i)
 			{
 				$t1->append('td', number_format($stat["\$0\${$i}"]));
@@ -237,12 +263,18 @@ class webapp_router_admin extends webapp_echo_html
 					$t7->append('td', 0);
 					$t8->append('td', 0);
 				}
-				
+				$t9->append('td', number_format($stat["\$5\${$i}"] * $price));
+				$t10->append('td', '-');
+				$pt += $stat["\$5\${$i}"] * $price;
 			}
+			$tp[0] = number_format($pt);
 
-		}, $days, $ym, $unitorders);
+		}, $days, $ym, $unitorders, $units);
 		$table->fieldset('单位', '统计', '总和', ...$days);
-		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+		$header = $table->header('');
+		$header->select(['' => '全部类型', 'cpc' => 'CPC', 'cpa' => 'CPA', 'cps' => 'CPS'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
+		$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+		
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
