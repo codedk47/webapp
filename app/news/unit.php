@@ -40,6 +40,11 @@ class webapp_router_unit extends webapp_echo_html
 		if ($this->unit['owns'])
 		{
 			array_push($owns, ...str_split($this->unit['owns'], 4));
+			$units = $this->webapp->mysql->unitsets('WHERE unit IN(?S)', $owns)->column('price', 'unit');
+		}
+		else
+		{
+			$units = [];
 		}
 
 		$unitorders = [NULL => array_fill(0, 32, ['count'=> 0, 'fee' => 0])];
@@ -138,7 +143,7 @@ class webapp_router_unit extends webapp_echo_html
 			}
 			$tp[0] = number_format($pt);
 
-		}, $days, $unitorders);
+		}, $days, $unitorders, $units);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
 		$table->xml['class'] = 'webapp-stateven';
