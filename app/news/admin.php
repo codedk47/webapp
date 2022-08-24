@@ -165,6 +165,7 @@ class webapp_router_admin extends webapp_echo_html
 		//print_r($unitorders);
 
 		$cond = ['WHERE left(date,7)=?s', $ym];
+
 		if ($type)
 		{
 			if ($units = $this->webapp->mysql->unitsets('WHERE type=?s', $type)->column('price', 'unit'))
@@ -179,8 +180,9 @@ class webapp_router_admin extends webapp_echo_html
 		}
 		else
 		{
-			$units = [];
+			$units = $this->webapp->mysql->unitsets->column('price', 'unit');
 		}
+		$types = $this->webapp->mysql->unitsets->column('type', 'unit');
 		
 		$stat = $this->webapp->mysql->unitstats(...$cond)->statmonth($ym, 'unit', 'right(date,2)', [
 			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
@@ -190,8 +192,8 @@ class webapp_router_admin extends webapp_echo_html
 			'SUM(IF({day}=0 OR right(date,2)={day},dc,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		], 'ORDER BY $1$0 DESC LIMIT 10');
-		
-		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $units)
+
+		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $units, $types)
 		{
 			$t1 = $table->tbody->append('tr');
 			$t2 = $table->tbody->append('tr');
@@ -221,7 +223,7 @@ class webapp_router_admin extends webapp_echo_html
 			$t7->append('td', '订单');
 			$t8->append('td', '金额');
 			$t9->append('td', '费用');
-			$t10->append('td', ['华丽的分割线', 'colspan' => count($days) + 2]);
+			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $types[$stat['unit']] ?? 'cpc', $units[$stat['unit']] ?? 0), 'colspan' => count($days) + 2]);
 
 			$t1->append('td', number_format($stat['$0$0']));
 			$t2->append('td', number_format($stat['$1$0']));
@@ -267,7 +269,7 @@ class webapp_router_admin extends webapp_echo_html
 			}
 			$tp[0] = number_format($pt);
 
-		}, $days, $ym, $unitorders, $units);
+		}, $days, $ym, $unitorders, $units, $types);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$header = $table->header('');
 		$header->select(['' => '全部类型', 'cpc' => 'CPC', 'cpa' => 'CPA', 'cps' => 'CPS'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
