@@ -221,7 +221,7 @@ class webapp_router_admin extends webapp_echo_html
 			$t7->append('td', '订单');
 			$t8->append('td', '金额');
 			$t9->append('td', '费用');
-			$t10->append('td', '-');
+			$t10->append('td', ['华丽的分割线', 'colspan' => count($days) + 2]);
 
 			$t1->append('td', number_format($stat['$0$0']));
 			$t2->append('td', number_format($stat['$1$0']));
@@ -242,7 +242,6 @@ class webapp_router_admin extends webapp_echo_html
 			}
 
 			$tp = $t9->append('td');
-			$t10->append('td', '-');
 			$price = $units[$stat['unit']] ?? 0;
 			$pt = 0;
 			foreach ($days as $i)
@@ -264,7 +263,6 @@ class webapp_router_admin extends webapp_echo_html
 					$t8->append('td', 0);
 				}
 				$t9->append('td', number_format($stat["\$5\${$i}"] * $price));
-				$t10->append('td', '-');
 				$pt += $stat["\$5\${$i}"] * $price;
 			}
 			$tp[0] = number_format($pt);
