@@ -223,7 +223,9 @@ class webapp_router_admin extends webapp_echo_html
 			$t7->append('td', '订单');
 			$t8->append('td', '金额');
 			$t9->append('td', '费用');
-			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $types[$stat['unit']] ?? 'cpc', $units[$stat['unit']] ?? 0), 'colspan' => count($days) + 2]);
+			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $types[$stat['unit']] ?? 'cpc', $units[$stat['unit']] ?? 0),
+				'colspan' => count($days) + 2,
+				'style' => 'text-align:left']);
 
 			$t1->append('td', number_format($stat['$0$0']));
 			$t2->append('td', number_format($stat['$1$0']));
