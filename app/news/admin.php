@@ -97,7 +97,7 @@ class webapp_router_admin extends webapp_echo_html
 	function post_home()
 	{
 	}
-	function get_home(string $ym = '', string $unit = NULL, string $type = NULL)
+	function get_home(string $ym = '', string $unit = NULL, string $type = NULL, string $admin = NULL)
 	{
 		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
 		if ($unit)
@@ -166,9 +166,20 @@ class webapp_router_admin extends webapp_echo_html
 
 		$cond = ['WHERE left(date,7)=?s', $ym];
 
-		if ($type)
+		if ($type || $admin)
 		{
-			if ($units = $this->webapp->mysql->unitsets('WHERE type=?s', $type)->column('price', 'unit'))
+			$unitcond = ['WHERE 1'];
+			if ($type)
+			{
+				$unitcond[0] .= ' AND type=?s';
+				$unitcond[] = $type;
+			}
+			if ($admin)
+			{
+				$unitcond[0] .= ' AND admin=?s';
+				$unitcond[] = $admin;
+			}
+			if ($units = $this->webapp->mysql->unitsets(...$unitcond)->column('price', 'unit'))
 			{
 				$cond[0] .= ' AND unit IN(?S)';
 				$cond[] = array_keys($units);
@@ -274,9 +285,11 @@ class webapp_router_admin extends webapp_echo_html
 		}, $days, $ym, $unitorders, $units, $types);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$header = $table->header('');
-		$header->select(['' => '全部类型', 'cpc' => 'CPC', 'cpa' => 'CPA', 'cps' => 'CPS'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
+		$header->select(['' => '全部类型', 'cpc' => 'CPC', 'cpa' => 'CPA', 'cps' => 'CPS'])
+			->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
-		
+		$header->select(['' => '全部账号'] + array_combine($admins = $this->webapp->mysql->unitsets('GROUP BY admin')->column('admin'), $admins))
+			->setattr(['onchange' => 'g({admin:this.value===""?null:this.value})'])->selected($admin);
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
@@ -1529,7 +1542,8 @@ JS);
 			? $this->webapp->mysql->unitsets('WHERE unit=?s LIMIT 1', $unit)->update($data)
 			: $this->webapp->mysql->unitsets->insert([
 				'site' => $this->webapp->site,
-				'time' => $this->webapp->time ] + $data))) {
+				'time' => $this->webapp->time,
+				'admin' => $this->webapp->admin[0]] + $data))) {
 			return $this->okay('?admin/unitsets');
 		}
 		$this->warn('创建失败！');
@@ -1563,8 +1577,9 @@ JS);
 			$table->cell($unit['rate']);
 			$table->cell($unit['price']);
 			$table->cell()->append('a', [$unit['name'], 'href' => "?admin/unitset,unit:{$unit['unit']}"]);
+			$table->cell($unit['admin']);
 		});
-		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name');
+		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name', 'admin');
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
 		$table->paging($this->webapp->at(['page' => '']));
