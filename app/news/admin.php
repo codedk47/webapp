@@ -286,7 +286,7 @@ class webapp_router_admin extends webapp_echo_html
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$header = $table->header('');
 		$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
-		$header->select(['' => '全部类型', 'cpc' => 'CPC', 'cpa' => 'CPA', 'cps' => 'CPS'])
+		$header->select(['' => '全部类型', 'cpc' => 'CPC', 'cpa' => 'CPA', 'cps' => 'CPS', 'cpm' => 'CPM'])
 			->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$header->select(['' => '全部账号'] + array_combine($admins = $this->webapp->mysql->unitsets('GROUP BY admin')->column('admin'), $admins))
 			->setattr(['onchange' => 'g({admin:this.value===""?null:this.value})'])->selected($admin);
@@ -1521,6 +1521,7 @@ JS);
 			'cpc' => 'CPC',
 			'cpa' => 'CPA',
 			'cps' => 'CPS',
+			'cpm' => 'CPM'
 		], 'required' => NULL]);
 		$form->field('rate', 'number', ['value' => 1, 'min' => 0.5, 'max' => 1, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
 		$form->field('price', 'number', ['value' => 0, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
