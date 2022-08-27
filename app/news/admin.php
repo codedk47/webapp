@@ -42,6 +42,7 @@ class webapp_router_admin extends webapp_echo_html
 				['Orders（支付中心，订单数据，超级管理）', '?admin/orders'],
 				['Payaisle（支付通道，设置修改，超级管理）', '?admin/payaisle'],
 				['Unitsets（单位设置，开设需要后台的单位）', '?admin/unitsets'],
+				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
 				['Runstatus（服务器状态，轻点）', '?admin/runstatus']
 			]]
 		]);
@@ -1594,6 +1595,10 @@ JS);
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
 		$table->paging($this->webapp->at(['page' => '']));
+	}
+	function get_unitcost()
+	{
+		$this->warn('正在开发请等待！');
 	}
 	//密码
 	function form_setpwd($ctx):webapp_form
