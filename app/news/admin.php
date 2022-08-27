@@ -93,6 +93,15 @@ class webapp_router_admin extends webapp_echo_html
 			?? $this->webapp->request_referer('?'));
 		return 302;
 	}
+	function adminlists():array
+	{
+		$users = [$this->webapp['admin_username'] => "admin(超级管理)"];
+		foreach ($this->webapp->mysql->admin as $admin)
+		{
+			$users[$admin['uid']] = "{$admin['uid']}({$admin['name']})";
+		}
+		return $users;
+	}
 	//统计
 	function post_home()
 	{
@@ -288,7 +297,7 @@ class webapp_router_admin extends webapp_echo_html
 		$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
 		$header->select(['' => '全部类型', 'cpc' => 'CPC', 'cpa' => 'CPA', 'cps' => 'CPS', 'cpm' => 'CPM'])
 			->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
-		$header->select(['' => '全部账号'] + array_combine($admins = $this->webapp->mysql->unitsets('GROUP BY admin')->column('admin'), $admins))
+		$header->select(['' => '全部账号'] + $this->adminlists())
 			->setattr(['onchange' => 'g({admin:this.value===""?null:this.value})'])->selected($admin);
 		$table->xml['class'] = 'webapp-stateven';
 	}
@@ -1565,7 +1574,7 @@ JS);
 
 		$cond[0] = ' ORDER BY time DESC';
 
-		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit)
+		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit, $admin)
 		{
 			$table->row();
 			$table->cell()->append('a', ['❌',
@@ -1578,9 +1587,9 @@ JS);
 			$table->cell($unit['rate']);
 			$table->cell($unit['price']);
 			$table->cell()->append('a', [$unit['name'], 'href' => "?admin/unitset,unit:{$unit['unit']}"]);
-			$table->cell($unit['admin']);
+			$table->cell($admin[$unit['admin']] ?? $unit['admin']);
 			$table->cell("https://ichigua.net/{$unit['unit']}");
-		});
+		}, $this->adminlists());
 		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name', 'admin', '推广链接');
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
