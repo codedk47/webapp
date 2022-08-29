@@ -108,6 +108,7 @@ class interfaces extends webapp
 			$this->echo('Please run at the local command line');
 			return;
 		}
+		$units = array_combine($unit = $this->mysql->unitsets->column('unit'), $unit);
 		foreach ($this['app_site'] as $site => $ip)
 		{
 			$this->site = $site;
@@ -124,8 +125,8 @@ class interfaces extends webapp
 			echo "\n-------- PULL UNIT --------\n";
 			foreach ($this->pull('incr-unit') as $unit)
 			{
-				echo $unit['unit'], ' - ',
-					$this->unitincr((string)$unit['unit'], (string)$unit['time'], [
+				echo $units[(string)$unit['unit']] ?? '0000', ' - ',
+					$this->unitincr($units[(string)$unit['unit']] ?? '0000', (string)$unit['time'], [
 						'pv' => (int)$unit['pv'],
 						'ua' => (int)$unit['ip'],
 						'lu' => (int)$unit['lu'],
