@@ -136,7 +136,8 @@ table[class*=-stateven]>tbody>tr:not(:first-child):nth-child(odd){
 table[class*=-stateven]>tbody>tr:nth-child(2)>td:first-child{
 	font-weight: bold;
 }
-table[class*=-stateven]>tbody>tr>td{
+table[class*=-stateven]>tbody>tr>td,
+table[class*=-stat]>tbody>tr>td{
 	text-align: right;
 }
 ul.restag{

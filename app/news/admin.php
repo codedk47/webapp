@@ -1596,9 +1596,44 @@ JS);
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
-	function get_unitcost()
+	function get_unitcost(string $start = NULL, string $end = NULL)
 	{
-		$this->warn('正在开发请等待！');
+		$start ??= date('Y-m-d', mktime(0, 0, 0, day:1));
+		$end ??= date('Y-m-d');
+
+		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
+
+		$cond[0] .= ' GROUP BY unit ORDER BY pv DESC';
+		
+		$stat = $this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia');
+
+
+		$price = $this->webapp->mysql->unitsets->column('price', 'unit');
+
+		$types = $this->webapp->mysql->unitsets->column('type', 'unit');
+
+
+		$table = $this->main->table($stat, function($table, $stat, $types, $price)
+		{
+			$table->row();
+			$table->cell($stat['unit']);
+			$table->cell($types[$stat['unit']] ?? 'cpa');
+			$table->cell(number_format($stat['pv']));
+			$table->cell(number_format($stat['ua']));
+			$table->cell(number_format($stat['lu']));
+			$table->cell(number_format($stat['ru']));
+			$table->cell(number_format($stat['dc']));
+			$table->cell(number_format($stat['ia']));
+			$table->cell('-');
+			$table->cell(number_format($p = $price[$stat['unit']] ?? 0, 2));
+			$table->cell(number_format($stat['ia'] * $p, 2));
+		}, $types, $price);
+		$table->fieldset('单位', '类型', '浏览', '独立', '登录', '注册', '下载', '激活', '充值', '单价', '激活 x 单价');
+		$header = $table->header('单位成本结算');
+		$table->bar->append('input', ['type' => 'date', 'value' => $start, 'onchange' => 'g({start:this.value})']);
+		$table->bar->append('span', ' - ');
+		$table->bar->append('input', ['type' => 'date', 'value' => $end, 'onchange' => 'g({end:this.value})']);
+		$table->xml['class'] = 'webapp-stat';
 	}
 	//密码
 	function form_setpwd($ctx):webapp_form
