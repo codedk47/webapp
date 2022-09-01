@@ -1221,7 +1221,7 @@ JS);
 			$t3->append('td', number_format($order['$1$0']));
 			$t4->append('td', number_format($order['$2$0'] * 0.01, 2));
 			$t5->append('td', number_format($order['$3$0'] * 0.01, 2));
-			$t6->append('td', sprintf('%0.1f%%', $order['$1$0'] / $order['$0'] * 100));
+			$t6->append('td', sprintf('%0.1f%%', $order['$0'] ? $order['$1$0'] / $order['$0'] * 100 : 0));
 
 			foreach ($days as $i)
 			{
@@ -1613,8 +1613,34 @@ JS);
 		$types = $this->webapp->mysql->unitsets->column('type', 'unit');
 
 
-		$table = $this->main->table($stat, function($table, $stat, $types, $price)
+		$order = $this->webapp->mysql(<<<SQL
+SELECT SUM(orders.order_fee) AS fee,accounts.unit AS unit
+FROM orders INNER JOIN (accounts) ON (accounts.uid=orders.notify_url)
+WHERE orders.pay_user=?i AND orders.status!="unpay"
+AND concat(left(orders.tym,4),"-",right(orders.tym,2),"-",lpad(orders.day,2,0))>=?s
+AND concat(left(orders.tym,4),"-",right(orders.tym,2),"-",lpad(orders.day,2,0))<=?s
+GROUP BY unit ORDER BY fee DESC
+SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
+
+
+		$count = [
+			'pv' => 0,
+			'ua' => 0,
+			'lu' => 0,
+			'ru' => 0,
+			'dc' => 0,
+			'ia' => 0,
+			'count' => 0,
+			'order' => 0
+		];
+		$table = $this->main->table($stat, function($table, $stat, $types, $price, $order) use(&$count)
 		{
+			$count['pv'] += $stat['pv'];
+			$count['ua'] += $stat['ua'];
+			$count['lu'] += $stat['lu'];
+			$count['ru'] += $stat['ru'];
+			$count['dc'] += $stat['dc'];
+			$count['ia'] += $stat['ia'];
 			$table->row();
 			$table->cell($stat['unit']);
 			$table->cell($types[$stat['unit']] ?? 'cpa');
@@ -1624,12 +1650,27 @@ JS);
 			$table->cell(number_format($stat['ru']));
 			$table->cell(number_format($stat['dc']));
 			$table->cell(number_format($stat['ia']));
-			$table->cell('-');
 			$table->cell(number_format($p = $price[$stat['unit']] ?? 0, 2));
-			$table->cell(number_format($stat['ia'] * $p, 2));
-		}, $types, $price);
-		$table->fieldset('单位', '类型', '浏览', '独立', '登录', '注册', '下载', '激活', '充值', '单价', '激活 x 单价');
-		$header = $table->header('单位成本结算');
+			$table->cell(number_format($c =$stat['ia'] * $p, 2));
+			$table->cell(number_format(($d = $order[$stat['unit']] ?? 0) * 0.01, 2));
+			$count['count'] += $c;
+			$count['order'] += $d;
+		}, $types, $price, $order);
+		$table->fieldset('单位', '类型', '浏览', '独立', '登录', '注册', '下载', '激活', '单价', '激活 x 单价', '充值');
+		$table->row()['style'] = 'background:lightblue';
+		$table->cell('合计');
+		$table->cell('-');
+		$table->cell(number_format($count['pv']));
+		$table->cell(number_format($count['ua']));
+		$table->cell(number_format($count['lu']));
+		$table->cell(number_format($count['ru']));
+		$table->cell(number_format($count['dc']));
+		$table->cell(number_format($count['ia']));
+		$table->cell('-');
+		$table->cell(number_format($count['count'], 2));
+		$table->cell(number_format($count['order'] * 0.01, 2));
+
+		$table->header('单位成本结算');
 		$table->bar->append('input', ['type' => 'date', 'value' => $start, 'onchange' => 'g({start:this.value})']);
 		$table->bar->append('span', ' - ');
 		$table->bar->append('input', ['type' => 'date', 'value' => $end, 'onchange' => 'g({end:this.value})']);
