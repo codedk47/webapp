@@ -396,12 +396,10 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 	function cookies(array|string $replace):static
 	{
 		foreach (is_string($replace)
-			? (preg_match_all('/([^=]+)=([^;]+);?/', $replace, $cookies, PREG_SET_ORDER) ? array_column($cookies, 2, 1) : [])
+			? (preg_match_all('/([^ =]+)=([^;]+);?/', $replace, $cookies, PREG_SET_ORDER) ? array_column($cookies, 2, 1) : [])
 			: $replace as $name => $value) {
-			if (strpbrk($name, "=,; \f\n\r\t\v") === FALSE)
-			{
-				$this->cookies[$name] = $value;
-			}
+			$this->cookies[$name] = $value;
+			
 		}
 		return $this;
 	}
