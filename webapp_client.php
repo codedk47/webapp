@@ -632,6 +632,39 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 	{
 		return (is_dir($dir = dirname($filename)) || mkdir($dir, recursive: TRUE)) && $this->to($filename);
 	}
+	function downm3u8(string $downdir, callable $rename = NULL):bool
+	{
+		do
+		{
+			$m3u8 = $this->content();
+			$path = preg_match('/^(\/[^\/]+){2,}/', $this->path) ? dirname($this->path) : '';
+			if (preg_match('/URI="([^"]+)/', $m3u8, $key))
+			{
+				if ($this->goto(preg_match('/^https?:\/\//i', $key[1]) ? $key[1] : "{$path}/{$key[1]}")->saveas("{$downdir}/keycode") === FALSE)
+				{
+					break;
+				}
+				$m3u8 = str_replace($key[0], 'URI="keycode', $m3u8);
+			}
+			$rename ??= fn($ts) => 'dx' . basename($ts, '.ts');
+			if (preg_match_all('/#EXTINF:[^\r\n]+\s+([^\r\n]+)/', $m3u8, $list))
+			{
+				foreach ($list[1] as $ts)
+				{
+					$name = $rename($ts);
+					if ($this->goto(preg_match('/^https?:\/\//i', $ts) ? $ts : "{$path}/{$ts}")->saveas("{$downdir}/{$name}"))
+					{
+						echo $ts," => {$name}\n";
+						continue;
+					}
+					break;
+				}
+				$m3u8 = preg_replace_callback('/(#EXTINF:[^\r\n]+\s+)([^\r\n]+)/', fn($m) => $m[1] . $rename($m[2]), $m3u8);
+			}
+			return file_put_contents("{$downdir}/play.m3u8", $m3u8) !== FALSE;
+		} while (FALSE);
+		return FALSE;
+	}
 	static function open(string $url, array $options = []):static
 	{
 		return ($http = new static($url, $options))->goto($http->path, $options);
