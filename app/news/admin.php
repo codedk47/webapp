@@ -559,7 +559,7 @@ class webapp_router_admin extends webapp_echo_html
 				'onclick' => 'return confirm(`Delete Resource ${this.dataset.hash}`)',
 				'data-hash' => $res['hash']]);
 			$table->cell()->append('a', [$res['hash'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
-			$table->cell(date('Y-m-d', $res['time']));
+			$table->cell(date('Y-m-d\\TH:i:s', $res['time']));
 			$table->cell(date('G:i:s', $res['duration'] + 57600));
 			$table->cell($type[$res['type']]);
 			$data = json_decode($res['data'], TRUE)[$this->webapp->site] ?? [];

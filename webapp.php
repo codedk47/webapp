@@ -483,8 +483,44 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		return iconv_strlen($text, $this['app_charset']);
 	}
 	//---------------------
+	function maskfile(string $src, string $dst):bool
+	{
+		$bin = random_bytes(8);
+		$key = array_map(ord(...), str_split($bin));
+		$buffer = file_get_contents($src);
+		$length = strlen($buffer);
+		for ($i = 0; $i < $length; ++$i)
+		{
+			$buffer[$i] = chr(ord($buffer[$i]) ^ $key[$i % 8]);
+		}
+		return file_put_contents($dst, $bin . $buffer) === $length + 8;
+	}
+	static function maskdata(string $origin)
+	{
+		$bin = static::random(8);
+		$key = array_map(ord(...), str_split($bin));
+		$length = strlen($origin);
+		for ($i = 0; $i < $length; ++$i)
+		{
+			$origin[$i] = chr(ord($origin[$i]) ^ $key[$i % 8]);
+		}
 
+		$key = array_map(ord(...), str_split($bin));
+		for ($i = 0; $i < $length; ++$i)
+		{
+			$origin[$i] = chr(ord($origin[$i]) ^ $key[$i % 8]);
+		}
 
+		var_dump($origin);
+	}
+	function maskfile1(string $source, string $output)
+	{
+
+	}
+	function unmasker():string
+	{
+		return '';
+	}
 
 	//----------------
 	function open(string $url, array $options = []):webapp_client_http
