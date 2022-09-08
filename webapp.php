@@ -226,6 +226,34 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	// {
 	// 	return preg_match_all('/[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]|\xe0[\xa0-\xbf][\x80-\xbf]|[\xe1-\xef][\x80-\xbf][\x80-\xbf]|\xf0[\x90-\xbf][\x80-\xbf][\x80-\xbf]|[\xf1-\xf7][\x80-\xbf][\x80-\xbf][\x80-\xbf]/', $content, $pattern) === FALSE ? [] : $pattern[0];
 	// }
+	static function maskdata(string $origin):string
+	{
+		$bin = static::random(8);
+		$key = array_map(ord(...), str_split($bin));
+		$length = strlen($origin);
+		for ($i = 0; $i < $length; ++$i)
+		{
+			$origin[$i] = chr(ord($origin[$i]) ^ $key[$i % 8]);
+			// $origin[$i] = chr(($k = ord($origin[$i])) ^ $key[$i % 8]);
+			// $key[$i % 8] = $k;
+		}
+		return $bin . $origin;
+	}
+	static function maskfile(string $source, string $output):bool
+	{
+		return file_put_contents($output, static::maskdata($buffer = file_get_contents($source))) === strlen($buffer) + 8;
+	}
+	static function unmasker(string $masked):string
+	{
+		$key = array_map(ord(...), str_split(substr($masked, 0, 8)));
+		$length = strlen($buffer = substr($masked, 8));
+		for ($i = 0; $i < $length; ++$i)
+		{
+			$buffer[$i] = chr(ord($buffer[$i]) ^ $key[$i % 8]);
+			//$buffer[$i] = chr($key[$i % 8] = ord($buffer[$i]) ^ $key[$i % 8]);
+		}
+		return $buffer;
+	}
 	function __construct(array $config = [], private readonly webapp_io $io = new webapp_stdio)
 	{
 		[$this->webapp, $this->configs] = [$this, $config + [
@@ -483,44 +511,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		return iconv_strlen($text, $this['app_charset']);
 	}
 	//---------------------
-	function maskfile(string $src, string $dst):bool
-	{
-		$bin = random_bytes(8);
-		$key = array_map(ord(...), str_split($bin));
-		$buffer = file_get_contents($src);
-		$length = strlen($buffer);
-		for ($i = 0; $i < $length; ++$i)
-		{
-			$buffer[$i] = chr(ord($buffer[$i]) ^ $key[$i % 8]);
-		}
-		return file_put_contents($dst, $bin . $buffer) === $length + 8;
-	}
-	static function maskdata(string $origin)
-	{
-		$bin = static::random(8);
-		$key = array_map(ord(...), str_split($bin));
-		$length = strlen($origin);
-		for ($i = 0; $i < $length; ++$i)
-		{
-			$origin[$i] = chr(ord($origin[$i]) ^ $key[$i % 8]);
-		}
 
-		$key = array_map(ord(...), str_split($bin));
-		for ($i = 0; $i < $length; ++$i)
-		{
-			$origin[$i] = chr(ord($origin[$i]) ^ $key[$i % 8]);
-		}
-
-		var_dump($origin);
-	}
-	function maskfile1(string $source, string $output)
-	{
-
-	}
-	function unmasker():string
-	{
-		return '';
-	}
 
 	//----------------
 	function open(string $url, array $options = []):webapp_client_http
