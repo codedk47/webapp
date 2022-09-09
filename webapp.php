@@ -239,10 +239,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return $bin . $origin;
 	}
-	static function maskfile(string $source, string $output):bool
-	{
-		return file_put_contents($output, static::maskdata($buffer = file_get_contents($source))) === strlen($buffer) + 8;
-	}
+	// static function maskfile(string $source, string $output):bool
+	// {
+	// 	return file_put_contents($output, static::maskdata($buffer = file_get_contents($source))) === strlen($buffer) + 8;
+	// }
 	static function unmasker(string $masked):string
 	{
 		$key = array_map(ord(...), str_split(substr($masked, 0, 8)));
