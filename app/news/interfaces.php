@@ -822,10 +822,17 @@ class interfaces extends webapp
 			{
 				if ((isset($data['random'], $data['answer'])
 					&& is_string($data['random'])
-					&& is_string($data['answer'])
-					&& $this->captcha_verify($data['random'], $data['answer'])) === FALSE) {
-					$error = '验证码无效或者过期';
+					&& is_string($data['answer'])) === FALSE) {
+					$error = '缺少认证信息';
 					break;
+				}
+				if ($data['random'] !== 'android')
+				{
+					if ($this->captcha_verify($data['random'], $data['answer']) === FALSE)
+					{
+						$error = '验证码无效或者过期';
+						break;
+					}
 				}
 				$phone = NULL;
 				if (isset($data['did']) && is_string($data['did']))

@@ -1309,6 +1309,7 @@ JS);
 			}
 			if (is_numeric($order['pay_user']) && strlen($order['notify_url']) === 10)
 			{
+				//内部通知
 				if (preg_match('/(E|B)(\d{8})(\d+)/', $order['order_no'], $goods)
 					&& $this->webapp->mysql->sync(fn() =>
 						$this->webapp->mysql->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->update(...match ($goods[1])
@@ -1343,7 +1344,25 @@ JS);
 				$error = '内部通知失败！';
 				break;
 			}
-			//外部通知
+			else
+			{
+				//外部通知
+				if (webapp_router_pay::callback($order, $result, $response))
+				{
+					return $this->okay("?admin/orders,search:{$order['hash']}");
+				}
+				else
+				{
+					$responses = [];
+					foreach ($response as $name => $value)
+					{
+						$responses[] = $name ? "{$name}: {$value}" : $value;
+					}
+					return $this->main->append('pre', join("\n", $responses) . "\n\n{$result}");
+					//echo 123;
+				}
+				//var_dump(webapp_router_pay::callback($order, $result));
+			}
 			$error = '外部通知失败！';
 		} while (0);
 		$this->warn($error);

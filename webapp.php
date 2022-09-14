@@ -480,11 +480,11 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 				? (is_bool($replace[$key]) ? $carry : "{$carry},{$key}:{$replace[$key]}")
 				: "{$carry},{$key}", $router ?? strstr("?{$this['request_query']},", ',', TRUE));
 	}
-	function admin(?string $signature = NULL):array
+	function admin(?string $signature = NULL, bool $permanent = FALSE):array
 	{
 		return static::authorize(func_num_args() ? $signature : $this->request_cookie($this['admin_cookie']),
 			fn(string $username, string $password, int $signtime, string $additional):array =>
-				$signtime > static::time(-$this['admin_expire'])
+				($permanent || $signtime > static::time(-$this['admin_expire']))
 				&& $username === $this['admin_username']
 				&& $password === $this['admin_password']
 					? [$username, $password, $additional] : []);

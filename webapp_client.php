@@ -546,10 +546,10 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 		$this->clear();
 		return FALSE;
 	}
-	// function status():int
-	// {
-	// 	return $this->response ? intval(substr($this[0], 9)) : 0;
-	// }
+	function status(?array &$response):int
+	{
+		return ($response = $this->response) ? intval(substr($this[0], 9)) : 0;
+	}
 	function then(Closure $success, Closure $failure = NULL):static
 	{
 		#look then like that promise
@@ -652,7 +652,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 				foreach ($list[1] as $ts)
 				{
 					$name = $rename($ts);
-					if ($this->goto(preg_match('/^https?:\/\//i', $ts) ? $ts : "{$path}/{$ts}")->saveas("{$downdir}/{$name}"))
+					if (is_file($filename = "{$downdir}/{$name}") || $this->goto(preg_match('/^https?:\/\//i', $ts) ? $ts : "{$path}/{$ts}")->saveas($filename))
 					{
 						echo $ts," => {$name}\n";
 						continue;

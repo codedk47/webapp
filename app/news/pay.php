@@ -374,8 +374,8 @@ final class webapp_pay_cj implements webapp_pay
 			}
 			$query[] = "key={$this->ctx['key']}";
 			//var_dump(join('&', $query));
-			$private = 'MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMaS/D3G2o3bxH66sCxoe6FXnpE7HiNyLWJXsvPxK0XbsEWjSgHchiKB5uDiUeM4oc4G+ZCPTgCOjgg5uA8SGpl5YlEdla+TFvhALu4YDD91SM5l6mTRaIBej0o6p0mfchliRlEWZi+r/uVvB+eZ8T6tEeY3QT87hUfXcM7sMna3AgMBAAECgYEAjCjfZfNf/FUsoo6/Hvk4mi8wOy5RHY/PvORN6aVGd+6SwvR4nku7Wcv63KyiRBGLE9MUgBbGZdo5IlErO2f54S3Pwnc1FqBi01q9ZJylrZRt6BHYoXcSS3OiKQMK1bqAZWn1md/EhSNAP/0bLtimo/uP/8Mmm9jcH4pn9Y2qcuECQQD8x0HW9PHhm100QlnkVxjscPNy9bNsHjm9lYRpUaawgB3uKwq97Kr5IswirKOT6C9bSTvlGIjfkRiiO6qCMwI/AkEAyRrgIWKl/7S4RPo1KGTnWD6wSCrPWSkZ5BL+cqVE3foNMbOtB71q7sxdI8jU5fCjuQ08zePfaiebE71ZgtL9iQJAcJBKwW5SSCTnXF4vqX8fmiqyPn8rZvoOvF3YmQ3DLNXgfi6smebKPCdCwC4gqby7WetCwMIsMWJrldL8Gv6cAQJAEtzNdvQsw74spnOddst4E4PVvv8c8az0O7s4WIJ94iApCqdirF4s4HcUqV2V8ndOs/W05U7hTrCmUASrl6S4mQJBALVOSzDSM7/qfEDnTRCWKEOINFBZihlmw4rqTXuesNIqpcthaBx7Y3GUjP2y6Q9Urb34yXPXoFlQtLvVKc6kF40=';
-			//$private = 'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKVtTmAGsTcsA7f7pNQLIedFhPRshXtpwYn3AVjxwGOzSxyduFO9LZOUbo5sXVQsO8UVPtYsoznnTnvUJtViuyZheR59b66+FpIDUFN8JUePneb2S04zOgrkX+7wCIbMlsTKgRnXz4UMZ2eQIW5op30VKSKe9TbQrq/J6pyxJXcTAgMBAAECgYB5n/vXrhPtNHcndeSh4e1zVDGEY6VgL0kUXn6nHlcM9m1rBKrZJmWz85W1MQcNM9hd9ljUrszzbZTOhhRnHsfpKR9YjzTioFh0SmTvH08rJD+KS1zgcz3NHzrsrKrxHWpNgT71HSz691loCBSWx+ieRPk5mpr1QPQut02+p+SmAQJBANfFErwrCPvdMy9HxCfLim4Mrs6s/XCBDMk20yDlIQF8eRRd901ZSDKGZKkydnsB1CwE4Rm2F5DxAUrMrghJrjMCQQDERVCTgVVFdZLWcxvTBVA36PRuTnkjeG1wbD5oypOcSbbjFR4OVv8nuPniJgRQxN4Cu0d+QHDAGDdh74duOnOhAkA/EI/IRb/LdbynHg+8HeapAbX6HF+7CU0GZqrQ24eJGqt9A3XruqO6eMNlHKW6kC9GamqsjCdZKsfY5/gZ3gc3AkEAt64642C1gcSvv/yH/KvLUBe2sYjFO9nXadATdBSpoikmfExmDXuDXRRy3x8/CKvFLf9AwDnkixHeusvlDdasIQJARsg+8DCmPTMS2laj56UxMezC3kGzPRhot2LG9eWhj61g9+00HFozb+3TEiUMIjPjQWcQU7vBJROJ9WmWR1oT7Q==';
+			//$private = 'MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMaS/D3G2o3bxH66sCxoe6FXnpE7HiNyLWJXsvPxK0XbsEWjSgHchiKB5uDiUeM4oc4G+ZCPTgCOjgg5uA8SGpl5YlEdla+TFvhALu4YDD91SM5l6mTRaIBej0o6p0mfchliRlEWZi+r/uVvB+eZ8T6tEeY3QT87hUfXcM7sMna3AgMBAAECgYEAjCjfZfNf/FUsoo6/Hvk4mi8wOy5RHY/PvORN6aVGd+6SwvR4nku7Wcv63KyiRBGLE9MUgBbGZdo5IlErO2f54S3Pwnc1FqBi01q9ZJylrZRt6BHYoXcSS3OiKQMK1bqAZWn1md/EhSNAP/0bLtimo/uP/8Mmm9jcH4pn9Y2qcuECQQD8x0HW9PHhm100QlnkVxjscPNy9bNsHjm9lYRpUaawgB3uKwq97Kr5IswirKOT6C9bSTvlGIjfkRiiO6qCMwI/AkEAyRrgIWKl/7S4RPo1KGTnWD6wSCrPWSkZ5BL+cqVE3foNMbOtB71q7sxdI8jU5fCjuQ08zePfaiebE71ZgtL9iQJAcJBKwW5SSCTnXF4vqX8fmiqyPn8rZvoOvF3YmQ3DLNXgfi6smebKPCdCwC4gqby7WetCwMIsMWJrldL8Gv6cAQJAEtzNdvQsw74spnOddst4E4PVvv8c8az0O7s4WIJ94iApCqdirF4s4HcUqV2V8ndOs/W05U7hTrCmUASrl6S4mQJBALVOSzDSM7/qfEDnTRCWKEOINFBZihlmw4rqTXuesNIqpcthaBx7Y3GUjP2y6Q9Urb34yXPXoFlQtLvVKc6kF40=';
+			$private = 'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAKVtTmAGsTcsA7f7pNQLIedFhPRshXtpwYn3AVjxwGOzSxyduFO9LZOUbo5sXVQsO8UVPtYsoznnTnvUJtViuyZheR59b66+FpIDUFN8JUePneb2S04zOgrkX+7wCIbMlsTKgRnXz4UMZ2eQIW5op30VKSKe9TbQrq/J6pyxJXcTAgMBAAECgYB5n/vXrhPtNHcndeSh4e1zVDGEY6VgL0kUXn6nHlcM9m1rBKrZJmWz85W1MQcNM9hd9ljUrszzbZTOhhRnHsfpKR9YjzTioFh0SmTvH08rJD+KS1zgcz3NHzrsrKrxHWpNgT71HSz691loCBSWx+ieRPk5mpr1QPQut02+p+SmAQJBANfFErwrCPvdMy9HxCfLim4Mrs6s/XCBDMk20yDlIQF8eRRd901ZSDKGZKkydnsB1CwE4Rm2F5DxAUrMrghJrjMCQQDERVCTgVVFdZLWcxvTBVA36PRuTnkjeG1wbD5oypOcSbbjFR4OVv8nuPniJgRQxN4Cu0d+QHDAGDdh74duOnOhAkA/EI/IRb/LdbynHg+8HeapAbX6HF+7CU0GZqrQ24eJGqt9A3XruqO6eMNlHKW6kC9GamqsjCdZKsfY5/gZ3gc3AkEAt64642C1gcSvv/yH/KvLUBe2sYjFO9nXadATdBSpoikmfExmDXuDXRRy3x8/CKvFLf9AwDnkixHeusvlDdasIQJARsg+8DCmPTMS2laj56UxMezC3kGzPRhot2LG9eWhj61g9+00HFozb+3TEiUMIjPjQWcQU7vBJROJ9WmWR1oT7Q==';
 			$key = openssl_pkey_get_private("-----BEGIN PRIVATE KEY-----\n" . chunk_split($private, 64, "\n") . "-----END PRIVATE KEY-----\n");
 			if ($key === FALSE
 				|| openssl_sign(strtoupper(md5(join('&', $query))), $sign, $key, OPENSSL_ALGO_SHA256) === FALSE) {
@@ -457,14 +457,15 @@ final class webapp_router_pay extends webapp_echo_xml
 
 		while ($form->fetch($order, $error))
 		{
+
 			//授权认证（现在使用webapp内部认证。以后公开后另外使用）
-			if (empty($auth = $this->webapp->admin($order['pay_auth'])))
+			if (empty($auth = $this->webapp->admin($order['pay_auth'], TRUE)))
 			{
 				$error = '支付认证失败！';
 				break;
 			}
 			//这里正对内部订单
-			$order['pay_user'] = intval($auth[2]);
+			$order['pay_user'] = $auth[2];
 
 			[$order['pay_name'], $order['pay_type']] = explode('@', $order['pay_type']);
 			if (array_key_exists($order['pay_name'], $this->webapp['app_pay']) === FALSE
@@ -581,6 +582,21 @@ final class webapp_router_pay extends webapp_echo_xml
 				&& $this->webapp->call('saveUser', $this->webapp->account_xml($this->webapp->mysql
 					->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->array()))
 			);
+	}
+	static function callback(array $order, ?string &$result, ?array &$response):bool
+	{
+		$client = webapp_client_http::open($order['notify_url'], [
+			'method' => 'POST',
+			'type' => 'application/json',
+			'data' => [
+				'order_id' => $order['hash'],
+				'order_no' => $order['order_no'],
+				'trade_no' => $order['trade_no'],
+				'order_fee' => $order['order_fee'],
+				'actual_fee' => $order['actual_fee'],
+			]]);
+		$client->status($response);
+		return str_contains(strtoupper($result = $client->content('text')), 'SUCCESS');
 	}
 	function notify(string $name, $result)
 	{
