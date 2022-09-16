@@ -357,14 +357,22 @@ window.addEventListener('DOMContentLoaded', async function()
 		}
 		if (unauthorized)
 		{
-			await loader(`${entry}?register`, {headers}, 'text/plain').then(render).then(() => new Promise(async resolve => top.resolve = resolve)).then(account =>
+			await loader(`${entry}?api/register`, {headers, method: 'POST', body: '{"random":"random","answer":"answer"}'}, 'application/json').then(result =>
 			{
-				console.log('register', account);
-				localStorage.setItem('account', account.signature);
+				if (result.code === 200 && result.data.signature)
+				{
+					localStorage.setItem('account', result.data.signature);
+				}
 			});
+
+			// await loader(`${entry}?register`, {headers}, 'text/plain').then(render).then(() => new Promise(async resolve => top.resolve = resolve)).then(account =>
+			// {
+			// 	console.log('register', account);
+			// 	localStorage.setItem('account', account.signature);
+			// });
 		}
-		// if (localStorage.getItem('account'))
-		// {
+		if (localStorage.getItem('account'))
+		{
 			document.cookie = `account=${localStorage.getItem('account')}`;
 			initreq.Authorization = headers.Authorization = `Bearer ${localStorage.getItem('account')}`;
 			initreq['Account-Init'] = 1;
@@ -374,10 +382,10 @@ window.addEventListener('DOMContentLoaded', async function()
 			//window.addEventListener('popstate', event => console.log(event));
 			top.init && top.init(localStorage.getItem('account'));
 			resolve();
-		// }
-		// else
-		// {
-		// 	alert('Unauthorized');
-		// }
+		}
+		else
+		{
+			alert('Unauthorized');
+		}
 	})).then(() => loader(log(frame.dataset.query), {headers: initreq}, 'text/plain').then(render));
 });
