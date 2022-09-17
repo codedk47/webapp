@@ -253,4 +253,9 @@ class ffmpeg
 			&& $this($option, "-hls_key_info_file \"{$keyinfo}\"", "-hls_segment_filename \"{$dirname}/dx%04d\" \"{$dirname}/play.m3u8\"") === 0
 			&& unlink($keyinfo);
 	}
+	//m3u8转化mp4
+	static function m3u8convert(string $src, string $dst):bool
+	{
+		return static::exec(sprintf('-i %s -c copy -bsf:a aac_adtstoasc %s', $src, $dst)) === 0;
+	}
 }
