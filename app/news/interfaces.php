@@ -244,6 +244,13 @@ class interfaces extends webapp
 	{
 		// var_dump($this->site = 0);
 		// var_dump($this->accountsss('nNKiKkHCJKINcy_Ygq5179NWRWAsG_T-ulL6-enTb0gfYwLqgsUMRmY9b4cg8RSbzw8', $acc), $acc);
+		$resources = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND sync="finished" AND FIND_IN_SET("HJSQ",tags)', $this->site);
+		foreach ($resources as $res)
+		{
+
+			$this->resource_xml($res);
+
+		}
 	}
 	function unitincr(string $uint, string $date, array $incr):bool
 	{
@@ -644,18 +651,6 @@ class interfaces extends webapp
 		foreach ($resources as $resource)
 		{
 			$this->resource_xml($resource);
-		}
-	}
-	function get_mdsq()
-	{
-		$resources = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND sync="finished" AND FIND_IN_SET("MDSQ",tags)', $this->site);
-		foreach ($resources as $res)
-		{
-			echo "md E:\\mdsq\\{$res['hash']}\n";
-			echo "copy /y D:\\mdsq\\{$res['hash']}\\cover.jpg E:\\mdsq\\{$res['hash']}\\cover.jpg\n";
-			echo "\"D:\\wmhp\\work\\webapp\\lib\\ffmpeg\\ffmpeg\" -allowed_extensions ALL -i \"D:/mdsq/{$res['hash']}/play.m3u8\" -c copy -bsf:a aac_adtstoasc \"E:/mdsq/{$res['hash']}/{$res['name']}.mp4\"\n";
-			//$this->resource_xml($resource);
-
 		}
 	}
 	//标签
