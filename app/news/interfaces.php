@@ -242,10 +242,15 @@ class interfaces extends webapp
 	}
 	function get_test(int $page = 1)
 	{
-		$this->site = 0;
-		$this->xml = $this->xml("<?xml version='1.0' encoding='{$this['app_charset']}'?><webapp/>");
 		// var_dump($this->site = 0);
 		// var_dump($this->accountsss('nNKiKkHCJKINcy_Ygq5179NWRWAsG_T-ulL6-enTb0gfYwLqgsUMRmY9b4cg8RSbzw8', $acc), $acc);
+
+
+
+
+		
+		$this->app('webapp_echo_xml')->xml->setattr(['site' => $this->site = 0]);
+		$this->xml = $this->app->xml;
 		$resources = $this->mysql->resources('WHERE sync="finished" AND FIND_IN_SET("HJSQ",tags) ORDER BY time ASC');
 		foreach ($resources->paging($page, 2000) as $res)
 		{
