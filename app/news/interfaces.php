@@ -240,12 +240,12 @@ class interfaces extends webapp
 		return boolval($account = $this->authorize($signature, fn(string $uid, string $pwd):array
 			=> $this->mysql->accounts('WHERE site=?i AND uid=?s AND pwd=?s LIMIT 1', $this->site, $uid, $pwd)->array()));
 	}
-	function get_test()
+	function get_test(int $page = 1)
 	{
 		// var_dump($this->site = 0);
 		// var_dump($this->accountsss('nNKiKkHCJKINcy_Ygq5179NWRWAsG_T-ulL6-enTb0gfYwLqgsUMRmY9b4cg8RSbzw8', $acc), $acc);
-		$resources = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND sync="finished" AND FIND_IN_SET("HJSQ",tags)', $this->site);
-		foreach ($resources as $res)
+		$resources = $this->mysql->resources('WHERE sync="finished" AND FIND_IN_SET("HJSQ",tags) ORDER BY time ASC');
+		foreach ($resources->paging($page, 2000) as $res)
 		{
 
 			$this->resource_xml($res);
