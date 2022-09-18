@@ -245,13 +245,12 @@ class interfaces extends webapp
 		// var_dump($this->site = 0);
 		// var_dump($this->accountsss('nNKiKkHCJKINcy_Ygq5179NWRWAsG_T-ulL6-enTb0gfYwLqgsUMRmY9b4cg8RSbzw8', $acc), $acc);
 		$resources = $this->mysql->resources('WHERE sync="finished" AND FIND_IN_SET("HJSQ",tags) ORDER BY time ASC');
-		print_r($resources);
-		// foreach ($resources->paging($page, 2000) as $res)
-		// {
+		foreach ($resources->paging($page, 2000) as $res)
+		{
 
-		// 	$this->resource_xml($res);
+			$this->resource_xml($res);
 
-		// }
+		}
 	}
 	function unitincr(string $uint, string $date, array $incr):bool
 	{
