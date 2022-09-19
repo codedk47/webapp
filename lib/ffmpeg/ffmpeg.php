@@ -254,8 +254,14 @@ class ffmpeg
 			&& unlink($keyinfo);
 	}
 	//m3u8转化mp4
-	static function m3u8convert(string $src, string $dst):bool
+	static function m3u8convert(string $src, string $dst, array $headerset = []):bool
 	{
-		return static::exec(sprintf('-i %s -c copy -bsf:a aac_adtstoasc %s', $src, $dst)) === 0;
+		$headers = [];
+		foreach ($headerset as $name => $value)
+		{
+			$headers[] = addslashes("{$name}: {$value}");
+		}
+		return static::exec(sprintf('%s-i "%s" -c copy -bsf:a aac_adtstoasc "%s"',
+			$headers ? '-headers "' . join('\r\n', $headers) . '" ' : '', $src, $dst)) === 0;
 	}
 }
