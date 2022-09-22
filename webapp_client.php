@@ -22,12 +22,16 @@ class webapp_client implements Stringable, Countable
 {
 	public array $errors = [];
 	protected readonly int $timeout, $flags;
-	private $filter, $buffer, $client;
+	private $ssl, $filter, $buffer, $client;
 	function __construct(public readonly string $socket, array $options = [])
 	{
 		$this->timeout = $options['timeout'] ?? 4;
 		$this->flags = $options['flags'] ?? STREAM_CLIENT_CONNECT;
 		$this->buffer = fopen('php://memory', 'r+');
+		$this->ssl = $options['ssl'] ?? [
+			'verify_peer' => FALSE,
+			'verify_peer_name' => FALSE,
+			'allow_self_signed' => TRUE];
 		$this->reconnect();
 	}
 	function __destruct()
@@ -73,10 +77,7 @@ class webapp_client implements Stringable, Countable
 		{
 			//var_dump("reconnect");
 			if (is_resource($client = @stream_socket_client($this->socket, $erron, $error,
-				$this->timeout, $this->flags, stream_context_create(['ssl' => [
-					'verify_peer' => FALSE,
-					'verify_peer_name' => FALSE,
-					'allow_self_signed' => TRUE]])))
+				$this->timeout, $this->flags, stream_context_create(['ssl' => $this->ssl])))
 				&& fwrite($client, '') === 0) {
 				$this->client = $client;
 				//var_dump( fwrite($client, '') );
@@ -622,9 +623,11 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 			'application/xml' => class_exists('webapp_xml', FALSE)
 				? new webapp_xml((string)$this)
 				: new SimpleXMLElement((string)$this),
-			'text/html' => class_exists('webapp_implementation', FALSE)
-				? (($doc = new webapp_implementation)->loadHTML((string)$this) ? $doc->xml : (string)$this)
-				: (($doc = new DOMDocument)->loadHTML((string)$this, LIBXML_NOWARNING | LIBXML_NOERROR) ? simplexml_import_dom($doc) : (string)$this),
+			'text/html' => is_string($fix = preg_replace('/<meta\s+charset=([\'"])([^\1]+)\1[^>]*>/i', #<--fix import html charset not recognized
+				'<meta http-equiv="Content-Type" content="text/html; charset=\2">',
+				(string)$this, 1)) && class_exists('webapp_implementation', FALSE)
+				? (($doc = new webapp_implementation)->loadHTML($fix) ? $doc->xml : $fix)
+				: (($doc = new DOMDocument)->loadHTML($fix, LIBXML_NOWARNING | LIBXML_NOERROR) ? simplexml_import_dom($doc) : $fix),
 			default => (string)$this
 		};
 	}
