@@ -248,7 +248,10 @@ window.addEventListener('DOMContentLoaded', async function()
 	new Promise(resolve =>
 	{
 		if (window.name) return resolve();
-		logs.push('?home/home');
+		if (frame.dataset.query == '')
+		{
+			frame.dataset.query = '?home/home';
+		}
 		loader(`${entry}?api/screen`, {headers}, 'application/json').then(screen =>
 		{
 			if (screen.data === null) return resolve(window.name = 'app');
