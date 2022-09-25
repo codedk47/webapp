@@ -229,7 +229,7 @@ window.addEventListener('DOMContentLoaded', async function()
 	}
 	if (frame.dataset.query.length === 0)
 	{
-		frame.dataset.query = logs[logs.length - 1] || '';
+		frame.dataset.query = window.name ? (logs[logs.length - 1] || '') : '?home/home';
 	}
 	window.addEventListener('message', event =>
 	{
@@ -248,11 +248,6 @@ window.addEventListener('DOMContentLoaded', async function()
 	new Promise(resolve =>
 	{
 		if (window.name) return resolve();
-		console.log(frame.dataset.query)
-		if (frame.dataset.query.length === 0)
-		{
-			frame.dataset.query = '?home/home';
-		}
 		loader(`${entry}?api/screen`, {headers}, 'application/json').then(screen =>
 		{
 			if (screen.data === null) return resolve(window.name = 'app');
