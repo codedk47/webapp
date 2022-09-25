@@ -248,7 +248,8 @@ window.addEventListener('DOMContentLoaded', async function()
 	new Promise(resolve =>
 	{
 		if (window.name) return resolve();
-		if (frame.dataset.query == '')
+		console.log(frame.dataset.query)
+		if (frame.dataset.query.length === 0)
 		{
 			frame.dataset.query = '?home/home';
 		}
