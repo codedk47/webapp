@@ -267,7 +267,7 @@ window.addEventListener('DOMContentLoaded', async function()
 					resolve(window.name = 'app');
 				}
 			};
-			fdiv.textContent = '正在进入';
+			//fdiv.textContent = '正在进入';
 			fdiv.appendChild(ftxt);
 			fdoc.onclick = event =>
 			{
@@ -298,15 +298,15 @@ window.addEventListener('DOMContentLoaded', async function()
 				margin: -2rem;
 			}
 			div{
-				width: 80%;
+				width: 4rem;
 				position: fixed;
-				left: 0;
+				top: 1rem;
 				right: 0;
-				bottom: 10%;
+				
 				margin: 0 auto;
 				padding: 1rem .4rem;
 				box-shadow: 0 .5rem 2rem rgb(27, 31, 35);
-				border-radius: .6rem;
+				border-radius: .6rem 0 0 .6rem;
 				overflow: hidden;
 				z-index: 1;
 				font-family: consolas, monospace;
