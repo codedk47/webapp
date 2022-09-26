@@ -15,6 +15,8 @@ customElements.define('webapp-video', class extends HTMLElement
 	#playdata;
 	#playtime = 0;
 	#toggleplay = document.createElement('div');
+	#limitstart = 0;
+	#limitend = NaN;
 	constructor()
 	{
 		super();
@@ -140,6 +142,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		//this.hasAttribute('weblive');
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
+		//this.#preview = this.dataset.preview ? this.dataset.preview.split(',')
 		this.appendChild(this.#video);
 		if (this.#video.controls = this.hasAttribute('controls'))
 		{
@@ -148,29 +151,42 @@ customElements.define('webapp-video', class extends HTMLElement
 		if (this.#load = this.dataset.load)
 		{
 			this.#require = this.dataset.require;
+			if (this.dataset.preview)
+			{
+				[this.#limitstart, this.#limitend] = this.dataset.preview.split(',').map(parseFloat);
+				this.#limitend += this.#limitstart;
+			}
 			loader(`${this.#load}/cover`, null, 'application/octet-stream').then(blob => this.#video.poster = URL.createObjectURL(blob));
 			loader(`${this.#load}/play`, null, 'text/plain').then(data =>
 			{
-				const m3u8 = data.split('\n');
-				for (let i = 0; i < m3u8.length; ++i)
+				const playlist = [], m3u8 = data.match(/#[^#]+/g);
+				for (let duration = 0, i = 0; i < m3u8.length; ++i)
 				{
-					switch (true)
+					if (m3u8[i].startsWith('#EXTINF'))
 					{
-						case m3u8[i].startsWith('#EXT-X-KEY'):
-							if (/URI="(?!http:\/\/)[^"]+"/.test(m3u8[i]))
+						let pattern;
+						if (duration !== null && (pattern = m3u8[i].match(/#EXTINF:(\d+(?:\.\d+))\,\s*([^\n]+)/)))
+						{
+							duration += parseFloat(pattern[1]);
+							if (duration >= this.#limitstart)
 							{
-								m3u8[i] = m3u8[i].replace(/URI="([^"]+)"/, `URI="${this.#load}/$1"`);
+								playlist[playlist.length] = /^(?!http:\/\/)/.test(pattern[2])
+									? pattern[0].replace(pattern[2], `${this.#load}/${pattern[2]}`) : pattern[0];
+								if (duration > this.#limitend)
+								{
+									duration = null;
+								}
 							}
-							break;
-						case m3u8[i].startsWith('#EXTINF'):
-							if (/^(?!http:\/\/)/.test(m3u8[++i]))
-							{
-								m3u8[i] = `${this.#load}/${m3u8[i]}`;
-							}
-							break;
+						}
 					}
+					else
+					{
+						playlist[playlist.length] = (m3u8[i].startsWith('#EXT-X-KEY')
+							? m3u8[i].replace(/URI="([^"]+)"/, `URI="${this.#load}/$1"`) : m3u8[i]).trimEnd();
+					}
+					
 				}
-				this.#open(m3u8.join('\n'));
+				this.#open(playlist.join('\n'));
 			});
 		}
 	}
