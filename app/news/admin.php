@@ -396,7 +396,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(number_format($tag['count']));
 			$table->cell(number_format($tag['click']));
 			$table->cell($tag['seat']);
-			$table->cell()->append('a', [$tag['name'], 'href' => "?admin/resources,search:{$tag['hash']}"]);
+			$table->cell()->append('a', [$tag['name'], 'href' => "?admin/resources,tag:{$tag['hash']}"]);
 			$table->cell($tag['alias']);
 		});
 		$table->fieldset('❌', 'hash', 'time', 'level', 'count', 'click', 'seat', 'name', 'alias');
@@ -513,16 +513,13 @@ class webapp_router_admin extends webapp_echo_html
 			$sync = $this->webapp->query['sync'] ?? 'finished'];
 		if (is_string($search))
 		{
-			if (strlen($search) === 4 && trim($search, webapp::key) === '')
-			{
-				$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
-				$cond[] = $search;
-			}
-			else
-			{
-				$cond[0] .= ' AND (hash=?s or data->>\'$."?i".name\' like ?s)';
-				array_push($cond, $search = urldecode($search), $this->webapp->site, "%{$search}%");
-			}
+			$cond[0] .= ' AND (hash=?s or data->>\'$."?i".name\' like ?s)';
+			array_push($cond, $search = urldecode($search), $this->webapp->site, "%{$search}%");
+		}
+		if (strlen($tag = $this->webapp->query['tag'] ?? ''))
+		{
+			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+			$cond[] = $tag;
 		}
 		if (strlen($type = $this->webapp->query['type'] ?? ''))
 		{
@@ -578,7 +575,7 @@ class webapp_router_admin extends webapp_echo_html
 		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
-		$table->bar->select(['' => '全部标签'] + $this->webapp->selecttags())->setattr(['onchange' => 'g({search:this.value===""?null:this.value})'])->selected($search ?? '');
+		$table->bar->select(['' => '全部标签'] + $this->webapp->selecttags())->setattr(['onchange' => 'g({tag:this.value===""?null:this.value})'])->selected($tag);
 		$table->bar->select(['' => '全部类型'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select([
 			'' => '任何要求',
