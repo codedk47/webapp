@@ -409,9 +409,11 @@ class webapp_router_admin extends webapp_echo_html
 	function form_resource($ctx):webapp_form
 	{
 		$form = new webapp_form($ctx);
-		$form->fieldset('封面图片');
+		$form->fieldset('封面图片 / 类型 / 预览');
 		$form->field('piccover', 'file');
 		$form->field('type', 'select', ['options' => $this->webapp['app_restype']]);
+		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1]);
+		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1]);
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
@@ -1411,17 +1413,59 @@ JS);
 				$this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $onoff)->update('keep=IF(keep="on","off","on")');
 			}
 		}
-		$table = $this->main->table($this->webapp->mysql->payaisle('ORDER BY sort ASC'), function($table, $pay)
+
+		$orderstat = [
+			'24h' => [],
+			'15m' => []
+		];
+		$t24 = $this->webapp->time(-86400);
+		$t15 = $t24 + (86400 - 900);
+		foreach ($this->webapp->mysql->orders('where time>=?i', $t24) as $order)
 		{
+			$name = "{$order['pay_name']}{$order['pay_type']}";
+			if (isset($orderstat['24h'][$name]))
+			{
+				$orderstat['24h'][$name][0] += 1;
+				$orderstat['24h'][$name][1] += intval($order['status'] != 'unpay');
+			}
+			else
+			{
+				$orderstat['24h'][$name] = [1, intval($order['status'] != 'unpay')];
+			}
+			if ($order['time'] > $t15)
+			{
+				if (isset($orderstat['15m'][$name]))
+				{
+					$orderstat['15m'][$name][0] += 1;
+					$orderstat['15m'][$name][1] += intval($order['status'] != 'unpay');
+				}
+				else
+				{
+					$orderstat['15m'][$name] = [1, intval($order['status'] != 'unpay')];
+				}
+			}
+		}
+		$table = $this->main->table($this->webapp->mysql->payaisle('ORDER BY sort ASC'), function($table, $pay, $orderstat)
+		{
+			preg_match_all('/\d#([^\[]+)/', $pay['type'], $aisle);
+			$stat = ['24h' => [], '15m' => []];
+			foreach ($aisle[1] as $name)
+			{
+				$name = "{$pay['code']}{$name}";
+				$stat['24h'][] = sprintf('%.02f%%', isset($orderstat['24h'][$name]) ? $orderstat['24h'][$name][1] / $orderstat['24h'][$name][0] * 100 : 0);
+				$stat['15m'][] = sprintf('%.02f%%', isset($orderstat['15m'][$name]) ? $orderstat['15m'][$name][1] / $orderstat['15m'][$name][0] * 100 : 0);
+			}
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $pay['time']));
 			$table->cell($pay['name']);
 			$table->cell($pay['sort']);
 			$table->cell($pay['code']);
+			$table->cell(join("\n", $stat['24h']));
+			$table->cell(join("\n", $stat['15m']));
 			$table->cell()->append('a', [$pay['type'], 'href' => "?admin/payaisle,code:{$pay['code']}"]);
 			$table->cell()->append('a', [$pay['keep'], 'href' => "?admin/payaisle,onoff:{$pay['code']}"]);
-		});
-		$table->fieldset('创建时间', '名称', '排序', '代码', '类型', 'on/off');
+		}, $orderstat);
+		$table->fieldset('创建时间', '名称', '排序', '代码', '24h成功', '15m成功', '类型', 'on/off');
 	}
 	//运行
 	function get_runstatus()

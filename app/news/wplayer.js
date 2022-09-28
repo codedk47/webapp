@@ -142,7 +142,6 @@ customElements.define('webapp-video', class extends HTMLElement
 		//this.hasAttribute('weblive');
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
-		//this.#preview = this.dataset.preview ? this.dataset.preview.split(',')
 		this.appendChild(this.#video);
 		if (this.#video.controls = this.hasAttribute('controls'))
 		{
