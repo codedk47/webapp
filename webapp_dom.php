@@ -847,7 +847,7 @@ class webapp_form implements ArrayAccess
 			'month'			=> preg_match('/^\d{4}-(?:0[1-9]|1[0-2])$/', $value) === 1,
 			'number',
 			'range'			=> self::is_numeric($node, $value),
-			'time'			=> preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value) === 1,
+			'time'			=> preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d(?:\:[0-5]\d)?$/', $value) === 1,
 			'url'			=> preg_match('/^[a-z][a-z0-9]*\:\/\//i', $value) === 1,
 			'week'			=> preg_match('/^\d{4}-W(?:0[1-9]|[1-4]\d|5[0-3])$/', $value) === 1,
 			default			=> (isset($node['pattern']) === FALSE || preg_match("/^{$node['pattern']}$/", $value))

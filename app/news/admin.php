@@ -483,6 +483,12 @@ class webapp_router_admin extends webapp_echo_html
 				]);
 			}
 			$form = $this->form_resource($this->main);
+
+			$resource['preview_start'] = date('H:i:s', ($resource['preview'] >> 16) - 28800);
+			$resource['preview_end'] = date('H:i:s', ($resource['preview'] & 0xffff) - 28800);
+
+
+
 			$form->echo($resource);
 		}
 	}

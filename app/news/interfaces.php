@@ -451,8 +451,10 @@ class interfaces extends webapp
 			$li['class'] = "level{$tagc[$level]}";
 		}
 
-		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
+		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币) / 预览');
 		$form->field('require', 'number', ['value' => 0, 'min' => -2, 'required' => NULL]);
+		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1]);
+		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1]);
 		$form->fieldset();
 		$form->button('Upload Resource', 'submit');
 		
@@ -461,10 +463,17 @@ class interfaces extends webapp
 	}
 	function resource_create(array $data):bool
 	{
+		$preview_start = explode(':', $data['preview_start']);
+		$preview_start = mktime(8 + $preview_start[0], $preview_start[1], $preview_start[2], 1, 1, 1970);
+		$preview_end = explode(':', $data['preview_end']);
+		$preview_end = mktime(8 + $preview_end[0], $preview_end[1], $preview_end[2], 1, 1, 1970);
+		$preview = $preview_end > $preview_start ? $preview_start << 16 | ($preview_end - $preview_start) & 0xffff : 10;
+
 		$name = webapp::lib('hanzi/interface.php')($data['name']);
 		return $this->mysql->resources->insert([
 			'hash' => $data['hash'],
 			'time' => $this->time,
+			'preview' => $preview,
 			'duration' => $data['duration'],
 			'type' => $data['type'],
 			'sync' => 'waiting',
@@ -493,9 +502,15 @@ class interfaces extends webapp
 	}
 	function resource_update(string $hash, array $data):bool
 	{
+		$preview_start = explode(':', $data['preview_start']);
+		$preview_start = mktime(8 + $preview_start[0], $preview_start[1], $preview_start[2], 1, 1, 1970);
+		$preview_end = explode(':', $data['preview_end']);
+		$preview_end = mktime(8 + $preview_end[0], $preview_end[1], $preview_end[2], 1, 1, 1970);
+		$preview = $preview_end > $preview_start ? $preview_start << 16 | ($preview_end - $preview_start) & 0xffff : 10;
+		
 		$name = webapp::lib('hanzi/interface.php')($data['name']);
-		$update = ['data=JSON_SET(data,\'$."?i".require\',?i,\'$."?i".name\',?s),type=?s,tags=?s',
-			$this->site, $data['require'] ?? 0, $this->site, $name, $data['type'], $data['tags']];
+		$update = ['preview=?i,data=JSON_SET(data,\'$."?i".require\',?i,\'$."?i".name\',?s),type=?s,tags=?s',
+			$preview, $this->site, $data['require'] ?? 0, $this->site, $name, $data['type'], $data['tags']];
 		if ($this->admin[2])
 		{
 			$update[0] .= ',type=?s,tags=?s,actors=?s,name=?s';
@@ -613,6 +628,7 @@ class interfaces extends webapp
 		$node = $this->xml->append('resource', [
 			'hash' => $resource['hash'],
 			'time' => $resource['time'],
+			'preview' =>  sprintf('%d,%d', $resource['preview'] >> 16, $resource['preview'] & 0xffff),
 			'duration' => $resource['duration'],
 			'type' => $resource['type'],
 			'tags' => $resource['tags'],
@@ -642,7 +658,7 @@ class interfaces extends webapp
 	}
 	function get_resources(string $type = NULL, int $page = 1, int $size = 1000)
 	{
-		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished"', $this->site];
+		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished" ORDER BY time DESC', $this->site];
 		if ($type)
 		{
 			$cond[0] .= ' AND type=?s';
