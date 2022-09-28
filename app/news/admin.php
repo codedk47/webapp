@@ -580,6 +580,9 @@ class webapp_router_admin extends webapp_echo_html
 				'data-hash' => $res['hash']]);
 			$table->cell()->append('a', [$res['hash'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $res['time']));
+			$table->cell(sprintf('%s - %s',
+				date('G:i:s', $start = ($res['preview'] >> 16) + 57600),
+				date('G:i:s', ($res['preview'] & 0xffff) + $start)));
 			$table->cell(date('G:i:s', $res['duration'] + 57600));
 			$table->cell($type[$res['type']]);
 			$data = json_decode($res['data'], TRUE)[$this->webapp->site] ?? [];
@@ -594,7 +597,7 @@ class webapp_router_admin extends webapp_echo_html
 				'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
 			//$table->cell()->append('a', ['下载预览', 'href' => "{$this->webapp['app_resdomain']}?resourcepreview/{$res['hash']}"]);
 		}, $this->webapp['app_restype']);
-		$table->fieldset('❌', 'hash', 'time', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓');
+		$table->fieldset('❌', 'hash', 'time', 'preview', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓');
 		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
