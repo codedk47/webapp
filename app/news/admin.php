@@ -414,6 +414,11 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('type', 'select', ['options' => $this->webapp['app_restype']]);
 		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1]);
 		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1]);
+
+
+		//$form->button('观看预览')['onclick'] = 'g({tag:this.value===""?null:this.value})';
+
+
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
@@ -484,8 +489,8 @@ class webapp_router_admin extends webapp_echo_html
 			}
 			$form = $this->form_resource($this->main);
 
-			$resource['preview_start'] = date('H:i:s', ($resource['preview'] >> 16) - 28800);
-			$resource['preview_end'] = date('H:i:s', ($resource['preview'] & 0xffff) - 28800);
+			$resource['preview_start'] = date('H:i:s', $preview_start = ($resource['preview'] >> 16) + 57600);
+			$resource['preview_end'] = date('H:i:s', ($resource['preview'] & 0xffff) + $preview_start);
 
 
 
