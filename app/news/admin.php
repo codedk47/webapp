@@ -415,9 +415,8 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1]);
 		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1]);
 
-
-		//$form->button('观看预览')['onclick'] = 'g({tag:this.value===""?null:this.value})';
-
+		$form->button('观看预览')['onclick'] = 'g({preview:btoa(`${this.previousElementSibling.previousElementSibling.value},${this.previousElementSibling.value}`)})';
+		$form->button('观看完整')['onclick'] = 'g({preview:null})';
 
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
@@ -475,24 +474,35 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		if ($resource = $this->webapp->resource_get($hash))
 		{
+			$resource['preview_start'] = date('H:i:s', $preview_start = ($resource['preview'] >> 16) + 57600);
+			$resource['preview_end'] = date('H:i:s', ($resource['preview'] & 0xffff) + $preview_start);
+
 			if ($resource['sync'] === 'finished')
 			{
 				$this->xml->head->append('script', ['src' => '/webapp/app/news/hls.min.js']);
 				$this->xml->head->append('script', ['src' => '/webapp/app/news/wplayer.js']);
-				$this->main->append('webapp-video', [
+				$playvideo = $this->main->append('webapp-video', [
 					'style' => 'display:block;width:854px;height:480px',
 					'data-load' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}", date('ym', $resource['time'])),
 					'muted' => NULL,
 					'autoplay' => NULL,
 					'controls' => NULL
 				]);
+				if (isset($this->webapp->query['preview']))
+				{
+					[$resource['preview_start'], $resource['preview_end']] = explode(',', base64_decode($this->webapp->query['preview']));
+					$preview_start = explode(':', $resource['preview_start']);
+					$preview_start = mktime(8 + $preview_start[0], $preview_start[1], $preview_start[2], 1, 1, 1970);
+					$preview_end = explode(':', $resource['preview_end']);
+					$preview_end = mktime(8 + $preview_end[0], $preview_end[1], $preview_end[2], 1, 1, 1970);
+					if ($preview_end >= $preview_start)
+					{
+						$playvideo['data-preview'] = sprintf('%d,%d', $preview_start, $preview_end - $preview_start);
+					}
+				}
+				
 			}
 			$form = $this->form_resource($this->main);
-
-			$resource['preview_start'] = date('H:i:s', $preview_start = ($resource['preview'] >> 16) + 57600);
-			$resource['preview_end'] = date('H:i:s', ($resource['preview'] & 0xffff) + $preview_start);
-
-
 
 			$form->echo($resource);
 		}
