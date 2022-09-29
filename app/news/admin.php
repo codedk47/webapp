@@ -1617,7 +1617,7 @@ JS);
 			'cps' => 'CPS',
 			'cpm' => 'CPM'
 		], 'required' => NULL]);
-		$form->field('rate', 'number', ['value' => 1, 'min' => 0.5, 'max' => 1, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
+		$form->field('rate', 'number', ['value' => 1, 'min' => 0.1, 'max' => 1, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
 		$form->field('price', 'number', ['value' => 0, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
 
 		$form->fieldset('owns');
