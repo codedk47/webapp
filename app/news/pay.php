@@ -54,8 +54,8 @@ final class webapp_pay_zz implements webapp_pay
 	static function paytype():array
 	{
 		return [
-			'8008' => '支付宝h5',	//30-500
-			'8007' => '微信原生h5'	//30-500
+			'8007' => '微信原生h5',	//30-500
+			'8008' => '支付宝h5'	//30-500
 		];
 	}
 	function __construct(array $context)
@@ -285,7 +285,8 @@ final class webapp_pay_yl implements webapp_pay
 	static function paytype():array
 	{
 		return [
-			'666' => '支付宝原生'	//10-300
+			'666' => '支付宝原生',	//10-300
+			'888' => '微信'	//30-500
 		];
 	}
 	function __construct(array $context)
