@@ -164,7 +164,7 @@ customElements.define('webapp-video', class extends HTMLElement
 					if (m3u8[i].startsWith('#EXTINF'))
 					{
 						let pattern;
-						if (duration !== null && (pattern = m3u8[i].match(/#EXTINF:(\d+(?:\.\d+))\,\s*([^\n]+)/)))
+						if (duration !== null && (pattern = m3u8[i].match(/#EXTINF:(\d+(?:\.\d+)?)\,\s*([^\n]+)/)))
 						{
 							duration += parseFloat(pattern[1]);
 							if (duration >= this.#limitstart)
