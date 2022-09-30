@@ -1815,7 +1815,7 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 		$table->cell('-');
 		$table->cell(number_format($fakes['count'], 2));
 
-		$table->header('单位成本结算（真实）');
+		$table->header('单位成本结算');
 		$table->bar->append('input', ['type' => 'date', 'value' => $start, 'onchange' => 'g({start:this.value})']);
 		$table->bar->append('span', ' - ');
 		$table->bar->append('input', ['type' => 'date', 'value' => $end, 'onchange' => 'g({end:this.value})']);
