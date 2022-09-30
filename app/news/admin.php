@@ -1717,7 +1717,7 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 			'count' => 0,
 			'order' => 0
 		];
-		foreach ($this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia') as $row)
+		foreach ($this->webapp->mysql->unitrates(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia') as $row)
 		{
 			$fake[$row['unit']] = $row;
 			foreach ($row as $k => $v)
