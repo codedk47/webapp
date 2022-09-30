@@ -289,7 +289,7 @@ class interfaces extends webapp
 			foreach ($incr as $key => $value)
 			{
 				$fake[$key] = $value * $uintdata['rate'];
-				$update[] = $this->mysql->format('?a=?a+?i', $key, $key, $fake[$key]);
+				$update[] = $this->mysql->format('?a=?a+?f', $key, $key, $fake[$key]);
 			}
 			$this->mysql->real_query('INSERT INTO unitrates SET ?v ON DUPLICATE KEY UPDATE ??', $data + $fake, join(',', $update));
 		}
