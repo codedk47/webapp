@@ -94,8 +94,8 @@ class webapp_router_unit extends webapp_echo_html
 			$t2->append('td', '独立');
 			$t3->append('td', '登录');
 			$t4->append('td', '注册');
-			$t5->append('td', '下载');
-			$t6->append('td', '激活');
+			$t5->append('td', '--');
+			$t6->append('td', '下载');
 			$t7->append('td', '订单');
 			$t8->append('td', '金额');
 			$t9->append('td', '费用');
@@ -107,7 +107,7 @@ class webapp_router_unit extends webapp_echo_html
 			$t2->append('td', number_format($stat['$1$0']));
 			$t3->append('td', number_format($stat['$2$0']));
 			$t4->append('td', number_format($stat['$3$0']));
-			$t5->append('td', number_format($stat['$4$0']));
+			$t5->append('td', '--');
 			$t6->append('td', number_format($stat['$5$0']));
 
 			if (isset($unitorders[$stat['unit']]))
@@ -130,7 +130,7 @@ class webapp_router_unit extends webapp_echo_html
 				$t2->append('td', number_format($stat["\$1\${$i}"]));
 				$t3->append('td', number_format($stat["\$2\${$i}"]));
 				$t4->append('td', number_format($stat["\$3\${$i}"]));
-				$t5->append('td', number_format($stat["\$4\${$i}"]));
+				$t5->append('td', '--');
 				$t6->append('td', number_format($stat["\$5\${$i}"]));
 				if (isset($unitorders[$stat['unit']]))
 				{
