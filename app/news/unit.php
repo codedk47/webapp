@@ -64,7 +64,8 @@ class webapp_router_unit extends webapp_echo_html
 			$unitorders[$order['unit']][$order['day']]['fee'] += $order['fee'];
 		}
 
-		//print_r($unitorders);
+
+		$types = $this->webapp->mysql->unitsets->column('type', 'unit');
 
 		$stat = $this->webapp->mysql->unitrates('WHERE left(date,7)=?s AND unit IN(?S)', $ym, $owns)->statmonth($ym, 'unit', 'right(date,2)', [
 			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
@@ -75,7 +76,7 @@ class webapp_router_unit extends webapp_echo_html
 			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		]);
 
-		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders)
+		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders, $units, $types)
 		{
 			$t1 = $table->tbody->append('tr');
 			$t2 = $table->tbody->append('tr');
@@ -89,25 +90,50 @@ class webapp_router_unit extends webapp_echo_html
 			$t10 = $table->tbody->append('tr');
 
 			$t1->append('td', [$stat['unit'] ?? '汇总', 'rowspan' => 10]);
-				
-			$t1->append('td', '浏览');
-			$t2->append('td', '独立');
-			$t3->append('td', '登录');
-			$t4->append('td', '注册');
-			$t5->append('td', '--');
-			$t6->append('td', '下载');
+			$type = $types[$stat['unit']] ?? 'cpc';
+			
+			if ($type === 'cpc')
+			{
+				$t1->append('td', '浏览');
+				$t2->append('td', '独立');
+				$t3->append('td', '登录');
+				$t4->append('td', '注册');
+				$t5->append('td', '下载');
+				$t6->append('td', '激活');
+			}
+			else
+			{
+				$t1->append('td', '-');
+				$t2->append('td', '-');
+				$t3->append('td', '-');
+				$t4->append('td', '-');
+				$t5->append('td', '-');
+				$t6->append('td', '下载');
+			}
+
 			$t7->append('td', '订单');
 			$t8->append('td', '金额');
 			$t9->append('td', '费用');
-			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $types[$stat['unit']] ?? 'cpc', $units[$stat['unit']] ?? 0),
+			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $type, $units[$stat['unit']] ?? 0),
 				'colspan' => count($days) + 2,
 				'style' => 'text-align:left']);
 
-			$t1->append('td', number_format($stat['$0$0']));
-			$t2->append('td', number_format($stat['$1$0']));
-			$t3->append('td', number_format($stat['$2$0']));
-			$t4->append('td', number_format($stat['$3$0']));
-			$t5->append('td', '--');
+			if ($type === 'cpc')
+			{
+				$t1->append('td', number_format($stat['$0$0']));
+				$t2->append('td', number_format($stat['$1$0']));
+				$t3->append('td', number_format($stat['$2$0']));
+				$t4->append('td', number_format($stat['$3$0']));
+				$t5->append('td', number_format($stat['$4$0']));
+			}
+			else
+			{
+				$t1->append('td', '-');
+				$t2->append('td', '-');
+				$t3->append('td', '-');
+				$t4->append('td', '-');
+				$t5->append('td', '-');
+			}
 			$t6->append('td', number_format($stat['$5$0']));
 
 			if (isset($unitorders[$stat['unit']]))
@@ -126,11 +152,23 @@ class webapp_router_unit extends webapp_echo_html
 			$pt = 0;
 			foreach ($days as $i)
 			{
-				$t1->append('td', number_format($stat["\$0\${$i}"]));
-				$t2->append('td', number_format($stat["\$1\${$i}"]));
-				$t3->append('td', number_format($stat["\$2\${$i}"]));
-				$t4->append('td', number_format($stat["\$3\${$i}"]));
-				$t5->append('td', '--');
+				if ($type === 'cpc')
+				{
+					$t1->append('td', number_format($stat["\$0\${$i}"]));
+					$t2->append('td', number_format($stat["\$1\${$i}"]));
+					$t3->append('td', number_format($stat["\$2\${$i}"]));
+					$t4->append('td', number_format($stat["\$3\${$i}"]));
+					$t5->append('td', number_format($stat["\$4\${$i}"]));
+				}
+				else
+				{
+					$t1->append('td', '-');
+					$t2->append('td', '-');
+					$t3->append('td', '-');
+					$t4->append('td', '-');
+					$t5->append('td', '-');
+				}
+
 				$t6->append('td', number_format($stat["\$5\${$i}"]));
 				if (isset($unitorders[$stat['unit']]))
 				{
@@ -147,7 +185,8 @@ class webapp_router_unit extends webapp_echo_html
 			}
 			$tp[0] = number_format($pt);
 
-		}, $days, $unitorders, $units);
+		}, $days, $unitorders, $units, $types);
+		
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
 		$table->xml['class'] = 'webapp-stateven';

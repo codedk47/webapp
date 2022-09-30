@@ -1689,13 +1689,11 @@ JS);
 
 		$cond[0] .= ' GROUP BY unit ORDER BY pv DESC';
 		
-		$stat = $this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia');
-
+		
 
 		$price = $this->webapp->mysql->unitsets->column('price', 'unit');
 
 		$types = $this->webapp->mysql->unitsets->column('type', 'unit');
-
 
 		$order = $this->webapp->mysql(<<<SQL
 SELECT SUM(orders.order_fee) AS fee,accounts.unit AS unit
@@ -1707,6 +1705,28 @@ GROUP BY unit ORDER BY fee DESC
 SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 
 
+
+		$fake = [];
+		$fakes = [
+			'pv' => 0,
+			'ua' => 0,
+			'lu' => 0,
+			'ru' => 0,
+			'dc' => 0,
+			'ia' => 0,
+			'count' => 0,
+			'order' => 0
+		];
+		foreach ($this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia') as $row)
+		{
+			$fake[$row['unit']] = $row;
+			foreach ($row as $k => $v)
+			{
+				if ($k === 'unit') continue;
+				$fakes[$k] += $v;
+			}
+		}
+
 		$count = [
 			'pv' => 0,
 			'ua' => 0,
@@ -1717,7 +1737,9 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 			'count' => 0,
 			'order' => 0
 		];
-		$table = $this->main->table($stat, function($table, $stat, $types, $price, $order) use(&$count)
+		$stat = $this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia');
+		
+		$table = $this->main->table($stat, function($table, $stat, $types, $price, $order, $fake) use(&$count, &$fakes)
 		{
 			$count['pv'] += $stat['pv'];
 			$count['ua'] += $stat['ua'];
@@ -1725,36 +1747,75 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 			$count['ru'] += $stat['ru'];
 			$count['dc'] += $stat['dc'];
 			$count['ia'] += $stat['ia'];
+
 			$table->row();
 			$table->cell($stat['unit']);
 			$table->cell($types[$stat['unit']] ?? 'cpa');
+			$table->cell(number_format($p = $price[$stat['unit']] ?? 0, 2));
 			$table->cell(number_format($stat['pv']));
 			$table->cell(number_format($stat['ua']));
 			$table->cell(number_format($stat['lu']));
 			$table->cell(number_format($stat['ru']));
 			$table->cell(number_format($stat['dc']));
 			$table->cell(number_format($stat['ia']));
-			$table->cell(number_format($p = $price[$stat['unit']] ?? 0, 2));
-			$table->cell(number_format($c =$stat['ia'] * $p, 2));
 			$table->cell(number_format(($d = $order[$stat['unit']] ?? 0) * 0.01, 2));
-			$count['count'] += $c;
+			$table->cell(number_format($c = $stat['ia'] * $p, 2));
 			$count['order'] += $d;
-		}, $types, $price, $order);
-		$table->fieldset('单位', '类型', '浏览', '独立', '登录', '注册', '下载', '激活', '单价', '激活 x 单价', '充值');
+			$count['count'] += $c;
+
+			if (isset($fake[$stat['unit']]))
+			{
+				$table->cell(number_format($fake[$stat['unit']]['pv']));
+				$table->cell(number_format($fake[$stat['unit']]['ua']));
+				$table->cell(number_format($fake[$stat['unit']]['lu']));
+				$table->cell(number_format($fake[$stat['unit']]['ru']));
+				$table->cell(number_format($fake[$stat['unit']]['dc']));
+				$table->cell(number_format($fake[$stat['unit']]['ia']));
+				$table->cell('-');
+				$table->cell(number_format($c = $fake[$stat['unit']]['ia'] * $p, 2));
+			}
+			else
+			{
+				$table->cell('-');
+				$table->cell('-');
+				$table->cell('-');
+				$table->cell('-');
+				$table->cell('-');
+				$table->cell('-');
+				$table->cell('-');
+				$table->cell('-');
+				$c = 0;
+			}
+
+			$fakes['count'] += $c;
+
+
+		}, $types, $price, $order, $fake);
+		$table->fieldset('单位', '类型', '单价', '浏览', '独立', '登录', '注册', '下载', '激活', '充值', '结算(激活x单价)',
+			'浏览(假)', '独立(假)', '登录(假)', '注册(假)', '下载(假)', '激活(假)', '充值(假)', '结算(激活x单价)(假)');
 		$table->row()['style'] = 'background:lightblue';
-		$table->cell('合计');
-		$table->cell('-');
+		$table->cell(['合计', 'colspan' => 3]);
+
 		$table->cell(number_format($count['pv']));
 		$table->cell(number_format($count['ua']));
 		$table->cell(number_format($count['lu']));
 		$table->cell(number_format($count['ru']));
 		$table->cell(number_format($count['dc']));
 		$table->cell(number_format($count['ia']));
-		$table->cell('-');
-		$table->cell(number_format($count['count'], 2));
+		
 		$table->cell(number_format($count['order'] * 0.01, 2));
+		$table->cell(number_format($count['count'], 2));
 
-		$table->header('单位成本结算');
+		$table->cell(number_format($fakes['pv']));
+		$table->cell(number_format($fakes['ua']));
+		$table->cell(number_format($fakes['lu']));
+		$table->cell(number_format($fakes['ru']));
+		$table->cell(number_format($fakes['dc']));
+		$table->cell(number_format($fakes['ia']));
+		$table->cell('-');
+		$table->cell(number_format($fakes['count'], 2));
+
+		$table->header('单位成本结算（真实）');
 		$table->bar->append('input', ['type' => 'date', 'value' => $start, 'onchange' => 'g({start:this.value})']);
 		$table->bar->append('span', ' - ');
 		$table->bar->append('input', ['type' => 'date', 'value' => $end, 'onchange' => 'g({end:this.value})']);
