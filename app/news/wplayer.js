@@ -145,7 +145,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.appendChild(this.#video);
 		if (this.#video.controls = this.hasAttribute('controls'))
 		{
-			this.appendChild(this.#toggleplay);
+			//this.appendChild(this.#toggleplay);
 		}
 		if (this.#load = this.dataset.load)
 		{
