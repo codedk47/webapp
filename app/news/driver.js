@@ -144,7 +144,7 @@ window.addEventListener('DOMContentLoaded', async function()
 				{
 					if (target.tagName === 'A'
 						&& target.hasAttribute('href')
-						&& target.hasAttribute('target') === false
+						&& (target.hasAttribute('target') === false || target.getAttribute('target') === '')
 						&& /^javascript:|^blob:/.test(target.getAttribute('href')) === false) {
 						router(target.getAttribute('href'));
 						event.preventDefault();
