@@ -275,8 +275,15 @@ window.addEventListener('DOMContentLoaded', async function()
 				{
 					fdoc.onclick = null;
 					clearTimeout(ftimer.tid);
+					if (screen.data.target)
+					{
+						window.open(`${entry}${screen.data.query}`);
+					}
+					else
+					{
+						frame.dataset.query = screen.data.query
+					}
 					resolve(window.name = 'app');
-					window.open(`${entry}${screen.data.query}`);
 				}
 			};
 			fdoc.head.appendChild(fdoc.createElement('style')).textContent = `
