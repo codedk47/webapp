@@ -239,11 +239,18 @@ class webapp_router_admin extends webapp_echo_html
 			$t2->append('td', '独立');
 			$t3->append('td', '登录');
 			$t4->append('td', '注册');
-			$t5->append('td', '下载');
-			$t6->append('td', '激活');
-			$t7->append('td', '订单');
-			$t8->append('td', '金额');
-			$t9->append('td', '费用');
+			// $t5->append('td', '下载');
+			// $t6->append('td', '激活');
+			// $t7->append('td', '订单');
+			// $t8->append('td', '金额');
+			// $t9->append('td', '费用');
+
+			$t5->append('td', '点击量');
+			$t6->append('td', '下载量');
+			$t7->append('td', '订单数');
+			$t8->append('td', '订单金额');
+			$t9->append('td', '结算金额');
+
 			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $types[$stat['unit']] ?? 'cpc', $units[$stat['unit']] ?? 0),
 				'colspan' => count($days) + 2,
 				'style' => 'text-align:left']);
