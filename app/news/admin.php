@@ -172,7 +172,6 @@ class webapp_router_admin extends webapp_echo_html
 			++$unitorders[$order['unit']][$order['day']]['count'];
 			$unitorders[$order['unit']][$order['day']]['fee'] += $order['fee'];
 		}
-		//print_r($unitorders);
 
 		$cond = ['WHERE left(date,7)=?s', $ym];
 
@@ -189,22 +188,17 @@ class webapp_router_admin extends webapp_echo_html
 				$unitcond[0] .= ' AND admin=?s';
 				$unitcond[] = $admin;
 			}
-			if ($units = $this->webapp->mysql->unitsets(...$unitcond)->column('price', 'unit'))
+			if ($units = $this->webapp->mysql->unitsets(...$unitcond)->column('unit'))
 			{
 				$cond[0] .= ' AND unit IN(?S)';
-				$cond[] = array_keys($units);
+				$cond[] = $units;
 			}
 			else
 			{
 				$cond[0] .= ' AND 0';
 			}
 		}
-		else
-		{
-			$units = $this->webapp->mysql->unitsets->column('price', 'unit');
-		}
-		$types = $this->webapp->mysql->unitsets->column('type', 'unit');
-		
+
 		$stat = $this->webapp->mysql->unitstats(...$cond)->statmonth($ym, 'unit', 'right(date,2)', [
 			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},ua,0))',
@@ -214,8 +208,9 @@ class webapp_router_admin extends webapp_echo_html
 			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		], 'ORDER BY $1$0 DESC LIMIT 10');
 
-		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $units, $types)
+		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders)
 		{
+
 			$t1 = $table->tbody->append('tr');
 			$t2 = $table->tbody->append('tr');
 			$t3 = $table->tbody->append('tr');
@@ -224,15 +219,13 @@ class webapp_router_admin extends webapp_echo_html
 			$t6 = $table->tbody->append('tr');
 			$t7 = $table->tbody->append('tr');
 			$t8 = $table->tbody->append('tr');
-			$t9 = $table->tbody->append('tr');
-			$t10 = $table->tbody->append('tr');
 			if ($stat['unit'])
 			{
-				$t1->append('td', ['rowspan' => 10])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
+				$t1->append('td', ['rowspan' => 8])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
 			}
 			else
 			{
-				$t1->append('td', ['汇总', 'rowspan' => 10]);
+				$t1->append('td', ['汇总', 'rowspan' => 8]);
 			}
 
 			$t1->append('td', '浏览');
@@ -243,17 +236,11 @@ class webapp_router_admin extends webapp_echo_html
 			// $t6->append('td', '激活');
 			// $t7->append('td', '订单');
 			// $t8->append('td', '金额');
-			// $t9->append('td', '费用');
 
 			$t5->append('td', '点击量');
 			$t6->append('td', '下载量');
 			$t7->append('td', '订单数');
 			$t8->append('td', '订单金额');
-			$t9->append('td', '结算金额');
-
-			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $types[$stat['unit']] ?? 'cpc', $units[$stat['unit']] ?? 0),
-				'colspan' => count($days) + 2,
-				'style' => 'text-align:left']);
 
 			$t1->append('td', number_format($stat['$0$0']));
 			$t2->append('td', number_format($stat['$1$0']));
@@ -261,7 +248,6 @@ class webapp_router_admin extends webapp_echo_html
 			$t4->append('td', number_format($stat['$3$0']));
 			$t5->append('td', number_format($stat['$4$0']));
 			$t6->append('td', number_format($stat['$5$0']));
-
 			if (isset($unitorders[$stat['unit']]))
 			{
 				$t7->append('td', number_format($unitorders[$stat['unit']][0]['count']));
@@ -273,9 +259,6 @@ class webapp_router_admin extends webapp_echo_html
 				$t8->append('td', 0);
 			}
 
-			$tp = $t9->append('td');
-			$price = $units[$stat['unit']] ?? 0;
-			$pt = 0;
 			foreach ($days as $i)
 			{
 				$t1->append('td', number_format($stat["\$0\${$i}"]));
@@ -294,12 +277,9 @@ class webapp_router_admin extends webapp_echo_html
 					$t7->append('td', 0);
 					$t8->append('td', 0);
 				}
-				$t9->append('td', number_format($stat["\$5\${$i}"] * $price));
-				$pt += $stat["\$5\${$i}"] * $price;
 			}
-			$tp[0] = number_format($pt);
 
-		}, $days, $ym, $unitorders, $units, $types);
+		}, $days, $ym, $unitorders);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$header = $table->header('');
 		$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
