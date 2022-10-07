@@ -79,7 +79,7 @@ class webapp_router_unit extends webapp_echo_html
 		$skip = TRUE;
 		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders, $units, $types) use(&$skip)
 		{
-			
+			if ($skip) return $skip = FALSE;
 			$t1 = $table->tbody->append('tr');
 			$t2 = $table->tbody->append('tr');
 			$t3 = $table->tbody->append('tr');
