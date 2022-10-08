@@ -113,8 +113,10 @@ class webapp_router_unit extends webapp_echo_html
 				$t6->append('td', '下载');
 			}
 
-			$t7->append('td', '订单');
-			$t8->append('td', '金额');
+			// $t7->append('td', '订单');
+			// $t8->append('td', '金额');
+			$t7->append('td', '-');
+			$t8->append('td', '-');
 			$t9->append('td', '费用');
 			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $type, $units[$stat['unit']] ?? 0),
 				'colspan' => count($days) + 2,
@@ -138,16 +140,18 @@ class webapp_router_unit extends webapp_echo_html
 			}
 			$t6->append('td', number_format($stat['$5$0']));
 
-			if (isset($unitorders[$stat['unit']]))
-			{
-				$t7->append('td', number_format($unitorders[$stat['unit']][0]['count']));
-				$t8->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
-			}
-			else
-			{
-				$t7->append('td', 0);
-				$t8->append('td', 0);
-			}
+			// if (isset($unitorders[$stat['unit']]))
+			// {
+			// 	$t7->append('td', number_format($unitorders[$stat['unit']][0]['count']));
+			// 	$t8->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
+			// }
+			// else
+			// {
+			// 	$t7->append('td', 0);
+			// 	$t8->append('td', 0);
+			// }
+			$t7->append('td', '-');
+			$t8->append('td', '-');
 
 			$tp = $t9->append('td');
 			$price = $units[$stat['unit']] ?? 0;
@@ -172,16 +176,18 @@ class webapp_router_unit extends webapp_echo_html
 				}
 
 				$t6->append('td', number_format($stat["\$5\${$i}"]));
-				if (isset($unitorders[$stat['unit']]))
-				{
-					$t7->append('td', number_format($unitorders[$stat['unit']][$i]['count']));
-					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * 0.01));
-				}
-				else
-				{
-					$t7->append('td', 0);
-					$t8->append('td', 0);
-				}
+				// if (isset($unitorders[$stat['unit']]))
+				// {
+				// 	$t7->append('td', number_format($unitorders[$stat['unit']][$i]['count']));
+				// 	$t8->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * 0.01));
+				// }
+				// else
+				// {
+				// 	$t7->append('td', 0);
+				// 	$t8->append('td', 0);
+				// }
+				$t7->append('td', '-');
+				$t8->append('td', '-');
 				$t9->append('td', number_format($stat["\$5\${$i}"] * $price));
 				$pt += $stat["\$5\${$i}"] * $price;
 			}

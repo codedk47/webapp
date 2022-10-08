@@ -6,7 +6,7 @@ if (globalThis.window)
 		const promise = new Map, worker = new Worker(document.currentScript.src);
 		worker.onmessage = event =>
 		{
-			console.log(event);
+			//console.log(event);
 			const callback = promise.get(event.data.id);
 			if (callback)
 			{
@@ -14,19 +14,21 @@ if (globalThis.window)
 				callback[event.data.is](event.data.content);
 			}
 		};
-		return (url) => new Promise((resolve, reject) =>
+		return (url, type = 'application/octet-stream', options = {cache: 'no-store'}) => new Promise((resolve, reject) =>
 		{
 			promise.set(++id, [resolve, reject]);
-			worker.postMessage({id, url});
+			worker.postMessage({id, url, type, options});
 		});
 	}());
 }
 else
 {
-	async function loader(source, options, type)
+	let count = 0;
+	const controller = new AbortController, queue = [], limit = 4;
+	async function load(url, type, options)
 	{
 		const
-		response = await fetch(source, options || null),
+		response = await fetch(url, {...options, signal: controller.signal}),
 		
 		reader = response.body.getReader(),
 		key = new Uint8Array(8),
@@ -82,18 +84,44 @@ else
 		{
 			case 'application/json': return JSON.parse(await blob.text());
 			case 'text/plain': return blob.text();
-			default: return blob;
+			default: return URL.createObjectURL(blob);
 		}
 	}
+	function work(data)
+	{
+		load(data.url, data.type, data.option)
+			.then(content => self.postMessage({id: data.id, is: 0, content}))
+			.catch(error => self.postMessage({id: data.id, is: 1, content: error}))
+			.finally(() =>
+			{
+				
+				--count;
+				if (queue.length)
+				{
+					console.log(queue);
+					work(queue.shift());
+				}
+				
+			});
+	}
+	
 	self.onmessage = event =>
 	{
-		console.log(event);
-		loader(event.data.url, {cache: "no-store"}).then(blob =>
+		if (event.data === 'abort')
 		{
-			self.postMessage({id: event.data.id, is: 0, content: URL.createObjectURL(blob)});
-		}).catch(error => self.postMessage({id: event.data.id, is: 1, content: error})).finally(v=>{
-
-			console.log('--------------------',v)
-		});
+			controller.abort();
+			queue.length = count = 0;
+		}
+		else
+		{
+			if (count++ < limit)
+			{
+				work(event.data);
+			}
+			else
+			{
+				queue[queue.length] = event.data;
+			}
+		}
 	};
 }
