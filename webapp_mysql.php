@@ -55,7 +55,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	}
 	function value(int $index = 0):NULL|int|float|string
 	{
-		return $this->array(MYSQLI_NUM)[$index];
+		return $this->array(MYSQLI_NUM)[$index] ?? NULL;
 	}
 	function all(int $mode = MYSQLI_ASSOC):array
 	{
@@ -392,9 +392,9 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	{
 		return $this->getIterator()->fetch($data, $mode);
 	}
-	function value(int $index = 0):?string
+	function value(int $index = 0):NULL|int|float|string
 	{
-		return $this->array(MYSQLI_NUM)[$index];
+		return $this->array(MYSQLI_NUM)[$index] ?? NULL;
 	}
 	function all(int $mode = MYSQLI_ASSOC):array
 	{

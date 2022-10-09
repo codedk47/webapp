@@ -1,10 +1,10 @@
 if (globalThis.window)
 {
-	window[document.currentScript.dataset.name || 'worker'] = (function()
+	window[document.currentScript.dataset.name || 'backer'] = (function()
 	{
 		let id = 0;
-		const promise = new Map, worker = new Worker(document.currentScript.src);
-		worker.onmessage = event =>
+		const promise = new Map, backer = new Worker(document.currentScript.src);
+		backer.onmessage = event =>
 		{
 			//console.log(event);
 			const callback = promise.get(event.data.id);
@@ -14,11 +14,21 @@ if (globalThis.window)
 				callback[event.data.is](event.data.content);
 			}
 		};
-		return (url, type = 'application/octet-stream', options = {cache: 'no-store'}) => new Promise((resolve, reject) =>
-		{
-			promise.set(++id, [resolve, reject]);
-			worker.postMessage({id, url, type, options});
-		});
+		return (url, type = 'application/octet-stream', options = {cache: 'no-store'}) => typeof type === 'string'
+			? new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && backer.postMessage({id, url, type, options}))
+			: Promise.allSettled(Array.from(type).map(file => new Promise((resolve, reject) =>
+			{
+				const reader = file.stream().getReader();
+				reader.read().then(function uploaddata({done, value})
+				{
+					if (done) return resolve(file);
+					new Promise((resolve, reject) =>
+					{
+						promise.set(++id, [resolve, reject]);
+						backer.postMessage({id, url, type: 'application/octet-stream', options, buffer: value.buffer}, [value.buffer]);
+					}).then(()=> reader.read().then(uploaddata)).catch(reject);
+				});
+			})));
 	}());
 }
 else
@@ -89,12 +99,16 @@ else
 	}
 	function work(data)
 	{
-		load(data.url, data.type, data.option)
+		load(data.url, data.type, data.buffer ? {
+			...data.options,
+			method: 'POST',
+			headers: {'content-type': 'application/json'},
+			body: data.buffer
+		} : data.options)
 			.then(content => self.postMessage({id: data.id, is: 0, content}))
 			.catch(error => self.postMessage({id: data.id, is: 1, content: error}))
 			.finally(() =>
 			{
-				
 				--count;
 				if (queue.length)
 				{

@@ -282,13 +282,15 @@ class interfaces extends webapp
 		}
 		$update[] = $this->mysql->format('details=JSON_SET(details, ??)', join(',', $detail));
 		$status = $this->mysql->real_query('INSERT INTO unitstats SET ?v ON DUPLICATE KEY UPDATE ??', $data + $incr, join(',', $update));
+
+		$ia = floatval($this->mysql->unitrates('WHERE unit=?s', $uint)->select('sum(ia)')->value());
 		if ($this->mysql->unitsets('WHERE unit=?s LIMIT 1', $uint)->fetch($uintdata))
 		{
 			$fake = $update = [];
 			array_pop($data);
 			foreach ($incr as $key => $value)
 			{
-				$fake[$key] = $value * $uintdata['rate'];
+				$fake[$key] = $ia < 10 ? $value : $value * $uintdata['rate'];
 				$update[] = $this->mysql->format('?a=?a+?f', $key, $key, $fake[$key]);
 			}
 			$this->mysql->real_query('INSERT INTO unitrates SET ?v ON DUPLICATE KEY UPDATE ??', $data + $fake, join(',', $update));
