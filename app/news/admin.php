@@ -1252,7 +1252,6 @@ JS);
 	}
 	function get_orders(string $search = NULL, int $page = 1)
 	{
-		if ($this->webapp->admin[2] === FALSE) return $this->warn('需要灰常牛逼的全局超级管理员才可以使用！');
 		$cond = ['WHERE 1'];
 		if ($pay_name = $this->webapp->query['pn'] ?? '')
 		{
@@ -1312,6 +1311,11 @@ JS);
 	{
 		do
 		{
+			if ($this->webapp->admin[2] === FALSE)
+			{
+				$error = '需要超级管理员权限';
+				break;
+			}
 			$error = '订单不存在';
 			if ($this->webapp->mysql->orders('WHERE hash=?s LIMIT 1', $hash)->fetch($order) === FALSE)
 			{
