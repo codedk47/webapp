@@ -35,14 +35,19 @@ class webapp_router_admin extends webapp_echo_html
 				['Reports（通告、报告，合并通用）', '?admin/reports'],
 				//['Web Socket Chat System（在线客服）', '?admin/wschat'],
 				//['Comments（评论记录，暂时没用）', '?admin/comments'],
+				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Set Tags（设置首页标签，包含哪些点播）', '?admin/settags'],
 				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
+				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Stat Bills（统计账单，包括资源购买）', '?admin/statbills'],
+				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Orderstat（订单统计，可以查看支付情况）', '?admin/orderstat'],
 				['Orders（支付中心，订单数据）', '?admin/orders'],
 				['Payaisle（支付通道，设置修改）', '?admin/payaisle'],
+				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Unitsets（单位设置，开设需要后台的单位）', '?admin/unitsets'],
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
+				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Runstatus（服务器状态，轻点）', '?admin/runstatus']
 			]]
 		]);
