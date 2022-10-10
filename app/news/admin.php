@@ -39,8 +39,8 @@ class webapp_router_admin extends webapp_echo_html
 				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
 				['Stat Bills（统计账单，包括资源购买）', '?admin/statbills'],
 				['Orderstat（订单统计，可以查看支付情况）', '?admin/orderstat'],
-				['Orders（支付中心，订单数据，超级管理）', '?admin/orders'],
-				['Payaisle（支付通道，设置修改，超级管理）', '?admin/payaisle'],
+				['Orders（支付中心，订单数据）', '?admin/orders'],
+				['Payaisle（支付通道，设置修改）', '?admin/payaisle'],
 				['Unitsets（单位设置，开设需要后台的单位）', '?admin/unitsets'],
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
 				['Runstatus（服务器状态，轻点）', '?admin/runstatus']
