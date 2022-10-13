@@ -104,7 +104,7 @@ class webapp_router_admin extends webapp_echo_html
 		$users = [$this->webapp['admin_username'] => "admin(超级管理)"];
 		foreach ($this->webapp->mysql->admin as $admin)
 		{
-			$users[$admin['uid']] = "{$admin['uid']}({$admin['name']})";
+			$users[$admin['uid']] = $admin['name'];
 		}
 		return $users;
 	}
@@ -1684,58 +1684,72 @@ JS);
 		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
 
 		$cond[0] .= ' GROUP BY unit ORDER BY pv DESC';
-		
-		
 
-		$price = $this->webapp->mysql->unitsets->column('price', 'unit');
+		$admin = $this->adminlists();
+		$unitsets = [];
+		foreach ($this->webapp->mysql->unitsets as $row)
+		{
+			$unitsets[$row['unit']] = [$row['price'], $row['type'], $admin[$row['admin']] ?? 'admin'];
+		}
 
-		$types = $this->webapp->mysql->unitsets->column('type', 'unit');
+// 		$order = $this->webapp->mysql(<<<SQL
+// SELECT SUM(orders.order_fee) AS fee,accounts.unit AS unit
+// FROM orders INNER JOIN (accounts) ON (accounts.uid=orders.notify_url)
+// WHERE orders.pay_user=?i AND orders.status!="unpay"
+// AND concat(left(orders.tym,4),"-",right(orders.tym,2),"-",lpad(orders.day,2,0))>=?s
+// AND concat(left(orders.tym,4),"-",right(orders.tym,2),"-",lpad(orders.day,2,0))<=?s
+// GROUP BY unit ORDER BY fee DESC
+// SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 
-		$order = $this->webapp->mysql(<<<SQL
-SELECT SUM(orders.order_fee) AS fee,accounts.unit AS unit
+$order = [];
+		foreach ($this->webapp->mysql(<<<SQL
+SELECT
+orders.order_fee AS fee,
+orders.time AS ordertime,
+accounts.unit AS unit,
+accounts.time AS accounttime
 FROM orders INNER JOIN (accounts) ON (accounts.uid=orders.notify_url)
 WHERE orders.pay_user=?i AND orders.status!="unpay"
 AND concat(left(orders.tym,4),"-",right(orders.tym,2),"-",lpad(orders.day,2,0))>=?s
 AND concat(left(orders.tym,4),"-",right(orders.tym,2),"-",lpad(orders.day,2,0))<=?s
-GROUP BY unit ORDER BY fee DESC
-SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
-
-
+ORDER BY fee DESC
+SQL, $this->webapp->site, $start, $end) as $row) {
+			if (array_key_exists($row['unit'], $order) === FALSE)
+			{
+				$order[$row['unit']] = [0, 0, 0];
+			}
+			$order[$row['unit']][0] += $row['fee'];
+			$order[$row['unit']][$row['ordertime'] - $row['accounttime'] > 86400 ? 1 : 2] += $row['fee'];
+		}
 
 		$fake = [];
-		$fakes = [
+		$fakes = $count = [
 			'pv' => 0,
 			'ua' => 0,
 			'lu' => 0,
 			'ru' => 0,
 			'dc' => 0,
 			'ia' => 0,
-			'count' => 0,
-			'order' => 0
+			'all' => 0,
+			'old' => 0,
+			'new' => 0,
+			'pay' => 0
 		];
 		foreach ($this->webapp->mysql->unitrates(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia') as $row)
 		{
 			$fake[$row['unit']] = $row;
 			foreach ($row as $k => $v)
 			{
-				if ($k === 'unit') continue;
-				$fakes[$k] += $v;
+				if (isset($fakes[$k]))
+				{
+					$fakes[$k] += $v;
+				}
 			}
 		}
 
-		$count = [
-			'pv' => 0,
-			'ua' => 0,
-			'lu' => 0,
-			'ru' => 0,
-			'dc' => 0,
-			'ia' => 0,
-			'count' => 0,
-			'order' => 0
-		];
 		$stat = $this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia');
 		
-		$table = $this->main->table($stat, function($table, $stat, $types, $price, $order, $fake) use(&$count, &$fakes)
+		$table = $this->main->table($stat, function($table, $stat, $unitsets, $order, $fake) use(&$count, &$fakes)
 		{
 			$count['pv'] += $stat['pv'];
 			$count['ua'] += $stat['ua'];
@@ -1745,19 +1759,26 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 			$count['ia'] += $stat['ia'];
 
 			$table->row();
-			$table->cell($stat['unit']);
-			$table->cell($types[$stat['unit']] ?? 'cpa');
-			$table->cell(number_format($p = $price[$stat['unit']] ?? 0, 2));
+			[$price, $type, $admin] = $unitsets[$stat['unit']] ?? [0, 'cpa', 'admin'];
+			[$all, $old, $new] = $order[$stat['unit']] ?? [0, 0, 0];
+
+			$table->cell("{$stat['unit']}({$admin})");
+			$table->cell($type);
+			$table->cell(number_format($price, 2));
 			$table->cell(number_format($stat['pv']));
 			$table->cell(number_format($stat['ua']));
 			$table->cell(number_format($stat['lu']));
 			$table->cell(number_format($stat['ru']));
 			$table->cell(number_format($stat['dc']));
 			$table->cell(number_format($stat['ia']));
-			$table->cell(number_format(($d = $order[$stat['unit']] ?? 0) * 0.01, 2));
-			$table->cell(number_format($c = $stat['ia'] * $p, 2));
-			$count['order'] += $d;
-			$count['count'] += $c;
+			$table->cell(number_format($all * 0.01, 2));
+			$table->cell(number_format($old * 0.01, 2));
+			$table->cell(number_format($new * 0.01, 2));
+			$table->cell(number_format($pay = $stat['ia'] * $price, 2));
+			$count['all'] += $all;
+			$count['old'] += $old;
+			$count['new'] += $new;
+			$count['pay'] += $pay;
 
 			if (isset($fake[$stat['unit']]))
 			{
@@ -1768,7 +1789,7 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 				$table->cell(number_format($fake[$stat['unit']]['dc']));
 				$table->cell(number_format($fake[$stat['unit']]['ia']));
 				$table->cell('-');
-				$table->cell(number_format($c = $fake[$stat['unit']]['ia'] * $p, 2));
+				$table->cell(number_format($pay = $fake[$stat['unit']]['ia'] * $price, 2));
 			}
 			else
 			{
@@ -1780,14 +1801,14 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 				$table->cell('-');
 				$table->cell('-');
 				$table->cell('-');
-				$c = 0;
+				$pay = 0;
 			}
 
-			$fakes['count'] += $c;
+			$fakes['pay'] += $pay;
 
 
-		}, $types, $price, $order, $fake);
-		$table->fieldset('单位', '类型', '单价', '浏览', '独立', '登录', '注册', '下载', '激活', '充值', '结算(激活x单价)',
+		}, $unitsets, $order, $fake);
+		$table->fieldset('单位(管理)', '类型', '单价', '浏览', '独立', '登录', '注册', '下载', '激活', '总充值', '老充值', '新充值', '结算(激活x单价)',
 			'浏览(假)', '独立(假)', '登录(假)', '注册(假)', '下载(假)', '激活(假)', '充值(假)', '结算(激活x单价)(假)');
 		$table->row()['style'] = 'background:lightblue';
 		$table->cell(['合计', 'colspan' => 3]);
@@ -1799,8 +1820,10 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 		$table->cell(number_format($count['dc']));
 		$table->cell(number_format($count['ia']));
 		
-		$table->cell(number_format($count['order'] * 0.01, 2));
-		$table->cell(number_format($count['count'], 2));
+		$table->cell(number_format($count['all'] * 0.01, 2));
+		$table->cell(number_format($count['old'] * 0.01, 2));
+		$table->cell(number_format($count['new'] * 0.01, 2));
+		$table->cell(number_format($count['pay'], 2));
 
 		$table->cell(number_format($fakes['pv']));
 		$table->cell(number_format($fakes['ua']));
@@ -1809,7 +1832,7 @@ SQL, $this->webapp->site, $start, $end)->column('fee', 'unit');
 		$table->cell(number_format($fakes['dc']));
 		$table->cell(number_format($fakes['ia']));
 		$table->cell('-');
-		$table->cell(number_format($fakes['count'], 2));
+		$table->cell(number_format($fakes['pay'], 2));
 
 		$table->header('单位成本结算');
 		$table->bar->append('input', ['type' => 'date', 'value' => $start, 'onchange' => 'g({start:this.value})']);

@@ -14,36 +14,62 @@ if (globalThis.window)
 				callback[event.data.is](event.data.content);
 			}
 		};
-		return (url, type = 'application/octet-stream', options = {cache: 'no-store'}) => typeof type === 'string'
-			? new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && backer.postMessage({id, url, type, options}))
-			: Promise.allSettled(Array.from(type).map(file => new Promise((resolve, reject) =>
+		return (url, options = {cache: 'no-store'}) => options instanceof FileList
+			? Promise.allSettled(Array.from(options).map(file => new Promise(async (resolve, reject) =>
 			{
-				const reader = file.stream().getReader();
-				reader.read().then(function uploaddata({done, value})
+				let hash = 5381n;
+				const stream = file.stream(), reader = stream.getReader();
+				await reader.read().then(function time33({done, value})
 				{
-					if (done) return resolve(file);
-					new Promise((resolve, reject) =>
+					if (done) return reader.releaseLock();
+					for (let i = 0; i < value.length; ++i)
 					{
-						promise.set(++id, [resolve, reject]);
-						backer.postMessage({id, url, type: 'application/octet-stream', options, buffer: value.buffer}, [value.buffer]);
-					}).then(()=> reader.read().then(uploaddata)).catch(reject);
+						hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i]);
+					}
+					reader.read().then(time33);
 				});
-			})));
+				await reader.cancel();
+				fetch(url, {
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify({
+						//hash: hash.toString(16).padStart(16, 0),
+						size: file.size,
+						type: file.type,
+						name: file.name})
+				}).then(response => response.text()).then(url =>
+				{
+					console.log(url)
+					const reader = stream.getReader();
+					reader.read().then(function uploaddata({done, value})
+					{
+						console.log(11111);
+						if (done) return resolve(file);
+						new Promise((resolve, reject) =>
+						{
+							promise.set(++id, [resolve, reject]);
+							backer.postMessage({id, url, options, buffer: value.buffer}, [value.buffer]);
+						}).then(() => reader.read().then(uploaddata)).catch(reject);
+					});
+				}).catch(reject);
+			})))
+			: new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && backer.postMessage({id, url, options}));
 	}());
 }
 else
 {
-	let count = 0;
-	const controller = new AbortController, queue = [], limit = 4;
-	async function load(url, type, options)
+	const controller = new AbortController, queue = [];
+	async function load(url, options)
 	{
 		//application/octet-stream
 		//application/octet-masker
 		const
-		option = {...options, signal: controller.signal}, response = await fetch(url, option), type = response.headers.get('content-type');
-		if (option.mask ||  === 'application/octet-masker')
+		option = {...options, signal: controller.signal},
+		response = await fetch(url, option),
+		type = response.headers.get('content-type');
+		let blob;
+		if (option.mask || type === 'application/octet-masker')
 		{
-			let blob;
 			const reader = response.body.getReader(), key = new Uint8Array(8), buffer = [];
 			for (let read, len = 0, offset = 0;;)
 			{
@@ -87,8 +113,8 @@ else
 		{
 			blob = await response.blob();
 		}
-		
-		switch (option.type || response.headers.get('content-type'))
+
+		switch (option.type || type)
 		{
 			case 'application/json': return JSON.parse(await blob.text());
 			case 'text/plain': return blob.text();
@@ -97,7 +123,7 @@ else
 	}
 	function work(data)
 	{
-		load(data.url, data.type, data.buffer ? {
+		load(data.url, data.buffer ? {
 			...data.options,
 			method: 'POST',
 			body: data.buffer
@@ -115,8 +141,7 @@ else
 				
 			});
 	}
-
-	
+	let count = 0;
 	self.onmessage = event =>
 	{
 		if (event.data === 'abort')
@@ -126,7 +151,7 @@ else
 		}
 		else
 		{
-			if (count++ < limit)
+			if (++count < 6)
 			{
 				work(event.data);
 			}
