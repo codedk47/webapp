@@ -101,7 +101,7 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function adminlists():array
 	{
-		$users = [$this->webapp['admin_username'] => "admin(超级管理)"];
+		$users = [$this->webapp['admin_username'] => "admin"];
 		foreach ($this->webapp->mysql->admin as $admin)
 		{
 			$users[$admin['uid']] = $admin['name'];
