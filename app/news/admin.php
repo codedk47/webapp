@@ -1749,7 +1749,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 
 		$stat = $this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia');
 		
-		$table = $this->main->table($stat, function($table, $stat, $unitsets, $order, $fake, $apru) use(&$count, &$fakes)
+		$table = $this->main->table($stat, function($table, $stat, $unitsets, $order, $fake) use(&$count, &$fakes)
 		{
 			$count['pv'] += $stat['pv'];
 			$count['ua'] += $stat['ua'];
@@ -1765,7 +1765,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$table->cell("{$stat['unit']}({$admin})");
 			$table->cell($type);
 			$table->cell(number_format($price, 2));
-			$table->cell(number_format(isset($apru[$stat['unit']]) ? $all / $apru[$stat['unit']] * 0.01 : 0, 2));
+			$table->cell(number_format($stat['ia'] ? $all * 0.01 / $stat['ia'] : 0, 2));
 			$table->cell(number_format($stat['pv']));
 			$table->cell(number_format($stat['ua']));
 			$table->cell(number_format($stat['lu']));
@@ -1808,14 +1808,13 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$fakes['pay'] += $pay;
 
 
-		}, $unitsets, $order, $fake, array_column($this->webapp->mysql
-			->accounts('WHERE date>=?s AND date<=?s GROUP BY unit', $start, $end)
-			->select('count(1) count,unit')->all(), 'count', 'unit'));
+		}, $unitsets, $order, $fake);
 		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '浏览', '独立', '登录', '注册', '下载', '激活', '总充值', '老充值', '新充值', '结算(激活x单价)',
 			'浏览(假)', '独立(假)', '登录(假)', '注册(假)', '下载(假)', '激活(假)', '充值(假)', '结算(激活x单价)(假)');
 		$table->row()['style'] = 'background:lightblue';
-		$table->cell(['合计', 'colspan' => 4]);
+		$table->cell(['合计', 'colspan' => 3]);
 
+		$table->cell(number_format($count['ia'] ? $count['all'] * 0.01 / $count['ia'] : 0, 2));
 		$table->cell(number_format($count['pv']));
 		$table->cell(number_format($count['ua']));
 		$table->cell(number_format($count['lu']));
