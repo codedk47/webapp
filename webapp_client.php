@@ -635,37 +635,38 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 	{
 		return (is_dir($dir = dirname($filename)) || mkdir($dir, recursive: TRUE)) && $this->to($filename);
 	}
-	function downm3u8(string $downdir, callable $rename = NULL):bool
+	function downm3u8(string $downdir):bool
 	{
-		do
+		if ($m3u8 = preg_match_all('/#[^#]+/', $this->content('text/plain'), $pattern) ? $pattern[0] : [])
 		{
-			$m3u8 = $this->content();
+			$count = 0;
 			$path = preg_match('/^(\/[^\/]+){2,}/', $this->path) ? dirname($this->path) : '';
-			if (preg_match('/URI="([^"]+)/', $m3u8, $key))
+			foreach ($m3u8 as &$value)
 			{
-				if ($this->goto(preg_match('/^https?:\/\//i', $key[1]) ? $key[1] : "{$path}/{$key[1]}")->saveas("{$downdir}/keycode") === FALSE)
+				if (str_starts_with($value, '#EXTINF'))
 				{
-					break;
-				}
-				$m3u8 = str_replace($key[0], 'URI="keycode', $m3u8);
-			}
-			$rename ??= fn($ts) => 'dx' . basename($ts, '.ts');
-			if (preg_match_all('/#EXTINF:[^\r\n]+\s+([^\r\n]+)/', $m3u8, $list))
-			{
-				foreach ($list[1] as $ts)
-				{
-					$name = $rename($ts);
-					if (is_file($filename = "{$downdir}/{$name}") || $this->goto(preg_match('/^https?:\/\//i', $ts) ? $ts : "{$path}/{$ts}")->saveas($filename))
-					{
-						echo $ts," => {$name}\n";
-						continue;
+					if (preg_match('/([^\,]+\,\s*)([^\r\n]+)/', $value, $ts)
+						&& (is_file($filename = "{$downdir}/" . ($name = sprintf('dx%06d', ++$count)))
+							|| $this->goto(preg_match('/^https?:\/\//i', $ts[2]) ? $ts[2] : "{$path}/{$ts[2]}")->saveas($filename))) {
+						$value = "{$ts[1]}{$name}\n";
+						echo "{$ts[2]} => {$name}\n";
 					}
-					break;
+					else
+					{
+						$value = '';
+					}
 				}
-				$m3u8 = preg_replace_callback('/(#EXTINF:[^\r\n]+\s+)([^\r\n]+)/', fn($m) => $m[1] . $rename($m[2]), $m3u8);
+				else
+				{
+					if (str_starts_with($value, '#EXT-X-KEY')
+						&& preg_match('/URI="([^"]+)/', $value, $key)
+						&& $this->goto(preg_match('/^https?:\/\//i', $key[1]) ? $key[1] : "{$path}/{$key[1]}")->saveas("{$downdir}/keycode")) {
+						$value = preg_replace('/URI="([^"]+)/', 'URI="keycode', $value);
+					}
+				}
 			}
-			return file_put_contents("{$downdir}/play.m3u8", $m3u8) !== FALSE;
-		} while (FALSE);
+			return file_put_contents("{$downdir}/play.m3u8", join($m3u8)) !== FALSE;
+		}
 		return FALSE;
 	}
 	static function open(string $url, array $options = []):static

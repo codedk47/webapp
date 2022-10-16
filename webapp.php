@@ -65,6 +65,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
 	}
+	// static function randhash(bool $care = FALSE):string
+	// {
+	// 	return static::hash(static::random(8), $care);
+	// }
 	static function iphex(string $ip):string
 	{
 		return str_pad(bin2hex(inet_pton($ip)), 32, '0', STR_PAD_LEFT);
