@@ -812,7 +812,7 @@ class interfaces extends webapp
 			{
 				$account[$gift['name']] = $account[$gift['name']] + $gift['value'];
 			}
-			$this->account_xml($account);
+			$this->account_xml($account, $signature);
 		}
 	}
 	function post_changedid()

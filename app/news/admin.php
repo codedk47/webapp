@@ -1749,7 +1749,8 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 
 		$stat = $this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia');
 		
-		$count['apru'] = [];
+		$count['apru-ia'] = 0;
+		$count['apru-all'] = 0;
 		$table = $this->main->table($stat, function($table, $stat, $unitsets, $order, $fake) use(&$count, &$fakes)
 		{
 			$count['pv'] += $stat['pv'];
@@ -1766,7 +1767,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$table->cell("{$stat['unit']}({$admin})");
 			$table->cell($type);
 			$table->cell(number_format($price, 2));
-			$table->cell(number_format($type === 'cpa' && $stat['ia'] ? $count['apru'][] = $all * 0.01 / $stat['ia'] : 0, 2));
+			$table->cell(number_format($type === 'cpa' && $stat['ia'] ? $all * 0.01 / $stat['ia'] : 0, 2));
 			$table->cell(number_format($stat['pv']));
 			$table->cell(number_format($stat['ua']));
 			$table->cell(number_format($stat['lu']));
@@ -1781,6 +1782,11 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$count['old'] += $old;
 			$count['new'] += $new;
 			$count['pay'] += $pay;
+			if ($type === 'cpa')
+			{
+				$count['apru-ia'] += $stat['ia'];
+				$count['apru-all'] += $all;
+			}
 
 			if (isset($fake[$stat['unit']]))
 			{
@@ -1815,7 +1821,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		$table->row()['style'] = 'background:lightblue';
 		$table->cell(['合计', 'colspan' => 3]);
 
-		$table->cell(number_format(array_sum($count['apru']) / count($count['apru']), 2));
+		$table->cell(number_format($count['apru-ia'] ? $count['apru-all'] * 0.01 / $count['apru-ia'] : 0, 2));
 		$table->cell(number_format($count['pv']));
 		$table->cell(number_format($count['ua']));
 		$table->cell(number_format($count['lu']));
