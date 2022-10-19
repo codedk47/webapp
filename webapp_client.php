@@ -336,7 +336,7 @@ class webapp_client_smtp extends webapp_client
 }
 class webapp_client_http extends webapp_client implements ArrayAccess
 {
-	public readonly string $path;
+	public string $path;
 	protected readonly int $autoretry, $autojump;
 	protected array $headers = [
 		'Host' => '*',
@@ -427,6 +427,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 	}
 	function request(string $method, string $path, $data = NULL, string $type = NULL):bool
 	{
+		$this->path = $path;
 		$request = ["{$method} {$path} HTTP/1.1"];
 		foreach ($this->headers as $name => $value)
 		{
