@@ -14,7 +14,7 @@ class interfaces extends webapp
 	}
 	function sync():webapp_client_http
 	{
-		return $this->sync[$this->site] ??= (new webapp_client_http("http://{$this['app_site'][$this->site]}/index.php", ['autoretry' => 2]))->headers([
+		return $this->sync[$this->site] ??= (new webapp_client_http("http://{$this['app_site'][$this->site]}/", ['autoretry' => 2]))->headers([
 			'Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password']),
 			'X-Client-IP' => $this->clientip
 		]);
@@ -29,7 +29,7 @@ class interfaces extends webapp
 			}
 		}
 		$sync = $this->sync();
-		return is_string($content = $sync->goto("{$sync->path}?sync/{$method}", [
+		return is_string($content = $sync->goto("/index.php?sync/{$method}", [
 			'method' => 'POST',
 			'type' => 'application/json',
 			'data' => $params
@@ -41,7 +41,7 @@ class interfaces extends webapp
 		$max = NULL;
 		do
 		{
-			if (is_object($xml = $sync->goto("{$sync->path}?pull/{$router}")->content()))
+			if (is_object($xml = $sync->goto("/index.php?pull/{$router}")->content()))
 			{
 				$max ??= intval($xml['max']);
 				foreach ($xml->children() as $children)
