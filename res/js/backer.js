@@ -14,45 +14,58 @@ if (globalThis.window)
 				callback[event.data.is](event.data.content);
 			}
 		};
-		return (url, options = {cache: 'no-store'}) => options instanceof FileList
-			? Promise.allSettled(Array.from(options).map(file => new Promise(async (resolve, reject) =>
+		function upload(url, files, progress)
+		{
+			let size = 0, send = 0;
+			const key = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
+			return Promise.allSettled(Array.from(files).map(file => new Promise(async (resolve, reject) =>
 			{
-				let hash = 5381n;
-				const stream = file.stream(), reader = stream.getReader();
-				await reader.read().then(function time33({done, value})
+				let hash = 5381n, i = 0;
+				const reader = file.stream().getReader();
+				await reader.read().then(async function time33({done, value})
 				{
 					if (done) return reader.releaseLock();
-					for (let i = 0; i < value.length; ++i)
+					while (i < value.length)
 					{
-						hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i]);
+						hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]);
 					}
-					reader.read().then(time33);
+					await reader.read().then(time33);
 				});
-				await reader.cancel();
+				size += file.size;
 				fetch(url, {
 					method: 'POST',
 					headers: {'Content-Type': 'application/json'},
 					body: JSON.stringify({
-						//hash: hash.toString(16).padStart(16, 0),
+						hash: Array.from(Array(10)).map((v, i) => key[hash >> BigInt(i) * 5n & 31n]).join(''),
 						size: file.size,
-						type: file.type,
-						name: file.name})
-				}).then(response => response.text()).then(url =>
+						mime: file.type,
+						...(i = file.name.lastIndexOf('.')) !== -1
+							? {type: file.name.substring(i + 1), name: file.name.substring(0, i)}
+							: {type: '', name: file.name}
+					})
+				}).then(async response =>
 				{
-					console.log(url)
-					const reader = stream.getReader();
+					if (response.ok === false) return reject();
+					const url = await response.text(), reader = file.stream().getReader();
 					reader.read().then(function uploaddata({done, value})
 					{
-						console.log(11111);
 						if (done) return resolve(file);
+						send += value.length;
+						progress(send / size);
 						new Promise((resolve, reject) =>
 						{
 							promise.set(++id, [resolve, reject]);
-							backer.postMessage({id, url, options, buffer: value.buffer}, [value.buffer]);
+							backer.postMessage({id, url, options : {
+								method: 'POST',
+								body: value.buffer
+							}}, [value.buffer]);
 						}).then(() => reader.read().then(uploaddata)).catch(reject);
 					});
 				}).catch(reject);
-			})))
+			})));
+		}
+		return (url, options, progress) => options instanceof FileList
+			? upload(url, options, progress || (value => value))
 			: new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && backer.postMessage({id, url, options}));
 	}());
 }
@@ -123,11 +136,7 @@ else
 	}
 	function work(data)
 	{
-		load(data.url, data.buffer ? {
-			...data.options,
-			method: 'POST',
-			body: data.buffer
-		} : data.options)
+		load(data.url, data.options)
 			.then(content => self.postMessage({id: data.id, is: 0, content}))
 			.catch(error => self.postMessage({id: data.id, is: 1, content: error}))
 			.finally(() =>

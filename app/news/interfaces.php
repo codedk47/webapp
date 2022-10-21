@@ -2,6 +2,7 @@
 require 'admin.php';
 require 'pay.php';
 require 'unit.php';
+require 'upto.php';
 class interfaces extends webapp
 {
 	function clientip():string
@@ -631,7 +632,7 @@ class interfaces extends webapp
 		$node = $this->xml->append('resource', [
 			'hash' => $resource['hash'],
 			'time' => $resource['time'],
-			'preview' =>  sprintf('%d,%d', $resource['preview'] >> 16, $resource['preview'] & 0xffff),
+			'preview' => sprintf('%d,%d', $resource['preview'] >> 16, $resource['preview'] & 0xffff),
 			'duration' => $resource['duration'],
 			'type' => $resource['type'],
 			'tags' => $resource['tags'],
@@ -1237,5 +1238,81 @@ class interfaces extends webapp
 			}
 			$this->app['errors'][] = '合集资源创建失败！';
 		}
+	}
+	function upto():array
+	{
+		return $this->upto = $this->webapp->authorize(func_num_args() ? func_get_arg(0) : $this->webapp->request_cookie('upto'),
+			fn($uid, $pwd, $st, $add) => array_key_exists($uid, webapp_router_upto::up)
+				&& webapp_router_upto::up[$uid]['pwd'] === $pwd
+					? webapp_router_upto::up[$uid] + ['uid' => $uid, 'add' => $add] : []);
+	}
+	function options_upto_upload()
+	{
+		$this->response_header('Access-Control-Allow-Origin', '*');
+	}
+	function get_upto_upload(string $sign)
+	{
+		do
+		{
+			if (empty($info = $this->upto($sign)))
+			{
+				break;
+			}
+			if (is_file($file = "D:/sharefiles/2210/{$info['add']}"))
+			{
+				if (unlink($file) === FALSE)
+				{
+					break;
+				}
+			}
+			$this->echo('success');
+			return;
+		} while (0);
+		$this->echo('failure');
+	}
+	function post_upto_upload(string $sign = NULL)
+	{
+		if ($info = $this->upto($sign))
+		{
+			if ($file = fopen("D:/up/{$info['add']}", 'a'))
+			{
+				fwrite($file, $this->request_content());
+				fclose($file);
+				return 200;
+			}
+			return 404;
+		}
+		do
+		{
+			if (is_array($input = $this->request_content('application/json')) && $this->upto() === FALSE)
+			{
+				break;
+			}
+			$input['time'] = $this->time;
+			if ($this->mysql->upres('where hash=?s limit 1', $input['hash'])->fetch($file))
+			{
+				$input['sync'] = 'waiting';
+				if (($file['upid'] === $this->upto['uid'] && $this->mysql->upres('where hash=?s limit 1', $input['hash'])->update($input)) === FALSE)
+				{
+					break;
+				}
+			}
+			else
+			{
+				$input['uid'] = $this->upto['uid'];
+				if ($this->mysql->upres->insert($input) === FALSE)
+				{
+					break;
+				}
+			}
+			$url = 'https://up.fasdfasd.com/?upto-upload/' . $this->signature($this->upto['uid'], $this->upto['pwd'], $input['hash']);
+			if (webapp_client_http::open($url)->content() !== 'success')
+			{
+				break;
+			}
+			$this->echo($url);
+			return 200;
+		} while (0);
+		return 404;
 	}
 };
