@@ -577,7 +577,7 @@ final class webapp_pay_kk implements webapp_pay
 	{
 		if (is_array($result)
 			&& isset($result['status'], $result['mchOrderNo'], $result['income'])
-			&& intval($result['status']) > 1) {
+			&& intval($result['status']) === 2) {
 			$status = [
 				'code' => 200,
 				'type' => 'text/plain',
