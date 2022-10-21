@@ -767,7 +767,7 @@ final class webapp_router_pay extends webapp_echo_xml
 	}
 	function notify(string $name, $result)
 	{
-		file_put_contents('d:/n.txt', json_encode($result, JSON_UNESCAPED_UNICODE));
+		//file_put_contents('d:/n.txt', json_encode($result, JSON_UNESCAPED_UNICODE));
 		if (class_exists($channel = "webapp_pay_{$name}", FALSE)
 			&& (new $channel($this->webapp['app_pay'][$name]))->notify($result, $status)
 			&& $this->webapp->mysql->orders('WHERE hash=?s LIMIT 1', $status['hash'])->fetch($order)
