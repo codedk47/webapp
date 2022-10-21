@@ -1299,7 +1299,7 @@ class interfaces extends webapp
 			}
 			else
 			{
-				$input['uid'] = $this->upto['uid'];
+				$input['upid'] = $this->upto['uid'];
 				if ($this->mysql->upres->insert($input) === FALSE)
 				{
 					break;
