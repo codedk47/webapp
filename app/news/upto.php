@@ -2,7 +2,8 @@
 class webapp_router_upto extends webapp_echo_html
 {
 	const up = [
-		'test' => ['pwd' => '486251']
+		'test' => ['pwd' => '486251'],
+		'test1' => ['pwd' => '268451']
 	];
 	function __construct(webapp $webapp)
 	{
