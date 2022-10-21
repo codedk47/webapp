@@ -1258,7 +1258,7 @@ class interfaces extends webapp
 			{
 				break;
 			}
-			if (is_file($file = "D:/sharefiles/2210/{$info['add']}"))
+			if (is_file($file = "D:/up/{$info['add']}"))
 			{
 				if (unlink($file) === FALSE)
 				{
