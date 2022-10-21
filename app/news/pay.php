@@ -531,7 +531,7 @@ final class webapp_pay_kk implements webapp_pay
 				'mchOrderNo' => $order['hash'],
 				'amount' => $order['order_fee'],
 				'currency' => 'cny',
-				'notifyUrl' => $order['notify_url'],
+				'notifyUrl' => strstr($order['notify_url'], '/notify', TRUE) . '/?pay/params,channel:kk',
 				'returnUrl' => $order['return_url'],
 				'subject' => $order['order_no'],
 				'body' => $order['order_no'],
@@ -807,6 +807,11 @@ final class webapp_router_pay extends webapp_echo_xml
 	function get_notify(string $channel)
 	{
 		$this->notify($channel, $this->webapp->request_content());
+	}
+	function get_params(string $channel)
+	{
+		parse_str(substr(strstr($this->webapp['request_query'], '?'), 1), $params);
+		$this->notify($channel, $params);
 	}
 	function form_payname($ctx, $name):webapp_form|bool
 	{
