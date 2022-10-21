@@ -51,7 +51,7 @@ function upload(form)
 	const progress = form.querySelector('progress');
 	backer('?upto-upload', form['resources[]'].files, value => progress.value = value).then(status =>
 	{
-		//upwait = false;
+		upwait = false;
 		alert('所有资源上传结束');
 		location.reload();
 	});
