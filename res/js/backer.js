@@ -17,33 +17,79 @@ if (globalThis.window)
 		function upload(url, files, progress)
 		{
 			let size = 0, send = 0;
-			const key = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
+			const code = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
 			return Promise.allSettled(Array.from(files).map(file => new Promise(async (resolve, reject) =>
 			{
-				let hash = 5381n, i = 0;
-				const reader = file.stream().getReader();
+				size += file.size;
+				let hash = 5381n, i = 0, reader = file.stream().getReader();
+
+
+				// do
+				// {
+				// 	let {done, value} = await reader.read();
+				// 	if (done) break;
+				// 	for (let i = 0; i < value.length; ++i)
+				// 	{
+
+				// 	}
+
+				// 	console.log(done, value)
+
+				// } while (true);
+
+
 				await reader.read().then(async function time33({done, value})
 				{
 					if (done) return reader.releaseLock();
 					while (i < value.length)
 					{
 						hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]);
+			
 					}
 					await reader.read().then(time33);
 				});
-				size += file.size;
-				fetch(url, {
+				console.log(hash)
+				return;
+				const
+				key = hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16)),
+				response = await fetch(url, {
 					method: 'POST',
 					headers: {'Content-Type': 'application/json'},
-					body: JSON.stringify({
-						hash: Array.from(Array(10)).map((v, i) => key[hash >> BigInt(i) * 5n & 31n]).join(''),
+					body: JSON.stringify({key,
+						hash: Array.from(Array(10)).map((v, i) => code[hash >> BigInt(i) * 5n & 31n]).join(''),
 						size: file.size,
 						mime: file.type,
 						...(i = file.name.lastIndexOf('.')) !== -1
 							? {type: file.name.substring(i + 1), name: file.name.substring(0, i)}
 							: {type: '', name: file.name}
 					})
-				}).then(async response =>
+				});
+				if (response.ok === false) return reject(file);
+				url = await response.text();
+				reader = file.stream().getReader();
+				reader.read().then(function uploaddata({done, value})
+				{
+					if (done) return resolve(file);
+					send += value.length;
+					progress(send / size);
+					new Promise((resolve, reject) =>
+					{
+						promise.set(++id, [resolve, reject]);
+						for (let i = 0; i < value.length; ++i)
+						{
+							value[i] = value[i] ^ key[i % 8];
+						}
+						backer.postMessage({id, url, options : {
+							method: 'POST',
+							body: value.buffer
+						}}, [value.buffer]);
+					}).then(() => reader.read().then(uploaddata)).catch(reject);
+				});
+				//console.log(url)
+		
+
+				return;
+				a.then(async response =>
 				{
 					if (response.ok === false) return reject();
 					const url = await response.text(), reader = file.stream().getReader();
@@ -52,13 +98,29 @@ if (globalThis.window)
 						if (done) return resolve(file);
 						send += value.length;
 						progress(send / size);
+
+
+						console.log( Math.random().toString(16) );
+
+
 						new Promise((resolve, reject) =>
 						{
 							promise.set(++id, [resolve, reject]);
-							backer.postMessage({id, url, options : {
-								method: 'POST',
-								body: value.buffer
-							}}, [value.buffer]);
+
+							for (let i = 0; i < value.length; ++i)
+							{
+								value[i] = i;
+								//console.log(value[i])
+							}
+
+
+							console.log(value.buffer)
+							//resolve();
+
+							// backer.postMessage({id, url, options : {
+							// 	method: 'POST',
+							// 	body: value.buffer
+							// }}, [value.buffer]);
 						}).then(() => reader.read().then(uploaddata)).catch(reject);
 					});
 				}).catch(reject);
