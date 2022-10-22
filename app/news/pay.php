@@ -531,7 +531,7 @@ final class webapp_pay_kk implements webapp_pay
 				'mchOrderNo' => $order['hash'],
 				'amount' => $order['order_fee'],
 				'currency' => 'cny',
-				'notifyUrl' => strstr($order['notify_url'], '/notify', TRUE) . '/?pay/params,channel:kk',
+				'notifyUrl' => strstr($order['notify_url'], '/notify', TRUE) . '/notkk.php',
 				'returnUrl' => $order['return_url'],
 				'subject' => $order['order_no'],
 				'body' => $order['order_no'],
