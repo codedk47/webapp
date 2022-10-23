@@ -16,43 +16,37 @@ if (globalThis.window)
 		};
 		function upload(url, files, progress)
 		{
-			let size = 0, send = 0;
+			let size = 0, sent = 0;
 			const code = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
 			return Promise.allSettled(Array.from(files).map(file => new Promise(async (resolve, reject) =>
 			{
 				size += file.size;
-				let hash = 5381n, i = 0, reader = file.stream().getReader();
-
-
-				// do
+				let hash = 5381n, reader = file.stream().getReader();
+				
+				// const
+				// key = await reader.read().then(async function time33({done, value})
 				// {
-				// 	let {done, value} = await reader.read();
-				// 	if (done) break;
-				// 	for (let i = 0; i < value.length; ++i)
-				// 	{
-
-				// 	}
-
-				// 	console.log(done, value)
-
-				// } while (true);
-
+				// 	if (done) return hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16));
+				// 	for (let i = 0; i < value.length; hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]));
+				// 	return await reader.read().then(time33);
+				// });
 
 				await reader.read().then(async function time33({done, value})
 				{
-					if (done) return reader.releaseLock();
-					while (i < value.length)
+					if (done) return;
+					for (let i = 0; i < value.length; ++i)
 					{
 						hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]);
-			
 					}
 					await reader.read().then(time33);
 				});
-				console.log(hash)
+
+
+
+				console.log(hash);
 				return;
-				const
-				key = hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16)),
-				response = await fetch(url, {
+				
+				const response = await fetch(url, {
 					method: 'POST',
 					headers: {'Content-Type': 'application/json'},
 					body: JSON.stringify({key,
@@ -64,9 +58,59 @@ if (globalThis.window)
 							: {type: '', name: file.name}
 					})
 				});
-				if (response.ok === false) return reject(file);
-				url = await response.text();
-				reader = file.stream().getReader();
+				console.log(hash);
+				return;
+				if (response.ok)
+				{
+					url = await response.text();
+					reader = file.stream().getReader();
+					let read = 0;
+					do
+					{
+						let {done, value} = await reader.read();
+						if (done) return resolve(file);
+						if (await new Promise((resolve, reject) =>
+						{
+							promise.set(++id, [resolve, reject]);
+							console.log(1)
+							for (let i = 0; i < value.length; ++i)
+							{
+								value[i] = value[i] ^ key[read++ % 8];
+							}
+							backer.postMessage({id, url, options: {method: 'POST', body: value.buffer}}, [value.buffer]);
+						}).then(() =>
+						{
+							
+							sent += value.length;
+							progress(sent / size);
+							return true;
+						})) continue;
+					} while (false);
+				}
+				return reject(file);
+
+
+
+				while (({done, value} = await reader.read()).done === false)
+				{
+					send += value.length;
+					progress(send / size);
+					await new Promise((resolve, reject) =>
+					{
+						promise.set(++id, [resolve, reject]);
+						for (let i = 0; i < value.length; ++i)
+						{
+							value[i] = value[i] ^ key[i % 8];
+						}
+						backer.postMessage({id, url, options : {
+							method: 'POST',
+							body: value.buffer
+						}}, [value.buffer]);
+					});
+				}
+				resolve(file);
+
+
 				reader.read().then(function uploaddata({done, value})
 				{
 					if (done) return resolve(file);

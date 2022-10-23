@@ -65,12 +65,12 @@ class news_driver extends webapp
 	//数据同步GET方法（尽量不要去使用）
 	function get(string $router):string|webapp_xml
 	{
-		return $this->sync->goto("{$this->sync->path}?{$router}")->content();
+		return $this->sync->goto("/index.php?{$router}")->content();
 	}
 	//数据同步POST方法（尽量不要去使用）
 	function post(string $router, array $data = []):string|webapp_xml
 	{
-		return $this->sync->goto("{$this->sync->path}?{$router}", [
+		return $this->sync->goto("/index.php?{$router}", [
 			'method' => 'POST',
 			'type' => 'application/json',
 			'data' => $data
@@ -79,7 +79,7 @@ class news_driver extends webapp
 	//数据同步DELETE方法（尽量不要去使用）
 	function delete(string $router):string|webapp_xml
 	{
-		return $this->sync->goto("{$this->sync->path}?{$router}", ['method' => 'POST'])->content();
+		return $this->sync->goto("/index.php?{$router}", ['method' => 'POST'])->content();
 	}
 	//统一拉取数据方法
 	function pull(string $router, int $size = 1000):iterable
