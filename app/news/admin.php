@@ -621,7 +621,8 @@ function viewallcover(tbody)
 {
 	tbody.querySelectorAll('tr').forEach(tr =>
 	{
-		if (!tr.dataset.cover) return;
+		if (!tr.dataset.cover || tr.dataset.load) return;
+		tr.dataset.load = 1;
 		const td = tr.appendChild(document.createElement('td'));
 		td.style.cssText = 'width:14rem;height:8rem';
 		td.textContent = ' ';
