@@ -625,11 +625,12 @@ function viewallcover(tbody)
 		const td = tr.appendChild(document.createElement('td'));
 		td.style.cssText = 'width:14rem;height:8rem';
 		td.textContent = ' ';
-		loader(tr.dataset.cover, null, 'application/octet-stream')
-			.then(blob => td.style.background = `url(${URL.createObjectURL(blob)}) center center / contain no-repeat`);
-
+		loader(tr.dataset.cover, null, 'application/octet-stream').then(blob =>
+		{
+			td.style.background = `url(${URL.createObjectURL(blob)}) center center / contain no-repeat`;
+			tr.dataset.removeAttribute('data-cover');
+		});
 	});
-	
 }
 // document.querySelectorAll('a[data-cover]').forEach(node =>
 // {
