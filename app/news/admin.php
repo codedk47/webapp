@@ -626,7 +626,7 @@ function viewallcover(tbody)
 		td.style.cssText = 'width:14rem;height:8rem';
 		td.textContent = ' ';
 		loader(tr.dataset.cover, null, 'application/octet-stream')
-			.then(blob => td.style.backgroundImage = `url(${URL.createObjectURL(blob)}) center center / contain no-repeat`);
+			.then(blob => td.style.background = `url(${URL.createObjectURL(blob)}) center center / contain no-repeat`);
 
 	});
 	
