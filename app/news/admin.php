@@ -566,7 +566,7 @@ class webapp_router_admin extends webapp_echo_html
 
 		$table = $this->main->table($this->webapp->mysql->resources(...$cond)->paging($page), function($table, $res, $type)
 		{
-			$table->row();
+			$table->row()['data-cover'] = sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']));
 			$table->cell(['width' => 'width:100%;'])->append('a', ['❌',
 				'href' => "?admin/resource-delete,hash:{$res['hash']}",
 				'onclick' => 'return confirm(`Delete Resource ${this.dataset.hash}`)',
@@ -586,11 +586,12 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell()->append('div', [
 				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
 			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
-			$table->cell()->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
-				'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
+			// $table->cell()->append('a', ['❓', 'href' => '#', 'download' => "{$res['hash']}.jpg",
+			// 	'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
 			//$table->cell()->append('a', ['下载预览', 'href' => "{$this->webapp['app_resdomain']}?resourcepreview/{$res['hash']}"]);
 		}, $this->webapp['app_restype']);
-		$table->fieldset('❌', 'hash', 'time', 'preview', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name', '❓');
+		$table->fieldset('❌', 'hash', 'time', 'preview', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name')
+			->append('td')->append('button', ['view all cover', 'onclick' => 'viewallcover(this.parentNode.parentNode.parentNode)']);
 		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
@@ -616,30 +617,45 @@ class webapp_router_admin extends webapp_echo_html
 		])->setattr(['onchange' => 'g({sync:this.value})'])->selected($sync);
 		$table->paging($this->webapp->at(['page' => '']));
 		$this->main->append('script')->cdata(<<<'JS'
-document.querySelectorAll('a[data-cover]').forEach(node =>
+function viewallcover(tbody)
 {
-	node.onmouseenter = function(event)
+	tbody.querySelectorAll('tr').forEach(tr =>
 	{
-		if (!this.img)
-		{
-			this.img = new Image;
-			loader(this.dataset.cover, null, 'application/octet-stream').then(blob => this.img.src = this.href = URL.createObjectURL(blob));
-			this.img.style.cssText = 'position:absolute;border:.1rem solid black;max-width:300px';
-			this.parentNode.parentNode.appendChild(this.img);
-		}
-		else
-		{
-			this.img.style.display = 'block';
-		}
-		this.img.style.top = event.pageY > window.outerHeight * 0.5
-			? `${this.getBoundingClientRect().bottom - this.img.offsetHeight - this.offsetHeight}px`
-			: `${this.getBoundingClientRect().bottom}px`;
-	}
-	node.onmouseleave = function()
-	{
-		this.img.style.display = 'none';
-	}
-});
+		if (!tr.dataset.cover) return;
+		const td = tr.appendChild(document.createElement('td'));
+		td.style.cssText = 'width:14rem;height:8rem';
+		td.textContent = ' ';
+		loader(tr.dataset.cover, null, 'application/octet-stream')
+			.then(blob => td.style.backgroundImage = `url(${URL.createObjectURL(blob)}) center center / contain no-repeat`);
+
+	});
+	
+}
+// document.querySelectorAll('a[data-cover]').forEach(node =>
+// {
+// 	return;
+// 	node.onmouseenter = function(event)
+// 	{
+// 		if (!this.img)
+// 		{
+// 			this.img = new Image;
+// 			loader(this.dataset.cover, null, 'application/octet-stream').then(blob => this.img.src = this.href = URL.createObjectURL(blob));
+// 			this.img.style.cssText = 'position:absolute;border:.1rem solid black;max-width:300px';
+// 			this.parentNode.parentNode.appendChild(this.img);
+// 		}
+// 		else
+// 		{
+// 			this.img.style.display = 'block';
+// 		}
+// 		this.img.style.top = event.pageY > window.outerHeight * 0.5
+// 			? `${this.getBoundingClientRect().bottom - this.img.offsetHeight - this.offsetHeight}px`
+// 			: `${this.getBoundingClientRect().bottom}px`;
+// 	}
+// 	node.onmouseleave = function()
+// 	{
+// 		this.img.style.display = 'none';
+// 	}
+// });
 JS);
 	}
 	//账户
@@ -1906,8 +1922,6 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		foreach ($this->webapp->mysql->resources('where find_in_set("M2M9",tags) and (??)', $names) as $res)
 		{
 			$ul->li[] = "{$res['hash']} - {$res['name']}\n";
-			$require = [9, 11, 13][round(ord(random_bytes(1)) / 25.5)] ?? -1;
-			$tags = 'kWei,DQFQ,5SUr,5SUr,fb3n,CoW1,06Rb,rfzr';
 			++$count;
 		}
 		$endata = $this->webapp->encrypt(json_encode([$names, $input['tags']], JSON_UNESCAPED_UNICODE));
