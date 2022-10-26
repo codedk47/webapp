@@ -651,7 +651,7 @@ final class webapp_pay_ny implements webapp_pay
 	{
 		if (is_array($result)
 			&& isset($result['returncode'], $result['orderid'], $result['transaction_id'], $result['amount'])
-			&& intval($result['returncode']) === '00') {
+			&& $result['returncode'] === '00') {
 			$status = [
 				'code' => 200,
 				'type' => 'text/plain',
@@ -845,13 +845,7 @@ final class webapp_router_pay extends webapp_echo_xml
 		$result = $this->webapp->request_content();
 
 		ob_start();
-		$logs = [$name];
-		foreach (getallheaders() as $k => $v)
-		{
-			$logs[] = "{$k}: {$v}";
-		}
-		$logs[] = $result;
-		var_dump($logs);
+		var_dump([$name, 'head' => getallheaders(), 'body' => $result]);
 		file_put_contents('d:/n.txt', ob_get_clean());
 
 		if (class_exists($channel = "webapp_pay_{$name}", FALSE)
