@@ -842,20 +842,17 @@ final class webapp_router_pay extends webapp_echo_xml
 	}
 	function notify(string $name)
 	{
-		$result = match ($name)
-		{
-			'ny' => $this->webapp->request_content('application/json'),
-			default => $this->webapp->request_content(),
-		};
+		$result = $this->webapp->request_content();
 
+		ob_start();
 		$logs = [$name];
 		foreach (getallheaders() as $k => $v)
 		{
 			$logs[] = "{$k}: {$v}";
 		}
-		$logs[] = "\r\n";
-		$logs[] = json_encode($result, JSON_UNESCAPED_UNICODE);
-		file_put_contents('d:/n.txt', join("\r\n", $logs));
+		$logs[] = $result;
+		var_dump($logs);
+		file_put_contents('d:/n.txt', ob_get_clean());
 
 		if (class_exists($channel = "webapp_pay_{$name}", FALSE)
 			&& (new $channel($this->webapp['app_pay'][$name]))->notify($result, $status)
