@@ -1936,14 +1936,19 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		{
 			$d = json_decode($d, TRUE);
 			$count = 0;
+			$csync = 0;
 			foreach ($this->webapp->mysql->resources('where find_in_set(?i,site) and type="long" and (??)', $this->webapp->site, $d[0]) as $res)
 			{
-				if ($this->webapp->mysql->resources('where hash=?s', $res['hash'])
-					->update('tags=?s', $d[1]) > 0) {
+				if ($this->webapp->mysql->resources('where hash=?s', $res['hash'])->update('tags=?s', $d[1]) > 0)
+				{
 					++$count;
-					};
+				}
+				if ($this->webapp->call('saveRes', $this->webapp->resource_xml($this->webapp->mysql->resources('where hash=?s', $res['hash'])->array())))
+				{
+					++$count;
+				}
 			}
-			$form->fieldset->append('b', "总计更新了{$count}条");
+			$form->fieldset->append('b', "总计更新了{$count}条，同了{$csync}");
 		}
 
 		$form->fieldset('只针对长视频！操作后不可逆转！！注意使用！！！');
