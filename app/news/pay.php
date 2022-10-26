@@ -847,11 +847,11 @@ final class webapp_router_pay extends webapp_echo_xml
 			'ny' => $this->webapp->request_content('application/json'),
 			default => $this->webapp->request_content(),
 		};
-		
+
 		$logs = [$name];
-		foreach (getallheaders() as $name => $value)
+		foreach (getallheaders() as $k => $v)
 		{
-			$logs[] = "{$name}: {$value}";
+			$logs[] = "{$k}: {$v}";
 		}
 		$logs[] = "\r\n";
 		$logs[] = json_encode($result, JSON_UNESCAPED_UNICODE);
