@@ -847,7 +847,16 @@ final class webapp_router_pay extends webapp_echo_xml
 			'ny' => $this->webapp->request_content('application/json'),
 			default => $this->webapp->request_content(),
 		};
-		//file_put_contents('d:/n.txt', json_encode($result, JSON_UNESCAPED_UNICODE));
+		
+		$logs = [$name];
+		foreach (getallheaders() as $name => $value)
+		{
+			$logs[] = "{$name}: {$value}";
+		}
+		$logs[] = "\r\n";
+		$logs[] = json_encode($result, JSON_UNESCAPED_UNICODE);
+		file_put_contents('d:/n.txt', join("\r\n", $logs));
+
 		if (class_exists($channel = "webapp_pay_{$name}", FALSE)
 			&& (new $channel($this->webapp['app_pay'][$name]))->notify($result, $status)
 			&& $this->webapp->mysql->orders('WHERE hash=?s LIMIT 1', $status['hash'])->fetch($order)
