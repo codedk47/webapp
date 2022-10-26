@@ -840,9 +840,14 @@ final class webapp_router_pay extends webapp_echo_xml
 		$client->status($response);
 		return str_contains(strtoupper($result = $client->content('text')), 'SUCCESS');
 	}
-	function notify(string $name, $result)
+	function notify(string $name)
 	{
 		//file_put_contents('d:/n.txt', json_encode($result, JSON_UNESCAPED_UNICODE));
+		$result = match ($name)
+		{
+			'ny' => $this->webapp->request_content('application/json'),
+			default => $this->webapp->request_content(),
+		};
 		if (class_exists($channel = "webapp_pay_{$name}", FALSE)
 			&& (new $channel($this->webapp['app_pay'][$name]))->notify($result, $status)
 			&& $this->webapp->mysql->orders('WHERE hash=?s LIMIT 1', $status['hash'])->fetch($order)
@@ -881,16 +886,11 @@ final class webapp_router_pay extends webapp_echo_xml
 	}
 	function post_notify(string $channel)
 	{
-		$this->notify($channel, $this->webapp->request_content());
+		$this->notify($channel);
 	}
 	function get_notify(string $channel)
 	{
-		$this->notify($channel, $this->webapp->request_content());
-	}
-	function get_params(string $channel)
-	{
-		parse_str(substr(strstr($this->webapp['request_query'], '?'), 1), $params);
-		$this->notify($channel, $params);
+		$this->notify($channel);
 	}
 	function form_payname($ctx, $name):webapp_form|bool
 	{
