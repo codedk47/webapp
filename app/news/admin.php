@@ -1945,10 +1945,10 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 				}
 				if ($this->webapp->call('saveRes', $this->webapp->resource_xml($this->webapp->mysql->resources('where hash=?s', $res['hash'])->array())))
 				{
-					++$count;
+					++$csync;
 				}
 			}
-			$form->fieldset->append('b', "总计更新了{$count}条，同了{$csync}");
+			$form->fieldset->append('b', "总计：更新了{$count}条，同步了{$csync}条。");
 		}
 
 		$form->fieldset('只针对长视频！操作后不可逆转！！注意使用！！！');
