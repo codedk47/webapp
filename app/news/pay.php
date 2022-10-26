@@ -844,9 +844,9 @@ final class webapp_router_pay extends webapp_echo_xml
 	{
 		$result = $this->webapp->request_content();
 
-		ob_start();
-		var_dump([$name, 'head' => getallheaders(), 'body' => $result]);
-		file_put_contents('d:/n.txt', ob_get_clean());
+		// ob_start();
+		// var_dump([$name, 'head' => getallheaders(), 'body' => $result]);
+		// file_put_contents('d:/n.txt', ob_get_clean());
 
 		if (class_exists($channel = "webapp_pay_{$name}", FALSE)
 			&& (new $channel($this->webapp['app_pay'][$name]))->notify($result, $status)
