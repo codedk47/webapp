@@ -655,7 +655,7 @@ final class webapp_pay_ny implements webapp_pay
 			$status = [
 				'code' => 200,
 				'type' => 'text/plain',
-				'data' => 'ON',
+				'data' => 'OK',
 				'hash' => $result['orderid'],
 				'trade_no' => $result['transaction_id'],
 				'actual_fee' => $result['amount'] * 100
