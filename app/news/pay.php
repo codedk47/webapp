@@ -590,6 +590,81 @@ final class webapp_pay_kk implements webapp_pay
 		return FALSE;
 	}
 }
+final class webapp_pay_ny implements webapp_pay
+{
+	static function paytype():array
+	{
+		return [
+			1 => '微信h5',
+			2 => '支付宝h5'
+		];
+	}
+	function __construct(array $context)
+	{
+		$this->ctx = $context;
+	}
+	function create(array &$order, ?string &$error):bool
+	{
+		do
+		{
+			$data = [
+				'pay_memberid' => $this->ctx['id'],
+				'pay_orderid' => $order['hash'],
+				'pay_amount' => $order['order_fee'] * 0.01,
+				'pay_applydate' => date('Y-m-d H:i:s'),
+				'pay_bankcode' => $order['pay_type'],
+				'pay_notifyurl' => $order['notify_url'],
+				'pay_callbackurl' => $order['return_url']
+			];
+			ksort($data);
+			$query = [];
+			foreach ($data as $k => $v)
+			{
+				$query[] = "{$k}={$v}";
+			}
+			$query[] = "key={$this->ctx['key']}";
+			$data['pay_md5sign'] = strtoupper(md5(join('&', $query)));
+			$data['pay_productname'] = $order['order_no'];
+			//print_r($data);
+			if (is_array($result = webapp_client_http::open('http://api.reqorder.top/Pay_IndexLink.html', [
+				'timeout' => 8,
+				'autoretry' => 2,
+				'method' => 'POST',
+				'data' => $data])->content()) === FALSE) {
+				break;
+			}
+			//var_dump($result);
+			if ((isset($result['status'], $result['data']['pay_url']) && $result['status'] === 'success') === FALSE)
+			{
+				$error = '远程支付失败！';
+				break;
+			}
+			$order['trade_no'] = $order['hash'];
+			$order['type'] = 'goto';
+			$order['data'] = $result['data']['pay_url'];
+			return TRUE;
+		} while (0);
+		//var_dump($result);
+		return FALSE;
+	}
+	function notify(mixed $result, ?array &$status):bool
+	{
+		if (is_array($result)
+			&& isset($result['returncode'], $result['orderid'], $result['transaction_id'], $result['amount'])
+			&& intval($result['returncode']) === '00') {
+			$status = [
+				'code' => 200,
+				'type' => 'text/plain',
+				'data' => 'OK',
+				'hash' => $result['orderid'],
+				'trade_no' => $result['transaction_id'],
+				'actual_fee' => $result['amount'] * 100
+			];
+			return TRUE;
+		}
+		return FALSE;
+	}
+}
 final class webapp_router_pay extends webapp_echo_xml
 {
 	#为了更好的兼容回调地址请改写地址重写
@@ -776,6 +851,10 @@ final class webapp_router_pay extends webapp_echo_xml
 			if (array_key_exists('actual_fee', $status))
 			{
 				$updata['actual_fee'] = $order['actual_fee'] = $status['actual_fee'];
+			}
+			if (array_key_exists('trade_no', $status))
+			{
+				$updata['trade_no'] = $order['trade_no'] = $status['trade_no'];
 			}
 			if (is_numeric($order['pay_user'])
 				&& strlen($order['notify_url']) === 10

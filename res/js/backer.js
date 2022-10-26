@@ -21,7 +21,50 @@ if (globalThis.window)
 			return Promise.allSettled(Array.from(files).map(file => new Promise(async (resolve, reject) =>
 			{
 				size += file.size;
-				let hash = 5381n, reader = file.stream().getReader();
+				let
+				hash = 5381n,
+				reader = file.stream().getReader(),
+				offset = 0,
+				key = Array(16).fill(parseInt(file.size / 16)).map((v, k) => v * k),
+				i = 0;
+				console.log(key);
+				do
+				{
+					let {done, value} = await reader.read();
+					if (done)
+					{
+						key = hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16));
+						break;
+					}
+					
+					while (i < 16 && offset + value.length > key[i])
+					{
+						console.log( i, ' - ', value[key[i++] - offset], ' - ', String.fromCharCode(value[key[i] - offset])  );
+
+
+
+
+						//hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[tell++]);
+					}
+					offset += value.length;
+					// while (tell < 7 && tell < value.length)
+					// {
+					// 	hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[tell++]);
+					// }
+					// if (key)
+					// if (tell < 7)
+					// {
+
+					// }
+					// for (let i = 0; i < value.length; ++i)
+					// {
+					// 	hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]);
+					// }
+
+
+
+				} while (true);
+
 				
 				// const
 				// key = await reader.read().then(async function time33({done, value})
@@ -30,16 +73,17 @@ if (globalThis.window)
 				// 	for (let i = 0; i < value.length; hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]));
 				// 	return await reader.read().then(time33);
 				// });
+				//console.log(file.size)
 
-				await reader.read().then(async function time33({done, value})
-				{
-					if (done) return;
-					for (let i = 0; i < value.length; ++i)
-					{
-						hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]);
-					}
-					await reader.read().then(time33);
-				});
+				// await reader.read().then(async function time33({done, value})
+				// {
+				// 	if (done) return;
+				// 	for (let i = 0; i < value.length; ++i)
+				// 	{
+				// 		hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]);
+				// 	}
+				// 	await reader.read().then(time33);
+				// });
 
 
 
