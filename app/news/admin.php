@@ -49,7 +49,7 @@ class webapp_router_admin extends webapp_echo_html
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Runstatus（服务器状态，轻点）', '?admin/runstatus'],
-				['临时修改标签', '?admin/tt']
+				['长视频 - 临时修改标签', '?admin/tt']
 			]]
 		]);
 		if ($webapp->admin[2])
@@ -1917,16 +1917,15 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 
 		$names = join(' or ', array_map(fn($name) => "name like \"%{$name}%\"", explode(',', $input['names'])));
 
-
 		$this->main->append('a', ['返回检查', 'href' => "?admin/tt"]);
 		$ul = $this->main->append('ul');
 		$count = 0;
-		foreach ($this->webapp->mysql->resources('where find_in_set("M2M9",tags) and (??)', $names) as $res)
+		foreach ($this->webapp->mysql->resources('where find_in_set(?i,site) and type="long" and (??)', $this->webapp->site, $names) as $res)
 		{
 			$ul->li[] = "{$res['hash']} - {$res['name']}\n";
 			++$count;
 		}
-		$endata = $this->webapp->encrypt(json_encode([$names, $input['tags']], JSON_UNESCAPED_UNICODE));
+		$endata = $this->webapp->encrypt(json_encode([$names, join(',', $input['tags'])], JSON_UNESCAPED_UNICODE));
 
 		$this->main->append('a', ["点击这里确认执行({$count})", 'href' => "?admin/tt,q:{$endata}"]);
 	}
@@ -1937,21 +1936,33 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		{
 			$d = json_decode($d, TRUE);
 			$count = 0;
-			foreach ($this->webapp->mysql->resources('where find_in_set("M2M9",tags) and (??)', $d[0]) as $res)
+			foreach ($this->webapp->mysql->resources('where find_in_set(?i,site) and type="long" and (??)', $this->webapp->site, $d[0]) as $res)
 			{
-				$require = [9, 11, 13][round(ord(random_bytes(1)) / 25.5)] ?? -1;
 				if ($this->webapp->mysql->resources('where hash=?s', $res['hash'])
-					->update('tags=?s,data=json_set(data,\'$."0".require\',?i)', $d[1], $require) > 0) {
+					->update('tags=?s', $d[1]) > 0) {
 					++$count;
 					};
 			}
 			$form->fieldset->append('b', "总计更新了{$count}条");
 		}
 
-		$form->fieldset('只针对 待处理标签');
+		$form->fieldset('只针对长视频！操作后不可逆转！！注意使用！！！');
 		$form->field('names', 'text', ['style' => 'width:30rem', 'placeholder' => '名称用英文 "," 切开，注意空格']);
 		$form->fieldset();
-		$form->field('tags', 'text', ['style' => 'width:30rem', 'placeholder' => '标签用英文 "," 切开，注意空格']);
+		$tagc = [];
+		$tags = [];
+		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+		{
+			$tagc[$tag['hash']] = $tag['level'];
+			$tags[$tag['hash']] = $tag['name'];
+		}
+		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
+
+		foreach ($form->fieldset->xpath('ul/li') as $li)
+		{
+			$level = (string)$li->label->input['value'];
+			$li['class'] = "level{$tagc[$level]}";
+		}
 		$form->fieldset();
 		$form->button('提交预览', 'submit');
 	}
