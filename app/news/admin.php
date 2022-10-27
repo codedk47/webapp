@@ -127,22 +127,27 @@ class webapp_router_admin extends webapp_echo_html
 				$t4 = $table->tbody->append('tr');
 				$t5 = $table->tbody->append('tr');
 				$t6 = $table->tbody->append('tr');
+				$t7 = $table->tbody->append('tr');
+				$t8 = $table->tbody->append('tr');
 
-				$t1->append('td', [$stat['date'], 'rowspan' => 6]);
+				$t1->append('td', [$stat['date'], 'rowspan' => 8]);
 
 				$t1->append('td', '浏览');
 				$t2->append('td', '独立');
 				$t3->append('td', '登录');
 				$t4->append('td', '注册');
-				$t5->append('td', '下载');
-				$t6->append('td', '激活');
+				$t5->append('td', '落览');
+				$t6->append('td', '下载');
+				$t7->append('td', '激活');
+				$t8->append('td', ['-', 'colspan' => 26]);
 
 				$t1->append('td', number_format($stat['pv']));
 				$t2->append('td', number_format($stat['ua']));
 				$t3->append('td', number_format($stat['lu']));
 				$t4->append('td', number_format($stat['ru']));
-				$t5->append('td', number_format($stat['dc']));
-				$t6->append('td', number_format($stat['ia']));
+				$t5->append('td', number_format($stat['dv']));
+				$t6->append('td', number_format($stat['dc']));
+				$t7->append('td', number_format($stat['ia']));
 
 				foreach (json_decode($stat['details'], TRUE) as $details)
 				{
@@ -150,8 +155,9 @@ class webapp_router_admin extends webapp_echo_html
 					$t2->append('td', number_format($details['ua']));
 					$t3->append('td', number_format($details['lu']));
 					$t4->append('td', number_format($details['ru']));
-					$t5->append('td', number_format($details['dc']));
-					$t6->append('td', number_format($details['ia']));
+					$t5->append('td', number_format($details['dv']));
+					$t6->append('td', number_format($details['dc']));
+					$t7->append('td', number_format($details['ia']));
 				}
 			});
 			$table->fieldset('日期', '统计', '总和', ...$hours);
@@ -210,6 +216,7 @@ class webapp_router_admin extends webapp_echo_html
 			'SUM(IF({day}=0 OR right(date,2)={day},ua,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},lu,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},ru,0))',
+			'SUM(IF({day}=0 OR right(date,2)={day},dv,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},dc,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		], 'ORDER BY $1$0 DESC LIMIT 10');
@@ -225,28 +232,28 @@ class webapp_router_admin extends webapp_echo_html
 			$t6 = $table->tbody->append('tr');
 			$t7 = $table->tbody->append('tr');
 			$t8 = $table->tbody->append('tr');
+			$t9 = $table->tbody->append('tr');
+			$t10 = $table->tbody->append('tr');
+
 			if ($stat['unit'])
 			{
-				$t1->append('td', ['rowspan' => 8])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
+				$t1->append('td', ['rowspan' => 10])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
 			}
 			else
 			{
-				$t1->append('td', ['汇总', 'rowspan' => 8]);
+				$t1->append('td', ['汇总', 'rowspan' => 10]);
 			}
 
 			$t1->append('td', '浏览');
 			$t2->append('td', '独立');
 			$t3->append('td', '登录');
 			$t4->append('td', '注册');
-			// $t5->append('td', '下载');
-			// $t6->append('td', '激活');
-			// $t7->append('td', '订单');
-			// $t8->append('td', '金额');
-
-			$t5->append('td', '点击量');
-			$t6->append('td', '下载量');
-			$t7->append('td', '订单数');
-			$t8->append('td', '订单金额');
+			$t5->append('td', '落地页');
+			$t6->append('td', '点击量');
+			$t7->append('td', '下载量');
+			$t8->append('td', '订单数');
+			$t9->append('td', '订单金额');
+			$t10->append('td', ['低调内涵不失奢华的分割线', 'colspan' => count($days) + 2]);
 
 			$t1->append('td', number_format($stat['$0$0']));
 			$t2->append('td', number_format($stat['$1$0']));
@@ -254,15 +261,16 @@ class webapp_router_admin extends webapp_echo_html
 			$t4->append('td', number_format($stat['$3$0']));
 			$t5->append('td', number_format($stat['$4$0']));
 			$t6->append('td', number_format($stat['$5$0']));
+			$t7->append('td', number_format($stat['$6$0']));
 			if (isset($unitorders[$stat['unit']]))
 			{
-				$t7->append('td', number_format($unitorders[$stat['unit']][0]['count']));
-				$t8->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
+				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count']));
+				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
 			}
 			else
 			{
-				$t7->append('td', 0);
 				$t8->append('td', 0);
+				$t9->append('td', 0);
 			}
 
 			foreach ($days as $i)
@@ -273,15 +281,16 @@ class webapp_router_admin extends webapp_echo_html
 				$t4->append('td', number_format($stat["\$3\${$i}"]));
 				$t5->append('td', number_format($stat["\$4\${$i}"]));
 				$t6->append('td', number_format($stat["\$5\${$i}"]));
+				$t7->append('td', number_format($stat["\$6\${$i}"]));
 				if (isset($unitorders[$stat['unit']]))
 				{
-					$t7->append('td', number_format($unitorders[$stat['unit']][$i]['count']));
-					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * 0.01));
+					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['count']));
+					$t9->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * 0.01));
 				}
 				else
 				{
-					$t7->append('td', 0);
 					$t8->append('td', 0);
+					$t9->append('td', 0);
 				}
 			}
 
@@ -1747,6 +1756,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			'ua' => 0,
 			'lu' => 0,
 			'ru' => 0,
+			'dv' => 0,
 			'dc' => 0,
 			'ia' => 0,
 			'all' => 0,
@@ -1754,7 +1764,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			'new' => 0,
 			'pay' => 0
 		];
-		foreach ($this->webapp->mysql->unitrates(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia') as $row)
+		foreach ($this->webapp->mysql->unitrates(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dv) dv,SUM(dc) dc,SUM(ia) ia') as $row)
 		{
 			$fake[$row['unit']] = $row;
 			foreach ($row as $k => $v)
@@ -1766,7 +1776,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			}
 		}
 
-		$stat = $this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dc) dc,SUM(ia) ia');
+		$stat = $this->webapp->mysql->unitstats(...$cond)->select('unit,SUM(pv) pv,SUM(ua) ua,SUM(lu) lu,SUM(ru) ru,SUM(dv) dv,SUM(dc) dc,SUM(ia) ia');
 		
 		$count['apru-ia'] = 0;
 		$count['apru-all'] = 0;
@@ -1776,6 +1786,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$count['ua'] += $stat['ua'];
 			$count['lu'] += $stat['lu'];
 			$count['ru'] += $stat['ru'];
+			$count['dv'] += $stat['dv'];
 			$count['dc'] += $stat['dc'];
 			$count['ia'] += $stat['ia'];
 
@@ -1787,16 +1798,29 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$table->cell($type);
 			$table->cell(number_format($price, 2));
 			$table->cell(number_format($type === 'cpa' && $stat['ia'] ? $all * 0.01 / $stat['ia'] : 0, 2));
-			$table->cell(number_format($stat['pv']));
-			$table->cell(number_format($stat['ua']));
-			$table->cell(number_format($stat['lu']));
-			$table->cell(number_format($stat['ru']));
+
+			$table->cell(number_format($stat['dv']));
 			$table->cell(number_format($stat['dc']));
 			$table->cell(number_format($stat['ia']));
+
 			$table->cell(number_format($all * 0.01, 2));
 			$table->cell(number_format($old * 0.01, 2));
 			$table->cell(number_format($new * 0.01, 2));
-			$table->cell(number_format($pay = $stat['ia'] * $price, 2));
+
+
+			if (isset($fake[$stat['unit']]))
+			{
+				$table->cell(number_format($fake[$stat['unit']]['ia']));
+				$table->cell('-');
+				$table->cell(number_format($pay = $fake[$stat['unit']]['ia'] * $price, 2));
+			}
+			else
+			{
+				$table->cell('-');
+				$table->cell('-');
+				$table->cell('-');
+				$pay = 0;
+			}
 			$count['all'] += $all;
 			$count['old'] += $old;
 			$count['new'] += $new;
@@ -1807,65 +1831,42 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 				$count['apru-all'] += $all;
 			}
 
-			if (isset($fake[$stat['unit']]))
-			{
-				$table->cell(number_format($fake[$stat['unit']]['pv']));
-				$table->cell(number_format($fake[$stat['unit']]['ua']));
-				$table->cell(number_format($fake[$stat['unit']]['lu']));
-				$table->cell(number_format($fake[$stat['unit']]['ru']));
-				$table->cell(number_format($fake[$stat['unit']]['dc']));
-				$table->cell(number_format($fake[$stat['unit']]['ia']));
-				$table->cell('-');
-				$table->cell(number_format($pay = $fake[$stat['unit']]['ia'] * $price, 2));
-			}
-			else
-			{
-				$table->cell('-');
-				$table->cell('-');
-				$table->cell('-');
-				$table->cell('-');
-				$table->cell('-');
-				$table->cell('-');
-				$table->cell('-');
-				$table->cell('-');
-				$pay = 0;
-			}
+			$table->cell(number_format($stat['pv']));
+			$table->cell(number_format($stat['ua']));
+			$table->cell(number_format($stat['lu']));
+			$table->cell(number_format($stat['ru']));
 
 			$fakes['pay'] += $pay;
 
 		}, $unitsets, $order, $fake);
-		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '浏览', '独立', '登录', '注册', '下载', '激活', '总充值', '老充值', '新充值', '结算(激活x单价)',
-			'浏览(假)', '独立(假)', '登录(假)', '注册(假)', '下载(假)', '激活(假)', '充值(假)', '结算(激活x单价)(假)');
+		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '落地页', '下载', '激活', '总充值', '老充值', '新充值',
+			'激活(假)', '充值(假)', '结算(激活x单价)(假)', '浏览', '独立', '登录', '注册');
+		$table->header('单位成本结算');
 		$table->row()['style'] = 'background:lightblue';
 		$table->cell(['合计', 'colspan' => 3]);
 
 		$table->cell(number_format($count['apru-ia'] ? $count['apru-all'] * 0.01 / $count['apru-ia'] : 0, 2));
-		$table->cell(number_format($count['pv']));
-		$table->cell(number_format($count['ua']));
-		$table->cell(number_format($count['lu']));
-		$table->cell(number_format($count['ru']));
+
+		$table->cell(number_format($count['dv']));
 		$table->cell(number_format($count['dc']));
 		$table->cell(number_format($count['ia']));
-		
+
 		$table->cell(number_format($count['all'] * 0.01, 2));
 		$table->cell(number_format($count['old'] * 0.01, 2));
 		$table->cell(number_format($count['new'] * 0.01, 2));
-		$table->cell(number_format($count['pay'], 2));
-
-		$table->cell(number_format($fakes['pv']));
-		$table->cell(number_format($fakes['ua']));
-		$table->cell(number_format($fakes['lu']));
-		$table->cell(number_format($fakes['ru']));
-		$table->cell(number_format($fakes['dc']));
 		$table->cell(number_format($fakes['ia']));
 		$table->cell('-');
 		$table->cell(number_format($fakes['pay'], 2));
 
-		$table->header('单位成本结算');
+		$table->cell(number_format($count['pv']));
+		$table->cell(number_format($count['ua']));
+		$table->cell(number_format($count['lu']));
+		$table->cell(number_format($count['ru']));
+
+		$table->xml['class'] = 'webapp-stat';
 		$table->bar->append('input', ['type' => 'date', 'value' => $start, 'onchange' => 'g({start:this.value})']);
 		$table->bar->append('span', ' - ');
 		$table->bar->append('input', ['type' => 'date', 'value' => $end, 'onchange' => 'g({end:this.value})']);
-		$table->xml['class'] = 'webapp-stat';
 	}
 	//密码
 	function form_setpwd($ctx):webapp_form
