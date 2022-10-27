@@ -1713,7 +1713,7 @@ JS);
 
 		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
 
-		$cond[0] .= ' GROUP BY unit ORDER BY pv DESC';
+		$cond[0] .= ' GROUP BY unit ORDER BY ia DESC';
 
 		$admin = $this->adminlists();
 		$unitsets = [];
