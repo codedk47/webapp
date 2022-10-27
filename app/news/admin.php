@@ -248,7 +248,7 @@ class webapp_router_admin extends webapp_echo_html
 			$t2->append('td', '独立');
 			$t3->append('td', '登录');
 			$t4->append('td', '注册');
-			$t5->append('td', '落地页');
+			$t5->append('td', '访问量');
 			$t6->append('td', '点击量');
 			$t7->append('td', '下载量');
 			$t8->append('td', '订单数');
@@ -1839,7 +1839,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$fakes['pay'] += $pay;
 
 		}, $unitsets, $order, $fake);
-		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '落地页', '下载', '激活', '总充值', '老充值', '新充值',
+		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '访问量', '下载', '激活', '总充值', '老充值', '新充值',
 			'激活(假)', '充值(假)', '结算(激活x单价)(假)', '浏览', '独立', '登录', '注册');
 		$table->header('单位成本结算');
 		$table->row()['style'] = 'background:lightblue';
