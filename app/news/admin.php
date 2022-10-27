@@ -1669,9 +1669,11 @@ JS);
 	}
 	function get_unitset_delete(string $unit)
 	{
-		$this->webapp->mysql->unitsets->delete('WHERE unit=?s LIMIT 1', $unit)
-			? $this->okay('?admin/unitsets')
-			: $this->warn('删除失败！');
+		($this->webapp->admin[2]
+			? $this->webapp->mysql->unitsets->delete('WHERE unit=?s LIMIT 1', $unit)
+			: $this->webapp->mysql->unitsets->delete('WHERE unit=?s AND admin=?s LIMIT 1', $unit, $this->webapp->admin[0]))
+				? $this->okay('?admin/unitsets')
+				: $this->warn('删除失败，只能删除该账号创建的渠道，或者联系超级管理员！');
 	}
 	function get_unitset(string $unit = NULL)
 	{
