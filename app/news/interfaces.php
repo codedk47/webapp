@@ -132,6 +132,7 @@ class interfaces extends webapp
 						'ua' => (int)$unit['ip'],
 						'lu' => (int)$unit['lu'],
 						'ru' => (int)$unit['ru'],
+						'dv' => (int)$unit['dv'],
 						'dc' => (int)$unit['dc'],
 						'ia' => (int)$unit['ia']]) ? 'OK' : 'NO',
 						"\n";
