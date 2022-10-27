@@ -242,24 +242,9 @@ class interfaces extends webapp
 		return boolval($account = $this->authorize($signature, fn(string $uid, string $pwd):array
 			=> $this->mysql->accounts('WHERE site=?i AND uid=?s AND pwd=?s LIMIT 1', $this->site, $uid, $pwd)->array()));
 	}
-	function get_test(int $page = 1)
+	function get_units()
 	{
-		// var_dump($this->site = 0);
-		// var_dump($this->accountsss('nNKiKkHCJKINcy_Ygq5179NWRWAsG_T-ulL6-enTb0gfYwLqgsUMRmY9b4cg8RSbzw8', $acc), $acc);
-
-
-
-
-		
-		$this->app('webapp_echo_xml')->xml->setattr(['site' => $this->site = 0]);
-		$this->xml = $this->app->xml;
-		$resources = $this->mysql->resources('WHERE sync="finished" AND FIND_IN_SET("HJSQ",tags) ORDER BY time ASC');
-		foreach ($resources->paging($page, 2000) as $res)
-		{
-
-			$this->resource_xml($res);
-
-		}
+		$this->xml->cdata(join($this->mysql->unitsets->column('unit')));
 	}
 	function unitincr(string $uint, string $date, array $incr):bool
 	{
