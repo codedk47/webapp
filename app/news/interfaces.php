@@ -646,13 +646,13 @@ class interfaces extends webapp
 			}
 		}
 	}
-	function get_resources(string $type = NULL, int $page = 1, int $size = 1000)
+	function get_resources(string $hash = NULL, int $page = 1, int $size = 1000)
 	{
-		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished" ORDER BY time DESC', $this->site];
-		if ($type)
+		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished"', $this->site];
+		if ($hash)
 		{
-			$cond[0] .= ' AND type=?s';
-			$cond[] = $type;
+			$cond[0] .= ' AND hash like ?s';
+			$cond[] = "{$hash}%";
 		}
 		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
 		{
@@ -665,6 +665,7 @@ class interfaces extends webapp
 		{
 			$this->resource_xml($resource);
 		}
+		$cond[0] .= ' ORDER BY time DESC';
 	}
 	//标签
 	function selecttags():array

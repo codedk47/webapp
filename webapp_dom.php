@@ -817,14 +817,14 @@ class webapp_form implements ArrayAccess
 				if (isset($pattern[1]) && intval($pattern[1]))
 				{
 					$v = intval(1 . str_repeat('0', strlen($pattern[1])));
-					if (strpos((string)($i = $f * $v), '.') || $i % ($pattern[0] * $v))
+					if (strpos(strval($i = intval($f * $v)), '.') || $i % ($pattern[0] * $v))
 					{
 						return FALSE;
 					}
 				}
 				else
 				{
-					if (strpos((string)$f, '.') || $f % intval($pattern[0]))
+					if (strpos(strval($f), '.') || intval($f) % intval($pattern[0]))
 					{
 						return FALSE;
 					}
