@@ -100,8 +100,8 @@ class webapp_router_unit extends webapp_echo_html
 				$t2->append('td', '独立');
 				$t3->append('td', '登录');
 				$t4->append('td', '注册');
-				$t5->append('td', '下载');
-				$t6->append('td', '激活');
+				$t5->append('td', '点击');
+				$t6->append('td', '下载');
 			}
 			else
 			{

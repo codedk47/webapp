@@ -137,8 +137,8 @@ class webapp_router_admin extends webapp_echo_html
 				$t3->append('td', '登录');
 				$t4->append('td', '注册');
 				$t5->append('td', '落览');
-				$t6->append('td', '下载');
-				$t7->append('td', '激活');
+				$t6->append('td', '点击');
+				$t7->append('td', '下载');
 				$t8->append('td', ['-', 'colspan' => 26]);
 
 				$t1->append('td', number_format($stat['pv']));
@@ -1841,8 +1841,8 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$fakes['pay'] += $pay;
 
 		}, $unitsets, $order, $fake);
-		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '访问量', '下载', '激活', '总充值', '老充值', '新充值',
-			'激活(假)', '充值(假)', '结算(激活x单价)(假)', '浏览', '独立', '登录', '注册');
+		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '访问量', '点击', '下载', '总充值', '老充值', '新充值',
+			'下载(假)', '充值(假)', '结算(激活x单价)(假)', '浏览', '独立', '登录', '注册');
 		$table->header('单位成本结算');
 		$table->row()['style'] = 'background:lightblue';
 		$table->cell(['合计', 'colspan' => 3]);
