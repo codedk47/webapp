@@ -1636,13 +1636,14 @@ JS);
 
 		$form->fieldset('type / rate / price');
 		$form->field('type', 'select', ['options' => [
-			'cpc' => 'CPC',
-			'cpa' => 'CPA',
-			'cps' => 'CPS',
-			'cpm' => 'CPM'
+			'' => '请选择渠道类型',
+			'cpc' => 'CPC（点击）',
+			'cpa' => 'CPA（安装）',
+			'cps' => 'CPS（分成）',
+			'cpm' => 'CPM（包月）'
 		], 'required' => NULL]);
-		$form->field('rate', 'number', ['value' => 1, 'min' => 0.1, 'max' => 1, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
-		$form->field('price', 'number', ['value' => 0, 'step' => 0.01, 'style' => 'width:14rem', 'required' => NULL]);
+		$form->field('rate', 'number', ['value' => 1, 'min' => 0.1, 'max' => 1, 'step' => 0.01, 'style' => 'width:11rem', 'required' => NULL]);
+		$form->field('price', 'number', ['value' => 0, 'step' => 0.01, 'style' => 'width:12rem', 'required' => NULL]);
 
 		$form->fieldset('owns');
 		$unit = $this->webapp->mysql->unitsets('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('unit', 'unit');
