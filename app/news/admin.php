@@ -1707,12 +1707,19 @@ JS);
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
-	function get_unitcost(string $start = NULL, string $end = NULL)
+	function get_unitcost(string $type = NULL, string $start = NULL, string $end = NULL)
 	{
 		$start ??= date('Y-m-d', mktime(0, 0, 0, day:1));
 		$end ??= date('Y-m-d');
 
+
 		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
+		if ($type)
+		{
+			$unit = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit');
+			$cond[0] .= ' AND unit IN(?S)';
+			$cond[] = $unit ? $unit : ['0000'];
+		}
 
 		$cond[0] .= ' GROUP BY unit ORDER BY ia DESC';
 
@@ -1867,6 +1874,9 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		$table->cell(number_format($count['ru']));
 
 		$table->xml['class'] = 'webapp-stat';
+		$table->bar->select(
+			['' => '全部类型', 'cpc' => 'cpc', 'cpa' => 'cpa', 'cps' => 'cps', 'cpm' => 'cpm']
+		)->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->append('input', ['type' => 'date', 'value' => $start, 'onchange' => 'g({start:this.value})']);
 		$table->bar->append('span', ' - ');
 		$table->bar->append('input', ['type' => 'date', 'value' => $end, 'onchange' => 'g({end:this.value})']);
