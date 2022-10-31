@@ -638,7 +638,6 @@ function viewallcover(tbody)
 		loader(tr.dataset.cover, null, 'application/octet-stream').then(blob =>
 		{
 			td.style.background = `url(${URL.createObjectURL(blob)}) center center / contain no-repeat`;
-			tr.dataset.removeAttribute('data-cover');
 		});
 	});
 }
