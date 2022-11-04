@@ -747,6 +747,12 @@ JS);
 				}
 			}
 		}
+
+		$counts = [];
+		foreach ($this->webapp->mysql->accounts(sprintf('%s GROUP BY device ORDER BY c DESC', $cond[0]), ...array_slice($cond, 1))
+			->select('device,count(1) c') as $dc) { $counts[] = "{$dc['device']}: {$dc['c']}";
+		}
+
 		$cond[0] .= ' order by time desc';
 		$table = $this->main->table($this->webapp->mysql->accounts(...$cond)->paging($page), function($table, $acc)
 		{
@@ -777,6 +783,7 @@ JS);
 			->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->bar->append('span', [join(', ', $counts), 'style' => 'padding-left:1rem;font-weight:bold;color:green']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
 	//广告
@@ -1301,6 +1308,11 @@ JS);
 			$cond[0] .= ' AND status=?s';
 			$cond[] = $status;
 		}
+		if ($pno = $this->webapp->query['pno'] ?? '')
+		{
+			$cond[0] .= ' AND order_no like ?s';
+			$cond[] = "{$pno}%";
+		}
 		if ($search)
 		{
 			$cond[0] .= strlen($search) === 10 ? ' AND notify_url=?s' : ' AND hash=?s';
@@ -1328,15 +1340,20 @@ JS);
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
 		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台@类型', '订单（内部产品）', '对方订单', '回调地址');
 		$table->header('找到 %s 个订单数据', number_format($table->count()));
-		$table->bar->select(['' => '全部平台'] + $this->webapp->mysql->payaisle('ORDER BY sort ASC')->column('name', 'code'))->setattr(['onchange' => 'g({pn:this.value})'])->selected($pay_name);
+		$table->bar->select(['' => '全部平台'] + $this->webapp->mysql->payaisle('ORDER BY sort ASC')->column('name', 'code'))->setattr(['onchange' => 'g({pn:this.value||null})'])->selected($pay_name);
 		$table->bar->select([
 			'' => '全部状态',
 			'notified' => 'notified',
 			'unpay' => 'unpay',
 			'payed' => 'payed'
-		])->setattr(['onchange' => 'g({status:this.value})'])->selected($status);
+		])->setattr(['onchange' => 'g({status:this.value||null})'])->selected($status);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->bar->select([
+			'' => '全部类型',
+			'B' => '金币充值',
+			'E' => '会员充值'
+		])->setattr(['onchange' => 'g({pno:this.value||null})'])->selected($pno);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
 	function get_ordernotify(string $hash)
@@ -1850,7 +1867,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 
 		}, $unitsets, $order, $fake);
 		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '访问量', '点击', '下载', '总充值', '老充值', '新充值',
-			'下载(假)', '充值(假)', '结算(激活x单价)(假)', '浏览', '独立', '登录', '注册');
+			'下载(假)', '充值(假)', '结算(激活x单价)(假)', '浏览', '独立', '日活', '注册');
 		$table->header('单位成本结算');
 		$table->row()['style'] = 'background:lightblue';
 		$table->cell(['合计', 'colspan' => 3]);
