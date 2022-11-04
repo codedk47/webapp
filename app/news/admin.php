@@ -134,7 +134,7 @@ class webapp_router_admin extends webapp_echo_html
 
 				$t1->append('td', '浏览');
 				$t2->append('td', '独立');
-				$t3->append('td', '登录');
+				$t3->append('td', '日活');
 				$t4->append('td', '注册');
 				$t5->append('td', '落览');
 				$t6->append('td', '点击');
@@ -246,7 +246,7 @@ class webapp_router_admin extends webapp_echo_html
 
 			$t1->append('td', '浏览');
 			$t2->append('td', '独立');
-			$t3->append('td', '登录');
+			$t3->append('td', '日活');
 			$t4->append('td', '注册');
 			$t5->append('td', '访问量');
 			$t6->append('td', '点击量');
