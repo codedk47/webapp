@@ -7,6 +7,7 @@ GET ?reports 获取报告
 GET ?resources 获取资源
 GET ?settags 获取合集栏目
 GET ?setvods 获取合集节目
+GET ?config 获取站点配置
 
 账号操作
 POST ?register [device,unit] 注册账号

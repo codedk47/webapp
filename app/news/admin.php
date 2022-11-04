@@ -48,7 +48,8 @@ class webapp_router_admin extends webapp_echo_html
 				['Unitsets（单位设置，开设需要后台的单位）', '?admin/unitsets'],
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
-				['Runstatus（服务器状态，轻点）', '?admin/runstatus'],
+				//['Runstatus（服务器状态，轻点）', '?admin/runstatus'],
+				['前端产品参数设置', '?admin/config'],
 				['长视频修改标签🚨谨慎使用❗', '?admin/tt']
 			]]
 		]);
@@ -1760,8 +1761,12 @@ JS);
 	function get_unitsets(string $search = NULL, int $page = 1)
 	{
 		$cond = ['WHERE site=?i', $this->webapp->site];
-
-		$cond[0] = ' ORDER BY time DESC';
+		if ($admin = $this->webapp->query['admin'] ?? '')
+		{
+			$cond[0] .= ' AND `admin`=?s';
+			$cond[] = $admin;
+		}
+		$cond[0] .= ' ORDER BY time DESC';
 
 		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit, $admin)
 		{
@@ -1783,13 +1788,13 @@ JS);
 		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name', 'admin', '推广链接', '直接下载');
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
+		$table->bar->select(['' => '全部'] + $this->adminlists())->setattr(['onchange' => 'g({admin:this.value||null})'])->selected($admin);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
 	function get_unitcost(string $type = NULL, string $start = NULL, string $end = NULL)
 	{
 		$start ??= date('Y-m-d', mktime(0, 0, 0, day:1));
 		$end ??= date('Y-m-d');
-
 
 		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
 		if ($type)
@@ -1798,10 +1803,17 @@ JS);
 			$cond[0] .= ' AND unit IN(?S)';
 			$cond[] = $unit ? $unit : ['0000'];
 		}
+		if ($adminid = $this->webapp->query['adminid'] ?? '')
+		{
+			$unit = $this->webapp->mysql->unitsets('where admin=?s', $adminid)->column('unit');
+			$cond[0] .= ' AND unit IN(?S)';
+			$cond[] = $unit ? $unit : ['0000'];
+		}
 
 		$cond[0] .= ' GROUP BY unit ORDER BY ia DESC';
 
 		$admin = $this->adminlists();
+		//print_r($admin);
 		$unitsets = [];
 		foreach ($this->webapp->mysql->unitsets as $row)
 		{
@@ -1958,6 +1970,8 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		$table->bar->append('input', ['type' => 'date', 'value' => $start, 'onchange' => 'g({start:this.value})']);
 		$table->bar->append('span', ' - ');
 		$table->bar->append('input', ['type' => 'date', 'value' => $end, 'onchange' => 'g({end:this.value})']);
+
+		$table->bar->select(['' => '全部'] + $admin)->setattr(['onchange' => 'g({adminid:this.value||null})'])->selected($adminid);
 	}
 	//密码
 	function form_setpwd($ctx):webapp_form
@@ -2002,6 +2016,38 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		$this->form_setpwd($this->main);
 	}
 
+	function post_config()
+	{
+		$input = $this->webapp->request_content();
+		if (isset($input['config']))
+		{
+			$this->webapp->mysql->real_query('INSERT INTO `configs` SET ?v ON DUPLICATE KEY UPDATE data=?s',
+				['site' => $this->webapp->site, 'data' => $input['config']], $input['config']);
+			if ($this->webapp->mysql->error)
+			{
+				$errmsg = $this->webapp->mysql->error;
+			}
+			else
+			{
+				//调用保存配置
+			}
+		}
+		$this->get_config();
+		if (isset($errmsg))
+		{
+			$this->main->form->fieldset->setattr([$errmsg, 'style' => 'color:maroon']);
+		}
+	}
+	function get_config()
+	{
+		$conf = $this->webapp->mysql->configs('where site=?i', $this->webapp->site)->array();
+		$data = json_encode(json_decode($conf['data'] ?? '', TRUE), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		$form = $this->main->form();
+		$form->fieldset();
+		$form->field('config', 'textarea', [$data,'cols' => 80, 'rows' => 40]);
+		$form->fieldset();
+		$form->button('Submit', 'submit');
+	}
 
 	function post_tt()
 	{

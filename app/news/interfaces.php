@@ -737,7 +737,10 @@ class interfaces extends webapp
 			$this->setvod_xml($settag);
 		}
 	}
-
+	function get_config()
+	{
+		$this->xml->cdata($this->mysql->configs('where site=?i', $this->site)->array()['data'] ?? '');
+	}
 
 
 
