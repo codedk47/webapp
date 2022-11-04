@@ -132,29 +132,59 @@ class webapp_router_admin extends webapp_echo_html
 
 				$t1->append('td', [$stat['date'], 'rowspan' => 8]);
 
-				$t1->append('td', '浏览');
-				$t2->append('td', '独立');
-				$t3->append('td', '日活');
-				$t4->append('td', '注册');
-				$t5->append('td', '落览');
+				if ($this->webapp->admin[2])
+				{
+					$t1->append('td', '浏览');
+					$t2->append('td', '独立');
+					$t3->append('td', '日活');
+					$t4->append('td', '注册');
+				}
+				else
+				{
+					$t1->append('td', '-');
+					$t2->append('td', '-');
+					$t3->append('td', '-');
+					$t4->append('td', '-');
+				}
+				$t5->append('td', '展示');
 				$t6->append('td', '点击');
 				$t7->append('td', '下载');
 				$t8->append('td', ['-', 'colspan' => 26]);
 
-				$t1->append('td', number_format($stat['pv']));
-				$t2->append('td', number_format($stat['ua']));
-				$t3->append('td', number_format($stat['lu']));
-				$t4->append('td', number_format($stat['ru']));
+				if ($this->webapp->admin[2])
+				{
+					$t1->append('td', number_format($stat['pv']));
+					$t2->append('td', number_format($stat['ua']));
+					$t3->append('td', number_format($stat['lu']));
+					$t4->append('td', number_format($stat['ru']));
+				}
+				else
+				{
+					$t1->append('td', '-');
+					$t2->append('td', '-');
+					$t3->append('td', '-');
+					$t4->append('td', '-');
+				}
 				$t5->append('td', number_format($stat['dv']));
 				$t6->append('td', number_format($stat['dc']));
 				$t7->append('td', number_format($stat['ia']));
 
 				foreach (json_decode($stat['details'], TRUE) as $details)
 				{
-					$t1->append('td', number_format($details['pv']));
-					$t2->append('td', number_format($details['ua']));
-					$t3->append('td', number_format($details['lu']));
-					$t4->append('td', number_format($details['ru']));
+					if ($this->webapp->admin[2])
+					{
+						$t1->append('td', number_format($details['pv']));
+						$t2->append('td', number_format($details['ua']));
+						$t3->append('td', number_format($details['lu']));
+						$t4->append('td', number_format($details['ru']));
+					}
+					else
+					{
+						$t1->append('td', '-');
+						$t2->append('td', '-');
+						$t3->append('td', '-');
+						$t4->append('td', '-');
+					}
 					$t5->append('td', number_format($details['dv']));
 					$t6->append('td', number_format($details['dc']));
 					$t7->append('td', number_format($details['ia']));
@@ -244,10 +274,20 @@ class webapp_router_admin extends webapp_echo_html
 				$t1->append('td', ['汇总', 'rowspan' => 10]);
 			}
 
-			$t1->append('td', '浏览');
-			$t2->append('td', '独立');
-			$t3->append('td', '日活');
-			$t4->append('td', '注册');
+			if ($this->webapp->admin[2])
+			{
+				$t1->append('td', '浏览');
+				$t2->append('td', '独立');
+				$t3->append('td', '日活');
+				$t4->append('td', '注册');
+			}
+			else
+			{
+				$t1->append('td', '-');
+				$t2->append('td', '-');
+				$t3->append('td', '-');
+				$t4->append('td', '-');
+			}
 			$t5->append('td', '访问量');
 			$t6->append('td', '点击量');
 			$t7->append('td', '下载量');
@@ -255,10 +295,21 @@ class webapp_router_admin extends webapp_echo_html
 			$t9->append('td', '订单金额');
 			$t10->append('td', ['低调内涵不失奢华的分割线', 'colspan' => count($days) + 2]);
 
-			$t1->append('td', number_format($stat['$0$0']));
-			$t2->append('td', number_format($stat['$1$0']));
-			$t3->append('td', number_format($stat['$2$0']));
-			$t4->append('td', number_format($stat['$3$0']));
+			if ($this->webapp->admin[2])
+			{
+				$t1->append('td', number_format($stat['$0$0']));
+				$t2->append('td', number_format($stat['$1$0']));
+				$t3->append('td', number_format($stat['$2$0']));
+				$t4->append('td', number_format($stat['$3$0']));
+			}
+			else
+			{
+				$t1->append('td', '-');
+				$t2->append('td', '-');
+				$t3->append('td', '-');
+				$t4->append('td', '-');
+			}
+
 			$t5->append('td', number_format($stat['$4$0']));
 			$t6->append('td', number_format($stat['$5$0']));
 			$t7->append('td', number_format($stat['$6$0']));
@@ -275,10 +326,21 @@ class webapp_router_admin extends webapp_echo_html
 
 			foreach ($days as $i)
 			{
-				$t1->append('td', number_format($stat["\$0\${$i}"]));
-				$t2->append('td', number_format($stat["\$1\${$i}"]));
-				$t3->append('td', number_format($stat["\$2\${$i}"]));
-				$t4->append('td', number_format($stat["\$3\${$i}"]));
+				if ($this->webapp->admin[2])
+				{
+					$t1->append('td', number_format($stat["\$0\${$i}"]));
+					$t2->append('td', number_format($stat["\$1\${$i}"]));
+					$t3->append('td', number_format($stat["\$2\${$i}"]));
+					$t4->append('td', number_format($stat["\$3\${$i}"]));
+				}
+				else
+				{
+					$t1->append('td', '-');
+					$t2->append('td', '-');
+					$t3->append('td', '-');
+					$t4->append('td', '-');
+				}
+
 				$t5->append('td', number_format($stat["\$4\${$i}"]));
 				$t6->append('td', number_format($stat["\$5\${$i}"]));
 				$t7->append('td', number_format($stat["\$6\${$i}"]));
