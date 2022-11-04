@@ -273,6 +273,7 @@ final class webapp_pay_fx implements webapp_pay
 				'type' => 'text/plain',
 				'data' => 'success',
 				'hash' => $result['fxddh'],
+				'trade_no' => $result['fxorder'],
 				'actual_fee' => $result['fxfee'] * 100
 			];
 			return TRUE;
