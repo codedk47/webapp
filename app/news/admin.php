@@ -49,7 +49,7 @@ class webapp_router_admin extends webapp_echo_html
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				//['Runstatus（服务器状态，轻点）', '?admin/runstatus'],
-				['前端产品参数设置', '?admin/config'],
+				['前台配置参数设置（纯JSON格式）', '?admin/config'],
 				['长视频修改标签🚨谨慎使用❗', '?admin/tt']
 			]]
 		]);
