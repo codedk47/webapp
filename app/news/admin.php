@@ -1308,17 +1308,17 @@ JS);
 			$cond[0] .= ' AND status=?s';
 			$cond[] = $status;
 		}
-		if ($pno = $this->webapp->query['pno'] ?? '')
-		{
-			$cond[0] .= ' AND order_no like ?s';
-			$cond[] = "{$pno}%";
-		}
 		if ($search)
 		{
 			$cond[0] .= strlen($search) === 10 ? ' AND notify_url=?s' : ' AND hash=?s';
 			$cond[] = $search;
 		}
+
+		$counts = $this->webapp->mysql->orders(...$cond)
+			->select('IFNULL(SUM(order_fee),0) c,IFNULL(SUM(IF(LEFT(order_no, 1)="B",order_fee,0)),0) b,IFNULL(SUM(IF(LEFT(order_no, 1)="E",order_fee,0)),0) e')->array();
+
 		$cond[0] .= ' ORDER BY time DESC';
+
 		$table = $this->main->table($this->webapp->mysql->orders(...$cond)->paging($page, 21), function($table, $order, $status)
 		{
 			$table->row();
@@ -1349,11 +1349,10 @@ JS);
 		])->setattr(['onchange' => 'g({status:this.value||null})'])->selected($status);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
-		$table->bar->select([
-			'' => '全部类型',
-			'B' => '金币充值',
-			'E' => '会员充值'
-		])->setattr(['onchange' => 'g({pno:this.value||null})'])->selected($pno);
+		$table->bar->append('span', [sprintf('全部：%.2f，金币：%.2f，会员：%.2f',
+			$counts['c'] * 0.01,
+			$counts['b'] * 0.01,
+			$counts['e'] * 0.01), 'style' => 'padding-left:1rem;font-weight:bold;color:green']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
 	function get_ordernotify(string $hash)
