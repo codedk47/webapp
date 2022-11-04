@@ -143,7 +143,7 @@ class webapp_router_admin extends webapp_echo_html
 				{
 					$t1->append('td', '-');
 					$t2->append('td', '-');
-					$t3->append('td', '-');
+					$t3->append('td', '日活');
 					$t4->append('td', '-');
 				}
 				$t5->append('td', '展示');
@@ -162,7 +162,7 @@ class webapp_router_admin extends webapp_echo_html
 				{
 					$t1->append('td', '-');
 					$t2->append('td', '-');
-					$t3->append('td', '-');
+					$t3->append('td', number_format($stat['lu']));
 					$t4->append('td', '-');
 				}
 				$t5->append('td', number_format($stat['dv']));
@@ -182,7 +182,7 @@ class webapp_router_admin extends webapp_echo_html
 					{
 						$t1->append('td', '-');
 						$t2->append('td', '-');
-						$t3->append('td', '-');
+						$t3->append('td', number_format($details['lu']));
 						$t4->append('td', '-');
 					}
 					$t5->append('td', number_format($details['dv']));
@@ -285,7 +285,7 @@ class webapp_router_admin extends webapp_echo_html
 			{
 				$t1->append('td', '-');
 				$t2->append('td', '-');
-				$t3->append('td', '-');
+				$t3->append('td', '日活');
 				$t4->append('td', '-');
 			}
 			$t5->append('td', '访问量');
@@ -306,7 +306,7 @@ class webapp_router_admin extends webapp_echo_html
 			{
 				$t1->append('td', '-');
 				$t2->append('td', '-');
-				$t3->append('td', '-');
+				$t3->append('td', number_format($stat['$2$0']));
 				$t4->append('td', '-');
 			}
 
@@ -337,7 +337,7 @@ class webapp_router_admin extends webapp_echo_html
 				{
 					$t1->append('td', '-');
 					$t2->append('td', '-');
-					$t3->append('td', '-');
+					$t3->append('td', number_format($stat["\$2\${$i}"]));
 					$t4->append('td', '-');
 				}
 
