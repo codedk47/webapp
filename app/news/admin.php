@@ -2029,7 +2029,8 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			}
 			else
 			{
-				//调用保存配置
+				$this->webapp->xml->append('config')->cdata($input['config']);
+				$this->webapp->call('saveConf', $this->webapp->xml->config);
 			}
 		}
 		$this->get_config();

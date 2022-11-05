@@ -739,7 +739,7 @@ class interfaces extends webapp
 	}
 	function get_config()
 	{
-		$this->xml->cdata($this->mysql->configs('where site=?i', $this->site)->array()['data'] ?? '');
+		$this->xml->append('config')->cdata($this->mysql->configs('where site=?i', $this->site)->array()['data'] ?? '');
 	}
 
 
