@@ -250,7 +250,7 @@ class webapp_router_admin extends webapp_echo_html
 			'SUM(IF({day}=0 OR right(date,2)={day},dv,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},dc,0))',
 			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
-		], 'ORDER BY $1$0 DESC LIMIT 10');
+		], 'ORDER BY $1$0 DESC LIMIT 50');
 
 		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders)
 		{
