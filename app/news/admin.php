@@ -2018,13 +2018,12 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 
 	function post_config()
 	{
-		if (count($apk = $this->webapp->request_uploadedfile('upapk')))
+		if ($this->webapp->request_content_type() === 'multipart/form-data')
 		{
-			$req = $this->webapp->sync()->goto('/?upapk', [
-				'method' => 'POST',
-				'data' => fopen($apk[0]['file'], 'r'),
-				'type' => 'application/octet-stream'
-			]);
+			$apk = $this->webapp->request_uploadedfile('upapk');
+			$req = $this->webapp->sync()->goto('/?upapk', count($apk)
+				? ['method' => 'POST', 'data' => fopen($apk[0]['file'], 'r'), 'type' => 'application/octet-stream']
+				: ['method' => 'POST', 'data' => '', 'type' => 'application/octet-stream']);
 		}
 		else
 		{
