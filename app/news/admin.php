@@ -2025,8 +2025,6 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 				'data' => fopen($apk[0]['file'], 'r'),
 				'type' => 'application/octet-stream'
 			]);
-
-			print_r($req);
 		}
 		else
 		{
