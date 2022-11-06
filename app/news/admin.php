@@ -2057,7 +2057,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 	{
 		$form = $this->main->form();
 
-		$form->field('upapk', 'file')['accept'] = 'application/vnd.android.package-archive';
+		$form->field('upapk', 'file');//['accept'] = 'application/vnd.android.package-archive';
 		$form->button('Update APK Or Revert APK', 'submit');
 		$form->button('Refresh')['onclick'] = 'location.href="/?admin/config"';
 		$this->main->append('br');
