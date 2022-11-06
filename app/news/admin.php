@@ -2071,7 +2071,6 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		$form->fieldset();
 		$form->button('Submit', 'submit');
 
-		
 	}
 
 	function post_tt()
