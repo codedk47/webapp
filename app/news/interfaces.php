@@ -123,50 +123,76 @@ class interfaces extends webapp
 					"\n";
 			}
 
+			$status = [[], []];
 			echo "\n-------- PULL UNIT --------\n";
 			foreach ($this->pull('incr-unit') as $unit)
 			{
-				echo $units[(string)$unit['unit']] ?? '0000', ' - ',
-					$this->unitincr($units[(string)$unit['unit']] ?? '0000', (string)$unit['time'], [
-						'pv' => (int)$unit['pv'],
-						'ua' => (int)$unit['ip'],
-						'lu' => (int)$unit['lu'],
-						'ru' => (int)$unit['ru'],
-						'dv' => (int)$unit['dv'],
-						'dc' => (int)$unit['dc'],
-						'ia' => (int)$unit['ia']]) ? 'OK' : 'NO',
-						"\n";
+				// echo $units[(string)$unit['unit']] ?? '0000', ' - ',
+				// 	$this->unitincr($units[(string)$unit['unit']] ?? '0000', (string)$unit['time'], [
+				// 		'pv' => (int)$unit['pv'],
+				// 		'ua' => (int)$unit['ip'],
+				// 		'lu' => (int)$unit['lu'],
+				// 		'ru' => (int)$unit['ru'],
+				// 		'dv' => (int)$unit['dv'],
+				// 		'dc' => (int)$unit['dc'],
+				// 		'ia' => (int)$unit['ia']]) ? 'OK' : 'NO',
+				// 		"\n";
+				$status[$this->unitincr($units[(string)$unit['unit']] ?? '0000', (string)$unit['time'], [
+							'pv' => (int)$unit['pv'],
+							'ua' => (int)$unit['ip'],
+							'lu' => (int)$unit['lu'],
+							'ru' => (int)$unit['ru'],
+							'dv' => (int)$unit['dv'],
+							'dc' => (int)$unit['dc'],
+							'ia' => (int)$unit['ia']]) ? 0 : 1][] = $units[(string)$unit['unit']] ?? '0000';
 			}
+			echo 'SUCCESS: ' . join(' ', $status[0]) . "\n";
+			echo 'FAILURE: ' . join(' ', $status[1]) . "\n";
 
+			$status = [0, 0];
 			echo "\n-------- PULL TAGS --------\n";
 			foreach ($this->pull('incr-tag') as $tag)
 			{
-				echo $tag['hash'], ' - ',
-					$this->mysql->tags('WHERE hash=?s LIMIT 1', $tag['hash'])
-						->update('`click`=`click`+?i', $tag['click']) === 1 ? 'OK' : 'NO',
-					"\n";
+				// echo $tag['hash'], ' - ',
+				// 	$this->mysql->tags('WHERE hash=?s LIMIT 1', $tag['hash'])
+				// 		->update('`click`=`click`+?i', $tag['click']) === 1 ? 'OK' : 'NO',
+				// 	"\n";
+				++$status[$this->mysql->tags('WHERE hash=?s LIMIT 1', $tag['hash'])
+					->update('`click`=`click`+?i', $tag['click']) === 1 ? 0 : 1];
 			}
+			echo "SUCCESS: {$status[0]}, FAILURE: {$status[1]}\n";
 
+			$status = [0, 0];
 			echo "\n-------- PULL RESOURCES --------\n";
 			foreach ($this->pull('incr-res') as $resource)
 			{
-				echo $resource['hash'], ' - ',
-					$this->mysql->resources('WHERE FIND_IN_SET(?s,site) AND hash=?s LIMIT 1', $site, $resource['hash'])
-						->update('data=json_set(data,\'$."?i".like\',data->>\'$."?i".like\'+?i,\'$."?i".view\',data->>\'$."?i".view\'+?i,\'$."?i".favorite\',data->>\'$."?i".favorite\'+?i)',
-							$site, $site, $resource['like'],
-							$site, $site, $resource['view'],
-							$site, $site, $resource['favorite']) === 1 ? 'OK' : 'NO',
-					"\n";
+				// echo $resource['hash'], ' - ',
+				// 	$this->mysql->resources('WHERE FIND_IN_SET(?s,site) AND hash=?s LIMIT 1', $site, $resource['hash'])
+				// 		->update('data=json_set(data,\'$."?i".like\',data->>\'$."?i".like\'+?i,\'$."?i".view\',data->>\'$."?i".view\'+?i,\'$."?i".favorite\',data->>\'$."?i".favorite\'+?i)',
+				// 			$site, $site, $resource['like'],
+				// 			$site, $site, $resource['view'],
+				// 			$site, $site, $resource['favorite']) === 1 ? 'OK' : 'NO',
+				// 	"\n";
+				++$status[$this->mysql->resources('WHERE FIND_IN_SET(?s,site) AND hash=?s LIMIT 1', $site, $resource['hash'])
+					->update('data=json_set(data,\'$."?i".like\',data->>\'$."?i".like\'+?i,\'$."?i".view\',data->>\'$."?i".view\'+?i,\'$."?i".favorite\',data->>\'$."?i".favorite\'+?i)',
+						$site, $site, $resource['like'],
+						$site, $site, $resource['view'],
+						$site, $site, $resource['favorite']) === 1 ? 0 : 1];
 			}
+			echo "SUCCESS: {$status[0]}, FAILURE: {$status[1]}\n";
 
+			$status = [0, 0];
 			echo "\n-------- PULL AD --------\n";
 			foreach ($this->pull('incr-ad') as $ad)
 			{
-				echo $ad['hash'], ' - ',
-					$this->mysql->ads('WHERE site=?i AND hash=?s LIMIT 1', $site, $ad['hash'])
-						->update('`click`=`click`+?i,`view`=`view`+?i', $ad['click'], $ad['view']) === 1 ? 'OK' : 'NO',
-					"\n";
+				// echo $ad['hash'], ' - ',
+				// 	$this->mysql->ads('WHERE site=?i AND hash=?s LIMIT 1', $site, $ad['hash'])
+				// 		->update('`click`=`click`+?i,`view`=`view`+?i', $ad['click'], $ad['view']) === 1 ? 'OK' : 'NO',
+				// 	"\n";
+				++$status[$this->mysql->ads('WHERE site=?i AND hash=?s LIMIT 1', $site, $ad['hash'])
+					->update('`click`=`click`+?i,`view`=`view`+?i', $ad['click'], $ad['view']) === 1 ? 0 : 1];
 			}
+			echo "SUCCESS: {$status[0]}, FAILURE: {$status[1]}\n";
 
 			// echo "\n-------- PULL COMMENTS --------\n";
 			// foreach ($this->pull('comments') as $comment)
