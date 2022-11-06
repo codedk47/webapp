@@ -138,13 +138,13 @@ class interfaces extends webapp
 				// 		'ia' => (int)$unit['ia']]) ? 'OK' : 'NO',
 				// 		"\n";
 				$status[$this->unitincr($units[(string)$unit['unit']] ?? '0000', (string)$unit['time'], [
-							'pv' => (int)$unit['pv'],
-							'ua' => (int)$unit['ip'],
-							'lu' => (int)$unit['lu'],
-							'ru' => (int)$unit['ru'],
-							'dv' => (int)$unit['dv'],
-							'dc' => (int)$unit['dc'],
-							'ia' => (int)$unit['ia']]) ? 0 : 1][] = $units[(string)$unit['unit']] ?? '0000';
+					'pv' => (int)$unit['pv'],
+					'ua' => (int)$unit['ip'],
+					'lu' => (int)$unit['lu'],
+					'ru' => (int)$unit['ru'],
+					'dv' => (int)$unit['dv'],
+					'dc' => (int)$unit['dc'],
+					'ia' => (int)$unit['ia']]) ? 0 : 1][] = $units[(string)$unit['unit']] ?? '0000';
 			}
 			echo 'SUCCESS: ' . join(' ', $status[0]) . "\n";
 			echo 'FAILURE: ' . join(' ', $status[1]) . "\n";
