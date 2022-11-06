@@ -5,7 +5,7 @@ class news_driver extends webapp
 	{
 		if ($this->authorization)
 		{
-			return file_put_contents(__DIR__ . '/../../pwa/source.apk', $this->request_content()) === $this->request_content_length() ? 200 : 500;
+			return file_put_contents(__DIR__ . '/../../../pwa/source.apk', $this->request_content()) === $this->request_content_length() ? 200 : 500;
 		}
 		return 401;
 	}
