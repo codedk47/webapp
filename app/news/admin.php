@@ -49,7 +49,7 @@ class webapp_router_admin extends webapp_echo_html
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				//['Runstatus（服务器状态，轻点）', '?admin/runstatus'],
-				['前台配置参数设置（纯JSON格式）', '?admin/config'],
+				['前台配置参数设置，更新APK包', '?admin/config'],
 				['长视频修改标签🚨谨慎使用❗', '?admin/tt']
 			]]
 		]);
@@ -2018,36 +2018,60 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 
 	function post_config()
 	{
-		$input = $this->webapp->request_content();
-		if (isset($input['config']))
+		if (count($apk = $this->webapp->request_uploadedfile('upapk')))
 		{
-			$this->webapp->mysql->real_query('INSERT INTO `configs` SET ?v ON DUPLICATE KEY UPDATE data=?s',
-				['site' => $this->webapp->site, 'data' => $input['config']], $input['config']);
-			if ($this->webapp->mysql->error)
+			$req = $this->webapp->sync()->goto('/?upapk', [
+				'method' => 'GET',
+				'data' => fopen($apk[0]['file'], 'r'),
+				'type' => 'application/octet-stream'
+			]);
+		}
+		else
+		{
+			$input = $this->webapp->request_content();
+			if (isset($input['config']))
 			{
-				$errmsg = $this->webapp->mysql->error;
-			}
-			else
-			{
-				$this->webapp->xml->append('config')->cdata($input['config']);
-				$this->webapp->call('saveConf', $this->webapp->xml->config);
+				$this->webapp->mysql->real_query('INSERT INTO `configs` SET ?v ON DUPLICATE KEY UPDATE data=?s',
+					['site' => $this->webapp->site, 'data' => $input['config']], $input['config']);
+				if ($this->webapp->mysql->error)
+				{
+					$errmsg = $this->webapp->mysql->error;
+				}
+				else
+				{
+					$this->webapp->xml->append('config')->cdata($input['config']);
+					$this->webapp->call('saveConf', $this->webapp->xml->config);
+				}
 			}
 		}
 		$this->get_config();
+		if (isset($req[0]))
+		{
+			$this->main->form->insert('fieldset', 'first')->setattr([$req[0], 'style' => 'color:maroon']);
+		}
 		if (isset($errmsg))
 		{
-			$this->main->form->fieldset->setattr([$errmsg, 'style' => 'color:maroon']);
+			$this->main->form->insert('fieldset', 'first')->setattr([$errmsg, 'style' => 'color:maroon']);
 		}
 	}
 	function get_config()
 	{
+		$form = $this->main->form();
+
+		$form->field('upapk', 'file')['accept'] = 'application/vnd.android.package-archive';
+		$form->button('Update APK', 'submit');
+		$form->button('Refresh')['onclick'] = 'location.href="/?admin/config"';
+		$this->main->append('br');
+
 		$conf = $this->webapp->mysql->configs('where site=?i', $this->webapp->site)->array();
 		$data = json_encode(json_decode($conf['data'] ?? '', TRUE), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 		$form = $this->main->form();
-		$form->fieldset();
+
 		$form->field('config', 'textarea', [$data,'cols' => 80, 'rows' => 40]);
 		$form->fieldset();
 		$form->button('Submit', 'submit');
+
+		
 	}
 
 	function post_tt()

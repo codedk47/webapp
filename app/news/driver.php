@@ -1,6 +1,14 @@
 <?php
 class news_driver extends webapp
 {
+	function post_upapk()
+	{
+		if ($this->authorization)
+		{
+			return file_put_contents(__DIR__ . '/source.apk', $this->request_content()) === $this->request_content_length() ? 200 : 500;
+		}
+		return 401;
+	}
 	//控制端远程调用接口（请勿非本地调用）
 	function post_sync(string $method)
 	{
