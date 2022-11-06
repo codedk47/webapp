@@ -114,14 +114,18 @@ class interfaces extends webapp
 		{
 			$this->site = $site;
 
+			$status = [0, 0];
 			echo "\n-------- PULL ACC LOG --------\n";
 			foreach ($this->pull('log-acc') as $acc)
 			{
-				echo $acc['uid'], ' - ',
-					$this->mysql->accounts('WHERE site=?i AND uid=?s LIMIT 1', $site, $acc['uid'])
-						->update('`favorite`=?s,`history`=?s', (string)$acc->favorite, (string)$acc->history) === 1 ? 'OK' : 'NO',
-					"\n";
+				// echo $acc['uid'], ' - ',
+				// 	$this->mysql->accounts('WHERE site=?i AND uid=?s LIMIT 1', $site, $acc['uid'])
+				// 		->update('`favorite`=?s,`history`=?s', (string)$acc->favorite, (string)$acc->history) === 1 ? 'OK' : 'NO',
+				// 	"\n";
+				++$status[$this->mysql->accounts('WHERE site=?i AND uid=?s LIMIT 1', $site, $acc['uid'])
+					->update('`favorite`=?s,`history`=?s', (string)$acc->favorite, (string)$acc->history) === 1 ? 0 : 1];
 			}
+			echo "SUCCESS: {$status[0]}, FAILURE: {$status[1]}\n";
 
 			$status = [[], []];
 			echo "\n-------- PULL UNIT --------\n";
