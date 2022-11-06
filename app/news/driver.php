@@ -5,7 +5,13 @@ class news_driver extends webapp
 	{
 		if ($this->authorization)
 		{
-			return file_put_contents(__DIR__ . '/../../../pwa/source.apk', $this->request_content()) === $this->request_content_length() ? 200 : 500;
+			$apkdir = __DIR__ . '/../../../pwa';
+			if ($apksrc = $this->request_content())
+			{
+				is_file("{$apkdir}/source.apk") && copy("{$apkdir}/source.apk", "{$apkdir}/source1.apk");
+				return file_put_contents("{$apkdir}/source.apk", $apksrc) === $this->request_content_length() ? 200 : 500;
+			}
+			return is_file("{$apkdir}/source.apk") && unlink("{$apkdir}/source.apk") ? 200 : 500;
 		}
 		return 401;
 	}
