@@ -2021,7 +2021,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		if (count($apk = $this->webapp->request_uploadedfile('upapk')))
 		{
 			$req = $this->webapp->sync()->goto('/?upapk', [
-				'method' => 'GET',
+				'method' => 'POST',
 				'data' => fopen($apk[0]['file'], 'r'),
 				'type' => 'application/octet-stream'
 			]);

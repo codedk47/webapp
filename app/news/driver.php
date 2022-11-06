@@ -1,7 +1,7 @@
 <?php
 class news_driver extends webapp
 {
-	function get_upapk()
+	function post_upapk()
 	{
 		if ($this->authorization)
 		{
