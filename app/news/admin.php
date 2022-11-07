@@ -839,7 +839,7 @@ JS);
 			$table->cell($acc['did']);
 			$table->cell($acc['phone']);
 			$table->cell($acc['name']);
-			$table->cell($acc['history'] / 12);
+			$table->cell(strlen($acc['history']) / 12);
 		});
 		$table->fieldset('账号(uid)', '注册日期(date)', '会员过期(expire)', '余额(balance)', '最后登录时间(lasttime)', '最后登录IP(lastip)', '设备类型(device)', '单位(unit)', '邀请账号(code)', '设备ID(did)', '绑定手机(phone)', '名称(name)', '记录(history)');
 		$table->header('Found %s item', number_format($table->count()));
