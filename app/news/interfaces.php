@@ -325,6 +325,7 @@ class interfaces extends webapp
 
 		$form->fieldset();
 		$form->field('ad', 'file', ['accept' => 'image/*']);
+		$form->field('weight', 'number', ['min' => 1, 'max' => 255, 'value' => 1, 'required' => NULL]);
 
 		$form->fieldset('名称跳转');
 		$form->field('name', 'text', ['style' => 'width:8rem', 'placeholder' => '广告名称', 'required' => NULL]);
@@ -422,6 +423,7 @@ class interfaces extends webapp
 		return $this->xml->append('ad', [
 			'hash' => $ad['hash'],
 			'seat' => $ad['seat'],
+			'weight' => $ad['weight'],
 			'timestart' => $ad['timestart'],
 			'timeend' => $ad['timeend'],
 			'weekset' => $ad['weekset'],

@@ -870,6 +870,7 @@ JS);
 			$table->cell()->append('a', [$ad['hash'], 'href' => "?admin/ad-update,hash:{$ad['hash']}"]);
 			$table->cell($ad['name']);
 			$table->cell($ad['seat']);
+			$table->cell($ad['weight']);
 			$table->cell(date('Y-m-d\TH:i:s', $ad['timestart']) . ' - ' . date('Y-m-d\TH:i:s', $ad['timeend']));
 			$table->cell($ad['weekset'] ? join(',', array_map(fn($v)=>"周{$week[$v]}", explode(',', $ad['weekset']))) : '时间段');
 			$table->cell($ad['count']);
@@ -879,7 +880,7 @@ JS);
 		},
 		['日', '一', '二', '三', '四', '五', '六'],
 		$this->webapp->signature($this->webapp['admin_username'], $this->webapp['admin_password'], (string)$this->webapp->site));
-		$table->fieldset('❌', 'hash', 'name', 'seat', 'timestart - timeend', 'weekset', 'count', 'click', 'view', 'goto');
+		$table->fieldset('❌', 'hash', 'name', 'seat', 'weight', 'timestart - timeend', 'weekset', 'count', 'click', 'view', 'goto');
 		$table->header('Found ' . $this->webapp->mysql->ads->count() . ' item');
 		$table->bar->append('button', ['Create Ad', 'onclick' => 'location.href="?admin/ad-create"']);
 	}
