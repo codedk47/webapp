@@ -132,7 +132,7 @@ class news_driver extends webapp
 		} while (0);
 		return FALSE;
 	}
-	function adshowables(array $ads, bool $more = TRUE):array
+	function adshowables(array $ads, bool $more = FALSE):array
 	{
 		$showable = array_filter($ads, $this->adshowable(...));
 		if ($more)
