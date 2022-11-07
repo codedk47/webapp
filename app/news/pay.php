@@ -627,7 +627,8 @@ final class webapp_pay_ny implements webapp_pay
 			$data['pay_md5sign'] = strtoupper(md5(join('&', $query)));
 			$data['pay_productname'] = $order['order_no'];
 			//print_r($data);
-			if (is_array($result = webapp_client_http::open('http://api.reqorder.top/Pay_IndexLink.html', [
+			//if (is_array($result = webapp_client_http::open('http://api.reqorder.top/Pay_IndexLink.html', [
+			if (is_array($result = webapp_client_http::open('tcp://119.23.236.28:8080/', [
 				'timeout' => 8,
 				'autoretry' => 2,
 				'method' => 'POST',
