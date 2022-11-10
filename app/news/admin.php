@@ -1784,7 +1784,7 @@ JS);
 			$table->cell($unit['price']);
 			$table->cell()->append('a', [$unit['name'], 'href' => "?admin/unitset,unit:{$unit['unit']}"]);
 			$table->cell($admin[$unit['admin']] ?? $unit['admin']);
-			$table->cell("https://kiss0.com/{$unit['unit']}");
+			$table->cell("https://cg.u358.com/{$unit['unit']}");
 			$table->cell("https://d.lanfengai.com/?packer/{$unit['unit']}");
 		}, $this->adminlists());
 		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name', 'admin', '推广链接', '直接下载');
