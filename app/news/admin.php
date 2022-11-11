@@ -198,9 +198,15 @@ class webapp_router_admin extends webapp_echo_html
 		}
 
 		$days = range(1, date('t', strtotime($ym)));
+		$ordercond = ['SELECT orders.day AS day,orders.order_fee AS fee,accounts.unit AS unit FROM orders INNER JOIN (accounts) ON (accounts.uid=orders.notify_url) WHERE orders.pay_user=?i AND orders.status!="unpay" AND tym=?i', $this->webapp->site, $y.$m];
+		if ($type && count($unittype = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit')))
+		{
+			$ordercond[0] .= ' AND accounts.unit IN(?S)';
+			$ordercond[] = $unittype;
+		}
 
 		$unitorders = [NULL => array_fill(0, 32, ['count'=> 0, 'fee' => 0])];
-		foreach ($this->webapp->mysql('SELECT orders.day AS day,orders.order_fee AS fee,accounts.unit AS unit FROM orders INNER JOIN (accounts) ON (accounts.uid=orders.notify_url) WHERE orders.pay_user=?i AND orders.status!="unpay" AND tym=?i', $this->webapp->site, $y.$m) as $order)
+		foreach ($this->webapp->mysql(...$ordercond) as $order)
 		{
 			++$unitorders[NULL][0]['count'];
 			$unitorders[NULL][0]['fee'] += $order['fee'];
