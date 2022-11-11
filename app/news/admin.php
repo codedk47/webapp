@@ -203,6 +203,30 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			$ordercond[0] .= ' AND accounts.unit IN(?S)';
 			$ordercond[] = $unittype;
+			$unitnames = ['WHERE left(date,7)=?s AND unit IN(?S)', $ym, $unittype];
+		}
+		else
+		{
+			$unitnames = ['WHERE left(date,7)=?s', $ym];
+		}
+
+		$unitrates = [NULL => array_fill(0, 32, ['fia'=> 0, 'fee' => 0])];
+		$unitprice = $this->webapp->mysql->unitsets->column('price', 'unit');
+		foreach ($this->webapp->mysql->unitrates(...$unitnames) as $rate)
+		{
+			if (isset($unitrates[$rate['unit']]) === FALSE)
+			{
+				$unitrates[$rate['unit']] = array_fill(0, 32, ['fia' => 0, 'fee' => 0]);
+			}
+			$day = intval(substr($rate['date'], -2));
+			$fee = $rate['ia'] * ($unitprice[$rate['unit']] ?? 0);
+			$unitrates[NULL][0]['fia'] += $rate['ia'];
+			$unitrates[NULL][0]['fee'] += $fee;
+			$unitrates[NULL][$day]['fia'] += $rate['ia'];
+			$unitrates[NULL][$day]['fee'] += $fee;
+			$unitrates[$rate['unit']][0]['fia'] += $rate['ia'];
+			$unitrates[$rate['unit']][0]['fee'] += $fee;
+			$unitrates[$rate['unit']][$day] = ['fia' => $rate['ia'], 'fee' => $fee];
 		}
 
 		$unitorders = [NULL => array_fill(0, 32, ['count'=> 0, 'fee' => 0])];
@@ -258,7 +282,7 @@ class webapp_router_admin extends webapp_echo_html
 			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
 		], 'ORDER BY $1$0 DESC LIMIT 50');
 
-		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders)
+		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $unitrates)
 		{
 
 			$t1 = $table->tbody->append('tr');
@@ -271,14 +295,16 @@ class webapp_router_admin extends webapp_echo_html
 			$t8 = $table->tbody->append('tr');
 			$t9 = $table->tbody->append('tr');
 			$t10 = $table->tbody->append('tr');
+			$t11 = $table->tbody->append('tr');
+			$t12 = $table->tbody->append('tr');
 
 			if ($stat['unit'])
 			{
-				$t1->append('td', ['rowspan' => 10])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
+				$t1->append('td', ['rowspan' => 12])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
 			}
 			else
 			{
-				$t1->append('td', ['汇总', 'rowspan' => 10]);
+				$t1->append('td', ['汇总', 'rowspan' => 12]);
 			}
 
 			if ($this->webapp->admin[2])
@@ -300,7 +326,11 @@ class webapp_router_admin extends webapp_echo_html
 			$t7->append('td', '下载量');
 			$t8->append('td', '订单数');
 			$t9->append('td', '订单金额');
-			$t10->append('td', ['低调内涵不失奢华的分割线', 'colspan' => count($days) + 2]);
+			$t10->append('td', '扣量下载');
+			$t11->append('td', '支付价格');
+
+
+			$t12->append('td', ['低调内涵不失奢华的分割线', 'colspan' => count($days) + 2]);
 
 			if ($this->webapp->admin[2])
 			{
@@ -330,6 +360,17 @@ class webapp_router_admin extends webapp_echo_html
 				$t8->append('td', 0);
 				$t9->append('td', 0);
 			}
+			if (isset($unitrates[$stat['unit']]))
+			{
+				$t10->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fia'])));
+				$t11->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fee'])));
+			}
+			else
+			{
+				$t10->append('td', 0);
+				$t11->append('td', 0);
+			}
+
 
 			foreach ($days as $i)
 			{
@@ -361,9 +402,19 @@ class webapp_router_admin extends webapp_echo_html
 					$t8->append('td', 0);
 					$t9->append('td', 0);
 				}
+				if (isset($unitrates[$stat['unit']]))
+				{
+					$t10->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fia'])));
+					$t11->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fee'])));
+				}
+				else
+				{
+					$t10->append('td', 0);
+					$t11->append('td', 0);
+				}
 			}
 
-		}, $days, $ym, $unitorders);
+		}, $days, $ym, $unitorders, $unitrates);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$header = $table->header('');
 		$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
@@ -1368,7 +1419,7 @@ JS);
 			$cond[0] .= ' AND pay_name=?s';
 			$cond[] = $pay_name;
 		}
-		if ($date = $this->webapp->query['date'] ?? '')
+		if ($date = $this->webapp->query['date'] ?? date('Y-m-d'))
 		{
 			$cond[0] .= ' AND tym=?i AND day=?i';
 			$cond[] = substr($date, 0, 4) . substr($date, 5, 2);
@@ -1801,7 +1852,7 @@ JS);
 	}
 	function get_unitcost(string $type = NULL, string $start = NULL, string $end = NULL)
 	{
-		$start ??= date('Y-m-d', mktime(0, 0, 0, day:1));
+		$start ??= date('Y-m-d');
 		$end ??= date('Y-m-d');
 
 		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
