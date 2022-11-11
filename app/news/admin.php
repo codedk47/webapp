@@ -327,7 +327,7 @@ class webapp_router_admin extends webapp_echo_html
 			$t8->append('td', '订单数');
 			$t9->append('td', '订单金额');
 			$t10->append('td', '扣量下载');
-			$t11->append('td', '支付价格');
+			$t11->append('td', '结算金额');
 
 
 			$t12->append('td', ['低调内涵不失奢华的分割线', 'colspan' => count($days) + 2]);
