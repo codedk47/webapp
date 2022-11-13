@@ -812,7 +812,7 @@ class interfaces extends webapp
 	{
 		return strlen($code) === 10
 			&& preg_match('/^(expire|balance)\:(\d+)$/', $gift, $value)
-			&& $this->mysql->accounts('WHERE uid=?s AND phone!=""', $code)->update(...$value[1] === 'expire'
+			&& $this->mysql->accounts('WHERE uid=?s', $code)->update(...$value[1] === 'expire'
 				? ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, $value[2]]
 				: ['?a=?a+?i', $value[1], $value[1], $value[2]]);
 	}
@@ -980,9 +980,9 @@ class interfaces extends webapp
 		}
 		if ($update
 			&& $this->account($signature, $account)
-			&& $this->mysql->accounts('WHERE site=?i AND uid=?s AND pwd=?s' . (
+			&& $this->mysql->accounts('WHERE site=?i AND uid=?s' . (
 				array_key_exists('code', $update) ? ' AND code=""' : ''
-			) . ' LIMIT 1', $this->site, $account['uid'], $account['pwd'])->update($update)) {
+			) . ' LIMIT 1', $this->site, $account['uid'])->update($update)) {
 			$this->account_xml($update + $account);
 		}
 	}

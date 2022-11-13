@@ -53,14 +53,28 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return $hash;
 	}
-	static function hash(string $data, bool $care = FALSE):string
+	static function time33hash(int $code, bool $care = FALSE):string
 	{
-		for ($code = static::time33($data), $hash = '', [$i, $n, $b] = $care ? [10, 6, 63] : [12, 5, 31]; $i;)
+		for ($hash = '', [$i, $n, $b] = $care ? [10, 6, 63] : [12, 5, 31]; $i;)
 		{
 			$hash .= self::key[$code >> --$i * $n & $b];
 		}
 		return $hash;
 	}
+	static function hashtime33(string $hash):int
+	{
+		for ($code = 0, [$i, $n] = strlen($hash) === 10 ? [10, 6] : [12, 5]; $i--;)
+		{
+			$code |= strpos(self::key, $hash[$i]) << 54 - $i * $n;
+		}
+		return $code;
+	}
+	static function hash(string $data, bool $care = FALSE):string
+	{
+		return static::time33hash(static::time33($data), $care);
+	}
+
+
 	static function hashfile(string $filename, bool $care = FALSE):?string
 	{
 		return is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
