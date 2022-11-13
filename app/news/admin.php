@@ -1774,16 +1774,17 @@ JS);
 		$form->field('code', 'number', ['value' => random_int(100000, 999999), 'min' => 100000, 'max' => 999999, 'required' => NULL]);
 		$form->field('name', 'text', ['placeholder' => '单位名字描述', 'maxlength' => 128, 'required' => NULL]);
 
-		$form->fieldset('type / rate / price');
+		$form->fieldset('type / rate / price / max');
 		$form->field('type', 'select', ['options' => [
-			'' => '请选择渠道类型',
+			'' => '单位类型',
 			'cpc' => 'CPC（点击）',
 			'cpa' => 'CPA（安装）',
 			'cps' => 'CPS（分成）',
 			'cpm' => 'CPM（包月）'
 		], 'required' => NULL]);
 		$form->field('rate', 'number', ['value' => 1, 'min' => 0.1, 'max' => 1, 'step' => 0.01, 'style' => 'width:11rem', 'required' => NULL]);
-		$form->field('price', 'number', ['value' => 0, 'step' => 0.01, 'style' => 'width:12rem', 'required' => NULL]);
+		$form->field('price', 'number', ['value' => 0, 'min' => 0, 'max' => 10, 'step' => 0.01, 'style' => 'width:6rem', 'required' => NULL]);
+		$form->field('max', 'number', ['value' => 0, 'min' => 0, 'max' => 255, 'style' => 'width:6rem', 'required' => NULL]);
 
 		$form->fieldset('owns');
 		$unit = $this->webapp->mysql->unitsets('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('unit', 'unit');
@@ -1830,7 +1831,7 @@ JS);
 		}
 		$cond[0] .= ' ORDER BY time DESC';
 
-		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit, $admin)
+		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit, $admin, $domain)
 		{
 			$table->row();
 			$table->cell()->append('a', ['❌',
@@ -1844,9 +1845,9 @@ JS);
 			$table->cell($unit['price']);
 			$table->cell()->append('a', [$unit['name'], 'href' => "?admin/unitset,unit:{$unit['unit']}"]);
 			$table->cell($admin[$unit['admin']] ?? $unit['admin']);
-			$table->cell("https://cg.u358.com/{$unit['unit']}");
-			$table->cell("https://d.lanfengai.com/?packer/{$unit['unit']}");
-		}, $this->adminlists());
+			$table->cell("https://{$domain['site']}/{$unit['unit']}");
+			$table->cell("https://{$domain['page']}/?packer/{$unit['unit']}");
+		}, $this->adminlists(), $this->webapp['app_unit'][$this->webapp->site]);
 		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name', 'admin', '推广链接', '直接下载');
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);

@@ -967,18 +967,28 @@ class interfaces extends webapp
 	{
 		$input = $this->request_content();
 		$update = [];
+		$pass = FALSE;
 		foreach (['face', 'code', 'phone', 'pwd', 'name'] as $allow)
 		{
-			if (array_key_exists($allow, $input) && match ($allow) {
-				'face' => $input[$allow] > -1 && $input[$allow] < 256,
-				'code' => isset($input['gift']) && $this->account_bind_code($input['code'], $input['gift']),
-				'phone', 'pwd', => strlen($input[$allow]) < 17,
-				'name' => $this->strlen($input[$allow]) < 17,
-				default => FALSE}) {
-				$update[$allow] = $input[$allow];
+			if (array_key_exists($allow, $input))
+			{
+				$pass = match ($allow)
+				{
+					'face' => $input[$allow] > -1 && $input[$allow] < 256,
+					'code' => isset($input['gift']) && $this->account_bind_code($input['code'], $input['gift']),
+					'phone', 'pwd', => strlen($input[$allow]) < 17,
+					'name' => $this->strlen($input[$allow]) < 17,
+					default => FALSE
+				};
+				if ($pass)
+				{
+					$update[$allow] = $input[$allow];
+					continue;
+				}
+				break;
 			}
 		}
-		if ($update
+		if ($pass && $update
 			&& $this->account($signature, $account)
 			&& $this->mysql->accounts('WHERE site=?i AND uid=?s' . (
 				array_key_exists('code', $update) ? ' AND code=""' : ''

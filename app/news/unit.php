@@ -77,7 +77,7 @@ class webapp_router_unit extends webapp_echo_html
 		]);
 
 		$skip = TRUE;
-		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders, $units, $types) use(&$skip)
+		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders, $units, $types, $domain) use(&$skip)
 		{
 			if ($skip) return $skip = FALSE;
 			$t1 = $table->tbody->append('tr');
@@ -118,7 +118,8 @@ class webapp_router_unit extends webapp_echo_html
 			$t7->append('td', '-');
 			$t8->append('td', '-');
 			$t9->append('td', '费用');
-			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f', $type, $units[$stat['unit']] ?? 0),
+			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f, 推广: https://%s/%s, 下载: https://%s/?packer/%s', $type, $units[$stat['unit']] ?? 0,
+				$domain['site'], $stat['unit'], $domain['page'], $stat['unit']),
 				'colspan' => count($days) + 2,
 				'style' => 'text-align:left']);
 
@@ -193,10 +194,55 @@ class webapp_router_unit extends webapp_echo_html
 			}
 			$tp[0] = number_format($pt);
 
-		}, $days, $unitorders, $units, $types);
+		}, $days, $unitorders, $units, $types, $this->webapp['app_unit'][$this->unit['site']]);
 		
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+		$table->header->append('button', ['添加单元', 'onclick' => 'location.href="?unit/add"']);
 		$table->xml['class'] = 'webapp-stateven';
+	}
+	function form_unitset($ctx):webapp_form
+	{
+		$form = new webapp_form($ctx);
+
+		$form->fieldset('unit / code / name / price');
+		$form->field('unit', 'text', ['placeholder' => '单位编码4位字母数字组合', 'pattern' => '\w{4}', 'maxlength' => 4, 'required' => NULL]);
+		$form->field('code', 'number', ['placeholder' => '6位密码', 'value' => random_int(100000, 999999), 'min' => 100000, 'max' => 999999, 'required' => NULL]);
+		$form->field('name', 'text', ['value' => $this->unit['name'], 'placeholder' => '单位名字描述', 'maxlength' => 128, 'required' => NULL]);
+		$form->field('price', 'number', ['value' => 0, 'min' => 0, 'max' => 100, 'step' => 0.01, 'style' => 'width:4rem', 'required' => NULL]);
+
+
+		// $form->fieldset('type / rate / price');
+		// $form->field('type', 'select', ['options' => [
+		// 	'' => '单位类型',
+		// 	'cpc' => 'CPC（点击）',
+		// 	'cpa' => 'CPA（安装）',
+		// 	'cps' => 'CPS（分成）',
+		// 	'cpm' => 'CPM（包月）'
+		// ], 'required' => NULL]);
+		// $form->field('rate', 'number', ['value' => 1, 'min' => 0.1, 'max' => 1, 'step' => 0.01, 'style' => 'width:12rem', 'required' => NULL]);
+		
+
+		// $form->fieldset('owns');
+		// $unit = $this->webapp->mysql->unitsets('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('unit', 'unit');
+
+		// $form->field('owns', 'checkbox', ['options' => $unit], 
+		// 	fn($v,$i)=>$i?join($v):str_split($v,4))['class'] = 'mo';
+
+
+		$form->button('添加单元', 'submit');
+
+		return $form;
+	}
+	function post_add()
+	{
+
+	}
+	function get_add()
+	{
+
+		
+
+		$this->form_unitset($this->main);
 	}
 }
