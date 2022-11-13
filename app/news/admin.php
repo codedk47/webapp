@@ -968,6 +968,7 @@ JS);
 		{
 			$form->fieldset('promise / content');
 			$form->field('promise', 'select', ['options' => [
+				'waiting' => '待处理',
 				'resolved' => '已解决',
 				'rejected' => '以拒绝'
 			]]);
