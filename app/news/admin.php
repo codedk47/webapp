@@ -819,7 +819,7 @@ JS);
 			&& $this->form_account($this->webapp)->fetch($acc)
 			&& $this->webapp->mysql->accounts('where site=?i and uid=?s', $this->webapp->site, $uid)->update($acc)
 			&& $this->webapp->call('saveUser', $this->webapp->account_xml($acc))) {
-			return $this->okay('?admin/accounts');
+			return $this->okay("?admin/accounts,search:{$uid}");
 		}
 		$this->warn('账户更新失败！');
 	}
@@ -1053,15 +1053,17 @@ JS);
 			$table->cell($this->webapp->hexip($rep['ip']));
 			if ($rep['account'])
 			{
-				$table->cell()->append('a', [$rep['account'], 'href' => "?admin/accounts,search:{$rep['account']}"]);
+				$table->cell()->append('a', [$rep['account'], 'href' => "?admin/accounts,search:{$rep['account']}", 'target' => '_blank']);
+				$table->cell()->append('a', ['充值记录', 'href' => "?admin/orders,date:,search:{$rep['account']}", 'target' => '_blank']);
 			}
 			else
 			{
 				$table->cell('管理通告');
+				$table->cell('-');
 			}
 			$table->cell($rep['describe']);
 		});
-		$table->fieldset('promise', 'time', 'ip', 'account', 'describe');
+		$table->fieldset('promise', 'time', 'ip', 'account', 'orders', 'describe');
 		$table->header('Reports, Found %s item', number_format($table->count()));
 		$table->button('Create Report', ['onclick' => 'location.href="?admin/report-create"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
