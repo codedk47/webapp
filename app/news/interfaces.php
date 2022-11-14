@@ -113,7 +113,7 @@ class interfaces extends webapp
 		foreach ($this['app_site'] as $site => $ip)
 		{
 			$this->site = $site;
-
+			echo "\n\n-------- SITE:{$this->site} --------\n\n";
 			$status = [0, 0];
 			echo "\n-------- PULL ACC LOG --------\n";
 			foreach ($this->pull('log-acc') as $acc)
@@ -196,7 +196,7 @@ class interfaces extends webapp
 				++$status[$this->mysql->ads('WHERE site=?i AND hash=?s LIMIT 1', $site, $ad['hash'])
 					->update('`click`=`click`+?i,`view`=`view`+?i', $ad['click'], $ad['view']) === 1 ? 0 : 1];
 			}
-			echo "SUCCESS: {$status[0]}, FAILURE: {$status[1]}\n";
+			echo "SUCCESS: {$status[0]}, FAILURE: {$status[1]}\n\n";
 
 			// echo "\n-------- PULL COMMENTS --------\n";
 			// foreach ($this->pull('comments') as $comment)
