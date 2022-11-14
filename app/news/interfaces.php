@@ -113,7 +113,7 @@ class interfaces extends webapp
 		foreach ($this['app_site'] as $site => $ip)
 		{
 			$this->site = $site;
-			echo "\n\nSTART PULL SITE:{$this->site}\n";
+			echo "\n\nSTART PULL SITE:{$this->site}";
 			$status = [0, 0];
 			echo "\n-------- PULL ACC LOG --------\n";
 			foreach ($this->pull('log-acc') as $acc)
