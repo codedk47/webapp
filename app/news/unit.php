@@ -12,8 +12,8 @@ class webapp_router_unit extends webapp_echo_html
 		}
 		$this->nav([
 			['主页', '?unit'],
-			['添加单元', '?unit/add'],
-			['管理单元', '?unit/all'],
+			['添加单位', '?unit/add'],
+			['管理单位', '?unit/all'],
 			['注销登录状态', "javascript:void(document.cookie='unit=0',location.href='?unit');"]
 		]);
 		$this->xml->head->append('link', ['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/news/admin.css']);
