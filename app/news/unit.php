@@ -13,6 +13,7 @@ class webapp_router_unit extends webapp_echo_html
 		$this->nav([
 			['主页', '?unit'],
 			['添加单元', '?unit/add'],
+			['管理单元', '?unit/all'],
 			['注销登录状态', "javascript:void(document.cookie='unit=0',location.href='?unit');"]
 		]);
 		$this->xml->head->append('link', ['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/news/admin.css']);
@@ -243,5 +244,27 @@ class webapp_router_unit extends webapp_echo_html
 	function get_add()
 	{
 		$this->form_unitset($this->main);
+	}
+	function get_all()
+	{
+		if ($this->unit['owns'])
+		{
+
+			$table = $this->main->table($this->webapp->mysql->unitsets('where unit in(?S)', str_split($this->unit['owns'], 4)), function($table, $unit)
+			{
+				$table->row();
+				$table->cell(date('Y-m-d H:i:s', $unit['time']));
+				$table->cell("{$unit['unit']}:{$unit['code']}");
+				$table->cell($unit['type']);
+
+				$table->cell($unit['price']);
+				$table->cell($unit['name']);
+			});
+			$table->fieldset('创建时间', '单位:密码', '类型', '单价', '名称');
+			$table->header('单位管理');
+
+			return;
+		}
+		$this->main->append('b', ['请先添加单位！']);
 	}
 }
