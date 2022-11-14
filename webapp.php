@@ -26,9 +26,9 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 {
 	const version = '4.7a', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
 	public readonly self $webapp;
-	public readonly object|string $router;
-	public readonly string $method;
 	public readonly array $query;
+	public object|string $router;
+	public string $method;
 	private array $errors = [], $cookies = [], $headers = [], $uploadedfiles, $configs, $route, $entry;
 	private static array $libary = [];
 	static function lib(string $filename)
