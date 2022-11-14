@@ -217,7 +217,7 @@ class webapp_router_unit extends webapp_echo_html
 		$form->field('name', 'text', ['placeholder' => '单位名字描述', 'value' => "{$this->unit['name']}{$count}", 'maxlength' => 128, 'required' => NULL]);
 		$form->field('price', 'number', ['value' => 0, 'min' => 0, 'max' => 100, 'step' => 0.01, 'style' => 'width:4rem', 'required' => NULL]);
 
-		$form->button('添加单元', 'submit');
+		$form->button('添加单位', 'submit');
 
 		return $form;
 	}
