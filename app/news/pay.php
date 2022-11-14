@@ -727,7 +727,7 @@ final class webapp_pay_kj implements webapp_pay
 			{
 				break;
 			}
-			$order['trade_no'] = preg_match('/\/(\d+)/', $result['payUrl'], $id) ? $id[1] : $order['hash'];
+			$order['trade_no'] = preg_match('/\d+/', basename($result['payUrl']), $id) ? $id[0] : $order['hash'];
 			$order['type'] = 'goto';
 			$order['data'] = $result['payUrl'];
 			return TRUE;
