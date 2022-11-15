@@ -36,20 +36,18 @@ class webapp_router_unit extends webapp_echo_html
 		webapp_echo_html::form_sign_in($this->main);
 		return 401;
 	}
-	function get_home(string $ym = '')
+	function get_home(string $ym = '', string $unit = NULL)
 	{
 		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
 		$days = range(1, date('t', strtotime($ym)));
 
-		$owns = [$this->unit['unit']];
-		if ($this->unit['owns'])
+
+		$owns = [$this->unit['unit'], ...$this->unit['owns'] ? str_split($this->unit['owns'], 4) : []];
+		$units = $this->webapp->mysql->unitsets('WHERE unit IN(?S)', $owns)->column('price', 'unit');
+		$unitopt = $this->webapp->mysql->unitsets('WHERE unit IN(?S)', $owns)->column('name', 'unit');
+		if ($unit && in_array($unit, $owns))
 		{
-			array_push($owns, ...str_split($this->unit['owns'], 4));
-			$units = $this->webapp->mysql->unitsets('WHERE unit IN(?S)', $owns)->column('price', 'unit');
-		}
-		else
-		{
-			$units = [];
+			$owns = [$this->unit['unit'], $unit];
 		}
 
 		$unitorders = [NULL => array_fill(0, 32, ['count'=> 0, 'fee' => 0])];
@@ -203,6 +201,10 @@ class webapp_router_unit extends webapp_echo_html
 		
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+
+		$table->header->select(['' => '所有单位'] + $unitopt)
+			->setattr(['onchange' => 'g({unit:this.value||null})'])->selected($unit);
+
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	function form_unitset($ctx):webapp_form
