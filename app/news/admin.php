@@ -1860,7 +1860,7 @@ JS);
 		$start ??= date('Y-m-d');
 		$end ??= date('Y-m-d');
 
-		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
+		$cond = ['WHERE site=?i AND date>=?s AND date<=?s AND ia>0', $this->webapp->site, $start, $end];
 		if ($type)
 		{
 			$unit = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit');
