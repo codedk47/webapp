@@ -271,11 +271,13 @@ class webapp_router_admin extends webapp_echo_html
 				$cond[0] .= ' AND 0';
 			}
 		}
+
 		$pretty = intval($this->webapp->query['pretty'] ?? 1);
+		$pretty_lu = $pretty === 1 ? 1 : $pretty * 2;
 		$stat = $this->webapp->mysql->unitstats(...$cond)->statmonth($ym, 'unit', 'right(date,2)', [
 			"SUM(IF({day}=0 OR right(date,2)={day},pv*{$pretty},0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},ua*{$pretty},0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},lu*{$pretty},0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},lu*{$pretty_lu},0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},ru*{$pretty},0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},dv*{$pretty},0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},dc*{$pretty},0))",
@@ -422,7 +424,7 @@ class webapp_router_admin extends webapp_echo_html
 			->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$header->select(['' => '全部账号'] + $this->adminlists())
 			->setattr(['onchange' => 'g({admin:this.value===""?null:this.value})'])->selected($admin);
-		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:4})']);
+		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:5})']);
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
