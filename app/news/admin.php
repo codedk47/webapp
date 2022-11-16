@@ -271,18 +271,18 @@ class webapp_router_admin extends webapp_echo_html
 				$cond[0] .= ' AND 0';
 			}
 		}
-
+		$pretty = intval($this->webapp->query['pretty'] ?? 1);
 		$stat = $this->webapp->mysql->unitstats(...$cond)->statmonth($ym, 'unit', 'right(date,2)', [
-			'SUM(IF({day}=0 OR right(date,2)={day},pv,0))',
-			'SUM(IF({day}=0 OR right(date,2)={day},ua,0))',
-			'SUM(IF({day}=0 OR right(date,2)={day},lu,0))',
-			'SUM(IF({day}=0 OR right(date,2)={day},ru,0))',
-			'SUM(IF({day}=0 OR right(date,2)={day},dv,0))',
-			'SUM(IF({day}=0 OR right(date,2)={day},dc,0))',
-			'SUM(IF({day}=0 OR right(date,2)={day},ia,0))',
+			"SUM(IF({day}=0 OR right(date,2)={day},pv*{$pretty},0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ua*{$pretty},0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},lu*{$pretty},0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ru*{$pretty},0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},dv*{$pretty},0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},dc*{$pretty},0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ia*{$pretty},0))",
 		], 'ORDER BY $1$0 DESC LIMIT 50');
 
-		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $unitrates)
+		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $unitrates, $pretty)
 		{
 
 			$t1 = $table->tbody->append('tr');
@@ -352,8 +352,8 @@ class webapp_router_admin extends webapp_echo_html
 			$t7->append('td', number_format($stat['$6$0']));
 			if (isset($unitorders[$stat['unit']]))
 			{
-				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count']));
-				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
+				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count'] * $pretty));
+				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * $pretty * 0.01));
 			}
 			else
 			{
@@ -362,8 +362,8 @@ class webapp_router_admin extends webapp_echo_html
 			}
 			if (isset($unitrates[$stat['unit']]))
 			{
-				$t10->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fia'])));
-				$t11->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fee'])));
+				$t10->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fia'] * $pretty)));
+				$t11->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fee'] * $pretty)));
 			}
 			else
 			{
@@ -394,8 +394,8 @@ class webapp_router_admin extends webapp_echo_html
 				$t7->append('td', number_format($stat["\$6\${$i}"]));
 				if (isset($unitorders[$stat['unit']]))
 				{
-					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['count']));
-					$t9->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * 0.01));
+					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['count'] * $pretty));
+					$t9->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * $pretty * 0.01));
 				}
 				else
 				{
@@ -404,8 +404,8 @@ class webapp_router_admin extends webapp_echo_html
 				}
 				if (isset($unitrates[$stat['unit']]))
 				{
-					$t10->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fia'])));
-					$t11->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fee'])));
+					$t10->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fia'] * $pretty)));
+					$t11->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fee'] * $pretty)));
 				}
 				else
 				{
@@ -414,7 +414,7 @@ class webapp_router_admin extends webapp_echo_html
 				}
 			}
 
-		}, $days, $ym, $unitorders, $unitrates);
+		}, $days, $ym, $unitorders, $unitrates, $pretty);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$header = $table->header('');
 		$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
@@ -422,6 +422,7 @@ class webapp_router_admin extends webapp_echo_html
 			->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$header->select(['' => '全部账号'] + $this->adminlists())
 			->setattr(['onchange' => 'g({admin:this.value===""?null:this.value})'])->selected($admin);
+		$header->append('button', ['漂亮的数据x4', 'onclick' => 'g({pretty:4})']);
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
@@ -2003,6 +2004,14 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$fakes['pay'] += $pay;
 
 		}, $unitsets, $order, $fake);
+		$table->colgroup->append('col', ['span' => 6]);
+		$table->colgroup->append('col', ['style' => 'background:PeachPuff']);
+		$table->colgroup->append('col', ['style' => 'background:SkyBlue']);
+		$table->colgroup->append('col', ['span' => 2]);
+		$table->colgroup->append('col', ['style' => 'background:LemonChiffon']);
+		
+
+
 		$table->fieldset('单位(管理)', '类型', '单价', 'APRU', '访问量', '点击', '下载', '总充值', '老充值', '新充值',
 			'下载(假)', '充值(假)', '结算(激活x单价)(假)', '浏览', '独立', '日活', '注册');
 		$table->header('单位成本结算');
