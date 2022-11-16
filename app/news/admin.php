@@ -273,7 +273,7 @@ class webapp_router_admin extends webapp_echo_html
 		}
 
 		$pretty = intval($this->webapp->query['pretty'] ?? 1);
-		$pretty_lu = $pretty === 1 ? 1 : $pretty * 2;
+		$pretty_lu = $pretty === 1 ? 1 : $pretty * 3;
 		$stat = $this->webapp->mysql->unitstats(...$cond)->statmonth($ym, 'unit', 'right(date,2)', [
 			"SUM(IF({day}=0 OR right(date,2)={day},pv*{$pretty},0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},ua*{$pretty},0))",
