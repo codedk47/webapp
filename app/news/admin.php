@@ -422,7 +422,7 @@ class webapp_router_admin extends webapp_echo_html
 			->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$header->select(['' => '全部账号'] + $this->adminlists())
 			->setattr(['onchange' => 'g({admin:this.value===""?null:this.value})'])->selected($admin);
-		$header->append('button', ['漂亮的数据x4', 'onclick' => 'g({pretty:4})']);
+		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:4})']);
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
