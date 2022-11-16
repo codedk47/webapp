@@ -491,6 +491,11 @@ class interfaces extends webapp
 		$preview_end = mktime(8 + $preview_end[0], $preview_end[1], $preview_end[2], 1, 1, 1970);
 		$preview = $preview_end > $preview_start ? $preview_start << 16 | ($preview_end - $preview_start) & 0xffff : 10;
 
+		if ($preview === 10)
+		{
+			$preview = ceil($data['duration'] * 0.7) << 16 | 50;
+		}
+
 		$name = webapp::lib('hanzi/interface.php')($data['name']);
 		return $this->mysql->resources->insert([
 			'hash' => $data['hash'],
