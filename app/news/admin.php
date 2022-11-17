@@ -1863,7 +1863,7 @@ JS);
 		$start ??= date('Y-m-d');
 		$end ??= date('Y-m-d');
 
-		$cond = ['WHERE site=?i AND date>=?s AND date<=?s AND ia>0', $this->webapp->site, $start, $end];
+		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
 		if ($type)
 		{
 			if ($unit = $this->webapp->mysql->unitsets('where unit=?s', $type)->array())
@@ -1874,7 +1874,7 @@ JS);
 			{
 				$unit = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit');
 			}
-			$cond[0] .= ' AND unit IN(?S)';
+			$cond[0] .= ' AND ia>0 AND unit IN(?S)';
 			$cond[] = $unit ? $unit : ['0000'];
 		}
 		if ($adminid = $this->webapp->query['adminid'] ?? '')
