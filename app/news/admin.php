@@ -1868,13 +1868,14 @@ JS);
 		{
 			if ($unit = $this->webapp->mysql->unitsets('where unit=?s', $type)->array())
 			{
+				$cond[0] .= ' AND unit IN(?S)';
 				$unit = [$unit['unit'], ...str_split($unit['owns'], 4)];
 			}
 			else
 			{
+				$cond[0] .= ' AND ia>0 AND unit IN(?S)';
 				$unit = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit');
 			}
-			$cond[0] .= ' AND ia>0 AND unit IN(?S)';
 			$cond[] = $unit ? $unit : ['0000'];
 		}
 		if ($adminid = $this->webapp->query['adminid'] ?? '')
