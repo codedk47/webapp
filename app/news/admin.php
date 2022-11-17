@@ -1866,7 +1866,14 @@ JS);
 		$cond = ['WHERE site=?i AND date>=?s AND date<=?s AND ia>0', $this->webapp->site, $start, $end];
 		if ($type)
 		{
-			$unit = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit');
+			if ($unit = $this->webapp->mysql->unitsets('where unit=?s', $type)->array())
+			{
+				$unit = [$unit['unit'], ...str_split($unit['owns'], 4)];
+			}
+			else
+			{
+				$unit = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit');
+			}
 			$cond[0] .= ' AND unit IN(?S)';
 			$cond[] = $unit ? $unit : ['0000'];
 		}
@@ -1876,6 +1883,7 @@ JS);
 			$cond[0] .= ' AND unit IN(?S)';
 			$cond[] = $unit ? $unit : ['0000'];
 		}
+
 
 		$cond[0] .= ' GROUP BY unit ORDER BY ia DESC';
 
@@ -1961,7 +1969,9 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			[$price, $type, $admin] = $unitsets[$stat['unit']] ?? [0, 'cpc', 'admin'];
 			[$all, $old, $new] = $order[$stat['unit']] ?? [0, 0, 0];
 
-			$table->cell("{$stat['unit']}({$admin})");
+			$table->cell()->append('a', ["{$stat['unit']}({$admin})", 'href' => $this->webapp->at(['type' => $stat['unit']])]);
+
+
 			$table->cell($type);
 			$table->cell(number_format($price, 2));
 			$table->cell(number_format($type === 'cpa' && $stat['ia'] ? $all * 0.01 / $stat['ia'] : 0, 2));
