@@ -1193,8 +1193,6 @@ class interfaces extends webapp
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 		$form->field('type', 'select', ['options' => $this['app_restype'], 'required' => NULL]);
 		$form->field('viewtype', 'select', ['options' => ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小', '大横图'], 'required' => NULL]);
-		$form->field('ad', 'select', ['options' => ['' => '请选择展示广告']
-			+ $this->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->site)->column('name', 'hash')]);
 
 		$form->fieldset('describe');
 		$form->field('describe', 'text', ['style' => 'width:60rem', 'placeholder' => '合集描述']);
@@ -1226,6 +1224,11 @@ class interfaces extends webapp
 			'placeholder' => '请输入展示的资源哈希用逗号间隔',
 			'pattern' => '([0-9A-Z]{12})?(,[0-9A-Z]{12})*'
 		], fn($v,$i)=>$i?join(explode(',',$v)):join(',',str_split($v,12)));
+
+		$form->fieldset('Ads');
+		$form->field('ad', 'checkbox', ['options' => ['' => '请选择展示广告']
+			+ $this->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->site)->column('name', 'hash')],
+			fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'mo';
 
 		$form->fieldset();
 		$form->button('Submit', 'submit');

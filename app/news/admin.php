@@ -916,8 +916,8 @@ JS);
 		$cond = ['where site=?i', $this->webapp->site];
 		if ($search)
 		{
-			$cond[0] .= ' and hash=?s';
-			$cond[] = $search;
+			$cond[0] .= ' and hash in(?S)';
+			$cond[] = str_split($search, 12);
 		}
 		$cond[0] .= ' order by time desc';
 		$table = $this->main->table($this->webapp->mysql->ads(...$cond), function($table, $ad, $week, $auth)
@@ -1278,7 +1278,7 @@ JS);
 			$table->cell($viewtype[$vod['viewtype']]);
 			if ($vod['ad'])
 			{
-				$table->cell()->append('a', [$vod['ad'], 'href' => "?admin/ads,search:{$vod['ad']}"]);
+				$table->cell()->append('a', [sprintf('%d个广告', strlen($vod['ad']) / 12), 'href' => "?admin/ads,search:{$vod['ad']}"]);
 			}
 			else
 			{
