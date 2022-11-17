@@ -1842,7 +1842,7 @@ JS);
 				'onclick' => 'return confirm(`Delete Admin ${this.dataset.unit}`)',
 				'data-unit' => $unit['unit']]);
 			$table->cell(date('Y-m-d\\TH:i:s', $unit['time']));
-			$table->cell("{$unit['unit']}:{$unit['code']}");
+			$table->cell()->append('a', ["{$unit['unit']}:{$unit['code']}", 'href' => "?admin/unitcost,type:{$unit['unit']}"]);
 			$table->cell($unit['type']);
 			$table->cell($unit['rate']);
 			$table->cell($unit['price']);
