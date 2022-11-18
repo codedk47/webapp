@@ -1864,6 +1864,11 @@ JS);
 		$end ??= date('Y-m-d');
 
 		$cond = ['WHERE site=?i AND date>=?s AND date<=?s', $this->webapp->site, $start, $end];
+		if (($showzero = isset($this->webapp->query['zero'])) === FALSE)
+		{
+			$cond[0] .= ' AND ia>0';
+		}
+
 		if ($type)
 		{
 			if ($unit = $this->webapp->mysql->unitsets('where unit=?s', $type)->array())
@@ -1873,7 +1878,7 @@ JS);
 			}
 			else
 			{
-				$cond[0] .= ' AND ia>0 AND unit IN(?S)';
+				$cond[0] .= ' AND unit IN(?S)';
 				$unit = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit');
 			}
 			$cond[] = $unit ? $unit : ['0000'];
@@ -2058,6 +2063,8 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		$table->bar->append('input', ['type' => 'date', 'value' => $end, 'onchange' => 'g({end:this.value})']);
 
 		$table->bar->select(['' => '全部'] + $admin)->setattr(['onchange' => 'g({adminid:this.value||null})'])->selected($adminid);
+
+		$table->bar->append('button', ['显示 / 隐藏 0 数据', 'onclick' => sprintf('g({zero:%s})', $showzero ? 'null' : 1)]);
 	}
 	//密码
 	function form_setpwd($ctx):webapp_form
