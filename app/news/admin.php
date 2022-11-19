@@ -876,7 +876,7 @@ JS);
 			->select('device,count(1) c') as $dc) { $counts[] = "{$dc['device']}: {$dc['c']}";
 		}
 
-		//$cond[0] .= ' order by time desc';
+		$cond[0] .= ' order by uid desc';
 		$table = $this->main->table($this->webapp->mysql->accounts(...$cond)->paging($page), function($table, $acc)
 		{
 			$table->row();
