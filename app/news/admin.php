@@ -246,11 +246,11 @@ class webapp_router_admin extends webapp_echo_html
 			$unitorders[$order['unit']][$order['day']]['fee'] += $order['fee'];
 		}
 
-		$cond = ['WHERE left(date,7)=?s', $ym];
+		$cond = ['WHERE site=?i AND left(date,7)=?s', $this->webapp->site, $ym];
 
 		if ($type || $admin)
 		{
-			$unitcond = ['WHERE site=?i', $this->webapp->site];
+			$unitcond = ['WHERE 1'];
 			if ($type)
 			{
 				$unitcond[0] .= ' AND type=?s';
