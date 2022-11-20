@@ -250,7 +250,7 @@ class webapp_router_admin extends webapp_echo_html
 
 		if ($type || $admin)
 		{
-			$unitcond = ['WHERE 1'];
+			$unitcond = ['WHERE site=?i', $this->webapp->site];
 			if ($type)
 			{
 				$unitcond[0] .= ' AND type=?s';
