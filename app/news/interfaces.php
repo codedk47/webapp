@@ -112,6 +112,7 @@ class interfaces extends webapp
 		$units = array_combine($unit = $this->mysql->unitsets->column('unit'), $unit);
 		foreach ($this['app_site'] as $site => $ip)
 		{
+			if ($site > 0) break;
 			$this->site = $site;
 			echo "\n\nSTART PULL SITE:{$this->site}";
 			$status = [0, 0];
