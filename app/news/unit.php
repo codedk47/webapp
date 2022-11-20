@@ -121,7 +121,7 @@ class webapp_router_unit extends webapp_echo_html
 			$t7->append('td', '-');
 			$t8->append('td', '-');
 			$t9->append('td', '费用');
-			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f, 推广: https://%s/%s, 下载: https://%s/?packer/%s', $type, $units[$stat['unit']] ?? 0,
+			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f, 推广:【 https://%s/%s 】 下载:【 https://%s/?packer/%s 】', $type, $units[$stat['unit']] ?? 0,
 				$domain['site'], $stat['unit'], $domain['page'], $stat['unit']),
 				'colspan' => count($days) + 2,
 				'style' => 'text-align:left']);
