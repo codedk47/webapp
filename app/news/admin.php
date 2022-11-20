@@ -203,11 +203,11 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			$ordercond[0] .= ' AND accounts.unit IN(?S)';
 			$ordercond[] = $unittype;
-			$unitnames = ['WHERE left(date,7)=?s AND unit IN(?S)', $ym, $unittype];
+			$unitnames = ['WHERE site=?i AND left(date,7)=?s AND unit IN(?S)', $this->webapp->site, $ym, $unittype];
 		}
 		else
 		{
-			$unitnames = ['WHERE left(date,7)=?s', $ym];
+			$unitnames = ['WHERE site=?i AND left(date,7)=?s', $this->webapp->site, $ym];
 		}
 
 		$unitrates = [NULL => array_fill(0, 32, ['fia'=> 0, 'fee' => 0])];
