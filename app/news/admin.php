@@ -1834,7 +1834,7 @@ JS);
 		}
 		$cond[0] .= ' ORDER BY time DESC';
 
-		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit, $admin, $domain)
+		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit, $admin, $promoteurl)
 		{
 			$table->row();
 			$table->cell()->append('a', ['❌',
@@ -1849,8 +1849,8 @@ JS);
 			$table->cell()->append('a', [$unit['name'], 'href' => "?admin/unitset,unit:{$unit['unit']}"]);
 			$table->cell($unit['max']);
 			$table->cell($admin[$unit['admin']] ?? $unit['admin']);
-			$table->cell("https://{$domain['site']}/{$unit['unit']}");
-			$table->cell("https://{$domain['page']}/?packer/{$unit['unit']}");
+			$table->cell("https://{$promoteurl}/pwa/website.html#{$unit['unit']}");
+			$table->cell("https://{$promoteurl}/?packer/{$unit['unit']}");
 		}, $this->adminlists(), $this->webapp['app_unit'][$this->webapp->site]);
 		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name', 'max', 'admin', '推广链接', '直接下载');
 		$table->header('Found ' . $table->count() . ' item');

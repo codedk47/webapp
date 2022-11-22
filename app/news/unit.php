@@ -80,7 +80,7 @@ class webapp_router_unit extends webapp_echo_html
 		]);
 
 		$skip = TRUE;
-		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders, $units, $types, $domain) use(&$skip)
+		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders, $units, $types, $promoteurl) use(&$skip)
 		{
 			if ($skip) return $skip = FALSE;
 			$t1 = $table->tbody->append('tr');
@@ -121,8 +121,8 @@ class webapp_router_unit extends webapp_echo_html
 			$t7->append('td', '-');
 			$t8->append('td', '-');
 			$t9->append('td', '费用');
-			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f, 推广:【 https://%s/%s 】 下载:【 https://%s/?packer/%s 】', $type, $units[$stat['unit']] ?? 0,
-				$domain['site'], $stat['unit'], $domain['page'], $stat['unit']),
+			$t10->append('td', [sprintf('类型: %s, 单价: %0.2f, 推广:【 https://%s/pwa/website.html#%s 】 下载:【 https://%s/?packer/%s 】', $type, $units[$stat['unit']] ?? 0,
+				$promoteurl, $stat['unit'], $promoteurl, $stat['unit']),
 				'colspan' => count($days) + 2,
 				'style' => 'text-align:left']);
 
