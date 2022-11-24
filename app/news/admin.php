@@ -1368,8 +1368,23 @@ JS);
 		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
 		$days = range(1, date('t', strtotime($ym)));
 
+		$cond = ['WHERE tym=?i', "{$y}{$m}"];
+		$payuser = $this->webapp->query['payuser'] ?? '';
+		if ($this->webapp->admin[2])
+		{
+			if ($payuser)
+			{
+				$cond[0] .= ' AND pay_user=?s';
+				$cond[] = $payuser;
+			}
+		}
+		else
+		{
+			$cond[0] .= ' AND pay_user=?s';
+			$cond[] = $this->webapp->site;
+		}
 
-		$stat = $this->webapp->mysql->orders('WHERE pay_user=?s AND tym=?i', $this->webapp->site, "{$y}{$m}")->statmonth($ym, 'pay_name', 'day', [
+		$stat = $this->webapp->mysql->orders(...$cond)->statmonth($ym, 'pay_name', 'day', [
 			'COUNT(IF(({day}=0 OR day={day}) AND status="unpay",1,NULL))',
 			'COUNT(IF(({day}=0 OR day={day}) AND status!="unpay",1,NULL))',
 			'SUM(IF({day}=0 OR day={day},order_fee,0))',
@@ -1415,12 +1430,25 @@ JS);
 		$table->fieldset('渠道', '统计', '总和', ...$days);
 		$table->header('订单统计');
 		$table->xml['class'] = 'webapp-stateven';
-
+		if ($this->webapp->admin[2])
+		{
+			$paysers = $this->webapp->mysql->orders('GROUP BY pay_user')->column('pay_user');
+			$table->bar->select(['' => '全部商户'] + array_combine($paysers, $paysers))->setattr(['onchange' => 'g({payuser:this.value||null})'])->selected($payuser);
+		}
 		$table->bar->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
 	}
 	function get_orders(string $search = NULL, int $page = 1)
 	{
-		$cond = $this->webapp->admin[2] ? ['WHERE 1'] : ['WHERE pay_user=?s', $this->webapp->site];
+		$payuser = $this->webapp->query['payuser'] ?? '';
+		if ($this->webapp->admin[2])
+		{
+			$cond = $payuser ? ['WHERE pay_user=?s', $payuser] : ['WHERE 1'];
+		}
+		else
+		{
+			$cond = ['WHERE pay_user=?s', $this->webapp->site];
+		}
+
 		if ($pay_name = $this->webapp->query['pn'] ?? '')
 		{
 			$cond[0] .= ' AND pay_name=?s';
@@ -1469,6 +1497,13 @@ JS);
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
 		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台@类型', '订单（内部产品）', '对方订单', '回调地址');
 		$table->header('找到 %s 个订单数据', number_format($table->count()));
+
+		if ($this->webapp->admin[2])
+		{
+			$paysers = $this->webapp->mysql->orders('GROUP BY pay_user')->column('pay_user');
+			$table->bar->select(['' => '全部商户'] + array_combine($paysers, $paysers))->setattr(['onchange' => 'g({payuser:this.value||null})'])->selected($payuser);
+		}
+
 		$table->bar->select(['' => '全部平台'] + $this->webapp->mysql->payaisle('ORDER BY sort ASC')->column('name', 'code'))->setattr(['onchange' => 'g({pn:this.value||null})'])->selected($pay_name);
 		$table->bar->select([
 			'' => '全部状态',
