@@ -1631,6 +1631,7 @@ JS);
 	{
 		if (($this->webapp->admin[2]
 			|| $this->webapp->admin[0] == 1001
+			|| $this->webapp->admin[0] == 1005
 		) === FALSE) return $this->warn('需要超级管理员授权才可以使用！');
 		$form = $this->form_payaisle($this->main);
 		$form->xml['style'] = 'display:block;margin:1rem 0';
