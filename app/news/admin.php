@@ -498,6 +498,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$cond = is_string($search) ? ['where hash=?s or name like ?s or alias like ?s ??',
 			$search = urldecode($search), "%{$search}%", "%{$search}%"] : ['??'];
+
 		$cond[] = 'ORDER BY level ASC,count DESC,click DESC';
 		$table = $this->main->table($this->webapp->mysql->tags(...$cond)->paging($page), function($table, $tag)
 		{
