@@ -1368,7 +1368,8 @@ JS);
 		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
 		$days = range(1, date('t', strtotime($ym)));
 
-		$stat = $this->webapp->mysql->orders('WHERE tym=?i', "{$y}{$m}")->statmonth($ym, 'pay_name', 'day', [
+
+		$stat = $this->webapp->mysql->orders('WHERE pay_user=?s AND tym=?i', $this->webapp->site, "{$y}{$m}")->statmonth($ym, 'pay_name', 'day', [
 			'COUNT(IF(({day}=0 OR day={day}) AND status="unpay",1,NULL))',
 			'COUNT(IF(({day}=0 OR day={day}) AND status!="unpay",1,NULL))',
 			'SUM(IF({day}=0 OR day={day},order_fee,0))',
@@ -1419,7 +1420,7 @@ JS);
 	}
 	function get_orders(string $search = NULL, int $page = 1)
 	{
-		$cond = ['WHERE 1'];
+		$cond = $this->webapp->admin[2] ? ['WHERE 1'] : ['WHERE pay_user=?s', $this->webapp->site];
 		if ($pay_name = $this->webapp->query['pn'] ?? '')
 		{
 			$cond[0] .= ' AND pay_name=?s';
