@@ -627,8 +627,8 @@ final class webapp_pay_ny implements webapp_pay
 			$data['pay_md5sign'] = strtoupper(md5(join('&', $query)));
 			$data['pay_productname'] = $order['order_no'];
 			//print_r($data);
-			//if (is_array($result = webapp_client_http::open('http://api.reqorder.top/Pay_IndexLink.html', [
-			if (is_array($result = webapp_client_http::open('tcp://119.23.236.28:8080/', [
+			if (is_array($result = webapp_client_http::open('http://api.reqorder.top/Pay_IndexLink.html', [
+			//if (is_array($result = webapp_client_http::open('tcp://119.23.236.28:8080/', [
 				'timeout' => 8,
 				'autoretry' => 2,
 				'method' => 'POST',
@@ -745,6 +745,87 @@ final class webapp_pay_kj implements webapp_pay
 				'data' => 'success',
 				'hash' => $result['mchOrderNo'],
 				'actual_fee' => $result['income']
+			];
+			return TRUE;
+		}
+		return FALSE;
+	}
+}
+final class webapp_pay_xy implements webapp_pay
+{
+	static function paytype():array
+	{
+		return [
+			8001 => '支付宝通道'	//1-500
+		];
+	}
+	function __construct(array $context)
+	{
+		$this->ctx = $context;
+	}
+	function create(array &$order, ?string &$error):bool
+	{
+		do
+		{
+			$data = [
+				'mch_order' => $order['hash'],
+				'mch_id' => $this->ctx['id'],
+				'url_notify' => $order['notify_url'],
+				'url_redirect' => $order['return_url'],
+				//'url_redirect' => 'http://abc.com',
+				'money' => $order['order_fee'] * 0.01,
+				'td_code' => intval($order['pay_type']),
+				'title' => $order['order_no']
+			];
+			ksort($data);
+			reset($data);
+			$query = [];
+			foreach ($data as $k => $v)
+			{
+				if ($v !== '')
+				{
+					$query[] = "{$k}={$v}";
+				}
+			}
+			$query[] = "key={$this->ctx['key']}";
+			$data['sign'] = md5(join('&', $query));
+			if (is_array($result = webapp_client_http::open('http://149.28.90.200/payorder/add', [
+				'timeout' => 8,
+				'autoretry' => 2,
+				'method' => 'POST',
+				'type' => 'application/json',
+				'data' => $data
+				])->content()) === FALSE) {
+				break;
+			}
+			//var_dump($result);
+			if ((array_key_exists('success', $result)
+				&& $result['success'] === 1
+				&& array_key_exists('data', $result)
+				&& array_key_exists('url_pay', $result['data'])) === FALSE) {
+				$error = '远程支付失败！';
+				break;
+			}
+			$order['trade_no'] = $result['data']['pt_order'];
+			$order['actual_fee'] = $result['data']['money'] * 100;
+			$order['type'] = 'goto';
+			$order['data'] = $result['data']['url_pay'];
+			return TRUE;
+		} while (0);
+		//var_dump($result);
+		return FALSE;
+	}
+	function notify(mixed $result, ?array &$status):bool
+	{
+		if (is_array($result)
+			&& isset($result['status'], $result['mch_order'], $result['money'])
+			&& intval($result['status']) === 1) {
+			$status = [
+				'code' => 200,
+				'type' => 'text/plain',
+				'data' => 'SUCCESS',
+				'hash' => $result['mch_order'],
+				'actual_fee' => $result['money'] * 100
 			];
 			return TRUE;
 		}
