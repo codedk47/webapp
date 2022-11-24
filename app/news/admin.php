@@ -1315,7 +1315,7 @@ JS);
 		$tops = ['10' => 'TOP 10', '20' => 'TOP 20', '50' => 'TOP 50', '100' => 'TOP 100'];
 		$days = range(1, date('t', strtotime($ym)));
 
-		$stat = $this->webapp->mysql->bills('WHERE tym=?i AND type=?s', "{$y}{$m}", $type)->statmonth($ym, 'describe', 'day', [
+		$stat = $this->webapp->mysql->bills('WHERE site=?i AND tym=?i AND type=?s', $this->webapp->site, "{$y}{$m}", $type)->statmonth($ym, 'describe', 'day', [
 			'SUM(IF({day}=0 OR day={day},fee,0))',
 			// 'COUNT(IF((!{day} OR day={day}) AND status!="unpay",1,NULL))',
 			// 'SUM(IF((!{day} OR day={day}) AND status!="unpay",order_fee,0))',
