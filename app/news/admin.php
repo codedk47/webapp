@@ -496,17 +496,8 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function get_tags(string $search = NULL, int $page = 1)
 	{
-		$cond = [];
-		if (is_string($search))
-		{
-			strlen($search) === 4 && trim($search, webapp::key) === ''
-				? array_push($cond, 'where hash=?s ??', $search)
-				: array_push($cond, 'where name=?s or alias like ?s ??', $search = urldecode($search), "%{$search}%");
-		}
-		else
-		{
-			$cond[] = '??';
-		}
+		$cond = is_string($search) ? ['where hash=?s or name like ?s or alias like ?s ??',
+			$search = urldecode($search), "%{$search}%", "%{$search}%"] : ['??'];
 		$cond[] = 'ORDER BY level ASC,count DESC,click DESC';
 		$table = $this->main->table($this->webapp->mysql->tags(...$cond)->paging($page), function($table, $tag)
 		{
