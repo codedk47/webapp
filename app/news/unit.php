@@ -209,12 +209,13 @@ class webapp_router_unit extends webapp_echo_html
 	}
 	function form_unitset($ctx):webapp_form
 	{
+
 		$form = new webapp_form($ctx);
 
 		$count = ceil(strlen($this->unit['owns']) / 4) + 1;
 
 		$form->fieldset('unit / code / name / price');
-		$form->field('unit', 'text', ['placeholder' => '单位编码4位字母数字组合', 'value' => substr($this->unit['unit'], 0, 3) . $count, 'pattern' => '\w{4}', 'maxlength' => 4, 'required' => NULL]);
+		$form->field('unit', 'text', ['placeholder' => '单位编码4位字母数字组合', 'value' => substr(substr($this->unit['unit'], 0, 3) . $count, -4), 'pattern' => '\w{4}', 'maxlength' => 4, 'required' => NULL]);
 		$form->field('code', 'number', ['placeholder' => '6位密码', 'value' => random_int(100000, 999999), 'min' => 100000, 'max' => 999999, 'required' => NULL]);
 		$form->field('name', 'text', ['placeholder' => '单位名字描述', 'value' => "{$this->unit['name']}{$count}", 'maxlength' => 128, 'required' => NULL]);
 		$form->field('price', 'number', ['value' => 0, 'min' => 0, 'max' => 100, 'step' => 0.01, 'style' => 'width:4rem', 'required' => NULL]);
