@@ -104,7 +104,7 @@ class webapp_router_admin extends webapp_echo_html
 	function adminlists():array
 	{
 		$users = [$this->webapp['admin_username'] => "admin"];
-		foreach ($this->webapp->mysql->admin as $admin)
+		foreach ($this->webapp->mysql->admin('where site=?i', $this->webapp->site) as $admin)
 		{
 			$users[$admin['uid']] = $admin['name'];
 		}
