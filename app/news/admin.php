@@ -1960,7 +1960,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 				$order[$row['unit']] = [0, 0, 0];
 			}
 			$order[$row['unit']][0] += $row['fee'];
-			$order[$row['unit']][$row['ordertime'] - $row['accounttime'] > 86400 ? 1 : 2] += $row['fee'];
+			$order[$row['unit']][date('Y-m-d', $row['ordertime']) === date('Y-m-d', $row['accounttime']) ? 2 : 1] += $row['fee'];
 		}
 
 		$fake = [];
