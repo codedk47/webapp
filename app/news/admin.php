@@ -836,11 +836,7 @@ JS);
 			$cond[0] .= ' and unit=?s';
 			$cond[] = $uint;
 		}
-		if ($date = $this->webapp->query['date'] ?? '')
-		{
-			$cond[0] .= ' and date=?s';
-			$cond[] = $date;
-		}
+		$date = $this->webapp->query['date'] ?? '';
 		if (is_string($search))
 		{
 			if (is_numeric($search))
@@ -861,6 +857,11 @@ JS);
 					array_push($cond, '%' . ($search = urldecode($search)) . '%', "%{$search}%");
 				}
 			}
+		}
+		else
+		{
+			$cond[0] .= ' and date=?s';
+			$date = $cond[] = preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $date) ? $date : date('Y-m-d');
 		}
 
 		$counts = [];
@@ -895,7 +896,7 @@ JS);
 		});
 		$table->fieldset('账号(uid)', '注册日期(date)', '会员过期(expire)', '余额(balance)', '最后登录时间(lasttime)', '最后登录IP(lastip)', '设备类型(device)', '单位(unit)', '邀请账号(code)', '设备ID(did)', '绑定手机(phone)', '名称(name)', '记录(history)');
 		$table->header('Found %s item', number_format($table->count()));
-		$table->bar->select(['' => '全部单位', '0000' => '内部单位'] + $this->webapp->mysql->unitsets('where site=?i', $this->webapp->site)->column('name', 'unit'))
+		$table->bar->select(['' => '全部单位', '0000' => '官方单位'] + $this->webapp->mysql->unitsets('where site=?i', $this->webapp->site)->column('name', 'unit'))
 			->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
@@ -1361,10 +1362,10 @@ JS);
 		$days = range(1, date('t', strtotime($ym)));
 
 		$cond = ['WHERE tym=?i', "{$y}{$m}"];
-		$payuser = $this->webapp->query['payuser'] ?? '';
+
 		if ($this->webapp->admin[2])
 		{
-			if ($payuser)
+			if ($payuser = $this->webapp->query['payuser'] ?? '')
 			{
 				$cond[0] .= ' AND pay_user=?s';
 				$cond[] = $payuser;
@@ -1431,9 +1432,9 @@ JS);
 	}
 	function get_orders(string $search = NULL, int $page = 1)
 	{
-		$payuser = $this->webapp->query['payuser'] ?? '';
 		if ($this->webapp->admin[2])
 		{
+			$payuser = $this->webapp->query['payuser'] ?? '';
 			$cond = $payuser ? ['WHERE pay_user=?s', $payuser] : ['WHERE 1'];
 		}
 		else
