@@ -120,7 +120,7 @@ class webapp_router_admin extends webapp_echo_html
 		if ($unit)
 		{
 			$hours = range(0, 23);
-			$table = $this->main->table($this->webapp->mysql->unitstats('WHERE left(date,7)=?s AND unit=?s ORDER BY date DESC', $ym, $unit), function($table, $stat)
+			$table = $this->main->table($this->webapp->mysql->unitstats('WHERE site=?i AND left(date,7)=?s AND unit=?s ORDER BY date DESC', $this->webapp->site, $ym, $unit), function($table, $stat)
 			{
 				$t1 = $table->tbody->append('tr');
 				$t2 = $table->tbody->append('tr');
