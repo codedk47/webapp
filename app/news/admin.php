@@ -874,7 +874,7 @@ JS);
 		{
 			$table->row();
 			$table->cell()->append('a', [$acc['uid'], 'href' => "?admin/account-update,uid:{$acc['uid']}"]);
-			$table->cell(date('Y-m-d\\TH:i:s', $acc['time']));
+			$table->cell($acc['date']);
 			$table->cell(date('Y-m-d', $acc['expire']));
 			$table->cell(number_format($acc['balance']));
 			$table->cell(date('Y-m-d\\TH:i:s', $acc['lasttime']));
