@@ -908,6 +908,10 @@ class interfaces extends webapp
 					if ($this->mysql->accounts('WHERE did=?s LIMIT 1', $did)->fetch($account))
 					{
 						$this->xml['status'] = 'sign-in';
+						$this->mysql->accounts('WHERE uid=?s LIMIT 1', $account['uid'])->update([
+							'lasttime' => $account['lasttime'] = $this->time,
+							'lastip' => $account['lastip'] = $this->clientiphex
+						]);
 						$this->account_xml($account);
 						return;
 					}
@@ -964,8 +968,9 @@ class interfaces extends webapp
 	function get_account(string $signature)
 	{
 		if ($this->account($signature, $account)
-			&& $this->mysql->accounts('WHERE site=?i AND uid=?s', $this->site, $account['uid'])
-				->update(['lasttime' => $this->time, 'lastip' => $this->clientiphex])) {
+			&& $this->mysql->accounts('WHERE site=?i AND uid=?s', $this->site, $account['uid'])->update([
+				'lasttime' => $account['lasttime'] = $this->time,
+				'lastip' => $account['lastip'] = $this->clientiphex])) {
 			$this->account_xml($account, $signature);
 		}
 	}
