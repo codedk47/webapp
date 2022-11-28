@@ -8,7 +8,7 @@ function router($request, $info)
 	} . '/#' . substr($info[0], 1);
 	@fwrite($request, packfhi(strlen($url)) . $url);
 }
-$server = stream_socket_server('tcp://0.0.0.0:8848');
+$server = stream_socket_server('tcp://0.0.0.0:80');
 stream_set_blocking($server, FALSE);
 $clients = [$server];
 $buffers = [];
