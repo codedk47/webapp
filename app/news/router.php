@@ -117,6 +117,8 @@ while (TRUE)
 					preg_match('/GET\s+([^\s]+)/', $content, $path) ? $path[1] : '/',
 					preg_match('/Host:\s?([^\r\n]+)/i', $content, $host) ? $host[1] : 'unknown'
 				];
+				$ip = stream_socket_get_name($request, TRUE);
+				echo "FROM {$ip} GET {$websockets[$id][0]}\n";
 				router($request, $websockets[$id]);
 			};
 			continue;
