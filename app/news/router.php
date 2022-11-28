@@ -3,8 +3,8 @@ function router($request, $info)
 {
 	$url = 'https://' . match ($info[1])
 	{
-		'chiguatv.cc' => 'sc.340api.com',
-		default => 'cg.xpelnt.com'
+		'route.domain' => 'api.domain',
+		default => 'api.domain'
 	} . '/#' . substr($info[0], 1);
 	@fwrite($request, packfhi(strlen($url)) . $url);
 }
