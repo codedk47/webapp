@@ -87,6 +87,13 @@ while (TRUE)
 			//print_r($hi);
 			$buffers[$id] = substr($content, $length + $hi['length']);
 			$content = substr($content, $length, $hi['length']);
+			if ($mask = $hi['mask'])
+			{
+				for ($i = 0; $i < $hi['length']; ++$i)
+				{
+					$content[$i] = chr(ord($content[$i]) ^ $mask[$i % 4]);
+				}
+			}
 			var_dump($content);
 			router($request, $websockets[$id]);
 			continue;
