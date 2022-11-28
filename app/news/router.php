@@ -26,8 +26,8 @@ while (TRUE)
 			$id = get_resource_id($client);
 			$clients[$id] = $client;
 			$buffers[$id] = '';
-			$ip = stream_socket_get_name($client, TRUE);
-			echo "New Client connected from {$ip}\n";
+			// $ip = stream_socket_get_name($client, TRUE);
+			// echo "New Client connected from {$ip}\n";
 		}
 		unset($read[0]);
 	}
@@ -115,13 +115,14 @@ while (TRUE)
 				$buffers[$id] = '';
 				$websockets[$id] = [
 					preg_match('/GET\s+([^\s]+)/', $content, $path) ? $path[1] : '/',
-					preg_match('/Host:\s?([^\r\n]+)/i', $content, $host) ? $host[1] : 'localhost'
+					preg_match('/Host:\s?([^\r\n]+)/i', $content, $host) ? $host[1] : 'unknown'
 				];
 				router($request, $websockets[$id]);
 			};
 			continue;
 		}
-		echo preg_match('/GET\s+([^\s]+)/', $content, $path) ? $path[0] : 'GET /', "\n";
+		$ip = stream_socket_get_name($request, TRUE);
+		echo "FROM {$ip} ", preg_match('/GET\s+([^\s]+)/', $content, $path) ? $path[0] : 'GET /', "\n";
 		@fwrite($request, join("\r\n", [
 			'HTTP/1.1 404 Not Found',
 			'Server: PHP',
