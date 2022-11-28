@@ -94,7 +94,6 @@ while (TRUE)
 					$content[$i] = chr(ord($content[$i]) ^ $mask[$i % 4]);
 				}
 			}
-			var_dump($content);
 			router($request, $websockets[$id]);
 			continue;
 		}
@@ -122,6 +121,7 @@ while (TRUE)
 			};
 			continue;
 		}
+		echo preg_match('/GET\s+([^\s]+)/', $content, $path) ? $path[0] : 'GET /', "\n";
 		@fwrite($request, join("\r\n", [
 			'HTTP/1.1 404 Not Found',
 			'Server: PHP',
