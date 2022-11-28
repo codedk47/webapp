@@ -598,6 +598,8 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	//request
 	function request_ip():string
 	{
+		//CF-Connecting-IP
+		//X-Forwarded-For
 		return $this->io->request_ip();
 	}
 	// function request_host():string

@@ -8,6 +8,11 @@ function router($request, $info)
 	} . '/#' . substr($info[0], 1);
 	@fwrite($request, packfhi(strlen($url)) . $url);
 }
+function clientip($request, $content):string
+{
+	return preg_match('/X-Forwarded-For\:\s?([^\r\n]+)/i', $content, $ip)
+		? $ip[1] : explode(':', stream_socket_get_name($request, TRUE))[0];
+}
 $server = stream_socket_server('tcp://0.0.0.0:80');
 stream_set_blocking($server, FALSE);
 $clients = [$server];
@@ -117,15 +122,20 @@ while (TRUE)
 					preg_match('/GET\s+([^\s]+)/', $content, $path) ? $path[1] : '/',
 					preg_match('/Host:\s?([^\r\n]+)/i', $content, $host) ? $host[1] : 'unknown'
 				];
-				$ip = stream_socket_get_name($request, TRUE);
-				echo "FROM {$ip} GET {$websockets[$id][0]}\n";
+				$ip = clientip($request, $content);
+				echo "WS FROM {$ip} GET {$websockets[$id][0]}\n";
 				router($request, $websockets[$id]);
 			};
 			continue;
 		}
-		$ip = stream_socket_get_name($request, TRUE);
-		echo "FROM {$ip} ", preg_match('/GET\s+([^\s]+)/', $content, $path) ? $path[0] : 'GET /', "\n";
+		echo 'HTTP FROM ', clientip($request, $content), ' ', preg_match('/GET\s+([^\s]+)/', $content, $path) ? $path[0] : 'GET /', "\n";
 		@fwrite($request, join("\r\n", [
+			// 'HTTP/1.1 200 OK',
+			// 'Server: PHP',
+			// 'Refresh: 0; url=https://localhost/#' . substr($path[1], 1),
+			// 'Content-Length: 2',
+			// 'Connection: close',
+			// "\r\nHi"
 			'HTTP/1.1 404 Not Found',
 			'Server: PHP',
 			'Content-Length: 0',
