@@ -5,6 +5,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		parent::__construct($webapp);
 		if ($webapp->method === 'options_config') return;
+		if ($webapp->method === 'post_config' && $webapp->authorization) return;
 		if (empty($this->admin()))
 		{
 			if (str_ends_with($webapp->method, 't_home'))
