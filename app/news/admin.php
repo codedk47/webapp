@@ -2157,7 +2157,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$req = $this->webapp->sync()->goto('/?upapk', count($apk)
 				? ['method' => 'POST', 'data' => fopen($apk[0]['file'], 'r'), 'type' => 'application/octet-stream']
 				: ['method' => 'POST', 'data' => '', 'type' => 'application/octet-stream']);
-			return isset($req[0]) ? intval(substr($req[0], 5)) : 500;
+			return isset($req[0]) ? intval(substr($req[0], 9)) : 500;
 		}
 		$input = $this->webapp->request_content();
 		if (isset($input['config']))
