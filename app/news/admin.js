@@ -61,7 +61,7 @@ function upres(e)
 	xhr.open(e.method, e.action);
 	xhr.setRequestHeader('Authorization', `Bearer ${e.dataset.auth}`);
 	xhr.upload.onprogress = event => event.lengthComputable && progress.forEach(e => e.value = event.loaded / event.total);
-	if (e.dataset.type != 'html')
+	if (e.dataset.back != 'html')
 	{
 		xhr.responseType = 'json';
 		xhr.onload = () => {
