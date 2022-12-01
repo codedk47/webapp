@@ -2177,15 +2177,21 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		$this->get_config();
 		if (isset($errmsg))
 		{
-			$this->main->form->insert('fieldset', 'first')->setattr([$errmsg, 'style' => 'color:maroon']);
+			$this->main->form->xml->fieldset[0] = $errmsg;
 		}
 	}
 	function get_config()
 	{
+
 		$form = $this->main->form("{$this->webapp['app_resdomain']}?admin/config");
 		$form->xml['onsubmit'] = 'return upres(this)';
 		$form->xml['data-auth'] = $this->webapp->signature($this->webapp['admin_username'], $this->webapp['admin_password'], (string)$this->webapp->site);
 		$form->xml['data-back'] = 'html';
+		$form->fieldset->setattr([
+			webapp_client_http::open("http://{$this->webapp['app_site'][$this->webapp->site]}/pwa/dir/index.txt")->content(),
+			'style' => 'color:maroon'
+		]);
+		$form->fieldset();
 		$form->progress()->setattr(['style' => 'width:100%']);
 		$form->fieldset();
 		$form->field('upapk', 'file', ['accept' => 'application/zip,application/x-zip,application/x-zip-compressed']);
