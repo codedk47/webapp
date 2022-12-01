@@ -61,21 +61,24 @@ function upres(e)
 	xhr.open(e.method, e.action);
 	xhr.setRequestHeader('Authorization', `Bearer ${e.dataset.auth}`);
 	xhr.upload.onprogress = event => event.lengthComputable && progress.forEach(e => e.value = event.loaded / event.total);
-	xhr.responseType = 'json';
-	xhr.onload = () => {
-		if (Object.keys(xhr.response.errors).length)
-		{
-			alert(Object.values(xhr.response.errors).join("\n"));
-		}
-		else
-		{
-			if (xhr.response.goto)
+	if (e.dataset.type != 'html')
+	{
+		xhr.responseType = 'json';
+		xhr.onload = () => {
+			if (Object.keys(xhr.response.errors).length)
 			{
-				location.href = xhr.response.goto;
+				alert(Object.values(xhr.response.errors).join("\n"));
 			}
-		}
-		console.log(xhr.response)
-	};
+			else
+			{
+				if (xhr.response.goto)
+				{
+					location.href = xhr.response.goto;
+				}
+			}
+			console.log(xhr.response)
+		};
+	}
 	xhr.send(new FormData(e));
 	return false;
 }
