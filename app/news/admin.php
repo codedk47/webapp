@@ -274,16 +274,15 @@ class webapp_router_admin extends webapp_echo_html
 			}
 		}
 
-		$pretty = intval($this->webapp->query['pretty'] ?? 1);
-		$pretty_lu = $pretty === 1 ? 1 : $pretty * 3;
+		$pretty = floatval($this->webapp->query['pretty'] ?? 1);
 		$stat = $this->webapp->mysql->unitstats(...$cond)->statmonth($ym, 'unit', 'right(date,2)', [
-			"SUM(IF({day}=0 OR right(date,2)={day},pv*{$pretty},0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ua*{$pretty},0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},lu*{$pretty_lu},0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ru*{$pretty},0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},dv*{$pretty},0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},dc*{$pretty},0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ia*{$pretty},0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ceil(pv*{$pretty}),0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ceil(ua*{$pretty}),0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ceil(lu*{$pretty}),0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ceil(ru*{$pretty}),0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ceil(dv*{$pretty}),0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ceil(dc*{$pretty}),0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ceil(ia*{$pretty}),0))",
 		], 'ORDER BY $1$0 DESC LIMIT 50');
 
 		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $unitrates, $pretty)
@@ -426,7 +425,7 @@ class webapp_router_admin extends webapp_echo_html
 			->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$header->select(['' => '全部账号'] + $this->adminlists())
 			->setattr(['onchange' => 'g({admin:this.value===""?null:this.value})'])->selected($admin);
-		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:2})']);
+		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:3.5})']);
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
