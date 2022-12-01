@@ -4,6 +4,7 @@ class webapp_router_admin extends webapp_echo_html
 	function __construct(interfaces $webapp)
 	{
 		parent::__construct($webapp);
+		if ($webapp->method === 'options_config') return;
 		if (empty($this->admin()))
 		{
 			if (str_ends_with($webapp->method, 't_home'))
@@ -2140,7 +2141,13 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 	{
 		$this->form_setpwd($this->main);
 	}
-
+	function options_config()
+	{
+		$this->webapp->response_header('Allow', 'OPTIONS, POST');
+		$this->webapp->response_header('Access-Control-Allow-Origin', '*');
+		$this->webapp->response_header('Access-Control-Allow-Headers', '*');
+		$this->webapp->response_header('Access-Control-Allow-Methods', 'POST');
+	}
 	function post_config()
 	{
 		if ($this->webapp->request_content_type() === 'multipart/form-data')
@@ -2180,10 +2187,13 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 	}
 	function get_config()
 	{
-		$form = $this->main->form();
-
-		//$form->field('upapk', 'file');//['accept'] = 'application/vnd.android.package-archive';
-		//$form->button('Update APK Or Revert APK', 'submit');
+		$form = $this->main->form("{$this->webapp['app_resdomain']}?admin/config");
+		$form->xml['onsubmit'] = 'return upres(this)';
+		$form->xml['data-auth'] = $this->webapp->signature($this->webapp['admin_username'], $this->webapp['admin_password'], (string)$this->webapp->site);
+		$form->progress()->setattr(['style' => 'width:100%']);
+		$form->fieldset();
+		$form->field('upapk', 'file', ['accept' => 'application/zip,application/x-zip,application/x-zip-compressed']);
+		$form->button('Update APK ZipArchive', 'submit');
 		$form->button('Refresh')['onclick'] = 'location.href="/?admin/config"';
 		$this->main->append('br');
 
