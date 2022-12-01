@@ -2176,6 +2176,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 				}
 			}
 		}
+		var_dump($req);
 		$this->get_config();
 		if (isset($req[0]))
 		{
