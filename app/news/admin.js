@@ -63,8 +63,11 @@ function upres(e)
 	xhr.upload.onprogress = event => event.lengthComputable && progress.forEach(e => e.value = event.loaded / event.total);
 	if (e.dataset.back == 'html')
 	{
-		alert(xhr.status);
-		location.reload();
+		xhr.onload = () =>
+		{
+			alert(xhr.status);
+			location.reload();
+		};
 	}
 	else
 	{
