@@ -2157,31 +2157,24 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$req = $this->webapp->sync()->goto('/?upapk', count($apk)
 				? ['method' => 'POST', 'data' => fopen($apk[0]['file'], 'r'), 'type' => 'application/octet-stream']
 				: ['method' => 'POST', 'data' => '', 'type' => 'application/octet-stream']);
+			return isset($req[0]) ? intval(substr($req[0], 5)) : 500;
 		}
-		else
+		$input = $this->webapp->request_content();
+		if (isset($input['config']))
 		{
-			$input = $this->webapp->request_content();
-			if (isset($input['config']))
+			$this->webapp->mysql->real_query('INSERT INTO `configs` SET ?v ON DUPLICATE KEY UPDATE data=?s',
+				['site' => $this->webapp->site, 'data' => $input['config']], $input['config']);
+			if ($this->webapp->mysql->error)
 			{
-				$this->webapp->mysql->real_query('INSERT INTO `configs` SET ?v ON DUPLICATE KEY UPDATE data=?s',
-					['site' => $this->webapp->site, 'data' => $input['config']], $input['config']);
-				if ($this->webapp->mysql->error)
-				{
-					$errmsg = $this->webapp->mysql->error;
-				}
-				else
-				{
-					$this->webapp->xml->append('config')->cdata($input['config']);
-					$this->webapp->call('saveConf', $this->webapp->xml->config);
-				}
+				$errmsg = $this->webapp->mysql->error;
+			}
+			else
+			{
+				$this->webapp->xml->append('config')->cdata($input['config']);
+				$this->webapp->call('saveConf', $this->webapp->xml->config);
 			}
 		}
-		var_dump($req);
 		$this->get_config();
-		if (isset($req[0]))
-		{
-			$this->main->form->insert('fieldset', 'first')->setattr([$req[0], 'style' => 'color:maroon']);
-		}
 		if (isset($errmsg))
 		{
 			$this->main->form->insert('fieldset', 'first')->setattr([$errmsg, 'style' => 'color:maroon']);
