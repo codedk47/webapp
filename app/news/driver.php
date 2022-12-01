@@ -9,7 +9,9 @@ class news_driver extends webapp
 			if ($this->request_content_length() && file_put_contents($apkdst = "{$pwadir}/apk.zip", $this->request_content()) === $this->request_content_length())
 			{
 				$zip = new ZipArchive;
-				return $zip->open($apkdst) && $zip->extractTo("$pwadir/dir") ? 200 : 500;
+				$code = $zip->open($apkdst) ? 200 : 500;
+				$zip->extractTo("$pwadir/dir");
+				return $code;
 			}
 		}
 		return 401;
