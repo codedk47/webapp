@@ -283,7 +283,7 @@ class webapp_router_admin extends webapp_echo_html
 			"SUM(IF({day}=0 OR right(date,2)={day},ceil(dv*{$pretty}),0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},ceil(dc*{$pretty}),0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},ceil(ia*{$pretty}),0))",
-		], 'ORDER BY $1$0 DESC LIMIT 50');
+		], 'ORDER BY $6$0 DESC LIMIT 50');
 
 		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $unitrates, $pretty)
 		{
