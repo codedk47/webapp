@@ -31,6 +31,11 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	public string $method;
 	private array $errors = [], $cookies = [], $headers = [], $uploadedfiles, $configs, $route, $entry;
 	private static array $libary = [];
+	static private $lock;
+	static function lock():bool
+	{
+		return is_resource(self::$lock = fopen(__FILE__, 'r')) && flock(self::$lock, LOCK_EX | LOCK_NB);
+	}
 	static function lib(string $filename)
 	{
 		return array_key_exists($name = strtolower($filename), static::$libary)
