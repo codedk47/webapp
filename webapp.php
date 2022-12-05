@@ -888,19 +888,10 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 	{
 		$this->uploadedfiles = array_slice($uploadedfiles, 0, $maximum);
 	}
-	// function getIterator():mysqli_result
-	// {
-	// 	return $this->store_result();
-	// }
-	// final function offsetGet(mixed $key):mixed
-	// {
-	// 	return $this->getArrayCopy()[$key] ?? [];
-	// }
 	function __toString():string
 	{
 		return $this->name;
 	}
-
 	function __debugInfo():array
 	{
 		return iterator_to_array($this);
