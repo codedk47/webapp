@@ -356,22 +356,22 @@ class webapp_router_admin extends webapp_echo_html
 			if (isset($unitorders[$stat['unit']]))
 			{
 				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count'] * $pretty));
-				$t9->append('td', '￥' . number_format($unitorders[$stat['unit']][0]['fee'] * $pretty * 0.01));
+				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * $pretty * 0.01) . '￥');
 			}
 			else
 			{
 				$t8->append('td', 0);
-				$t9->append('td', '￥0');
+				$t9->append('td', '0￥');
 			}
 			if (isset($unitrates[$stat['unit']]))
 			{
 				$t10->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fia'] * $pretty)));
-				$t11->append('td', '￥' . number_format(ceil($unitrates[$stat['unit']][0]['fee'] * $pretty)));
+				$t11->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fee'] * $pretty)) . '￥');
 			}
 			else
 			{
 				$t10->append('td', 0);
-				$t11->append('td', '￥0');
+				$t11->append('td', '0￥');
 			}
 
 
@@ -398,22 +398,22 @@ class webapp_router_admin extends webapp_echo_html
 				if (isset($unitorders[$stat['unit']]))
 				{
 					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['count'] * $pretty));
-					$t9->append('td', '￥' . number_format($unitorders[$stat['unit']][$i]['fee'] * $pretty * 0.01));
+					$t9->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * $pretty * 0.01) . '￥');
 				}
 				else
 				{
 					$t8->append('td', 0);
-					$t9->append('td', '￥0');
+					$t9->append('td', '0￥');
 				}
 				if (isset($unitrates[$stat['unit']]))
 				{
 					$t10->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fia'] * $pretty)));
-					$t11->append('td', '￥' . number_format(ceil($unitrates[$stat['unit']][$i]['fee'] * $pretty)));
+					$t11->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fee'] * $pretty)) . '￥');
 				}
 				else
 				{
 					$t10->append('td', 0);
-					$t11->append('td', '￥0');
+					$t11->append('td', '0￥');
 				}
 			}
 
@@ -2019,16 +2019,16 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			$table->cell(number_format($stat['dc']));
 			$table->cell(number_format($stat['ia']));
 
-			$table->cell(number_format($all * 0.01, 2));
-			$table->cell(number_format($old * 0.01, 2));
-			$table->cell(number_format($new * 0.01, 2));
+			$table->cell(number_format($all * 0.01, 2) . '￥');
+			$table->cell(number_format($old * 0.01, 2) . '￥');
+			$table->cell(number_format($new * 0.01, 2) . '￥');
 
 
 			if (isset($fake[$stat['unit']]))
 			{
 				$table->cell(number_format($fake[$stat['unit']]['ia']));
 				$table->cell('-');
-				$table->cell(number_format($pay = $fake[$stat['unit']]['ia'] * $price, 2));
+				$table->cell(number_format($pay = $fake[$stat['unit']]['ia'] * $price, 2) . '￥');
 			}
 			else
 			{
@@ -2075,12 +2075,12 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 		$table->cell(number_format($count['dc']));
 		$table->cell(number_format($count['ia']));
 
-		$table->cell(number_format($count['all'] * 0.01, 2));
-		$table->cell(number_format($count['old'] * 0.01, 2));
-		$table->cell(number_format($count['new'] * 0.01, 2));
+		$table->cell(number_format($count['all'] * 0.01, 2) . '￥');
+		$table->cell(number_format($count['old'] * 0.01, 2) . '￥');
+		$table->cell(number_format($count['new'] * 0.01, 2) . '￥');
 		$table->cell(number_format($fakes['ia']));
 		$table->cell('-');
-		$table->cell(number_format($fakes['pay'], 2));
+		$table->cell(number_format($fakes['pay'], 2) . '￥');
 
 		$table->cell(number_format($count['pv']));
 		$table->cell(number_format($count['ua']));
