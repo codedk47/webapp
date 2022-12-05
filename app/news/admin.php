@@ -1227,7 +1227,7 @@ JS);
 	{
 		$settags = [];
 		$seltags = [];
-		foreach ($this->webapp->mysql->settags('ORDER BY sort ASC,time DESC') as $settag)
+		foreach ($this->webapp->mysql->settags('WHERE site=?i ORDER BY sort ASC,time DESC', $this->webapp->site) as $settag)
 		{
 			$settags[$settag['hash']] = [
 				'name' => $seltags[$settag['hash']] = $settag['name'],
