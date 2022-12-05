@@ -398,22 +398,22 @@ class webapp_router_admin extends webapp_echo_html
 				if (isset($unitorders[$stat['unit']]))
 				{
 					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['count'] * $pretty));
-					$t9->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * $pretty * 0.01));
+					$t9->append('td', '￥' . number_format($unitorders[$stat['unit']][$i]['fee'] * $pretty * 0.01));
 				}
 				else
 				{
 					$t8->append('td', 0);
-					$t9->append('td', 0);
+					$t9->append('td', '￥0');
 				}
 				if (isset($unitrates[$stat['unit']]))
 				{
 					$t10->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fia'] * $pretty)));
-					$t11->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fee'] * $pretty)));
+					$t11->append('td', '￥' . number_format(ceil($unitrates[$stat['unit']][$i]['fee'] * $pretty)));
 				}
 				else
 				{
 					$t10->append('td', 0);
-					$t11->append('td', 0);
+					$t11->append('td', '￥0');
 				}
 			}
 
