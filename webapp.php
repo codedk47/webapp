@@ -31,11 +31,39 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	public string $method;
 	private array $errors = [], $cookies = [], $headers = [], $uploadedfiles, $configs, $route, $entry;
 	private static array $libary = [];
-	static private $lock;
-	static function lock():bool
-	{
-		return is_resource(self::$lock = fopen(__FILE__, 'r')) && flock(self::$lock, LOCK_EX | LOCK_NB);
-	}
+	// static private array $locks = [];
+	// static function lock(string $filename = __FILE__):bool
+	// {
+	// 	fopen('php://memory', 'r+');
+	// 	return is_resource(self::$locks[$filename] = fopen($filename, 'r')) && flock(self::$locks[$filename], LOCK_EX | LOCK_NB);
+	// }
+// 	static function fsync(string $filename, callable $sync = NULL, &$value = NULL):bool
+// 	{
+// 		$status = FALSE;
+// 		if ($resource = fopen($filename, 'r+'))
+// 		{
+// 			if (flock($resource, LOCK_EX | LOCK_NB))
+// 			{
+// 				$value = is_callable($sync) ? $sync($resource) : $sync;
+// 				flock($resource, LOCK_UN);
+// 				$status = TRUE;
+// 			}
+// 			else
+// 			{
+// // 				ob_start();
+// // readfile("text.txt");
+// // $data = ob_get_clean();
+// // 				//fread()
+// // 				flock($resource, LOCK_SH);
+// 				$value = file_get_contents($filename);
+// 				//$value = stream_get_contents($resource);
+// 				//$value = fread($resource, 8014);
+				
+// 			}
+// 			fclose($resource);
+// 		}
+// 		return $status;
+// 	}
 	static function lib(string $filename)
 	{
 		return array_key_exists($name = strtolower($filename), static::$libary)
@@ -529,6 +557,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			? static::authorize($this->request_authorization(), $authenticate)
 			: $this->admin($this->request_authorization());
 	}
+	function authorized(string $additional = NULL):array
+	{
+		return ['Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password'], $additional)];
+	}
 	function generatetext(int $count, int $start = 0x4e00, int $end = 0x9fa5)
 	{
 		$random = unpack('V*', random_bytes($count * 4));
@@ -672,89 +704,11 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			default => $this->io->request_content()
 		};
 	}
-	function request_uploadedfile(string $name, int $maximum = NULL):ArrayObject
+	function request_uploadedfile(string $name, int $maximum = NULL):webapp_request_uploadedfile
 	{
-		return array_key_exists($name, $this->uploadedfiles ??= $this->io->request_uploadedfile()) && is_object($this->uploadedfiles[$name])
-			? $this->uploadedfiles[$name] : $this->uploadedfiles[$name] = new class($this, $this->uploadedfiles[$name] ?? [], $maximum) extends ArrayObject implements Stringable
-			{
-				function __construct(public readonly webapp $webapp, array $uploadedfiles, int $maximum = NULL)
-				{
-					parent::__construct(flags: ArrayObject::STD_PROP_LIST);
-					foreach (array_slice($uploadedfiles, 0, $maximum) as $uploadedfile)
-					{
-						$this[] = ['hash'=> $webapp->hashfile($uploadedfile['file']), ...$uploadedfile];
-					}
-				}
-				function __toString():string
-				{
-					return join('|', $this->column('file'));
-				}
-				function __debugInfo():array
-				{
-					return $this->getArrayCopy();
-				}
-				function column(string $key):array
-				{
-					return array_column($this->getArrayCopy(), $key);
-				}
-				function size():int
-				{
-					return array_sum($this->column('size'));
-				}
-				// function open(string $hash = NULL):mixed
-				// {
-				// 	return fopen($hash === NULL ? $this : $this[$hash]['file'], 'r');
-				// }
-				// function content(string $hash = NULL):string
-				// {
-				// 	return file_get_contents($hash === NULL ? $this : $this[$hash]['file']);
-				// }
-				function movefile(int $index, string $filename):bool
-				{
-					//$index = max(1, $index) < count($this)
-
-					//if (array_key_exists($index, $this))
-					return move_uploaded_file($this[$index]['file'], $filename);
-				}
-				function moveto(string $filename):array
-				{
-					$success = [];
-					foreach ($this as $file)
-					{
-						// if (move_uploaded_file($file['file'], $filename)
-						// {
-
-						// }
-						print_r($file);
-					}
-					// $date = array_combine(['date', 'year', 'month', 'day', 'week', 'yday', 'time', 'hours', 'minutes', 'seconds'], explode(' ', date('Ymd Y m d w z His H i s')));
-					// foreach ($this as $hash => $info)
-					// {
-					// 	if ((is_dir($rootdir = dirname($file = preg_replace_callback('/\{([a-z]+)(?:\,(-?\d+)(?:\,(-?\d+))?)?\}/i', fn(array $format):string => match ($format[1])
-					// 	{
-					// 		'hash' => count($format) > 2 ? substr($hash, ...array_slice($format, 2)) : $hash,
-					// 		'name', 'type' => $info[$format[1]],
-					// 		default => $date[$format[1]] ?? $format[0]
-					// 	}, $filename))) || mkdir($rootdir, recursive: TRUE)) && move_uploaded_file($this[$hash]['file'], $file)) {
-					// 		$this[$hash]['file'] = $file;
-					// 		$success[$hash] = $this[$hash];
-					// 	}
-					// }
-					return $success;
-				}
-				// function detect(string $mime):bool
-				// {
-				// 	foreach ($this as $files)
-				// 	{
-				// 		//感觉在不久的将来这里需要改
-				// 		if (preg_match('/^(' . str_replace(['/', '*', ','], ['\\/', '.*', '|'], $mime) . ')$/', $files['type']) === 0)
-				// 		{
-				// 			return FALSE;
-				// 		}
-				// 	}
-				// 	return TRUE;
-				// }
-			};
+		return array_key_exists($name, $this->uploadedfiles ??= $this->io->request_uploadedfile())
+			&& $this->uploadedfiles[$name] instanceof webapp_request_uploadedfile ? $this->uploadedfiles[$name]
+			: $this->uploadedfiles[$name] = new webapp_request_uploadedfile($this, $name, $this->uploadedfiles[$name] ?? [], $maximum);
 	}
 	//response
 	function response_status(int $code):void
@@ -923,5 +877,128 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			return 304;
 		}
 		return 404;
+	}
+}
+//
+//class webapp_request_uploadedfile extends ArrayObject implements Stringable// IteratorAggregate, 
+class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Countable, Stringable
+{
+	private array $uploadedfiles;
+	function __construct(public readonly webapp $webapp, private readonly string $name, array $uploadedfiles, int $maximum = NULL)
+	{
+		$this->uploadedfiles = array_slice($uploadedfiles, 0, $maximum);
+	}
+	// function getIterator():mysqli_result
+	// {
+	// 	return $this->store_result();
+	// }
+	// final function offsetGet(mixed $key):mixed
+	// {
+	// 	return $this->getArrayCopy()[$key] ?? [];
+	// }
+	function __toString():string
+	{
+		return $this->name;
+	}
+
+	function __debugInfo():array
+	{
+		return iterator_to_array($this);
+	}
+	function offsetExists(mixed $key):bool
+	{
+		return array_key_exists($key, $this->uploadedfiles);
+	}
+	function offsetGet(mixed $key):mixed
+	{
+		if ($this->offsetExists($key))
+		{
+			$this->uploadedfiles[$key]['hash'] ??= $this->webapp->hashfile($this->uploadedfiles[$key]['file']);
+			return $this->uploadedfiles[$key];
+		}
+		return [];
+	}
+	function offsetSet(mixed $key, mixed $value):void
+	{
+	}
+	function offsetUnset(mixed $key):void
+	{
+	}
+	function getIterator():Traversable
+	{
+		for ($i = 0; $i < count($this); ++$i)
+		{
+			yield $this[$i];
+		}
+	}
+	function count():int
+	{
+		return count($this->uploadedfiles);
+	}
+	function column(string $key):array
+	{
+		return array_column($key === 'hash' ? $this->__debugInfo() : $this->uploadedfiles, $key);
+	}
+	function size():int
+	{
+		return array_sum($this->column('size'));
+	}
+	function open(int $index = 0)
+	{
+		return fopen($this->uploadedfiles[$index]['file'], 'r+');
+	}
+	function content(int $index = 0):string
+	{
+		return file_get_contents($this->uploadedfiles[$index]['file']);
+	}
+	// function movefile(int $index, string $filename):bool
+	// {
+	// 	//$index = max(1, $index) < count($this)
+	// 	//if (array_key_exists($index, $this))
+	// 	return move_uploaded_file($this[$index]['file'], $filename);
+	// }
+	// function moveto(string $filename):array
+	// {
+	// 	$success = [];
+	// 	foreach ($this as $file)
+	// 	{
+	// 		// if (move_uploaded_file($file['file'], $filename)
+	// 		// {
+	// 		// }
+	// 		print_r($file);
+	// 	}
+	// 	// $date = array_combine(['date', 'year', 'month', 'day', 'week', 'yday', 'time', 'hours', 'minutes', 'seconds'], explode(' ', date('Ymd Y m d w z His H i s')));
+	// 	// foreach ($this as $hash => $info)
+	// 	// {
+	// 	// 	if ((is_dir($rootdir = dirname($file = preg_replace_callback('/\{([a-z]+)(?:\,(-?\d+)(?:\,(-?\d+))?)?\}/i', fn(array $format):string => match ($format[1])
+	// 	// 	{
+	// 	// 		'hash' => count($format) > 2 ? substr($hash, ...array_slice($format, 2)) : $hash,
+	// 	// 		'name', 'type' => $info[$format[1]],
+	// 	// 		default => $date[$format[1]] ?? $format[0]
+	// 	// 	}, $filename))) || mkdir($rootdir, recursive: TRUE)) && move_uploaded_file($this[$hash]['file'], $file)) {
+	// 	// 		$this[$hash]['file'] = $file;
+	// 	// 		$success[$hash] = $this[$hash];
+	// 	// 	}
+	// 	// }
+	// 	return $success;
+	// }
+	// function detect(string $mime):bool
+	// {
+	// 	foreach ($this as $files)
+	// 	{
+	// 		//感觉在不久的将来这里需要改
+	// 		if (preg_match('/^(' . str_replace(['/', '*', ','], ['\\/', '.*', '|'], $mime) . ')$/', $files['type']) === 0)
+	// 		{
+	// 			return FALSE;
+	// 		}
+	// 	}
+	// 	return TRUE;
+	// }
+	function post(string $url):webapp_client_http
+	{
+		return webapp_client_http::open($url, ['method' => 'POST',
+			'headers' => $this->webapp->authorized(),
+			'type' => 'multipart/form-data',
+			'data' => [$this->name => $this]]);
 	}
 }

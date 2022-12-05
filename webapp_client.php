@@ -404,26 +404,37 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 		}
 		return $this;
 	}
-	private function form($data, string $name, string $contents, string $filename):bool
+	private function form(iterable $data, string $contents, string $filename, string $field = '%s'):bool
 	{
-		if (is_array($data))
+		foreach ($data as $name => $value)
 		{
-			foreach ($data as $key => $value)
+			switch (TRUE)
 			{
-				if ($this->form($value, $key, $contents, $filename) === FALSE)
-				{
-					return FALSE;
-				}
+				case $value instanceof webapp_request_uploadedfile:
+					foreach ($value as $file)
+					{
+						if (($this->printf($filename, "{$name}[]", "{$file['name']}.{$file['type']}", $file['mime'])
+							&& $this->from($file['file'])
+							&& $this->echo("\r\n")) === FALSE) break 2;
+					}
+					continue 2;
+				case is_iterable($value):
+					if ($this->form($value, $contents, $filename, sprintf($field, $name) . '[%s]')) continue 2;
+					break;
+				case is_scalar($value) || is_null($value):
+					if ($this->printf($contents, sprintf($field, $name))
+						&& $this->echo((string)$value)
+						&& $this->echo("\r\n")) continue 2;
+					break;
+				case is_resource($value):
+					if ($this->printf($filename, sprintf($field, $name), basename(stream_get_meta_data($value)['uri']), 'application/octet-stream')
+						&& $this->from($value)
+						&& $this->echo("\r\n")) continue 2;
+					break;
 			}
-			return TRUE;
+			return FALSE;
 		}
-		return match (TRUE)
-		{
-			is_null($data), is_scalar($data) => $this->printf($contents, $name) && $this->echo((string)$data),
-			is_resource($data) => $this->printf($filename, $name, basename(stream_get_meta_data($data)['uri'])) && $this->from($data),
-			//$data instanceof self => $this->from($data),
-			default => FALSE
-		} && $this->echo("\r\n");
+		return TRUE;
 	}
 	function request(string $method, string $path, $data = NULL, string $type = NULL):bool
 	{
@@ -445,12 +456,10 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 		if ($data === NULL || ($this->clear()
 			&& (is_string($data) ? $this->echo($data) : match ($type ??= 'application/x-www-form-urlencoded') {
 				'application/x-www-form-urlencoded' => $this->echo(http_build_query($data)),
-				'multipart/form-data' => $this->form($data, '',
-					$contents = '--' . join("\r\n", [
-						$boundary = static::boundary(),
-						'Content-Disposition: form-data; name="%s"', "\r\n"]),
-					substr($contents, 0, -4) . "; filename=\"%s\"\r\nContent-Type: application/octet-stream\r\n\r\n",
-					$type .= "; boundary={$boundary}") && $this->echo("--{$boundary}--"),
+				'multipart/form-data' => $this->form($data,
+					$contents = '--' . join("\r\n", [$boundary = static::boundary(),'Content-Disposition: form-data; name="%s"', "\r\n"]),
+					substr($contents, 0, -4) . "; filename=\"%s\"\r\nContent-Type: %s\r\n\r\n")
+						&& $this->echo("--{$boundary}--", $type .= "; boundary={$boundary}"),
 				'application/json' => $this->echo(json_encode($data, JSON_UNESCAPED_UNICODE)),
 				'application/xml' => $this->echo($data instanceof DOMDocument ? $data->saveXML() : (string)$data),
 				'application/octet-stream' => $this->from($data),
