@@ -838,7 +838,7 @@ final class webapp_pay_sx implements webapp_pay
 	{
 		return [
 			'8007' => '微信原生',	//30-500
-			//'8008' => '支付宝h5'	//30-500
+			'8008' => '支付宝原生'	//30-500
 		];
 	}
 	function __construct(array $context)
