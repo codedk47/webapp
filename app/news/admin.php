@@ -357,8 +357,8 @@ class webapp_router_admin extends webapp_echo_html
 			$t7->append('td', number_format($stat['$6$0']));
 			if (isset($unitorders[$stat['unit']]))
 			{
-				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count'] * $pretty));
-				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * $pretty * 0.01));
+				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count'] * $pretty * 4));
+				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * $pretty * 4 * 0.01));
 			}
 			else
 			{
@@ -399,8 +399,8 @@ class webapp_router_admin extends webapp_echo_html
 				$t7->append('td', number_format($stat["\$6\${$i}"]));
 				if (isset($unitorders[$stat['unit']]))
 				{
-					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['count'] * $pretty));
-					$t9->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * $pretty * 0.01));
+					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['count'] * $pretty * 4));
+					$t9->append('td', number_format($unitorders[$stat['unit']][$i]['fee'] * $pretty * 4 * 0.01));
 				}
 				else
 				{
