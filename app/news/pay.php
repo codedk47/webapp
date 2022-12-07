@@ -832,6 +832,87 @@ final class webapp_pay_xy implements webapp_pay
 		return FALSE;
 	}
 }
+final class webapp_pay_sx implements webapp_pay
+{
+	static function paytype():array
+	{
+		return [
+			'8007' => '微信原生',	//30-500
+			//'8008' => '支付宝h5'	//30-500
+		];
+	}
+	function __construct(array $context)
+	{
+		$this->ctx = $context;
+	}
+	function create(array &$order, ?string &$error):bool
+	{
+		do
+		{
+			$data = [
+				'mchId' => $this->ctx['id'],
+				'productId' => $order['pay_type'],
+				'mchOrderNo' => $order['hash'],
+				'amount' => $order['order_fee'],
+				'notifyUrl' => $order['notify_url'],
+				'returnUrl' => $order['return_url'],
+				'subject' => $order['order_no'],
+				'body' => $order['order_no'],
+				'extra' => '{}'
+			];
+			ksort($data);
+			reset($data);
+			$query = [];
+			foreach ($data as $k => $v)
+			{
+				if ($v !== '')
+				{
+					$query[] = "{$k}={$v}";
+				}
+			}
+			$query[] = "key={$this->ctx['key']}";
+			$data['sign'] = strtoupper(md5(join('&', $query)));
+			//print_r($data);
+			if (is_array($result = webapp_client_http::open('https://sxwg888888.toshopvn.com/api/pay/create_order', [
+				'timeout' => 8,
+				'autoretry' => 2,
+				'method' => 'POST',
+				//'type' => 'application/json',
+				'data' => $data
+				])->content()) === FALSE) {
+				break;
+			}
+			//var_dump($result);
+			if ((array_key_exists('payUrl', $result) && array_key_exists('retCode', $result) && $result['retCode'] === 'SUCCESS') === FALSE)
+			{
+				$error = '远程支付失败！';
+				break;
+			}
+			$order['trade_no'] = $order['hash'];
+			$order['type'] = 'goto';
+			$order['data'] = $result['payUrl'];
+			return TRUE;
+		} while (0);
+		return FALSE;
+	}
+	function notify(mixed $result, ?array &$status):bool
+	{
+		if (is_array($result)
+			&& isset($result['status'], $result['mchOrderNo'], $result['payOrderId'], $result['income'])
+			&& intval($result['status']) > 1) {
+			$status = [
+				'code' => 200,
+				'type' => 'text/plain',
+				'data' => 'success',
+				'hash' => $result['mchOrderNo'],
+				'trade_no' => $result['payOrderId'],
+				'actual_fee' => $result['income']
+			];
+			return TRUE;
+		}
+		return FALSE;
+	}
+}
 final class webapp_router_pay extends webapp_echo_xml
 {
 	#为了更好的兼容回调地址请改写地址重写
