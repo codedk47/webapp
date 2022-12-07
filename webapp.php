@@ -879,8 +879,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		return 404;
 	}
 }
-//
-//class webapp_request_uploadedfile extends ArrayObject implements Stringable// IteratorAggregate, 
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Countable, Stringable
 {
 	private array $uploadedfiles;
@@ -941,6 +939,17 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 	function content(int $index = 0):string
 	{
 		return file_get_contents($this->uploadedfiles[$index]['file']);
+	}
+	function move(string $filename, int $index = 0)
+	{
+		if ($this->offsetExists($index)
+			&& ((is_uploaded_file($this->uploadedfiles[$index]['file'])
+				&& move_uploaded_file($this->uploadedfiles[$index]['file'], $filename))
+				|| rename($this->uploadedfiles[$index]['file'], $filename))) {
+			$this->uploadedfiles[$index]['file'] = $filename;
+			return TRUE;
+		}
+		return FALSE;
 	}
 	// function movefile(int $index, string $filename):bool
 	// {

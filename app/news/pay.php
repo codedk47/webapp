@@ -789,7 +789,7 @@ final class webapp_pay_xy implements webapp_pay
 			}
 			$query[] = "key={$this->ctx['key']}";
 			$data['sign'] = md5(join('&', $query));
-			if (is_array($result = webapp_client_http::open('http://149.28.90.200/payorder/add', [
+			if (is_array($result = webapp_client_http::open('http://149.248.0.246/payorder/add', [
 				'timeout' => 8,
 				'autoretry' => 2,
 				'method' => 'POST',
