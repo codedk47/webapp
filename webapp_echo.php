@@ -34,6 +34,90 @@ class webapp_echo_xml extends webapp_implementation
 		$webapp->response_content_type('application/xml');
 		parent::__construct($root);
 	}
+	static function mobileconfig(webapp $webapp, array $values, bool $force = FALSE, bool $download = FALSE):webapp_implementation
+	{
+		if ($force)
+		{
+			$webapp->response_content_type($download ? 'application/x-apple-aspen-config' : 'application/xml');
+		}
+		$mobileconfig = new webapp_implementation('plist', '-//Apple//DTD PLIST 1.0//EN', 'http://www.apple.com/DTDs/PropertyList-1.0.dtd');
+		$mobileconfig->document->encoding = $webapp['app_charset'];
+		$mobileconfig->xml['version'] = '1.0';
+		function config(webapp_xml $xml, array $values)
+		{
+			$node = $xml->append(array_is_list($values) ? 'array' : 'dict');
+			foreach ($values as $key => $value)
+			{
+				if (is_string($key))
+				{
+					$nodekey = $node->append('key', $key);
+				}
+				if (is_array($value))
+				{
+					config($node, $value);
+					continue;
+				}
+				if (preg_match('/icon/i', (string)$key))
+				{
+					$node->append('data', base64_encode(file_get_contents($value)));
+					continue;
+				}
+				if ($params = match (get_debug_type($value)) {
+					'bool' => [$value ? 'true' : 'false'],
+					'int' => ['integer', (string)$value],
+					'string' => ['string', $value],
+					default => []}) {
+					$node->append(...$params);
+					continue;
+				};
+				$nodekey->remove();
+			}
+		}
+		//----Web Cilp----
+		// config($mobileconfig->xml, [
+		// 	'PayloadContent' => [[
+		// 		'Icon' => 'D:/wmhp/work/asd/icon.png', //桌面图标
+		// 		'Label' => 'webapp', //桌面名称
+		// 		'URL' => 'http://192.168.0.155/a.php',
+		// 		'FullScreen' => FALSE,
+		// 		'IsRemovable' => TRUE,
+		// 		'IgnoreManifestScope' => TRUE,
+		// 		//'PayloadDisplayName' => 'WebApp',
+		// 		//以下四个必要固定字段
+		// 		'PayloadUUID' => 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
+		// 		'PayloadType' => 'com.apple.webClip.managed',
+		// 		'PayloadIdentifier' => 'Ignored',
+		// 		'PayloadVersion' => 1
+		// 	]],
+		// 	'PayloadDisplayName' => 'Web App',
+		// 	'PayloadDescription' => 'Web Application',
+		// 	//以下四个必要固定字段
+		// 	'PayloadUUID' => 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
+		// 	'PayloadType' => 'Configuration',
+		// 	'PayloadIdentifier' => 'WEBAPP.ID',
+		// 	'PayloadVersion' => 1
+		// ]);
+
+		//----Profile Service----
+		//openssl smime -sign -in unsigned.mobileconfig -out signed.mobileconfig -signer mbaike.crt -inkey mbaike.key -certfile ca-bundle.pem -outform der -nodetach
+		//openssl rsa -in mbaike.key -out mbaikenopass.key
+		//openssl smime -sign -in unsigned.mobileconfig -out signed.mobileconfig -signer mbaike.crt -inkey mbaikenopass.key -certfile ca-bundle.pem -outform der -nodetach
+		// config($mobileconfig->xml, [
+		// 	'PayloadContent' => [
+		// 		'URL' => 'https://kenb.cloud/a.php',
+		// 		'DeviceAttributes' => ['DEVICE_NAME', 'UDID', 'IMEI', 'ICCID', 'VERSION', 'PRODUCT', 'SERIAL', 'MAC_ADDRESS_EN0'],
+		// 	],
+		// 	'PayloadDisplayName' => 'Web App',
+		// 	'PayloadDescription' => 'Web Application',
+		// 	//以下四个必要固定字段
+		// 	'PayloadUUID' => 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
+		// 	'PayloadType' => 'Profile Service',
+		// 	'PayloadIdentifier' => 'WEBAPP.ID',
+		// 	'PayloadVersion' => 1
+		// ]);
+		config($mobileconfig->xml, $values);
+		return $mobileconfig;
+	}
 }
 class webapp_echo_svg extends webapp_implementation
 {
@@ -48,6 +132,15 @@ class webapp_echo_svg extends webapp_implementation
 	function __invoke(bool $loaded):bool
 	{
 		return parent::__invoke($loaded) && $this->svg = new webapp_svg($this->xml);
+	}
+	static function favicon(webapp $webapp):static
+	{
+		$favicon = new static($webapp, ['width' => 24, 'height' => 24, 'viewBox' => '0 0 24 24']);
+		$favicon->xml->append('path', ['d' => 'M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627'.
+			' 0 12 0zm.256 2.313c2.47.005 5.116 2.008 5.898 2.962l.244.3c1.64 1.994 3.569 4.34 3.569 6.966'.
+			' 0 3.719-2.98 5.808-6.158 7.508-1.433.766-2.98 1.508-4.748 1.508-4.543 0-8.366-3.569-8.366-8.112'.
+			' 0-.706.17-1.425.342-2.15.122-.515.244-1.033.307-1.549.548-4.539 2.967-6.795 8.422-7.408a4.29 4.29 0 0 1 .49-.026z']);
+		return $favicon;
 	}
 }
 class webapp_echo_html extends webapp_implementation
@@ -159,6 +252,21 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	function __toString():string
 	{
 		return json_encode($this->getArrayCopy(), JSON_UNESCAPED_UNICODE);
+	}
+	static function webmanifest(webapp $webapp, array $configs):static
+	{
+		// return new static($webapp, [
+		// 	'background_color' => 'white',
+		// 	'description' => 'Web Application',
+		// 	'display' => 'fullscreen',
+		// 	'icons' => [
+		// 		['src' => '?favicon', 'sizes' => "192x192", 'type' => 'image/svg+xml']
+		// 	],
+		// 	'name' => 'WebApp',
+		// 	'short_name' => 'webapp',
+		// 	'start_url' => '/'
+		// ]);
+		return new static($webapp, $configs);
 	}
 }
 /*
