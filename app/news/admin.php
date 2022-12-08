@@ -2104,7 +2104,7 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 			'下载(假)', '充值(假)', '结算(激活x单价)(假)', '浏览', '独立', '日活', '注册');
 		$table->header('单位成本结算');
 		$table->row()['style'] = 'background:lightblue';
-		$table->cell(['合计', 'colspan' => 3]);
+		$table->cell(['合计', 'colspan' => 4]);
 
 		$table->cell(number_format($count['apru-ia'] ? $count['apru-all'] * 0.01 / $count['apru-ia'] : 0, 2));
 
