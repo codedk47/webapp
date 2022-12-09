@@ -718,20 +718,17 @@ final class webapp_pay_kj implements webapp_pay
 				break;
 			}
 			//var_dump($result);
-			if ((array_key_exists('retCode', $result) && $result['retCode'] === 'SUCCESS') === FALSE)
+			if ((array_key_exists('payUrl', $result) && array_key_exists('retCode', $result) && $result['retCode'] === 'SUCCESS') === FALSE)
 			{
 				$error = '远程支付失败！';
 				break;
 			}
-			if (array_key_exists('payUrl', $result) === FALSE)
-			{
-				break;
-			}
-			$order['trade_no'] = preg_match('/\d+/', basename($result['payUrl']), $id) ? $id[0] : $order['hash'];
+			$order['trade_no'] = preg_match('/(?:order_id=|LM)(\d+)/', basename($result['payUrl']), $id) ? $id[1] : $order['hash'];
 			$order['type'] = 'goto';
 			$order['data'] = $result['payUrl'];
 			return TRUE;
 		} while (0);
+		//var_dump($result);
 		return FALSE;
 	}
 	function notify(mixed $result, ?array &$status):bool
