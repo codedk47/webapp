@@ -133,25 +133,8 @@ class news_driver extends webapp
 	}
 	function adshowables(array $ads, bool $more = FALSE):array
 	{
-		if ($showable = array_values(array_filter($ads, $this->adshowable(...))))
-		{
-			if ($more === FALSE)
-			{
-				$current = 0;
-				$weight = array_column($showable, 'weight');
-				$random = random_int(0, array_sum($weight));
-				foreach ($weight as $index => $value)
-				{
-					if ($random >= $current && $random < $current + $value)
-					{
-						break;
-					}
-					$current += $value;
-				}
-				return $showable[$index];
-			}
-		}
-		return $showable;
+		$showable = array_filter($ads, $this->adshowable(...));
+		return $more ? $showable : $this->random_weights($showable);
 	}
 	//获取可用支付渠道
 	function paychannels():array

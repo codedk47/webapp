@@ -74,6 +74,29 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return random_bytes($length);
 	}
+	static function random_int(int $min, int $max):int
+	{
+		return random_int($min, $max);
+	}
+	static function random_weights(array $items, string $key = 'weight'):array
+	{
+		if ($items)
+		{
+			$current = 0;
+			$weight = array_combine(array_keys($items), array_column($items, $key));
+			$random = static::random_int(0, array_sum($weight));
+			foreach ($weight as $index => $value)
+			{
+				if ($random >= $current && $random < $current + $value)
+				{
+					break;
+				}
+				$current += $value;
+			}
+			return $items[$index];
+		}
+		return $items;
+	}
 	static function time(int $offset = 0):int
 	{
 		return time() + $offset;
