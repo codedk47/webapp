@@ -82,9 +82,8 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		if ($items)
 		{
-			$current = 0;
 			$weight = array_combine(array_keys($items), array_column($items, $key));
-			$random = static::random_int(0, array_sum($weight));
+			$random = static::random_int($current = 0, max(0, array_sum($weight) - 1));
 			foreach ($weight as $index => $value)
 			{
 				if ($random >= $current && $random < $current + $value)
