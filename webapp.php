@@ -775,6 +775,32 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return $this->router === $router && in_array($this->method, ['get_favicon', 'get_captcha', 'get_qrcode', ...$methods], TRUE);
 	}
+	function not_authorized():bool
+	{
+		if ($this->allow($this) || $this->authorization()) return FALSE;
+		if ($this['request_method'] === 'post')
+		{
+			$this->app('webapp_echo_json', ['signature' => NULL]);
+			if (webapp_echo_html::form_sign_in($this)->fetch($auth))
+			{
+				if ($this->authorization($signature = static::signature($auth['username'], $auth['password'])))
+				{
+					$this->response_status(200);
+					$this->response_cookie($this['admin_cookie'], $this->app['signature'] = $signature);
+					$this->response_refresh(0);
+					return FALSE;
+				}
+				$this->app['errors'][] = 'Sign in failed';
+			}
+		}
+		else
+		{
+			webapp_echo_html::form_sign_in($this->app('webapp_echo_html')->main);
+			$this->app->title('Sign In');
+		}
+		$this->response_status(401);
+		return TRUE;
+	}
 	final function init_admin_sign_in(array $config = [], webapp_io $io = new webapp_stdio):bool
 	{
 		self::__construct($config, $io);
