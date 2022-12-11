@@ -577,8 +577,11 @@ class webapp_router_admin extends webapp_echo_html
 			5 => '5 - 热门',
 			6 => '6 - 经典',
 			7 => '7 - 传媒',
-			8 => '8 - 扩展',
-			11 => '11 - 明星作者'])->setattr(['onchange' => 'g({search:this.value||null})'])->selected($search);
+			8 => '8 - 扩展一',
+			9 => '9 - 扩展二',
+			10 => '10 - 扩展三',
+			11 => '11 - 明星作者',
+			12 => '12 - 临时添加'])->setattr(['onchange' => 'g({search:this.value||null})'])->selected($search);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
