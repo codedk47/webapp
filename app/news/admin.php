@@ -785,7 +785,7 @@ function viewallcover(tbody)
 		if (!tr.dataset.cover || tr.dataset.load) return;
 		tr.dataset.load = 1;
 		const td = tr.appendChild(document.createElement('td'));
-		td.style.cssText = 'width:14rem;height:8rem';
+		td.style.cssText = 'width:24rem;height:16rem';
 		td.textContent = ' ';
 		loader(tr.dataset.cover, null, 'application/octet-stream').then(blob =>
 		{
