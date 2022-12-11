@@ -3,7 +3,11 @@ if (globalThis.window)
 	window[document.currentScript.dataset.name || 'backer'] = (function()
 	{
 		let id = 0;
-		const promise = new Map, backer = new Worker(document.currentScript.src);
+		const
+		byte = 16,
+		code = '0123456789ABCDEFGHIJKLMNOPQRSTUV',
+		promise = new Map,
+		backer = new Worker(document.currentScript.src);
 		backer.onmessage = event =>
 		{
 			//console.log(event);
@@ -17,7 +21,6 @@ if (globalThis.window)
 		function upload(url, files, progress)
 		{
 			let size = 0, sent = 0;
-			const code = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
 			return Promise.allSettled(Array.from(files).map(file => new Promise(async (resolve, reject) =>
 			{
 				size += file.size;
@@ -25,76 +28,28 @@ if (globalThis.window)
 				hash = 5381n,
 				reader = file.stream().getReader(),
 				offset = 0,
-				key = Array(16).fill(parseInt(file.size / 16)).map((v, k) => v * k),
+				key = Array(byte).fill(parseInt(file.size / byte, 10)).map((v, k) => v * k),
 				i = 0;
-				console.log(key);
 				do
 				{
 					let {done, value} = await reader.read();
 					if (done)
 					{
-						key = hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16));
+						//key = hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16));
 						break;
 					}
-					
-					while (i < 16 && offset + value.length > key[i])
+					while (i < byte && offset + value.length > key[i])
 					{
-						console.log( i, ' - ', value[key[i++] - offset], ' - ', String.fromCharCode(value[key[i] - offset])  );
-
-
-
-
-						//hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[tell++]);
+						//console.log( i, ' - ', value[key[i] - offset], ' - ', String.fromCharCode(value[key[i] - offset]) );
+						hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[key[i++] - offset]);
 					}
 					offset += value.length;
-					// while (tell < 7 && tell < value.length)
-					// {
-					// 	hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[tell++]);
-					// }
-					// if (key)
-					// if (tell < 7)
-					// {
-
-					// }
-					// for (let i = 0; i < value.length; ++i)
-					// {
-					// 	hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]);
-					// }
-
-
-
 				} while (true);
-
-				
-				// const
-				// key = await reader.read().then(async function time33({done, value})
-				// {
-				// 	if (done) return hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16));
-				// 	for (let i = 0; i < value.length; hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]));
-				// 	return await reader.read().then(time33);
-				// });
-				//console.log(file.size)
-
-				// await reader.read().then(async function time33({done, value})
-				// {
-				// 	if (done) return;
-				// 	for (let i = 0; i < value.length; ++i)
-				// 	{
-				// 		hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value[i++]);
-				// 	}
-				// 	await reader.read().then(time33);
-				// });
-
-
-
-				console.log(hash);
-				return;
-				
 				const response = await fetch(url, {
 					method: 'POST',
 					headers: {'Content-Type': 'application/json'},
-					body: JSON.stringify({key,
-						hash: Array.from(Array(10)).map((v, i) => code[hash >> BigInt(i) * 5n & 31n]).join(''),
+					body: JSON.stringify({
+						hash: Array.from(Array(12)).map((v, i) => code[hash >> BigInt(i) * 5n & 31n]).join(''),
 						size: file.size,
 						mime: file.type,
 						...(i = file.name.lastIndexOf('.')) !== -1
@@ -102,17 +57,21 @@ if (globalThis.window)
 							: {type: '', name: file.name}
 					})
 				});
-				console.log(hash);
-				return;
+
 				if (response.ok)
 				{
 					url = await response.text();
+					key = hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16));
+					console.log();
+return;
 					reader = file.stream().getReader();
 					let read = 0;
 					do
 					{
 						let {done, value} = await reader.read();
 						if (done) return resolve(file);
+
+
 						if (await new Promise((resolve, reject) =>
 						{
 							promise.set(++id, [resolve, reject]);
@@ -121,7 +80,10 @@ if (globalThis.window)
 							{
 								value[i] = value[i] ^ key[read++ % 8];
 							}
-							backer.postMessage({id, url, options: {method: 'POST', body: value.buffer}}, [value.buffer]);
+							backer.postMessage({id, url, options: {
+								method: 'POST',
+								headers: {'Mask-Key' : key.map(value => value.toString(16).padStart(2, 0)).join('')},
+								body: value.buffer}}, [value.buffer]);
 						}).then(() =>
 						{
 							
