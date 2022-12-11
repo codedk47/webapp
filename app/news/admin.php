@@ -468,17 +468,27 @@ class webapp_router_admin extends webapp_echo_html
 	function form_tag($ctx):webapp_form
 	{
 		$form = new webapp_form($ctx);
-		$form->fieldset('name / level / count / click');
-		$form->field('name', 'text', ['required' => NULL]);
+		
+		if ($this->webapp->admin[2])
+		{
+			$form->fieldset('hash / name / level / count / click');
+			$form->field('hash', 'text', ['style' => 'width:4rem', 'minlength' => 4, 'maxlength' => 4, 'required' => NULL]);
+			$form->field('name', 'text', ['style' => 'width:8rem', 'required' => NULL]);
+		}
+		else
+		{
+			$form->fieldset('name / level / count / click');
+			$form->field('hash', 'text', ['required' => NULL]);
+		}
 		$form->field('level', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
 		$form->field('count', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
 		$form->field('click', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
 
-		$form->fieldset('seat');
-		$form->field('seat', 'text', ['style' => 'width:40rem']);
-
 		$form->fieldset('alias');
 		$form->field('alias', 'text', ['style' => 'width:40rem', 'required' => NULL]);
+
+		$form->fieldset('seat');
+		$form->field('seat', 'text', ['style' => 'width:40rem']);
 
 		$form->fieldset();
 		$form->button('Submit', 'submit');
@@ -531,11 +541,18 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$this->form_tag($this->main)->echo($this->webapp->mysql->tags('where hash=?s', $hash)->array());
 	}
-	function get_tags(string $search = NULL, int $page = 1)
+	function get_tags(string $search = NULL, int $level = NULL, int $page = 1)
 	{
-		$cond = is_string($search) ? ['where hash=?s or name like ?s or alias like ?s ??',
-			$search = urldecode($search), "%{$search}%", "%{$search}%"] : ['??'];
-
+		if ($search === NULL)
+		{
+			$cond = ['??'];
+		}
+		else
+		{
+			$cond = strlen($search) < 4 && is_numeric($search)
+				? ['where level=?i ??', $search]
+				: ['where hash=?s or name like ?s or alias like ?s ??', $search = urldecode($search), "%{$search}%", "%{$search}%"];
+		}
 		$cond[] = 'ORDER BY level ASC,count DESC,click DESC';
 		$table = $this->main->table($this->webapp->mysql->tags(...$cond)->paging($page), function($table, $tag)
 		{
@@ -556,6 +573,12 @@ class webapp_router_admin extends webapp_echo_html
 		$table->fieldset('❌', 'hash', 'time', 'level', 'count', 'click', 'seat', 'name', 'alias');
 		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Create Tag', ['onclick' => 'location.href="?admin/tag-create"']);
+		$table->bar->select(['' => '全部级别', '0 - 全局', '1 - 一级分类', '2 - 二级分类', '3 - 三级分类', '4 - 四级分类',
+			5 => '5 - 热门',
+			6 => '6 - 经典',
+			7 => '7 - 传媒',
+			8 => '8 - 扩展',
+			11 => '11 - 明星作者'])->setattr(['onchange' => 'g({search:this.value||null})'])->selected($search);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
