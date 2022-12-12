@@ -697,13 +697,13 @@ class interfaces extends webapp
 			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
 			$cond[] = $this->query['tag'];
 		}
+		$cond[0] .= ' ORDER BY time DESC';
 		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
 		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
 		{
 			$this->resource_xml($resource);
 		}
-		$cond[0] .= ' ORDER BY time DESC';
 	}
 	function get_pres(string $hash = NULL, int $page = 1, int $size = 100)
 	{
@@ -723,13 +723,13 @@ class interfaces extends webapp
 			$cond[0] .= ' AND time>?i';
 			$cond[] = $this->query['time'];
 		}
+		$cond[0] .= ' ORDER BY time DESC';
 		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
 		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
 		{
 			$this->resource_xml($resource);
 		}
-		$cond[0] .= ' ORDER BY time DESC';
 	}
 	//标签
 	function selecttags():array
