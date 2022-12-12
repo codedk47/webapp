@@ -698,6 +698,7 @@ class interfaces extends webapp
 			$cond[] = $this->query['tag'];
 		}
 		$cond[0] .= ' ORDER BY time DESC';
+		
 		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
 		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
@@ -707,7 +708,7 @@ class interfaces extends webapp
 	}
 	function get_pres(string $hash = NULL, int $page = 1, int $size = 100)
 	{
-		$cond = ['WHERE site=0 AND sync="finished"'];
+		$cond = ['WHERE site="0" AND sync="finished"'];
 		if ($hash)
 		{
 			$cond[0] .= ' AND hash like ?s';
