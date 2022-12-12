@@ -477,6 +477,18 @@ class webapp_router_admin extends webapp_echo_html
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
+	function tag_level():array
+	{
+		return ['0 - 全局', '1 - 一级分类', '2 - 二级分类', '3 - 三级分类', '4 - 四级分类',
+			5 => '5 - 热门',
+			6 => '6 - 经典',
+			7 => '7 - 传媒',
+			8 => '8 - 扩展一',
+			9 => '9 - 扩展二',
+			10 => '10 - 扩展三',
+			11 => '11 - 明星作者',
+			12 => '12 - 临时添加'];
+	} 
 	function form_tag($ctx):webapp_form
 	{
 		$form = new webapp_form($ctx);
@@ -492,7 +504,7 @@ class webapp_router_admin extends webapp_echo_html
 			$form->fieldset('name / level / count / click');
 			$form->field('hash', 'text', ['required' => NULL]);
 		}
-		$form->field('level', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
+		$form->field('level', 'select', ['style' => 'width:9rem', 'required' => NULL, 'options' => $this->tag_level()]);
 		$form->field('count', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
 		$form->field('click', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
 
@@ -595,21 +607,13 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell($tag['seat']);
 			$table->cell()->append('a', [$tag['name'], 'href' => "?admin/resources,tag:{$tag['hash']}"]);
 			$table->cell($tag['alias']);
-			$table->cell()->append('a', ['merge', 'href' => "javascript:location.href='?admin/tagmerge,from:{$tag['hash']},to:'+prompt('to');"]);
+			$table->cell()->append('a', ['merge', 'href' => "javascript:location.href='?admin/tagmerge,from:{$tag['hash']},to:'+(prompt('to')||'');"]);
 		});
 		$table->fieldset('❌', 'hash', 'time', 'level', 'count', 'click', 'seat', 'name', 'alias', 'merge');
 		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Show Tags', ['onclick' => 'location.href="?admin/tags,page:-1"']);
 		$table->button('Create Tag', ['onclick' => 'location.href="?admin/tag-create"']);
-		$table->bar->select(['' => '全部级别', '0 - 全局', '1 - 一级分类', '2 - 二级分类', '3 - 三级分类', '4 - 四级分类',
-			5 => '5 - 热门',
-			6 => '6 - 经典',
-			7 => '7 - 传媒',
-			8 => '8 - 扩展一',
-			9 => '9 - 扩展二',
-			10 => '10 - 扩展三',
-			11 => '11 - 明星作者',
-			12 => '12 - 临时添加'])->setattr(['onchange' => 'g({search:this.value||null})'])->selected($search);
+		$table->bar->select(['' => '全部级别'] + $this->tag_level())->setattr(['onchange' => 'g({search:this.value||null})'])->selected($search);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
