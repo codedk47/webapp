@@ -201,11 +201,20 @@ class webapp_router_admin extends webapp_echo_html
 
 		$days = range(1, date('t', strtotime($ym)));
 		$ordercond = ['SELECT orders.day AS day,orders.order_fee AS fee,accounts.unit AS unit FROM orders INNER JOIN (accounts) ON (accounts.uid=orders.notify_url) WHERE orders.pay_user=?i AND orders.status!="unpay" AND tym=?i', $this->webapp->site, $y.$m];
-		if ($type && count($unittype = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit')))
+		if (is_string($type))
 		{
-			$ordercond[0] .= ' AND accounts.unit IN(?S)';
-			$ordercond[] = $unittype;
-			$unitnames = ['WHERE site=?i AND left(date,7)=?s AND unit IN(?S)', $this->webapp->site, $ym, $unittype];
+			if (strlen($type) === 3 && count($unittype = $this->webapp->mysql->unitsets('where type=?s', $type)->column('unit')))
+			{
+				$ordercond[0] .= ' AND accounts.unit IN(?S)';
+				$ordercond[] = $unittype;
+				$unitnames = ['WHERE site=?i AND left(date,7)=?s AND unit IN(?S)', $this->webapp->site, $ym, $unittype];
+			}
+			else
+			{
+				$ordercond[0] .= ' AND accounts.unit=?s';
+				$ordercond[] = $type;
+				$unitnames = ['WHERE site=?i AND left(date,7)=?s AND unit=?s', $this->webapp->site, $ym, $type];
+			}
 		}
 		else
 		{
@@ -253,9 +262,9 @@ class webapp_router_admin extends webapp_echo_html
 		if ($type || $admin)
 		{
 			$unitcond = ['WHERE site=?i', $this->webapp->site];
-			if ($type)
+			if (is_string($type))
 			{
-				$unitcond[0] .= ' AND type=?s';
+				$unitcond[0] .= strlen($type) === 4 ? ' AND unit=?s' : ' AND type=?s';
 				$unitcond[] = $type;
 			}
 			if ($admin)
@@ -319,7 +328,7 @@ class webapp_router_admin extends webapp_echo_html
 			"SUM(IF({day}=0 OR right(date,2)={day},ceil(dv*{$pretty}),0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},ceil(dc*{$pretty}),0))",
 			"SUM(IF({day}=0 OR right(date,2)={day},ceil(ia*{$pretty}),0))",
-		], 'ORDER BY $6$0 DESC LIMIT 50');
+		], 'ORDER BY $6$0 DESC LIMIT 20');
 
 		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $unitrates, $pretty)
 		{
@@ -461,6 +470,9 @@ class webapp_router_admin extends webapp_echo_html
 			->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$header->select(['' => '全部账号'] + $this->adminlists())
 			->setattr(['onchange' => 'g({admin:this.value===""?null:this.value})'])->selected($admin);
+		$header->append('input', ['type' => 'text', 'value' => is_string($type) && strlen($type) === 4 ? $type : NULL,
+			'placeholder' => '单位代码',
+			'style' => 'width:4rem', 'minlength' => 4, 'maxlength' => 4, 'onchange' => 'g({type:this.value||null})']);
 		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:3.3})']);
 		$table->xml['class'] = 'webapp-stateven';
 	}
