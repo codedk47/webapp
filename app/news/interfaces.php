@@ -706,14 +706,9 @@ class interfaces extends webapp
 			$this->resource_xml($resource);
 		}
 	}
-	function get_pres(string $time = NULL, int $page = 1, int $size = 100)
+	function get_pres(int $time, int $page = 1, int $size = 100)
 	{
-		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished"', $this->site = 0];
-		if (is_numeric($time))
-		{
-			$cond[0] .= ' AND time>?i';
-			$cond[] = $time;
-		}
+		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished" AND time>?i', $this->site = 0, $time];
 		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
 		{
 			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
