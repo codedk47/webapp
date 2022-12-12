@@ -705,6 +705,32 @@ class interfaces extends webapp
 		}
 		$cond[0] .= ' ORDER BY time DESC';
 	}
+	function get_pres(string $hash = NULL, int $page = 1, int $size = 1000)
+	{
+		$cond = ['WHERE site=0 AND sync="finished"'];
+		if ($hash)
+		{
+			$cond[0] .= ' AND hash like ?s';
+			$cond[] = "{$hash}%";
+		}
+		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
+		{
+			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+			$cond[] = $this->query['tag'];
+		}
+		if (array_key_exists('time', $this->query) && is_string($this->query['tag']))
+		{
+			$cond[0] .= ' AND time>?i';
+			$cond[] = $this->query['time'];
+		}
+		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
+		$this->app->xml->setattr($resources->paging);
+		foreach ($resources as $resource)
+		{
+			$this->resource_xml($resource);
+		}
+		$cond[0] .= ' ORDER BY time DESC';
+	}
 	//标签
 	function selecttags():array
 	{
