@@ -555,6 +555,20 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function get_tags(string $search = NULL, int $level = NULL, int $page = 1)
 	{
+		if ($page === -1)
+		{
+			$div = $this->main->append('div');
+			$div->append('button', ['Back to tags lists', 'onclick' => 'location.href="?admin/tags"']);
+			$ul = $div->append('ul', ['class' => 'restag', 'style' => 'font-family:var(--webapp-font-monospace)']);
+			foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+			{
+				$ul->append('li', [
+					"{$tag['hash']} {$tag['name']}",
+					'class' => "level{$tag['level']}"
+				]);
+			}
+			return;
+		}
 		if ($search === NULL)
 		{
 			$cond = ['??'];
@@ -581,9 +595,11 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell($tag['seat']);
 			$table->cell()->append('a', [$tag['name'], 'href' => "?admin/resources,tag:{$tag['hash']}"]);
 			$table->cell($tag['alias']);
+			$table->cell()->append('a', ['merge', 'href' => "javascript:location.href='?admin/tagmerge,from:{$tag['hash']},to:'+prompt('to');"]);
 		});
-		$table->fieldset('❌', 'hash', 'time', 'level', 'count', 'click', 'seat', 'name', 'alias');
+		$table->fieldset('❌', 'hash', 'time', 'level', 'count', 'click', 'seat', 'name', 'alias', 'merge');
 		$table->header('Found %s item', number_format($table->count()));
+		$table->button('Show Tags', ['onclick' => 'location.href="?admin/tags,page:-1"']);
 		$table->button('Create Tag', ['onclick' => 'location.href="?admin/tag-create"']);
 		$table->bar->select(['' => '全部级别', '0 - 全局', '1 - 一级分类', '2 - 二级分类', '3 - 三级分类', '4 - 四级分类',
 			5 => '5 - 热门',
@@ -596,6 +612,31 @@ class webapp_router_admin extends webapp_echo_html
 			12 => '12 - 临时添加'])->setattr(['onchange' => 'g({search:this.value||null})'])->selected($search);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->paging($this->webapp->at(['page' => '']));
+	}
+	function get_tagmerge(string $from, string $to)
+	{
+		if ($this->webapp->admin[2] && count($tag = $this->webapp->mysql->tags('where hash in(?S)', [$from, $to])->column('count', 'hash')) === 2)
+		{
+			$count = 0;
+			$merge = 0;
+			$stat = $this->main->append('div', ['style' => 'color:red']);
+			$ul = $this->main->append('ul', ['class' => 'webapp', 'style' => 'font-family: var(--webapp-font-monospace)']);
+			foreach ($this->webapp->mysql->resources('where find_in_set(?s,tags)', $from) as $res)
+			{
+				++$count;
+				$update = 'NO';
+				if ($this->webapp->mysql->resources('where hash=?s limit 1', $res['hash'])->update('tags=?s', str_replace($from, $to, $res['tags'])) === 1)
+				{
+					++$merge;
+					$update = 'OK';
+				}
+				$ul->append('li', sprintf('%s=%s - %s', $res['hash'], $update, htmlentities($res['name'])));
+			}
+			$update = $this->webapp->mysql->tags('where hash=?s limit 1', $to)->update('`count`=`count`+?i', $merge) === 1 ? $tag[$to] + $merge : $tag[$to];
+			$stat->text("count: {$count}, merge: {$merge}, total: {$update}");
+			return;
+		}
+		$this->warn($this->webapp->admin[2] ? '标签更新失败！' : '需要全局管理权限！');
 	}
 	//资源
 	function form_resource($ctx):webapp_form

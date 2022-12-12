@@ -535,7 +535,7 @@ class interfaces extends webapp
 		$preview_end = explode(':', $data['preview_end']);
 		$preview_end = mktime(8 + $preview_end[0], $preview_end[1], $preview_end[2], 1, 1, 1970);
 		$preview = $preview_end > $preview_start ? $preview_start << 16 | ($preview_end - $preview_start) & 0xffff : 10;
-		
+		//资源更新权限
 		$name = webapp::lib('hanzi/interface.php')($data['name']);
 		$update = ['preview=?i,data=JSON_SET(data,\'$."?i".require\',?i,\'$."?i".name\',?s),type=?s,tags=?s',
 			$preview, $this->site, $data['require'] ?? 0, $this->site, $name, $data['type'], $data['tags']];
