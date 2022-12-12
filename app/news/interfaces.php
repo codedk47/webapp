@@ -706,27 +706,22 @@ class interfaces extends webapp
 			$this->resource_xml($resource);
 		}
 	}
-	function get_pres(string $hash = NULL, int $page = 1, int $size = 100)
+	function get_pres(string $time = NULL, int $page = 1, int $size = 100)
 	{
-		$cond = ['WHERE site="0" AND sync="finished"'];
-		if ($hash)
+		$cond = ['WHERE FIND_IN_SET(?i,site) AND hash NOT LIKE "HJS0%" AND sync="finished"', $this->site = 0];
+		if (is_numeric($time))
 		{
-			$cond[0] .= ' AND hash like ?s';
-			$cond[] = "{$hash}%";
+			$cond[0] .= ' AND time>?i';
+			$cond[] = $this->query['time'];
 		}
 		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
 		{
 			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
 			$cond[] = $this->query['tag'];
 		}
-		if (array_key_exists('time', $this->query) && is_numeric($this->query['time']))
-		{
-			$cond[0] .= ' AND time>?i';
-			$cond[] = $this->query['time'];
-		}
 		$cond[0] .= ' ORDER BY time DESC';
 		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
-		$this->app('webapp_echo_xml')->xml->setattr(['site' => 0]);
+		$this->app('webapp_echo_xml')->xml->setattr(['site' => $this->site]);
 		$this->xml = $this->app->xml;
 		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
