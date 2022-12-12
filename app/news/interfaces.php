@@ -705,7 +705,7 @@ class interfaces extends webapp
 		}
 		$cond[0] .= ' ORDER BY time DESC';
 	}
-	function get_pres(string $hash = NULL, int $page = 1, int $size = 1000)
+	function get_pres(string $hash = NULL, int $page = 1, int $size = 100)
 	{
 		$cond = ['WHERE site=0 AND sync="finished"'];
 		if ($hash)
@@ -718,7 +718,7 @@ class interfaces extends webapp
 			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
 			$cond[] = $this->query['tag'];
 		}
-		if (array_key_exists('time', $this->query) && is_string($this->query['tag']))
+		if (array_key_exists('time', $this->query) && is_numeric($this->query['time']))
 		{
 			$cond[0] .= ' AND time>?i';
 			$cond[] = $this->query['time'];
