@@ -726,6 +726,7 @@ class interfaces extends webapp
 		}
 		$cond[0] .= ' ORDER BY time DESC';
 		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
+		print_r($resources);
 		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
 		{
