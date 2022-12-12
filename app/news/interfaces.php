@@ -708,7 +708,7 @@ class interfaces extends webapp
 	}
 	function get_pres(string $time = NULL, int $page = 1, int $size = 100)
 	{
-		$cond = ['WHERE FIND_IN_SET(?i,site) AND hash NOT LIKE "HJS0%" AND sync="finished"', $this->site = 0];
+		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished"', $this->site = 0];
 		if (is_numeric($time))
 		{
 			$cond[0] .= ' AND time>?i';
