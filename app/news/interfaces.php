@@ -712,7 +712,7 @@ class interfaces extends webapp
 		if (is_numeric($time))
 		{
 			$cond[0] .= ' AND time>?i';
-			$cond[] = $this->query['time'];
+			$cond[] = $time;
 		}
 		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
 		{
