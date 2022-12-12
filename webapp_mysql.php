@@ -343,7 +343,7 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 				($this->mysql)('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'PRI')->array()['Key'] ??
 				($this->mysql)('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'UNI')->value()['Key'] ?? NULL,
 			'create' => ($this->mysql)('SHOW CREATE TABLE ?a', $this->tablename)->value(1),
-			default => 1.1
+			default => NULL
 		};
 	}
 	function __invoke(mixed ...$conditionals):static
