@@ -726,7 +726,10 @@ class interfaces extends webapp
 		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
 		{
-			$this->resource_xml($resource)['play'] = sprintf('https://keniubila.com/%s/%s/play.m3u8', date('ym', $resource['time']), $resource['hash']);
+			$ym = date('ym', $resource['time']);
+			$res = $this->resource_xml($resource);
+			$res['play'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/play.m3u8";
+			$res['cover'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/cover.jpg";
 		}
 	}
 	//标签
