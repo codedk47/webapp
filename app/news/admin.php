@@ -572,13 +572,22 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			$div = $this->main->append('div');
 			$div->append('button', ['Back to tags lists', 'onclick' => 'location.href="?admin/tags"']);
-			$ul = $div->append('ul', ['class' => 'restag', 'style' => 'font-family:var(--webapp-font-monospace)']);
+			$ul = [];
+			foreach ($this->list_tag_level() as $level => $class)
+			{
+				$div->append('br');
+				$ul[$level] = $div->fieldset($class)->setattr('style', 'display:inline-block')
+					->append('ul', ['class' => 'restag', 'style' => 'margin:0;font-family:var(--webapp-font-monospace)']);
+			}
 			foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
 			{
-				$ul->append('li', [
-					"{$tag['hash']} {$tag['name']}",
-					'class' => "level{$tag['level']}"
-				]);
+				if (isset($ul[$tag['level']]))
+				{
+					$ul[$tag['level']]->append('li', [
+						"{$tag['hash']} {$tag['name']}",
+						'class' => "level{$tag['level']}"
+					]);
+				}
 			}
 			return;
 		}
