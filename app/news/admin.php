@@ -440,7 +440,7 @@ class webapp_router_admin extends webapp_echo_html
 
 
 				$t5->append('td', number_format($stat["\$4\${$i}"]));
-				$t6->append('td', number_format($stat["\$5\${$i}"]));
+				//$t6->append('td', number_format($stat["\$5\${$i}"]));
 				$t6->append('td', ($stat["\$5\${$i}"] ? round($stat["\$6\${$i}"] / $stat["\$5\${$i}"] * 100, 2) : 0) . '%');
 				$t7->append('td', number_format($stat["\$6\${$i}"]));
 				if (isset($unitorders[$stat['unit']]))
