@@ -437,9 +437,12 @@ class webapp_router_admin extends webapp_echo_html
 					$t4->append('td', '-');
 				}
 
+
+				$rr = $stat["\$5\${$i}"] ? round($stat["\$6\${$i}"] / $stat["\$5\${$i}"] * 100, 2) : 0;
+
 				$t5->append('td', number_format($stat["\$4\${$i}"]));
 				$t6->append('td', number_format($stat["\$5\${$i}"]));
-				$t7->append('td', number_format($stat["\$6\${$i}"]));
+				$t7->append('td', number_format($stat["\$6\${$i}"]) . "({$rr}%)");
 				if (isset($unitorders[$stat['unit']]))
 				{
 					$t8->append('td', number_format($unitorders[$stat['unit']][$i]['count'] * $pretty));
@@ -486,7 +489,7 @@ class webapp_router_admin extends webapp_echo_html
 			7 => '7 - 地点位置',
 			8 => '8 - 衣着服饰',
 			9 => '9 - 其他杂项',
-			10 => '10 - 传媒',
+			10 => '10 - 传媒频道',
 			11 => '11 - 明星作者',
 			12 => '12 - 临时添加'];
 	} 
