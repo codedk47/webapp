@@ -781,14 +781,14 @@ class webapp_form implements ArrayAccess
 	}
 	function captcha(string $name):?webapp_html
 	{
-		if ($this->webapp && $this->webapp['captcha_echo'])
+		if ($this->webapp && $this->webapp['captcha_length'])
 		{
 			$this->captcha = $this->fieldset($name);
 			$this->field('captcha_encrypt');
-			$this->field('captcha_decrypt', 'text', ['placeholder' => 'Type following captcha', 'onfocus' => 'this.select()', 'required' => NULL]);
+			$this->field('captcha_decrypt', 'text', ['onfocus' => 'this.select()', 'placeholder' => 'Type following captcha', 'required' => NULL]);
 			if ($this->echo)
 			{
-				$this->fields['captcha_encrypt']['value'] = $this->webapp->captcha_random($this->webapp['captcha_unit'], $this->webapp['captcha_expire']);
+				$this->fields['captcha_encrypt']['value'] = $this->webapp->captcha_random($this->webapp['captcha_length'], $this->webapp['captcha_expire']);
 				$this->fieldset()->setattr([
 					'style' => "height:{$this->webapp['captcha_params'][1]}px;cursor:pointer;background:url(?captcha/{$this->fields['captcha_encrypt']['value']}) no-repeat center",
 					'onclick' => 'fetch("?captcha").then(r=>r.text()).then(r=>this.style.backgroundImage=`url(?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value=r})`)'
@@ -884,7 +884,7 @@ class webapp_table implements Countable
 			&& property_exists($this->data, 'paging')
 			&& is_array($this->data->paging) ? $this->data->paging : [];
 		$this->xml = $node->append('table', ['class' => 'webapp']);
-		$this->tbody = &$this->xml->tbody;
+		$this->tbody = $this->xml->append('tbody');
 		if ($echo)
 		{
 			foreach ($data as $item)
@@ -927,12 +927,20 @@ class webapp_table implements Countable
 	{
 		return $this->row->append('td', $value);
 	}
+	function cells(iterable $values):webapp_html
+	{
+		foreach ($values as $value)
+		{
+			$this->cell((string)$value);
+		}
+		return $this->row;
+	}
 	function echo(array $values):webapp_html
 	{
 		$row = $this->row();
 		foreach ($values as $value)
 		{
-			$this->cell($value);
+			$this->cell(is_int($value) ? (string)$value : $value);
 		}
 		return $row;
 	}
@@ -996,9 +1004,9 @@ class webapp_table implements Countable
 	{
 		return $this->bar->append('input', $attributes + ['type' => 'search', 'placeholder' => 'Type search keywords']);
 	}
-	function footer(?string $content = NULL):webapp_html
+	function footer(string|array $context = NULL):webapp_html
 	{
-		return $this->maxspan($this->tfoot->append('tr')->append('td', [$content]));
+		return $this->maxspan($this->tfoot->append('tr')->append('td', $context));
 	}
 	function paging(string $url, int $max = 9):static
 	{
