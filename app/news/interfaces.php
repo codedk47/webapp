@@ -1476,7 +1476,7 @@ class interfaces extends webapp
 	}
 	function post_pay()
 	{
-		$this->app('webapp_echo_xml');
+		$this->xml = $this->app('webapp_echo_xml')->xml;
 		$form = new webapp_form($this);
 		//授权认证（现在使用webapp内部认证。以后公开后另外使用）
 		$form->field('pay_auth', 'text', ['required' => NULL]);
@@ -1565,7 +1565,7 @@ class interfaces extends webapp
 	}
 	function get_pay()
 	{
-		$this->app('webapp_echo_xml');
+		$this->xml = $this->app('webapp_echo_xml')->xml;
 		if (is_array($pays = webapp_client_http::open("{$this['app_hostpay']}?payitems/pay", [
 			'headers' => ['Authorization' => "Bearer {$this['app_signpay']}"]
 		])->content()) && isset($pays['data'])) {
