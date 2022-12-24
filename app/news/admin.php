@@ -45,7 +45,7 @@ class webapp_router_admin extends webapp_echo_html
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Orderstat（订单统计，可以查看支付情况）', '?admin/orderstat'],
 				['Orders（支付中心，订单数据）', '?admin/orders'],
-				['Payaisle（支付通道，设置修改）', '?admin/payaisle'],
+				//['Payaisle（支付通道，设置修改）', '?admin/payaisle'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Unitsets（单位设置，开设需要后台的单位）', '?admin/unitsets'],
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
