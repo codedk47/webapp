@@ -269,6 +269,10 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return $this->real_query('CREATE DATABASE ?a', $dbname);
 	}
+	function deletedb(string $dbname):bool
+	{
+		return $this->real_query('DROP DATABASE ?a', $dbname);
+	}
 	function createtab(string $tabname):bool
 	{
 		return $this->real_query('CREATE TABLE ?a(`hash` char(12) NOT NULL, PRIMARY KEY (`hash`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4', $tabname);
@@ -340,9 +344,9 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		{
 			'tablename' => $this->tablename,
 			'primary' => $this->primary =
-				($this->mysql)('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'PRI')->array()['Key'] ??
-				($this->mysql)('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'UNI')->value()['Key'] ?? NULL,
-			'create' => ($this->mysql)('SHOW CREATE TABLE ?a', $this->tablename)->value(1),
+				($this->mysql)('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'PRI')->array()['Field'] ??
+				($this->mysql)('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'UNI')->value()['Field'] ?? NULL,
+			'create' => $this->mysql->show($this->tablename)->value(1),
 			default => NULL
 		};
 	}

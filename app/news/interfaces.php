@@ -1,8 +1,6 @@
 <?php
 require 'admin.php';
-require 'pay.php';
 require 'unit.php';
-require 'upto.php';
 class interfaces extends webapp
 {
 	function clientip():string
@@ -371,11 +369,11 @@ class interfaces extends webapp
 	{
 		$this->response_header('Access-Control-Allow-Origin', '*');
 		$this->app('webapp_echo_json', ['code' => 0]);
-		if ($this->form_ad($this->webapp)->fetch($ad))
+		if ($this->form_ad($this)->fetch($ad))
 		{
 			if (is_string($hash))
 			{
-				$ad += $this->webapp->mysql->ads('where site=?i and hash=?s', $this->site, $hash)->array();
+				$ad += $this->mysql->ads('where site=?i and hash=?s', $this->site, $hash)->array();
 				$ok = $this->mysql->ads('where site=?i and hash=?s', $this->site, $hash)->update($ad);
 			}
 			else
@@ -452,7 +450,7 @@ class interfaces extends webapp
 		$form->fieldset('资源文件 / 封面图片');
 		$form->field('resource', 'file', ['accept' => 'video/mp4', 'required' => NULL]);
 		$form->field('piccover', 'file', ['accept' => 'image/*']);
-		$form->field('type', 'select', ['options' => $this->webapp['app_restype']]);
+		$form->field('type', 'select', ['options' => $this['app_restype']]);
 		$form->fieldset('name / actors');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => $form->echo ? $this->admin[0] : NULL, 'required' => NULL]);
@@ -461,7 +459,7 @@ class interfaces extends webapp
 		$form->fieldset('tags（从小到大排列）');
 		$tagc = [];
 		$tags = [];
-		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+		foreach ($this->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
 		{
 			$tagc[$tag['hash']] = $tag['level'];
 			$tags[$tag['hash']] = $tag['name'];
@@ -1232,7 +1230,7 @@ class interfaces extends webapp
 		$form->fieldset('tags（从小到大排列）');
 		$tagc = [];
 		$tags = [];
-		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+		foreach ($this->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
 		{
 			$tagc[$tag['hash']] = $tag['level'];
 			$tags[$tag['hash']] = $tag['name'];
@@ -1309,7 +1307,7 @@ class interfaces extends webapp
 	}
 	function upto():array
 	{
-		return $this->upto = $this->webapp->authorize(func_num_args() ? func_get_arg(0) : $this->webapp->request_cookie('upto'),
+		return $this->upto = $this->authorize(func_num_args() ? func_get_arg(0) : $this->request_cookie('upto'),
 			fn($uid, $pwd, $st, $add) => array_key_exists($uid, webapp_router_upto::up)
 				&& webapp_router_upto::up[$uid]['pwd'] === $pwd
 					? webapp_router_upto::up[$uid] + ['uid' => $uid, 'add' => $add] : []);
@@ -1383,4 +1381,279 @@ class interfaces extends webapp
 		} while (0);
 		return 404;
 	}
-};
+	//支付
+	function post_notify()
+	{
+		do
+		{
+			if ((is_array($content = $this->request_content())
+				&& isset($content['order_no'])
+				&& is_string($content['order_no'])
+				&& strlen($content['order_no']) === 12
+				&& $this->mysql->orders('WHERE hash=?s AND `status`!="notified" LIMIT 1', $content['order_no'])->fetch($order)) === FALSE) {
+				break;
+			}
+			$update = ['last' => $this->time, 'status' => 'payed'];
+			if (array_key_exists('actual_fee', $content))
+			{
+				$update['actual_fee'] = $order['actual_fee'] = $content['actual_fee'];
+			}
+			if (array_key_exists('trade_no', $content))
+			{
+				$update['trade_no'] = $order['trade_no'] = $content['trade_no'];
+			}
+			//{E:会员|B:金币}{YYYYMMDD}{增加数字}
+			if (preg_match('/^(E|B)(\d{8})(\d+)$/', $order['order_no'], $goods))
+			{
+				if ($this->mysql->sync(fn() =>
+					$this->mysql->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->update(...match ($goods[1])
+						{
+							'E' => ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, $goods[3]],
+							'B' => ['balance=balance+?i', $goods[3]],
+							default => []
+						})
+					&& $this->mysql->bills->insert([
+						'hash' => $this->randhash(TRUE),
+						'site' => $order['pay_user'],
+						'time' => $this->time,
+						'type' => 'undef',
+						'tym' => date('Ym', $this->time),
+						'day' => date('d', $this->time),
+						'fee' => intval($order['order_fee'] * 0.01),
+						'account' => $order['notify_url'],
+						'describe' => match ($goods[1])
+						{
+							'E' => sprintf('购买会员: %d天', $goods[3] / 86400),
+							'B' => sprintf('购买金币: %d个', $goods[3]),
+							default => '??'
+						}])
+					&& is_numeric($this->site = $order['pay_user'])
+					&& $this->call('saveUser', $this->account_xml($this->mysql
+						->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->array()))
+				) === FALSE) break;
+				$update['status'] = 'notified';
+			}
+			//C{增加金币}可选E或B
+			if (preg_match('/^C(\d+)([A-Z\d]+)?$/', $order['order_no'], $goods))
+			{
+				// if ($this->game()->transfer($order['notify_url'], $goods[1], $update['notify_url']) === FALSE)
+				// {
+				// 	break;
+				// }
+				$update['status'] = 'notified';
+				$update_acc = [[]];
+				foreach (isset($goods[2]) && preg_match_all('/(E|B)(\d+)/', $goods[2], $give, PREG_SET_ORDER) ? $give : [] as $g)
+				{
+					if ($g[1] === 'E')
+					{
+						$update_acc[0][] = 'expire=IF(expire>?i,expire,?i)+?i';
+						array_push($update_acc, $time = time(), $time, $g[2]);
+					}
+					if ($g[1] === 'B')
+					{
+						$update_acc[0][] = 'balance=balance+?i';
+						$update_acc[] = $g[2];
+					}
+				}
+				if ($update_acc[0])
+				{
+					$update_acc[0] = join(',', $update_acc[0]);
+					$this->site = $order['pay_user'];
+					$this->mysql->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->update(...$update_acc);
+					$this->call('saveUser', $this->account_xml($this->mysql
+						->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->array()));
+				}
+			}
+			if ($this->mysql->orders('WHERE hash=?s LIMIT 1', $order['hash'])->update($update) < 1)
+			{
+				break;
+			}
+			echo 'SUCCESS';
+			return;
+		} while (0);
+		error_log(json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+		echo 'FAILURE';
+	}
+	function post_pay()
+	{
+		$form = new webapp_form($this);
+		//授权认证（现在使用webapp内部认证。以后公开后另外使用）
+		$form->field('pay_auth', 'text', ['required' => NULL]);
+		//支付类型
+		$form->field('pay_type', 'text', ['pattern' => '[a-z]+@.+', 'required' => NULL]);
+		//订单编号
+		$form->field('order_no', 'text', ['maxlength' => 32, 'pattern' => '[0-9a-zA-Z]+', 'required' => NULL]);
+		//订单费用
+		$form->field('order_fee', 'number', ['min' => 0, 'required' => NULL], fn($v)=>floatval($v));
+		//回调地址
+		$form->field('notify_url', 'text', ['required' => NULL]);
+		//跳转地址（可选）
+		$form->field('return_url', 'text');
+
+		if ($this->request_content_type() === 'application/json')
+		{
+			$form->xml['enctype'] = 'application/json';
+		}
+
+		while ($form->fetch($order, $error))
+		{
+			//授权认证
+			if (empty($auth = $this->admin($order['pay_auth'], TRUE)))
+			{
+				$error = '支付认证失败！';
+				break;
+			}
+			//这里正对内部订单
+			$order['pay_user'] = $auth[2];
+			[$order['pay_name'], $order['pay_type']] = explode('@', $order['pay_type']);
+
+			if ($this->mysql->orders->insert([
+				'hash' => $order['hash'] = $this->randhash(),
+				'time' => $this->time,
+				'last' => $this->time,
+				'tym' => date('Ym', $this->time),
+				'day' => date('d', $this->time),
+				'status' => 'unpay',
+				'actual_fee' => $order['order_fee'],
+				'order_fee' => $order['order_fee'],
+				'pay_user' => $order['pay_user'],
+				'pay_name' => $order['pay_name'],
+				'pay_type' => $order['pay_type'],
+				'order_no' => $order['order_no'],
+				'trade_no' => '',
+				'notify_url' => $order['notify_url']
+			]) === FALSE) {
+				$error = '订单创建失败，请重试！';
+				break;
+			}
+			if (is_array($result = webapp_client_http::open("{$this['app_hostpay']}?pay", [
+				'timeout' => 8,
+				'autoretry' => 2,
+				'method' => 'POST',
+				//'type' => 'application/json',
+				'headers' => ['Authorization' => "Bearer {$this['app_signpay']}"],
+				'data' => [
+					'pay_name' => $order['pay_name'],
+					'pay_code' => $order['pay_type'],
+					'order_no' => $order['hash'],
+					'user_id' => $order['pay_user'],
+					'order_fee' => $order['order_fee'],
+					'return_url' => $order['return_url'],
+					//回调通知地址
+					'notify_url' => 'https://kenb.cloud/?notify',
+					//客户端IP
+					'client_ip' => $this->clientip()
+				]])->content()) === FALSE) {
+				$error = '远程支付失败！';
+				break;
+			}
+			//var_dump($result);
+			if ($result['code'] !== 200)
+			{
+				$error = join("\n", $result['errors']);
+				break;
+			}
+			$this->mysql->orders('WHERE hash=?s LIMIT 1', $order['hash'])->update('trade_no=?s', $result['data']['hash']);
+			$this->xml['type'] = $result['data']['type'];
+			$this->xml->cdata($result['data']['data']);
+			return;
+		}
+		//var_dump($result);
+		$this->xml['type'] = 'error';
+		$this->xml->cdata($error ?? '未知错误');
+	}
+	function get_pay()
+	{
+		if (is_array($pays = webapp_client_http::open("{$this['app_hostpay']}?payitems/pay", [
+			'headers' => ['Authorization' => "Bearer {$this['app_signpay']}"]
+		])->content()) && isset($pays['data'])) {
+			foreach ($pays['data'] as $pay)
+			{
+				$this->xml->append('pay', [
+					'type' => "{$pay['pay_name']}@{$pay['pay_code']}",
+					'valve' => $pay['items'],
+					'name' => $pay['name']
+				]);
+			}
+		}
+	}
+
+
+
+
+
+
+	function game():waligame
+	{
+		return new waligame(...$this['app_game'][$this->site]);
+	}
+}
+class waligame
+{
+	private readonly webapp_client_http $api;
+	function __construct(string $api,	//平台API地址
+		private readonly string $aid,	//代理ID
+		private readonly string $acc,	//API账号
+		private readonly string $ase,	//参数加密秘钥
+		private readonly string $key	//请求签名秘钥
+	) {
+		$this->api = new webapp_client_http($api, ['autoretry' => 1]);
+	}
+	function request(string $action, array $params = []):array
+	{
+		$query = [];
+		foreach ($params as $key => $value)
+		{
+			$query[] = "{$key}={$value}";
+		}
+		$data = base64_encode(openssl_encrypt(join('&', $query), 'AES-128-ECB', $this->ase, OPENSSL_RAW_DATA));
+		return $this->api->request('GET', "{$this->api->path}/{$action}?" . http_build_query([
+			'a' => $this->acc,
+			't' => $time = time(),
+			'p' => $data,
+			'k' => md5("{$data}{$time}{$this->key}")
+		])) && is_array($body = $this->api->content()) ? $body : [];
+	}
+	//测试
+	function ping():array
+	{
+		return $this->request('ping', ['text' => 'Hello PHP']);
+	}
+	//强制登出玩家
+	function kick(string $uid):bool
+	{
+		return $this->request('kick', ['uid' => $uid])['code'] === 0;
+	}
+	//余额，参数为空查商户，否则查用户余额
+	function balance(string $uid = NULL):int
+	{
+		return $this->request(...$uid === NULL ? ['getAgentBalance'] : ['getbalance', ['uid' => $uid]])['data']['balance'] ?? 0;
+	}
+	//注册账号
+	function register(string $uid, string $channel):array
+	{
+		return $this->request('register', ['uid' => $uid, 'channel' => $channel]);
+	}
+	//进入游戏，不用注册可以直接进入
+	function entergame(string $uid, int $game = 8)
+	{
+		return $this->request('enterGame', ['uid' => $uid]);
+	}
+	//划拨
+	function transfer(string $uid, float $credit, ?string &$orderid):bool
+	{
+		// Array
+		// (
+		// 	[code] => 0
+		// 	[data] => Array
+		// 		(
+		// 			[status] => 1
+		// 			[reason] => ok
+		// 		)
+		// )
+		$status = $this->request('transfer', [
+			'orderId' => $orderid = sprintf('%s_%s_%s', $this->aid, (new DateTime)->format('YmdHisv'), $uid),
+			'uid' => $uid, 'credit' => $credit]);
+		return isset($status['data']['reason']) && $status['data']['reason'] === 'ok';
+	}
+}

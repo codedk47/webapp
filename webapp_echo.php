@@ -249,9 +249,23 @@ class webapp_echo_json extends ArrayObject implements Stringable
 		$webapp->response_content_type("application/json; charset={$webapp['app_charset']}");
 		parent::__construct($data, ArrayObject::STD_PROP_LIST);
 	}
+
 	function __toString():string
 	{
 		return json_encode($this->getArrayCopy(), JSON_UNESCAPED_UNICODE);
+		// try
+		// {
+		// } catch (JsonException $error)
+		// {
+		// }
+	}
+	// function dialog(string|array $context, )
+	// {
+	// 	$this['dialog'] = $context;
+	// }
+	function goto(string $url)
+	{
+		$this['goto'] = $url;
 	}
 	static function webmanifest(webapp $webapp, array $configs):static
 	{

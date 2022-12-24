@@ -361,8 +361,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			'mysql_maptable'	=> 'webapp_maptable_',
 			'mysql_charset'		=> 'utf8mb4',//latin1
 			//Captcha
-			'captcha_echo'		=> TRUE,
-			'captcha_unit'		=> 4,
+			'captcha_length'	=> 4,
 			'captcha_expire'	=> 99,
 			'captcha_params'	=> [210, 86, __DIR__ . '/res/fonts/ArchitectsDaughter_R.ttf', 28],
 			//QRCode
@@ -515,11 +514,11 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	final function offsetSet(mixed $key, mixed $value):void
 	{
-		//$this->configs[$key] = $value;
+		$this->configs[$key] = $value;
 	}
 	final function offsetUnset(mixed $key):void
 	{
-		//unset($this->configs[$key]);
+		unset($this->configs[$key]);
 	}
 	final function count():int
 	{
@@ -559,19 +558,21 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function at(array $params, string $router = NULL):string
 	{
-		return array_reduce(array_keys($replace = array_reverse($params + $this->query, TRUE)), 
+		return array_reduce(array_keys($replace = array_reverse($params + $this->query, TRUE)),
 			fn($carry, $key) => is_scalar($replace[$key])
 				? (is_bool($replace[$key]) ? $carry : "{$carry},{$key}:{$replace[$key]}")
 				: "{$carry},{$key}", $router ?? strstr("?{$this['request_query']},", ',', TRUE));
 	}
-	function admin(?string $signature = NULL, bool $permanent = FALSE):array
+	function admin(?string $signature = NULL):array
 	{
-		return static::authorize(func_num_args() ? $signature : $this->request_cookie($this['admin_cookie']),
-			fn(string $username, string $password, int $signtime, string $additional):array =>
-				($permanent || $signtime > static::time(-$this['admin_expire']))
-				&& $username === $this['admin_username']
-				&& $password === $this['admin_password']
-					? [$username, $password, $additional] : []);
+		return static::authorize(func_num_args() ? $signature : $this->request_cookie($this['admin_cookie']), $this->authenticate(...));
+	}
+	function authenticate(string $username, string $password, int $signtime, string $additional):array
+	{
+		return $signtime > static::time(-$this['admin_expire'])
+			&& $username === $this['admin_username']
+			&& $password === $this['admin_password']
+				? [$username, $password, $additional] : [];
 	}
 	function authorization(Closure $authenticate = NULL):array
 	{
@@ -795,67 +796,39 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function allow(string|self $router, string ...$methods):bool
 	{
-		return $this->router === $router && in_array($this->method, ['get_favicon', 'get_captcha', 'get_qrcode', ...$methods], TRUE);
+		return $this->router === $router
+			&& in_array($this->method, $router === $this ? ['get_favicon', 'get_captcha', 'get_qrcode', ...$methods] : $methods, TRUE);
 	}
-	function not_authorized():bool
+	function not_sign_in(callable $authenticate = NULL, string $method = NULL):bool
 	{
-		if ($this->allow($this) || $this->authorization()) return FALSE;
-		if ($this['request_method'] === 'post')
+		if (method_exists(...$this->route))
 		{
-			$this->app('webapp_echo_json', ['signature' => NULL]);
-			if (webapp_echo_html::form_sign_in($this)->fetch($auth))
+			if (static::authorize($this->request_cookie($this['admin_cookie']), $authenticate ??= $this->authenticate(...)))
 			{
-				if ($this->authorization($signature = static::signature($auth['username'], $auth['password'])))
-				{
-					$this->response_status(200);
+				return FALSE;
+			}
+			$method ??= $this['app_index'];
+			if ($this->method === "post_{$method}")
+			{
+				$this->app('webapp_echo_json', ['signature' => NULL]);
+				if (webapp_echo_html::form_sign_in($this)->fetch($sign)
+					&& static::authorize($signature = static::signature($sign['username'], $sign['password']), $authenticate)) {
 					$this->response_cookie($this['admin_cookie'], $this->app['signature'] = $signature);
+					$this->response_status(200);
 					$this->response_refresh(0);
 					return FALSE;
 				}
 				$this->app['errors'][] = 'Sign in failed';
 			}
-		}
-		else
-		{
-			webapp_echo_html::form_sign_in($this->app('webapp_echo_html')->main);
-			$this->app->title('Sign In');
-		}
-		$this->response_status(401);
-		return TRUE;
-	}
-	final function init_admin_sign_in(array $config = [], webapp_io $io = new webapp_stdio):bool
-	{
-		self::__construct($config, $io);
-		if (method_exists(...$this->route))
-		{
-			if ($this->allow($this)) return TRUE;
-			if ($this->admin) return FALSE;
-			$this->response_status(403);
-		}
-		if ($this['request_query'] === '')
-		{
-			if ($this['request_method'] === 'post')
-			{
-				$this->app('webapp_echo_json', ['signature' => NULL]);
-				if (webapp_echo_html::form_sign_in($this)->fetch($admin))
-				{
-					if ($this->admin($signature = $this->signature($admin['username'], $admin['password'])))
-					{
-						$this->response_cookie($this['admin_cookie'], $this->app['signature'] = $signature);
-						$this->response_refresh(0);
-					}
-					else
-					{
-						$this->app['errors'][] = 'Sign in failed';
-					}
-				}
-			}
 			else
 			{
-				webapp_echo_html::form_sign_in($this->app('webapp_echo_html')->main);
-				$this->app->title('Sign In Admin');
+				if ($this->method === "get_{$method}")
+				{
+					$this->app('webapp_echo_html')->title('Sign In');
+					webapp_echo_html::form_sign_in($this->app->main);
+				}
 			}
-			$this->response_status(200);
+			$this->response_status(401);
 		}
 		return TRUE;
 	}
@@ -871,7 +844,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function get_captcha(string $random = NULL)
 	{
-		if ($this['captcha_echo'])
+		if ($this['captcha_length'])
 		{
 			if ($result = static::captcha_result($random))
 			{
@@ -883,7 +856,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 				}
 				return 304;
 			}
-			if ($random = static::captcha_random($this['captcha_unit'], $this['captcha_expire']))
+			if ($random = static::captcha_random($this['captcha_length'], $this['captcha_expire']))
 			{
 				$this->response_content_type("text/plain; charset={$this['app_charset']}");
 				$this->echo($random);

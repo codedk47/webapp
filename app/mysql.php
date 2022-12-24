@@ -43,7 +43,8 @@ new class extends webapp
 {
 	function __construct()
 	{
-		if ($this->init_admin_sign_in()) return;
+		//if ($this->init_admin_sign_in()) return;
+		parent::__construct();
 		[$this->mysql_hostname, $this->mysql_username, $this->mysql_password]
 			= json_decode($this->request_cookie_decrypt('mysql_hostinfo') ?? 'NULL', TRUE)
 				?? [$this['mysql_hostname'], $this['mysql_username'], $this['mysql_password']];
