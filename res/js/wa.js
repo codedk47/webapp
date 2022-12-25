@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', event =>
 		return new Promise((resolve, reject) =>
 		{
 			//dialog.appendChild(document.createElement('header')).innerHTML = 'dialog';
-			confirm.onclick = () => Boolean(resolve(form));
+			confirm.onclick = () => Boolean(dialog.close(resolve(form)));
 			dialog.onclose = cancel.onclick = () => reject(form);
 			dialog.appendChild(form).onsubmit = confirm.onclick;
 			if (typeof context === 'string')
@@ -74,11 +74,7 @@ document.addEventListener('DOMContentLoaded', event =>
 			}
 			dialog.appendChild(footer);
 			document.body.appendChild(dialog).showModal();
-		}).then(resolve, reject || Boolean).finally(() =>
-		{
-			dialog.close();
-			dialog.remove();
-		});
+		}).then(resolve, reject || Boolean).finally(() => dialog.remove());
 	}
 	async function interact(element)
 	{
@@ -116,7 +112,6 @@ document.addEventListener('DOMContentLoaded', event =>
 				//console.log(json.goto)
 				location.assign(json.goto);
 			}
-			return;
 		}
 		catch (error)
 		{

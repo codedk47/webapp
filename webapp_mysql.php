@@ -265,26 +265,19 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 		$fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
 		return $result;
 	}
-	function createdb(string $dbname):bool
+
+
+
+	function table(string $name, string $primary = NULL):webapp_mysql_table
 	{
-		return $this->real_query('CREATE DATABASE ?a', $dbname);
-	}
-	function deletedb(string $dbname):bool
-	{
-		return $this->real_query('DROP DATABASE ?a', $dbname);
-	}
-	function createtab(string $tabname):bool
-	{
-		return $this->real_query('CREATE TABLE ?a(`hash` char(12) NOT NULL, PRIMARY KEY (`hash`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4', $tabname);
-	}
-	function table(string $name):webapp_mysql_table
-	{
-		return new class($this, $name) extends webapp_mysql_table
+		return new class($this, $name, $primary) extends webapp_mysql_table
 		{
-			function __construct(webapp_mysql $mysql, string $name)
+			function __construct(webapp_mysql $mysql, protected string $tablename, public ?string $primary)
 			{
-				unset($this->primary);
-				$this->tablename = $name;
+				if ($this->primary === NULL)
+				{
+					unset($this->primary);
+				}
 				parent::__construct($mysql);
 			}
 		};
@@ -333,8 +326,9 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 {
 	public array $paging = [];
 	private string $cond = '', $fields = '*';
-	protected ?string $tablename, $primary;
-	protected ?mysqli_result $lastresult;
+	protected string $tablename;
+	public ?string $primary;
+	//protected ?mysqli_result $lastresult;
 	function __construct(protected readonly webapp_mysql $mysql)
 	{
 	}

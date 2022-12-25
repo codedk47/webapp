@@ -493,7 +493,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	final function __invoke(object $object):object
 	{
-		$object->webapp ??= $this;
+		if (property_exists($object, 'webapp') === FALSE)
+		{
+			$object->webapp = $this;
+		}
 		if ($object instanceof ArrayAccess)
 		{
 			$object['errors'] = &$this->errors;
