@@ -218,6 +218,11 @@ class news_driver extends webapp
 	{
 		return $this->game->balance($uid);
 	}
+	function game_exchange(string $uid, &$error):bool
+	{
+		$error = '妈的法克，提现失败！';
+		return false;
+	}
 }
 class waligame
 {
