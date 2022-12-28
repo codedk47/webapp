@@ -1402,6 +1402,7 @@ class interfaces extends webapp
 			{
 				$update['trade_no'] = $order['trade_no'] = $content['trade_no'];
 			}
+			$this->site = $order['pay_user'];
 			//{E:会员|B:金币}{YYYYMMDD}{增加数字}
 			if (preg_match('/^(E|B)(\d{8})(\d+)$/', $order['order_no'], $goods))
 			{
@@ -1427,7 +1428,6 @@ class interfaces extends webapp
 							'B' => sprintf('购买金币: %d个', $goods[3]),
 							default => '??'
 						}])
-					&& is_numeric($this->site = $order['pay_user'])
 					&& $this->call('saveUser', $this->account_xml($this->mysql
 						->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->array()))
 				) === FALSE) break;
@@ -1436,10 +1436,13 @@ class interfaces extends webapp
 			//C{增加金币}E{会员时间}B{视频金币}
 			if (preg_match('/^C(\d+)(E\d+)(B\d+)$/', $order['order_no'], $goods))
 			{
-				// if ($this->game()->transfer($order['notify_url'], $goods[1], $update['notify_url']) === FALSE)
-				// {
-				// 	break;
-				// }
+				$game = $this->sync()->goto("/index.php?game-credit/{$order['notify_url']},coin:{$goods[1]}");
+				if ($game->status($response) !== 200)
+				{
+					ECHO 111;
+					break;
+				}
+				$update['trade_no'] = $game->content();
 				$update['status'] = 'notified';
 				$update_acc = [[]];
 				if ($e = intval(substr($goods[2], 1)))
@@ -1455,7 +1458,6 @@ class interfaces extends webapp
 				if ($update_acc[0])
 				{
 					$update_acc[0] = join(',', $update_acc[0]);
-					$this->site = $order['pay_user'];
 					$this->mysql->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->update(...$update_acc);
 					$this->call('saveUser', $this->account_xml($this->mysql
 						->accounts('WHERE uid=?s LIMIT 1', $order['notify_url'])->array()));
@@ -1468,7 +1470,7 @@ class interfaces extends webapp
 			echo 'SUCCESS';
 			return;
 		} while (0);
-		error_log(json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+		//error_log(json_encode($content, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 		echo 'FAILURE';
 	}
 	function post_pay()
@@ -1616,5 +1618,9 @@ class interfaces extends webapp
 			return;
 		}
 		echo 'FAILURE';
+	}
+	function get_dd()
+	{
+		var_dump( $this->sync($this->site = 0)->goto('/t.php?game-balance/1234567890,coin:50')->content() );
 	}
 }

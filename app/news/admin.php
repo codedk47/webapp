@@ -1707,7 +1707,7 @@ JS);
 				&& $this->webapp->mysql->orders('WHERE hash=?s', $hash)->update([
 					'pay_name' => $order['pay_name'],
 					'pay_type' => $order['pay_type'],
-					'order_no' => substr($exchange['orderid'], 0, -11),
+					'order_no' => $exchange['orderid'],
 					'trade_no' => $result['data']['hash'],
 					'status' => 'payed'
 				])) {

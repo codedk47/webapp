@@ -214,6 +214,20 @@ class news_driver extends webapp
 	{
 		return new waligame(...$this['wali_config']['params']);
 	}
+	function get_game_credit(string $uid, int $coin)
+	{
+		if ($this->authorization)
+		{
+			if ($this->game->transfer($uid, $coin, $orderid))
+			{
+				echo $orderid;
+			}
+		}
+	}
+	function get_game_enter(string $uid)
+	{
+		print_r($this->game->entergame($uid));
+	}
 	function game_balance(string $uid):int
 	{
 		return $this->game->balance($uid);
@@ -311,14 +325,14 @@ class waligame
 		return $this->request(...$uid === NULL ? ['getAgentBalance'] : ['getbalance', ['uid' => $uid]])['data']['balance'] ?? 0;
 	}
 	//注册账号
-	function register(string $uid, string $channel):array
-	{
-		return $this->request('register', ['uid' => $uid, 'channel' => $channel]);
-	}
+	// function register(string $uid, string $channel):array
+	// {
+	// 	return $this->request('register', ['uid' => $uid, 'channel' => $channel]);
+	// }
 	//进入游戏，不用注册可以直接进入
-	function entergame(string $uid, int $game = 8)
+	function entergame(string $uid, int $game = 8):string
 	{
-		return $this->request('enterGame', ['uid' => $uid]);
+		return is_array($game = $this->request('enterGame', ['uid' => $uid])) && $game['code'] === 0 ? $game['data']['gameUrl'] : '';
 	}
 	//划拨
 	function transfer(string $uid, float $credit, ?string &$orderid):bool
@@ -332,9 +346,9 @@ class waligame
 		// 			[reason] => ok
 		// 		)
 		// )
-		$status = $this->request('transfer', [
-			'orderId' => $orderid = sprintf('%s_%s_%s', $this->aid, (new DateTime)->format('YmdHisv'), $uid),
-			'uid' => $uid, 'credit' => $credit]);
-		return isset($status['data']['reason']) && $status['data']['reason'] === 'ok';
+		$orderid = $this->aid . '_' . (new DateTime)->format('YmdHisv');
+		return is_array($status = $this->request('transfer', ['orderId' => "{$orderid}_{$uid}", 'uid' => $uid, 'credit' => $credit]))
+			&& isset($status['data']['reason'])
+			&& $status['data']['reason'] === 'ok';
 	}
 }
