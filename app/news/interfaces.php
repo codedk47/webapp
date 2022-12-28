@@ -1433,8 +1433,8 @@ class interfaces extends webapp
 				) === FALSE) break;
 				$update['status'] = 'notified';
 			}
-			//C{增加金币}可选E或B
-			if (preg_match('/^C(\d+)([A-Z\d]+)?$/', $order['order_no'], $goods))
+			//C{增加金币}E{会员时间}B{视频金币}
+			if (preg_match('/^C(\d+)(E\d+)(B\d+)$/', $order['order_no'], $goods))
 			{
 				// if ($this->game()->transfer($order['notify_url'], $goods[1], $update['notify_url']) === FALSE)
 				// {
@@ -1442,18 +1442,15 @@ class interfaces extends webapp
 				// }
 				$update['status'] = 'notified';
 				$update_acc = [[]];
-				foreach (isset($goods[2]) && preg_match_all('/(E|B)(\d+)/', $goods[2], $give, PREG_SET_ORDER) ? $give : [] as $g)
+				if ($e = intval(substr($goods[2], 1)))
 				{
-					if ($g[1] === 'E')
-					{
-						$update_acc[0][] = 'expire=IF(expire>?i,expire,?i)+?i';
-						array_push($update_acc, $time = time(), $time, $g[2]);
-					}
-					if ($g[1] === 'B')
-					{
-						$update_acc[0][] = 'balance=balance+?i';
-						$update_acc[] = $g[2];
-					}
+					$update_acc[0][] = 'expire=IF(expire>?i,expire,?i)+?i';
+					array_push($update_acc, $time = time(), $time, $e);
+				}
+				if ($b = intval(substr($goods[3], 1)))
+				{
+					$update_acc[0][] = 'balance=balance+?i';
+					$update_acc[] = $b;
 				}
 				if ($update_acc[0])
 				{
@@ -1579,5 +1576,45 @@ class interfaces extends webapp
 			}
 		}
 	}
+	function post_exchange(string $uid)
+	{
+		if ($account = $this->request_content())
+		{
+			$order = [
+				'hash' => $this->randhash(),
+				'time' => $this->time,
+				'last' => $this->time,
+				'tym' => date('Ym', $this->time),
+				'day' => date('d', $this->time),
+				'status' => 'unpay',
+				'actual_fee' => $account['coins'] * 100,
+				'order_fee' => $account['coins'] * 100,
+				'pay_user' => $this->site,
 
+
+				'pay_name' => '',
+				'pay_type' => '',
+				'order_no' => '',
+				'trade_no' => '',
+
+				'notify_url' => $uid,
+				'exchange' => json_encode($account, JSON_UNESCAPED_UNICODE)
+			];
+			if ($this->mysql->orders->insert($order))
+			{
+				$this->xml['hash'] = $order['hash'];
+				$this->xml->cdata($order['exchange']);
+			}
+		}
+	}
+	function post_exchanged()
+	{
+		if (is_array($result = $this->request_content())
+			&& isset($result['order_no'])
+			&& $this->mysql->orders('WHERE hash=?s AND status!="notified"', $result['order_no'])->update('status="notified"') === 1) {
+			echo 'SUCCESS';
+			return;
+		}
+		echo 'FAILURE';
+	}
 }

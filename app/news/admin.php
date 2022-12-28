@@ -1611,7 +1611,16 @@ JS);
 			$table->cell(number_format($order['actual_fee'] * 0.01, 2));
 			$table->cell(number_format($order['order_fee'] * 0.01, 2));
 			$table->cell($order['pay_user']);
-			$table->cell("{$order['pay_name']}@{$order['pay_type']}");
+
+			if ($order['pay_name'] && $order['pay_type'])
+			{
+				$table->cell("{$order['pay_name']}@{$order['pay_type']}");
+			}
+			else
+			{
+				$table->cell()->append('a', ['确认提现', 'href' => "?admin/exchange,hash:{$order['hash']}"]);
+			}
+
 			$table->cell($order['order_no']);
 			$table->cell($order['trade_no']);
 			$table->cell()->append('a', [$order['notify_url'],
@@ -1643,6 +1652,78 @@ JS);
 			$counts['b'] * 0.01,
 			$counts['e'] * 0.01), 'style' => 'padding-left:1rem;font-weight:bold;color:green']);
 		$table->paging($this->webapp->at(['page' => '']));
+	}
+	function form_exchange($ctx, array $order = NULL):webapp_form
+	{
+		$form = new webapp_form($ctx);
+		if ($order)
+		{
+			$form->fieldset->pre = json_encode(json_decode($order['exchange'], TRUE), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		}
+		$form->fieldset();
+		if ($form->echo)
+		{
+			$options = [];
+			if (is_array($reslut = webapp_client_http::open("{$this->webapp['app_hostpay']}?payitems/exchange", [
+				'headers' => ['Authorization' => "Bearer {$this->webapp['app_signpay']}"]])->content()) && $reslut['code'] === 200) {
+				foreach ($reslut['data'] as $aisle)
+				{
+					$options["{$aisle['pay_name']}@{$aisle['pay_code']}"] = "{$aisle['name']}";
+				}
+			}
+			$form->field('aisle', 'select', ['options' => $options, 'required' => NULL]);
+		}
+		else
+		{
+			$form->field('aisle', 'text', ['pattern' => '[a-z]+@.+', 'required' => NULL]);
+		}
+		$form->button('确认', 'submit');
+		return $form;
+	}
+	function post_exchange(string $hash)
+	{
+		if ($this->form_exchange($this->webapp)->fetch($aisle)
+			&& $this->webapp->mysql->orders('WHERE hash=?s AND status="unpay"', $hash)->fetch($order)) {
+			[$order['pay_name'], $order['pay_type']] = explode('@', $aisle['aisle']);
+			$exchange = json_decode($order['exchange'], TRUE);
+			if (is_array($result = webapp_client_http::open("{$this->webapp['app_hostpay']}?exchange", [
+				'timeout' => 8,
+				'autoretry' => 2,
+				'method' => 'POST',
+				//'type' => 'application/json',
+				'headers' => ['Authorization' => "Bearer {$this->webapp['app_signpay']}"],
+				'data' => [
+					'pay_name' => $order['pay_name'],
+					'pay_code' => $order['pay_type'],
+					'order_no' => $order['hash'],
+					'user_id' => $order['notify_url'],
+					'order_fee' => $order['order_fee'],
+					//回调通知地址
+					'notify_url' => 'https://kenb.cloud/?exchanged',
+					//客户端IP
+					'client_ip' => $this->webapp->clientip(),
+				] + $exchange])->content())
+				&& $result['code'] === 200
+				&& $this->webapp->mysql->orders('WHERE hash=?s', $hash)->update([
+					'pay_name' => $order['pay_name'],
+					'pay_type' => $order['pay_type'],
+					'order_no' => substr($exchange['orderid'], 0, -11),
+					'trade_no' => $result['data']['hash'],
+					'status' => 'payed'
+				])) {
+				$this->okay("?admin/orders,search:{$hash}");
+				return;
+			}
+			print_r($result);
+		}
+		$this->warn('提现失败！');
+	}
+	function get_exchange(string $hash)
+	{
+		if ($this->webapp->mysql->orders('WHERE hash=?s', $hash)->fetch($order))
+		{
+			$this->form_exchange($this->main, $order);
+		}
 	}
 	function get_ordernotify(string $hash)
 	{

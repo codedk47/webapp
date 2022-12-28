@@ -218,10 +218,55 @@ class news_driver extends webapp
 	{
 		return $this->game->balance($uid);
 	}
-	function game_exchange(string $uid, array $exinfo, &$error):bool
+	function game_exchange(string $uid, array $exchange, &$error):bool
 	{
-		$error = '妈的法克，提现失败！';
-		return false;
+		do
+		{
+			if (isset($exchange['coins'], $exchange['account'], $exchange['account_type'], $exchange['account_name'], $exchange['account_tel'], $exchange['account_addr']) === FALSE)
+			{
+				$error = '缺少关键字段！';
+				break;
+			}
+			foreach ($exchange as $datatype)
+			{
+				if (is_string($datatype) === FALSE)
+				{
+					$error = '字段类型错误！';
+					break 2;
+				}
+			}
+			$exchange['coins'] = intval($exchange['coins']);
+			if ($exchange['coins'] < 1)
+			{
+				$error = '金额错误！';
+				break;
+			}
+			if ($exchange['account_type'] === 'bank')
+			{
+				if (isset($exchange['account_bank']) === FALSE)
+				{
+					$error = '缺少银行名称！';
+					break;
+				}
+			}
+			// if ($this->game->transfer($uid, -$exchange['coins'], $exchange['orderid']) === FALSE)
+			// {
+			// 	$error = '提现失败，远程错误！';
+			// 	break;
+			// }
+			//28530_20221226124645_894qJpNThN
+			$exchange['orderid'] = sprintf('%s_%s_%s', 28530, (new DateTime)->format('YmdHisv'), $uid);
+			if (is_object($result = $this->post("exchange/{$uid}", $exchange)) === FALSE || isset($result['hash']) === FALSE)
+			{
+				//$this->game->transfer($uid, $exchange['coins'], $exchange['orderid']);
+				$error = '提现失败，内部错误！';
+				break;
+			}
+			//echo $result;
+			return TRUE;
+		} while (FALSE);
+		//echo $result;
+		return FALSE;
 	}
 }
 class waligame
@@ -233,7 +278,7 @@ class waligame
 		private readonly string $ase,	//参数加密秘钥
 		private readonly string $key	//请求签名秘钥
 	) {
-		$this->api = new webapp_client_http($api, ['autoretry' => 1]);
+		$this->api = new webapp_client_http($api, ['autoretry' => 1, 'timeout' => 8]);
 	}
 	function request(string $action, array $params = []):array
 	{

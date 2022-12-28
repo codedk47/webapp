@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', event =>
 			else
 			{
 				form.method = context.method || 'post';
-				form.enctype = context.enctype || 'application/x-www-form-urlencoded';
+				//form.enctype = context.enctype || 'application/x-www-form-urlencoded';
 				context.hasOwnProperty('action') && form.setAttribute('action', context.action);
 				for (let name in context.fields)
 				{
@@ -80,12 +80,17 @@ document.addEventListener('DOMContentLoaded', event =>
 	{
 		//dialog({method: 'get', action: '?', fields: {name: 'text'}}).then(bind);
 
+		//redirect: 'manual'
+		//return;
+	
+		//alert(element.enctype)
 
+		//console.log( JSON.stringify(Object.fromEntries(new FormData(element))) );
 		//return;
 		const
 		response = element.tagName === 'FORM'
-			? await fetch(element.action, {redirect: 'manual', method: element.method, body: new FormData(element)})
-			: await fetch(element.href, {redirect: 'manual', method: element.dataset.method || 'get'}),
+			? await fetch(element.action, {method: element.getAttribute('method'), body: new URLSearchParams(new FormData(element))})
+			: await fetch(element.href, {method: element.dataset.method || 'get'}),
 		data = await response.text();
 
 		//alert(response.redirect());
@@ -99,7 +104,7 @@ document.addEventListener('DOMContentLoaded', event =>
 			const json = JSON.parse(data);
 			if (Array.isArray(json.errors) && json.errors.length)
 			{
-				return dialog(json.errors.join('\n'));
+				await dialog(json.errors.join('\n'));
 			}
 			if (json.hasOwnProperty('dialog'))
 			{
@@ -121,9 +126,9 @@ document.addEventListener('DOMContentLoaded', event =>
 
 
 
-	document.querySelectorAll('[data-bind]').forEach(element => element.addEventListener(element.dataset.bind, event =>
+	document.querySelectorAll('[data-bind]').forEach(element => element[`on${element.dataset.bind}`] = event =>
 	{
-		event.preventDefault();
+		
 
 		if (element.tagName === 'FORM')
 		{
@@ -153,5 +158,5 @@ document.addEventListener('DOMContentLoaded', event =>
 			}
 		}
 		return false;
-	}));
+	});
 });

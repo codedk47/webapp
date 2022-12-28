@@ -104,7 +104,19 @@ else
 		}
 		function request_formdata():array
 		{
-			return $_POST;
+			if ($this->request_method() === 'POST')
+			{
+				return $_POST;
+			}
+			if (str_starts_with($this->request_header('Content-Type') ?? '', 'application/x-www-form-urlencoded'))
+			{
+				parse_str($this->request_content(), $data);
+			}
+			else
+			{
+				$data = [];
+			}
+			return $data;
 		}
 		function request_uploadedfile():array
 		{
