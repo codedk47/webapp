@@ -1439,7 +1439,6 @@ class interfaces extends webapp
 				$game = $this->sync()->goto("/index.php?game-credit/{$order['notify_url']},coin:{$goods[1]}");
 				if ($game->status($response) !== 200)
 				{
-					ECHO 111;
 					break;
 				}
 				$update['trade_no'] = $game->content();

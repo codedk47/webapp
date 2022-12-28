@@ -224,9 +224,15 @@ class news_driver extends webapp
 			}
 		}
 	}
-	function get_game_enter(string $uid)
+	function get_game_enter()
 	{
-		print_r($this->game->entergame($uid));
+		if($acc = $this->authorize($this->request_authorization(), fn($uid) => [$uid]))
+		{
+			////print_r($this->game->entergame($uid));
+			echo $acc[0];
+			return;
+		}
+		echo 11;
 	}
 	function game_balance(string $uid):int
 	{
@@ -263,16 +269,16 @@ class news_driver extends webapp
 					break;
 				}
 			}
-			// if ($this->game->transfer($uid, -$exchange['coins'], $exchange['orderid']) === FALSE)
-			// {
-			// 	$error = '提现失败，远程错误！';
-			// 	break;
-			// }
+			if ($this->game->transfer($uid, -$exchange['coins'], $exchange['orderid']) === FALSE)
+			{
+				$error = '提现失败，远程错误！';
+				break;
+			}
 			//28530_20221226124645_894qJpNThN
-			$exchange['orderid'] = sprintf('%s_%s_%s', 28530, (new DateTime)->format('YmdHisv'), $uid);
+			//$exchange['orderid'] = sprintf('%s_%s_%s', 28530, (new DateTime)->format('YmdHisv'), $uid);
 			if (is_object($result = $this->post("exchange/{$uid}", $exchange)) === FALSE || isset($result['hash']) === FALSE)
 			{
-				//$this->game->transfer($uid, $exchange['coins'], $exchange['orderid']);
+				$this->game->transfer($uid, $exchange['coins'], $exchange['orderid']);
 				$error = '提现失败，内部错误！';
 				break;
 			}

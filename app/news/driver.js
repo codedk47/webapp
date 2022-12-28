@@ -76,6 +76,11 @@ function router(path, body)
 // 		}, 'image/png');
 // 	});
 // }
+function entergame()
+{
+	//loader()
+	alert(1)
+}
 async function register(random, answer)
 {
 	return caller('?api/register', {random, answer}, 'application/json').then(result =>
