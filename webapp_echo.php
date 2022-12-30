@@ -263,7 +263,7 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	// {
 	// 	$this['dialog'] = $context;
 	// }
-	function goto(string $url)
+	function goto(string $url = NULL)
 	{
 		$this['goto'] = $url;
 	}

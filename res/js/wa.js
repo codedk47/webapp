@@ -87,10 +87,11 @@ document.addEventListener('DOMContentLoaded', event =>
 
 		//console.log( JSON.stringify(Object.fromEntries(new FormData(element))) );
 		//return;
+
 		const
 		response = element.tagName === 'FORM'
 			? await fetch(element.action, {method: element.getAttribute('method'), body: new URLSearchParams(new FormData(element))})
-			: await fetch(element.href, {method: element.dataset.method || 'get'}),
+			: await fetch(element.href || element.dataset.src, {method: element.dataset.method || 'get'}),
 		data = await response.text();
 
 		//alert(response.redirect());
@@ -112,10 +113,12 @@ document.addEventListener('DOMContentLoaded', event =>
 					? await dialog(json.dialog)
 					: await dialog(json.dialog, interact);
 			}
-			if (json.hasOwnProperty('goto') && typeof json.goto === 'string')
+			if (json.hasOwnProperty('goto'))
 			{
 				//console.log(json.goto)
-				location.assign(json.goto);
+				typeof json.goto === 'string'
+					? location.assign(json.goto)
+					: location.reload();
 			}
 		}
 		catch (error)
@@ -143,7 +146,7 @@ document.addEventListener('DOMContentLoaded', event =>
 					dialog({
 						method: element.dataset.method || 'post',
 						//enctype: element.dataset.enctype || 'application/x-www-form-urlencoded',
-						action: element.href,
+						action: element.href || element.dataset.src,
 						fields: JSON.parse(element.dataset.dialog)
 					}, interact);
 				}

@@ -228,8 +228,7 @@ class news_driver extends webapp
 	{
 		if($acc = $this->authorize($this->request_authorization(), fn($uid) => [$uid]))
 		{
-			////print_r($this->game->entergame($uid));
-			echo $acc[0];
+			echo $this->game->entergame($acc[0]);
 			return;
 		}
 		echo 11;

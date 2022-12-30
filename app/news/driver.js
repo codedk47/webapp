@@ -76,11 +76,6 @@ function router(path, body)
 // 		}, 'image/png');
 // 	});
 // }
-function entergame()
-{
-	//loader()
-	alert(1)
-}
 async function register(random, answer)
 {
 	return caller('?api/register', {random, answer}, 'application/json').then(result =>
@@ -188,6 +183,37 @@ window.addEventListener('DOMContentLoaded', async function()
 		}
 		return entry + query;
 	}
+	top.entergame = function()
+	{
+		loader(`${entry}?game-enter`, {headers: Object.assign({Authorization:
+			`Bearer ${localStorage.getItem('account')}`}, headers)}, 'text/plain').then(data => {
+
+			frame.style.display = 'none';
+			const game = document.createElement('iframe'), close = document.createElement('span');
+			game.setAttribute('frameborder', 0);
+			game.width = game.height = '100%';
+			game.src = data;
+
+			//close.textContent = '离开游戏';
+			close.textContent = '❌';
+			close.onclick = () =>
+			{
+				if (confirm('离开游戏？'))
+				{
+					frame.style.display = null;
+					document.body.removeChild(close);
+					document.body.removeChild(game);
+				}
+			}
+			close.style.cssText = 'position:fixed;top:14rem;right:.6rem;font-size:1.5rem';
+		
+			document.body.appendChild(close);
+			document.body.appendChild(game);
+			//alert(data)
+		});
+	}
+
+
 	// frame.addEventListener('transitionend', event =>
 	// {
 	// 	alert(1)
