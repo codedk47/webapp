@@ -20,7 +20,36 @@ function urlencode(data)
 		'~': '%7E'}[escape]));
 }
 
-
+function url64_encode(data)
+{
+	const
+	key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-', 
+	bin = unescape(encodeURIComponent(data));
+	let buffer = '';
+	for (let i = 0, length = bin.length; i < length;)
+	{
+		let value = bin.charCodeAt(i++) << 16;
+		buffer += key.charAt(value >> 18 & 63);
+		if (i < length)
+		{
+			value |= bin.charCodeAt(i++) << 8;
+			buffer += key.charAt(value >> 12 & 63);
+			if (i < length)
+			{
+				value |= bin.charCodeAt(i++);
+				buffer += key.charAt(value >> 6 & 63);
+				buffer += key.charAt(value & 63);
+				continue;
+			}
+			buffer += key.charAt(value >> 6 & 63);
+			break;
+		}
+		buffer += key.charAt(value >> 12 & 63);
+		break;
+	}
+	console.log(buffer)
+	return buffer;
+}
 
 
 document.addEventListener('DOMContentLoaded', event =>

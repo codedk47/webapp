@@ -65,6 +65,15 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return array_column($this->all(), $key, $index);
 	}
+	function group(string $field, string $key, string $index = NULL):array
+	{
+		$group = [];
+		foreach ($this as $data)
+		{
+			$group[$data[$field]][$data[$index]] = $data[$key];
+		}
+		return $group;
+	}
 	private function quote(string $name):string
 	{
 		return '`' . addcslashes($name, '`') . '`';
@@ -368,16 +377,29 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	{
 		return ($this->mysql)('SELECT ?? FROM ?a??', $this->fields, $this->tablename, (string)$this);
 	}
-	function result(array|string $fields = '*'):mysqli_result
+	function result(&$fields = NULL, bool $detailed = FALSE):iterable
 	{
-		$result = $this->select($fields)->getIterator()->getIterator();
+		$result = $this->getIterator()->getIterator();
+		$fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
 		$result->paging = $this->paging;
 		return $result;
-		// $result = $this->getIterator()->getIterator();
-		// $fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
-		// $result->paging = $this->paging;
-		// return $result;
 	}
+	// function result(array|string $fields = '*'):mysqli_result
+	// {
+
+
+
+	// 	$detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
+
+		
+	// 	$result = $this->select($fields)->getIterator()->getIterator();
+	// 	$result->paging = $this->paging;
+	// 	return $result;
+	// 	// $result = $this->getIterator()->getIterator();
+	// 	// $fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
+	// 	// $result->paging = $this->paging;
+	// 	// return $result;
+	// }
 	function object(string $class = 'stdClass', array $constructor_args = []):object
 	{
 		return $this->getIterator()->object($class, $constructor_args);

@@ -410,8 +410,9 @@ class webapp_html extends webapp_xml
 			{
 				'ul' => ['checked', 'li/label/input'],
 				'details' => ['checked', 'ul/li/label/input'],
-				default => ['selected', 'option']
+				default => ['selected', '//option']
 			};
+			//var_dump("{$selector}[{$value}]");
 			foreach ($this->xpath("{$selector}[{$value}]") as $node)
 			{
 				$node->setattr([$selected => NULL]);
@@ -425,7 +426,7 @@ class webapp_html extends webapp_xml
 		{
 			'ul' => 'li/label/input/@value',
 			'details' => 'ul/li/label/input/@value',
-			default => 'option/@value'
+			default => '//option/@value'
 		}));
 	}
 	// function section(string $title, int $level = 1):static
@@ -688,7 +689,7 @@ class webapp_form implements ArrayAccess
 						'ul',
 						'details',
 						'select'=> $node->selected(...is_array($value) ? $value : [$value]),
-						'textarea' => $node->text($value),
+						'textarea' => $node->text((string)$value),
 						default => $node->setattr(['value' => $value])
 					};
 				}
@@ -756,7 +757,6 @@ class webapp_form implements ArrayAccess
 		$errors[] = $error = "Form input[{$field}] invalid";
 		return FALSE;
 	}
-	//
 
 	// function files(string $name):ArrayObject
 	// {
@@ -925,7 +925,7 @@ class webapp_table implements Countable
 	}
 	function cell(NULL|string|array $value = NULL):webapp_html
 	{
-		return $this->row->append('td', $value);
+		return $this->row->append('td', is_string($value) ? htmlspecialchars($value) : $value);
 	}
 	function cells(iterable $values):webapp_html
 	{
