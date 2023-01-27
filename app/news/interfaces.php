@@ -1305,82 +1305,82 @@ class interfaces extends webapp
 			$this->app['errors'][] = '合集资源创建失败！';
 		}
 	}
-	function upto():array
-	{
-		return $this->upto = $this->authorize(func_num_args() ? func_get_arg(0) : $this->request_cookie('upto'),
-			fn($uid, $pwd, $st, $add) => array_key_exists($uid, webapp_router_upto::up)
-				&& webapp_router_upto::up[$uid]['pwd'] === $pwd
-					? webapp_router_upto::up[$uid] + ['uid' => $uid, 'add' => $add] : []);
-	}
-	function options_upto_upload()
-	{
-		$this->response_header('Access-Control-Allow-Origin', '*');
-	}
-	function get_upto_upload(string $sign)
-	{
-		do
-		{
-			if (empty($info = $this->upto($sign)))
-			{
-				break;
-			}
-			if (is_file($file = "D:/up/{$info['add']}"))
-			{
-				if (unlink($file) === FALSE)
-				{
-					break;
-				}
-			}
-			$this->echo('success');
-			return;
-		} while (0);
-		$this->echo('failure');
-	}
-	function post_upto_upload(string $sign = NULL)
-	{
-		if ($info = $this->upto($sign))
-		{
-			if ($file = fopen("D:/up/{$info['add']}", 'a'))
-			{
-				fwrite($file, $this->request_content());
-				fclose($file);
-				return 200;
-			}
-			return 404;
-		}
-		do
-		{
-			if (is_array($input = $this->request_content('application/json')) && $this->upto() === FALSE)
-			{
-				break;
-			}
-			$input['time'] = $this->time;
-			if ($this->mysql->upres('where hash=?s limit 1', $input['hash'])->fetch($file))
-			{
-				$input['sync'] = 'waiting';
-				if (($file['upid'] === $this->upto['uid'] && $this->mysql->upres('where hash=?s limit 1', $input['hash'])->update($input)) === FALSE)
-				{
-					break;
-				}
-			}
-			else
-			{
-				$input['upid'] = $this->upto['uid'];
-				if ($this->mysql->upres->insert($input) === FALSE)
-				{
-					break;
-				}
-			}
-			$url = 'https://up.fasdfasd.com/?upto-upload/' . $this->signature($this->upto['uid'], $this->upto['pwd'], $input['hash']);
-			if (webapp_client_http::open($url)->content() !== 'success')
-			{
-				break;
-			}
-			$this->echo($url);
-			return 200;
-		} while (0);
-		return 404;
-	}
+	// function upto():array
+	// {
+	// 	return $this->upto = $this->authorize(func_num_args() ? func_get_arg(0) : $this->request_cookie('upto'),
+	// 		fn($uid, $pwd, $st, $add) => array_key_exists($uid, webapp_router_upto::up)
+	// 			&& webapp_router_upto::up[$uid]['pwd'] === $pwd
+	// 				? webapp_router_upto::up[$uid] + ['uid' => $uid, 'add' => $add] : []);
+	// }
+	// function options_upto_upload()
+	// {
+	// 	$this->response_header('Access-Control-Allow-Origin', '*');
+	// }
+	// function get_upto_upload(string $sign)
+	// {
+	// 	do
+	// 	{
+	// 		if (empty($info = $this->upto($sign)))
+	// 		{
+	// 			break;
+	// 		}
+	// 		if (is_file($file = "D:/up/{$info['add']}"))
+	// 		{
+	// 			if (unlink($file) === FALSE)
+	// 			{
+	// 				break;
+	// 			}
+	// 		}
+	// 		$this->echo('success');
+	// 		return;
+	// 	} while (0);
+	// 	$this->echo('failure');
+	// }
+	// function post_upto_upload(string $sign = NULL)
+	// {
+	// 	if ($info = $this->upto($sign))
+	// 	{
+	// 		if ($file = fopen("D:/up/{$info['add']}", 'a'))
+	// 		{
+	// 			fwrite($file, $this->request_content());
+	// 			fclose($file);
+	// 			return 200;
+	// 		}
+	// 		return 404;
+	// 	}
+	// 	do
+	// 	{
+	// 		if (is_array($input = $this->request_content('application/json')) && $this->upto() === FALSE)
+	// 		{
+	// 			break;
+	// 		}
+	// 		$input['time'] = $this->time;
+	// 		if ($this->mysql->upres('where hash=?s limit 1', $input['hash'])->fetch($file))
+	// 		{
+	// 			$input['sync'] = 'waiting';
+	// 			if (($file['upid'] === $this->upto['uid'] && $this->mysql->upres('where hash=?s limit 1', $input['hash'])->update($input)) === FALSE)
+	// 			{
+	// 				break;
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			$input['upid'] = $this->upto['uid'];
+	// 			if ($this->mysql->upres->insert($input) === FALSE)
+	// 			{
+	// 				break;
+	// 			}
+	// 		}
+	// 		$url = 'https://up.fasdfasd.com/?upto-upload/' . $this->signature($this->upto['uid'], $this->upto['pwd'], $input['hash']);
+	// 		if (webapp_client_http::open($url)->content() !== 'success')
+	// 		{
+	// 			break;
+	// 		}
+	// 		$this->echo($url);
+	// 		return 200;
+	// 	} while (0);
+	// 	return 404;
+	// }
 	//支付
 	function post_notify()
 	{
@@ -1565,8 +1565,7 @@ class interfaces extends webapp
 	{
 		$this->xml = $this->app('webapp_echo_xml')->xml;
 		if (is_array($pays = webapp_client_http::open("{$this['app_hostpay']}?payitems/pay", [
-			'headers' => ['Authorization' => "Bearer {$this['app_signpay']}"]
-		])->content()) && isset($pays['data'])) {
+			'headers' => ['Authorization' => "Bearer {$this['app_signpay']}"]])->content()) && isset($pays['data'])) {
 			foreach ($pays['data'] as $pay)
 			{
 				$this->xml->append('pay', [

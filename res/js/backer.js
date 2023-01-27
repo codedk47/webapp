@@ -1,5 +1,33 @@
 if (globalThis.window)
 {
+	if (document.currentScript.dataset.config)
+	{
+		
+		Promise.any(document.currentScript.dataset.config.split(',').map(domain =>
+			new Promise(resolve => new WebSocket(`wss://${domain}/test`).onmessage = event => resolve(event.data)))).then(data =>
+			{
+
+				console.log(data)
+
+			});
+
+		console.log()
+
+	}
+	window.router = async (websockets) =>
+	{
+		Promise.any(websockets.map(domain => new Promise(resolve => new WebSocket(`wss://${domain}/test`).onmessage = event => resolve(event.data)))).then(data =>
+		{
+			//console.log(a)
+
+			// Promise.any(['r.yongyinsoft.com', 'r.ytgoo.com'].map(domain => fetch(`https://${domain}/favicon.ico`).then(()=>domain)   )).then(response=>{
+			// 	console.log(response)
+			// });
+			
+	
+			console.log(data)
+		});
+	}
 	window[document.currentScript.dataset.name || 'backer'] = (function()
 	{
 		let id = 0;
