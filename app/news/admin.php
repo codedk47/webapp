@@ -2164,8 +2164,8 @@ accounts.unit AS unit,
 accounts.time AS accounttime
 FROM orders INNER JOIN (accounts) ON (accounts.uid=orders.notify_url)
 WHERE orders.pay_user=?i AND orders.status!="unpay"
-AND concat(left(orders.tym,4),"-",right(orders.tym,2),"-",lpad(orders.day,2,0))>=?s
-AND concat(left(orders.tym,4),"-",right(orders.tym,2),"-",lpad(orders.day,2,0))<=?s
+AND FROM_UNIXTIME(orders.time, '%Y-%m-%d')>=?s
+AND FROM_UNIXTIME(orders.time, '%Y-%m-%d')<=?s
 ORDER BY fee DESC
 SQL, $this->webapp->site, $start, $end) as $row) {
 			if (array_key_exists($row['unit'], $order) === FALSE)

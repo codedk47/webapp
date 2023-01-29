@@ -154,9 +154,9 @@ class webapp_echo_html extends webapp_implementation
 		$this->xml->setattr(['lang' => 'en'])->append('head');
 		$this->meta(['charset' => $webapp['app_charset']]);
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
-		//$this->link(['rel' => 'manifest', 'href' => '?webmanifest']);
-		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
 		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/res/ps/webapp.css', 'media' => 'all']);
+		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
+		//$this->link(['rel' => 'manifest', 'href' => '?webmanifest']);
 
 		// $head->append('meta', ['charset' => $webapp['app_charset']]);
 		// $head->append('meta', ['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
@@ -238,6 +238,46 @@ class webapp_echo_html extends webapp_implementation
 			'src' => 'about:blank'
 		]);
 		return $frame;
+	}
+}
+class webapp_echo_htmlmask extends webapp_echo_html
+{
+	public readonly bool $entry;
+
+	function __construct(webapp $webapp)
+	{
+		parent::__construct($webapp);
+		if ($this->entry = $webapp->method === "{$webapp['request_method']}_{$webapp['app_index']}")
+		{
+			unset($this->xml->head->link[0], $this->xml->body->div);
+			$this->script(['src' => '/webapp/res/js/backer.js']);
+			$this->script(['src' => '/webapp/res/js/framer.js']);
+			$this->xml->body['style'] = 'margin:0px;padding:0px;overflow:hidden';
+			$this->xml->body->append('iframe', [
+				'importance' => 'high',
+				'width' => '100%',
+				'height' => '100%',
+				'src' => 'about:blank',
+				//'src' => '?asd',
+				'style'=> 'position:fixed;border:none',
+				'data-query' => '?asd'
+			]);
+		}
+		else
+		{
+			unset($this->xml->head->link[1]);
+			//print_r($this);
+		}
+	}
+	function __toString():string
+	{
+		return $this->entry ? parent::__toString() : $this->webapp->maskdata(parent::__toString());
+		if ($this->entry)
+		{
+			return parent::__toString();
+		}
+		$this->webapp->response_content_type('text/plain');
+		return $this->webapp->maskdata(parent::__toString());
 	}
 }
 class webapp_echo_json extends ArrayObject implements Stringable
