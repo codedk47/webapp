@@ -2218,6 +2218,15 @@ SQL, $this->webapp->site, $start, $end) as $row) {
 
 			$table->row();
 			[$price, $type, $admin, $rundate] = $unitsets[$stat['unit']] ?? [0, 'cpc', 'admin', '2022-04-07'];
+
+
+			if (isset($order[$stat['unit']]) === FALSE)
+			{
+				var_dump($stat['unit']);
+				print_r($order);
+				exit;
+			}
+
 			[$all, $old, $new] = $order[$stat['unit']] ?? [0, 0, 0];
 
 			$table->cell()->append('a', ["{$stat['unit']}({$admin})", 'href' => $this->webapp->at(['type' => $stat['unit']])]);
