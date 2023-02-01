@@ -77,7 +77,7 @@ addEventListener('DOMContentLoaded', async event =>
 		show(context)
 		{
 			this.#section.innerHTML = context;
-			this.#dialog.showModal();
+			this.#dialog.open || this.#dialog.showModal();
 		}
 		close()
 		{
@@ -85,7 +85,7 @@ addEventListener('DOMContentLoaded', async event =>
 		}
 	};
 
-
+	framer.dialog.show(`addwdwd aw awda awda wdawd`);
 
 	if ('splashscreen' in frame.dataset)
 	{
@@ -164,7 +164,7 @@ addEventListener('DOMContentLoaded', async event =>
 
 	if ('authorization' in frame.dataset)
 	{
-		while (!(localStorage.getItem('token') && await loader(`${frame.dataset.authorization}/${localStorage.getItem('token')}`).token))
+		while (!(localStorage.getItem('token') && 'token' in await loader(`${frame.dataset.authorization}/${localStorage.getItem('token')}`)))
 		{
 			localStorage.setItem('token', await new Promise(resolve =>
 			{
