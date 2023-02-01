@@ -725,9 +725,9 @@ class interfaces extends webapp
 			$res['cover'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/cover.jpg";
 		}
 	}
-	function get_shares(int $time = 1672502400, int $page = 1, int $size = 100)
+	function get_shares(int $page = 1, int $size = 100)
 	{
-		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished" AND time>?i', $this->site = 0, $time];
+		$cond = ['WHERE FIND_IN_SET(?i,site)', $this->site = 0];
 		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
 		{
 			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
