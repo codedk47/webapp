@@ -250,7 +250,7 @@ class webapp_echo_htmlmask extends webapp_echo_html
 		if ($this->entry = $webapp->method === "{$webapp['request_method']}_{$webapp['app_index']}")
 		{
 			unset($this->xml->head->link[0], $this->xml->body->div);
-			$this->script(['src' => '/webapp/res/js/backer.js']);
+			$this->script(['src' => '/webapp/res/js/loader.js']);
 			$this->script(['src' => '/webapp/res/js/framer.js']);
 			$this->xml->body['style'] = 'margin:0px;padding:0px;overflow:hidden';
 			$this->xml->body->append('iframe', [
@@ -266,17 +266,26 @@ class webapp_echo_htmlmask extends webapp_echo_html
 		else
 		{
 			unset($this->xml->head->link[1]);
-			//print_r($this);
+
+			$this->script(<<<JS
+// top.loader('http://127.0.0.1/notify.txt', {type: 'text/plain'}).then(data=>{
+// 	console.log(data)
+// });
+window.addEventListener('DOMContentLoaded', async event =>{
+
+	console.log(top.framer);
+});
+JS);
 		}
 	}
 	function __toString():string
 	{
-		return $this->entry ? parent::__toString() : $this->webapp->maskdata(parent::__toString());
+		//return $this->entry ? parent::__toString() : $this->webapp->maskdata(parent::__toString());
 		if ($this->entry)
 		{
 			return parent::__toString();
 		}
-		$this->webapp->response_content_type('text/plain');
+		$this->webapp->response_content_type('@text/plain');
 		return $this->webapp->maskdata(parent::__toString());
 	}
 }

@@ -1,34 +1,97 @@
+async function loader(url, option = {})
+{
+	//application/octet-stream
+	//application/octet-masker
+	const response = await fetch(url, option);
+	let type = response.headers.get('content-type') || 'application/octet-stream', blob;
+	if (option.mask || type.startsWith('@'))
+	{
+		const reader = response.body.getReader(), key = new Uint8Array(8), buffer = [];
+		for (let read, len = 0, offset = 0;;)
+		{
+			read = await reader.read();
+			if (read.done)
+			{
+				break;
+			}
+			if (len < 8)
+			{
+				//console.log('keyload...')
+				let i = 0;
+				while (i < read.value.length)
+				{
+					key[len++] = read.value[i++];
+					//console.log('keyload-' + i)
+					if (len > 7)
+					{
+						//console.log('keyloaded over')
+						break;
+					}
+				}
+				if (len < 8)
+				{
+					//console.log('keyload contiune')
+					continue;
+				}
+				//console.log('keyloaded finish')
+				read.value = read.value.slice(i);
+			}
+			//console.log('payload...')
+			for (let i = 0; i < read.value.length; ++i)
+			{
+				read.value[i] = read.value[i] ^ key[offset++ % 8];
+			}
+			buffer[buffer.length] = read.value;
+		}
+		type = option.type || type.substring(1);
+		blob = new Blob(buffer, {type});
+	}
+	else
+	{
+		blob = await response.blob();
+	}
+
+	switch (option.type || type.split(';')[0])
+	{
+		case 'application/json': return JSON.parse(await blob.text());
+		case 'text/plain': return blob.text();
+		default: return URL.createObjectURL(blob);
+	}
+}
+
+
+
 if (globalThis.window)
 {
-	if (document.currentScript.dataset.config)
-	{
+	// if (document.currentScript.dataset.config)
+	// {
 		
-		Promise.any(document.currentScript.dataset.config.split(',').map(domain =>
-			new Promise(resolve => new WebSocket(`wss://${domain}/test`).onmessage = event => resolve(event.data)))).then(data =>
-			{
+	// 	Promise.any(document.currentScript.dataset.config.split(',').map(domain =>
+	// 		new Promise(resolve => new WebSocket(`wss://${domain}/test`).onmessage = event => resolve(event.data)))).then(data =>
+	// 		{
 
-				console.log(data)
+	// 			console.log(data)
 
-			});
+	// 		});
 
-		console.log()
+	// 	console.log()
 
-	}
-	window.router = async (websockets) =>
-	{
-		Promise.any(websockets.map(domain => new Promise(resolve => new WebSocket(`wss://${domain}/test`).onmessage = event => resolve(event.data)))).then(data =>
-		{
-			//console.log(a)
+	// }
+	// window.router = async (websockets) =>
+	// {
+	// 	Promise.any(websockets.map(domain => new Promise(resolve => new WebSocket(`wss://${domain}/test`).onmessage = event => resolve(event.data)))).then(data =>
+	// 	{
+	// 		//console.log(a)
 
-			// Promise.any(['r.yongyinsoft.com', 'r.ytgoo.com'].map(domain => fetch(`https://${domain}/favicon.ico`).then(()=>domain)   )).then(response=>{
-			// 	console.log(response)
-			// });
+	// 		// Promise.any(['r.yongyinsoft.com', 'r.ytgoo.com'].map(domain => fetch(`https://${domain}/favicon.ico`).then(()=>domain)   )).then(response=>{
+	// 		// 	console.log(response)
+	// 		// });
 			
 	
-			console.log(data)
-		});
-	}
-	window[document.currentScript.dataset.name || 'backer'] = (function()
+	// 		console.log(data)
+	// 	});
+	// }
+	loader.worker = (function()
 	{
 		let id = 0;
 		const
@@ -212,71 +275,9 @@ return;
 else
 {
 	const controller = new AbortController, queue = [];
-	async function load(url, options)
+	function worker(data)
 	{
-		//application/octet-stream
-		//application/octet-masker
-		const
-		option = {...options, signal: controller.signal},
-		response = await fetch(url, option),
-		type = response.headers.get('content-type');
-		let blob;
-		if (option.mask || type === 'application/octet-masker')
-		{
-			const reader = response.body.getReader(), key = new Uint8Array(8), buffer = [];
-			for (let read, len = 0, offset = 0;;)
-			{
-				read = await reader.read();
-				if (read.done)
-				{
-					break;
-				}
-				if (len < 8)
-				{
-					//console.log('keyload...')
-					let i = 0;
-					while (i < read.value.length)
-					{
-						key[len++] = read.value[i++];
-						//console.log('keyload-' + i)
-						if (len > 7)
-						{
-							//console.log('keyloaded over')
-							break;
-						}
-					}
-					if (len < 8)
-					{
-						//console.log('keyload contiune')
-						continue;
-					}
-					//console.log('keyloaded finish')
-					read.value = read.value.slice(i);
-				}
-				//console.log('payload...')
-				for (let i = 0; i < read.value.length; ++i)
-				{
-					read.value[i] = read.value[i] ^ key[offset++ % 8];
-				}
-				buffer[buffer.length] = read.value;
-			}
-			blob = new Blob(buffer, {type});
-		}
-		else
-		{
-			blob = await response.blob();
-		}
-
-		switch (option.type || type)
-		{
-			case 'application/json': return JSON.parse(await blob.text());
-			case 'text/plain': return blob.text();
-			default: return URL.createObjectURL(blob);
-		}
-	}
-	function work(data)
-	{
-		load(data.url, data.options)
+		loader(data.url, {...data.options, signal: controller.signal})
 			.then(content => self.postMessage({id: data.id, is: 0, content}))
 			.catch(error => self.postMessage({id: data.id, is: 1, content: error}))
 			.finally(() =>
@@ -285,7 +286,7 @@ else
 				if (queue.length)
 				{
 					console.log(queue);
-					work(queue.shift());
+					worker(queue.shift());
 				}
 				
 			});
@@ -302,7 +303,7 @@ else
 		{
 			if (++count < 6)
 			{
-				work(event.data);
+				worker(event.data);
 			}
 			else
 			{

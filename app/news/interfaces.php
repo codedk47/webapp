@@ -725,6 +725,27 @@ class interfaces extends webapp
 			$res['cover'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/cover.jpg";
 		}
 	}
+	function get_shares(int $time = 1672502400, int $page = 1, int $size = 100)
+	{
+		$cond = ['WHERE sync="finished" AND time>?i', $time];
+		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
+		{
+			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+			$cond[] = $this->query['tag'];
+		}
+		$cond[0] .= ' ORDER BY time ASC';
+		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
+		$this->app('webapp_echo_xml');
+		$this->xml = $this->app->xml;
+		$this->app->xml->setattr($resources->paging);
+		foreach ($resources as $resource)
+		{
+			$ym = date('ym', $resource['time']);
+			$res = $this->resource_xml($resource);
+			$res['play'] = "https://r.yongyinsoft.com/{$ym}/{$resource['hash']}/play";
+			$res['cover'] = "https://r.yongyinsoft.com/{$ym}/{$resource['hash']}/cover";
+		}
+	}
 	//标签
 	function selecttags():array
 	{
