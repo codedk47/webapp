@@ -271,10 +271,10 @@ class webapp_echo_htmlmask extends webapp_echo_html
 // top.loader('http://127.0.0.1/notify.txt', {type: 'text/plain'}).then(data=>{
 // 	console.log(data)
 // });
-window.addEventListener('DOMContentLoaded', async event =>{
+// window.addEventListener('DOMContentLoaded', async event =>{
 
-	console.log(top.framer);
-});
+// 	console.log(top.framer);
+// });
 JS);
 		}
 	}

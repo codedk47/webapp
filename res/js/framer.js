@@ -1,34 +1,12 @@
-window.addEventListener('DOMContentLoaded', async event =>
+addEventListener('DOMContentLoaded', async event =>
 {
 	const
 	headers = {},
 	frame = document.querySelector('iframe'),
 	sandbox = document.createElement('iframe'),
-	entry = frame.dataset.entry || location.href,
 	framer = url => postMessage(url);
 
-	window.framer = framer;
-	sandbox.width = sandbox.height = '100%';
-	sandbox.style.cssText = 'background:white;position:fixed;border:none;overflow:hidden;display:none';
-	document.body.appendChild(sandbox);
-
-
-	framer.open = function(url = 'about:blank')
-	{
-		sandbox.style.display = 'block';
-		sandbox.src = url;
-		return sandbox;
-	};
-	framer.close = function()
-	{
-		sandbox.style.display = 'none';
-		sandbox.src = 'about:blank';
-		return sandbox;
-	};
-
-	
-	//Authorization: 'Bearer asdasdasd'
-	window.addEventListener('message', event =>
+	addEventListener('message', event =>
 	{
 		loader(event.data, {headers}).then(data =>
 		{
@@ -43,39 +21,109 @@ window.addEventListener('DOMContentLoaded', async event =>
 						&& target.hasAttribute('href')
 						&& target.hasAttribute('target') === false
 						&& /^javascript:|^blob:/.test(target.getAttribute('href')) === false) {
-						postMessage(target.href);
 						event.preventDefault();
+						framer(target.href);
 						break;
 					}
 				}
-
-				// let target = event.target;
-				// console.log(target.tagName === 'A'
-				// && target.hasAttribute('href')
-				// && target.hasAttribute('target'))
-				// event.preventDefault();
 			};
 		});
-
-
-
-		
 	});
+
+	event.currentTarget.framer = framer;
+	sandbox.width = sandbox.height = '100%';
+	sandbox.style.cssText = 'background:white;position:fixed;border:none;overflow:hidden;display:none';
+	document.body.appendChild(sandbox);
+
+	framer.open = (url = 'about:blank') => new Promise(resolve =>
+	{
+		sandbox.src = url;
+		sandbox.style.display = 'block';
+		sandbox.onload = () => resolve(sandbox.contentWindow);
+	});
+	framer.close = () =>
+	{
+		sandbox.style.display = 'none';
+		sandbox.src = 'about:blank';
+	};
+	framer.dialog = new class
+	{
+		#dialog = document.createElement('dialog');
+		#section = document.createElement('section');
+		#footer = document.createElement('footer');
+		constructor()
+		{
+			this.#dialog.style.cssText = [
+				'padding: 0',
+				'border: 1px solid dimgray',
+				'border-radius: .4rem',
+				'box-shadow: 0 .1rem .4rem rgb(27, 31, 35)'
+			].join(';');
+			this.#section.style.cssText = [
+				'padding: .8rem',
+				'white-space: pre-wrap',
+			].join(';');
+			this.#footer.style.cssText = [
+				'padding: .4rem',
+				'border-top: 1px solid silver',
+				'background-image: linear-gradient(-180deg, #fafbfc 0%, #eff3f6 90%)',
+				'text-align: center'
+			].join(';');
+			this.#footer.innerText = 'Close';
+			this.#footer.onclick = () => this.#dialog.close();
+			this.#dialog.append(this.#section, this.#footer);
+			document.body.appendChild(this.#dialog);
+		}
+		show(context)
+		{
+			this.#section.innerHTML = context;
+			this.#dialog.showModal();
+		}
+		close()
+		{
+			this.#dialog.close();
+		}
+	};
+
+
 
 	if ('splashscreen' in frame.dataset)
 	{
+		// console.log({
+		// 	autoskip: true,
+		// 	duration: 1,
+		// 	mask: true,
+		// 	picture: "https://domain/picture",
+		// 	support: "https://domain/support"
+		// });
 		const splashscreen = JSON.parse(frame.dataset.splashscreen);
-		console.log( splashscreen );
-
-
-		framer.open();
-		loader(splashscreen.image, {mask: splashscreen.mask}).then(blob =>
+		framer.open().then(window => loader(splashscreen.picture, {mask: splashscreen.mask}).then(blob =>
 		{
 			sandbox.style.background = `white url(${blob}) no-repeat center/cover`;
 			const
-			draw = sandbox.contentDocument,
+			draw = window.document,
 			into = draw.createElement('span'),
-			body = draw.body;
+			skip = setInterval((function()
+			{
+				if (splashscreen.duration > 0)
+				{
+					into.innerText = `${String(splashscreen.duration--).padStart(2, 0)} s`;
+					//setTimeout(arguments.callee, 1000);
+				}
+				else
+				{
+					clearInterval(skip);
+					if (splashscreen.autoskip)
+					{
+						framer.close();
+					}
+					else
+					{
+						into.innerText = 'Into';
+					}
+				}
+				return arguments.callee;
+			})(), 1000);
 			into.style.cssText = [
 				'position: fixed',
 				'top: .8rem',
@@ -89,31 +137,11 @@ window.addEventListener('DOMContentLoaded', async event =>
 				'text-shadow: black 1px 1px',
 				'border-radius: .6rem'
 			].join(';');
-			body.appendChild(into);
-			(function()
-			{
-				if (splashscreen.duration > 0)
-				{
-					into.innerText = `${splashscreen.duration.toString().padStart(2, 0)} s`;
-					setTimeout(arguments.callee, 1000, --splashscreen.duration);
-				}
-				else
-				{
-					if (splashscreen.auto)
-					{
-						framer.close();
-					}
-					else
-					{
-						into.innerText = 'Into';
-					}
-				}
-			})();
 			draw.onclick = event =>
 			{
 				if (event.target === into)
 				{
-					if (splashscreen.duration === 0)
+					if (splashscreen.duration < 0)
 					{
 						draw.onclick = null;
 						sandbox.style.background = 'white';
@@ -129,7 +157,8 @@ window.addEventListener('DOMContentLoaded', async event =>
 					}
 				}
 			};
-		});
+			draw.body.appendChild(into);
+		}));
 	}
 
 
