@@ -727,7 +727,7 @@ class interfaces extends webapp
 	}
 	function get_shares(int $time = 1672502400, int $page = 1, int $size = 100)
 	{
-		$cond = ['WHERE sync="finished" AND time>?i', $time];
+		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished" AND time>?i', $this->site = 0, $time];
 		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
 		{
 			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
@@ -735,7 +735,7 @@ class interfaces extends webapp
 		}
 		$cond[0] .= ' ORDER BY time ASC';
 		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
-		$this->app('webapp_echo_xml');
+		$this->app('webapp_echo_xml')->xml->setattr(['site' => $this->site]);
 		$this->xml = $this->app->xml;
 		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
