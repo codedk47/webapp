@@ -259,23 +259,14 @@ class webapp_echo_htmlmask extends webapp_echo_html
 				'height' => '100%',
 				'src' => 'about:blank',
 				//'src' => '?asd',
-				'style'=> 'position:fixed;border:none',
-				'data-query' => '?asd'
+				'style'=> 'position:fixed;border:none'
 			]);
 		}
 		else
 		{
 			unset($this->xml->head->link[1]);
 
-			$this->script(<<<JS
-// top.loader('http://127.0.0.1/notify.txt', {type: 'text/plain'}).then(data=>{
-// 	console.log(data)
-// });
-// window.addEventListener('DOMContentLoaded', async event =>{
 
-// 	console.log(top.framer);
-// });
-JS);
 		}
 	}
 	function __toString():string

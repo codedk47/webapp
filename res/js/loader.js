@@ -1,7 +1,5 @@
 async function loader(url, option = {})
 {
-	//application/octet-stream
-	//application/octet-masker
 	const response = await fetch(url, option);
 	let type = response.headers.get('content-type') || 'application/octet-stream', blob;
 	if (option.mask || type.startsWith('@'))
@@ -43,7 +41,7 @@ async function loader(url, option = {})
 			}
 			buffer[buffer.length] = read.value;
 		}
-		type = option.type || type.substring(1);
+		type = option.type || type.startsWith('@') ? type.substring(1) : type;
 		blob = new Blob(buffer, {type});
 	}
 	else
@@ -283,9 +281,9 @@ else
 			.finally(() =>
 			{
 				--count;
+				// console.log(count);
 				if (queue.length)
 				{
-					console.log(queue);
 					worker(queue.shift());
 				}
 				
