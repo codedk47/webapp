@@ -57,7 +57,7 @@ addEventListener('DOMContentLoaded', async event =>
 		async draw(src)
 		{
 			this.#observes.clear(Array.from(this.#observes.keys()).forEach(element => this.#viewport.unobserve(element)));
-			return Promise.all([this.load(), loader(src)]).then(([frame, data]) => new Promise(resolve =>
+			return Promise.all([this.load(), loader(src, {headers})]).then(([frame, data]) => new Promise(resolve =>
 			{
 				frame.contentWindow.viewport = element => this.viewport(element);
 				frame.contentWindow.close = () => this.close();
