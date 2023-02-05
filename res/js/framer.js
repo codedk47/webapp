@@ -34,7 +34,6 @@ addEventListener('DOMContentLoaded', async event =>
 		open(src)
 		{
 			this.show(() => this.load(src))
-			
 		}
 		close()
 		{
@@ -44,36 +43,56 @@ addEventListener('DOMContentLoaded', async event =>
 		{
 			return new Promise(resolve =>
 			{
-				this.#frame.addEventListener('load', event => resolve(event.target), {once: true});
-				this.#frame.src = src;
+				const frame = this.#frame, source = frame.contentDocument || {};
+				frame.src = src;
+				requestAnimationFrame(function detect()
+				{
+					const target = frame.contentDocument || {};
+					target === source || target.readyState === 'loading'
+						? requestAnimationFrame(detect)
+						: resolve(frame);
+				});
 			});
 		}
 		async draw(src)
 		{
 			this.#observes.clear(Array.from(this.#observes.keys()).forEach(element => this.#viewport.unobserve(element)));
-			return Promise.all([this.load(), loader(src)]).then(([frame, data]) =>
+			return Promise.all([this.load(), loader(src)]).then(([frame, data]) => new Promise(resolve =>
 			{
-				frame.addEventListener('load', event =>
+				frame.contentWindow.viewport = element => this.viewport(element);
+				frame.contentWindow.close = () => this.close();
+				frame.contentDocument.open();
+				frame.contentDocument.write(data);
+				frame.contentDocument.close();
+				frame.contentWindow.requestAnimationFrame(function detect()
 				{
-					const document = event.target.contentDocument;
-					document.onclick = event =>
+					frame.contentDocument.readyState === 'loading'
+						? frame.contentWindow.requestAnimationFrame(detect)
+						: resolve(frame);
+				});
+			})).then(frame =>
+			{
+				const document = frame.contentDocument;
+				document.onclick = event =>
+				{
+					for (let target = event.target; target.parentNode; target = target.parentNode)
 					{
-						for (let target = event.target; target.parentNode; target = target.parentNode)
+						if (target.tagName === 'A' && target.hasAttribute('href'))
 						{
-							if (target.tagName === 'A' && target.hasAttribute('href'))
+							if (target.hasAttribute('target'))
 							{
-								if (target.hasAttribute('target'))
+								if (target.getAttribute('target') === 'sandbox')
 								{
-									if (target.getAttribute('target') === 'sandbox')
-									{
-										event.preventDefault();
-										target.href.startsWith(location.origin)
-											? sandbox.show(() => sandbox.draw(target.href))
-											: sandbox.open(target.href);
-										break;
-									}
+									event.preventDefault();
+									target.href.startsWith(location.origin)
+										? sandbox.show(() => sandbox.draw(target.href))
+										: sandbox.open(target.href);
+									break;
 								}
-								else
+							}
+							else
+							{
+								if (target.href.startsWith(location.origin))
 								{
 									event.preventDefault();
 									render.draw(target.href);
@@ -82,17 +101,12 @@ addEventListener('DOMContentLoaded', async event =>
 								}
 							}
 						}
-					};
-					document.querySelectorAll('img[data-src]').forEach(element =>
-						this.viewport(element).then(element =>
-							loader.worker(element.dataset.src, {mask: true}).then(blob =>
-								element.src = blob)));
-				}, {once: true});
-
-				console.log(frame.contentDocument)
-				frame.contentDocument.open();
-				frame.contentDocument.write(data);
-				frame.contentDocument.close();
+					}
+				};
+				document.querySelectorAll('img[data-src]').forEach(element =>
+					this.viewport(element).then(element =>
+						loader.worker(element.dataset.src, {mask: true}).then(blob =>
+							element.src = blob)));
 			});
 		}
 		async viewport(element)
@@ -101,7 +115,6 @@ addEventListener('DOMContentLoaded', async event =>
 			{
 				if (this.#observes.has(element) === false)
 				{
-					//console.log(element)
 					this.#observes.set(element, resolve);
 					this.#viewport.observe(element);
 				}
@@ -109,8 +122,6 @@ addEventListener('DOMContentLoaded', async event =>
 		}
 
 	}
-
-
 
 	const
 	headers = {},
@@ -123,7 +134,6 @@ addEventListener('DOMContentLoaded', async event =>
 	{
 		frame.name = 'sandbox';
 		frame.width = frame.height = '100%';
-		//frame.sandbox = 'allow-scripts';
 		frame.style.cssText = 'position:fixed;border:none;overflow:hidden;background:white;display:none';
 		document.body.appendChild(frame);
 	});
@@ -169,7 +179,7 @@ addEventListener('DOMContentLoaded', async event =>
 			this.#dialog.close();
 		}
 	};
-	//framer.dialog.show(`addwdwd aw awda awda wdawd`);
+	//framer.dialog.show(`This test dialog show style`);
 
 	if ('splashscreen' in render.dataset)
 	{
@@ -189,46 +199,7 @@ addEventListener('DOMContentLoaded', async event =>
 			clear = () =>
 			{
 				sandbox.hide(frame => frame.style.background = 'white');
-				document.onclick = null;
-			},
-			timer = setInterval((function()
-			{
-				if (splashscreen.duration > 0)
-				{
-					button.innerText = `${String(splashscreen.duration--).padStart(2, 0)} s`;
-					//setTimeout(arguments.callee, 1000);
-				}
-				else
-				{
-					clearInterval(timer);
-					if (splashscreen.autoskip || button.isConnected === false)
-					{
-						clear();
-					}
-					else
-					{
-						button.innerText = 'Into';
-					}
-				}
-				return arguments.callee;
-			})(), 1000);
-			document.onclick = event =>
-			{
-				if (event.target === button)
-				{
-					if (splashscreen.duration < 0)
-					{
-						clear();
-					}
-				}
-				else
-				{
-					if ('support' in splashscreen)
-					{
-						open(splashscreen.support);
-						clear();
-					}
-				}
+				document.onclick = null
 			};
 			loader(splashscreen.picture, {mask: splashscreen.mask}).then(blob =>
 			{
@@ -242,15 +213,50 @@ addEventListener('DOMContentLoaded', async event =>
 					'font: 100% consolas,monospace',
 					'background-color: rgba(0, 0, 0, .6)',
 					'box-shadow: 0 .1rem .6rem rgb(27, 31, 35)',
-					
 					'text-shadow: black 1px 1px',
 					'border-radius: .6rem'
 				].join(';');
+				document.onclick = event =>
+				{
+					if (event.target === button)
+					{
+						if (splashscreen.duration < 0)
+						{
+							clear();
+						}
+					}
+					else
+					{
+						if ('support' in splashscreen)
+						{
+							open(splashscreen.support);
+							clear();
+						}
+					}
+				};
+				requestAnimationFrame(function timer()
+				{
+					if (splashscreen.duration > 0)
+					{
+						button.innerText = `${String(splashscreen.duration--).padStart(2, 0)} s`;
+						setTimeout(timer, 1000);
+					}
+					else
+					{
+						if (splashscreen.autoskip)
+						{
+							clear();
+						}
+						else
+						{
+							button.innerText = 'Into';
+						}
+					}
+				});
 				document.body.appendChild(button);
-			});
+			}, clear);
 		});
 	}
-
 
 	if ('authorization' in render.dataset)
 	{
@@ -258,26 +264,12 @@ addEventListener('DOMContentLoaded', async event =>
 		{
 			localStorage.setItem('token', await new Promise(resolve =>
 			{
-				framer(`${render.dataset.authorization}`);
+				framer(render.dataset.authorization);
 				framer.authorization = resolve;
 			}));
 		}
 		delete framer.authorization;
 		headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
-	}
-
-	if ('socket' in render.dataset)
-	{
-		const websocket = new WebSocket(render.dataset.socket);
-		websocket.onopen = event =>
-		{
-			console.log(event);
-		};
-		websocket.onmessage = event =>
-		{
-			console.log(event);
-		};
-		console.log(render.dataset.socket)
 	}
 
 	if ('query' in render.dataset)
