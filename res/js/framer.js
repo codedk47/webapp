@@ -1,3 +1,4 @@
+
 addEventListener('DOMContentLoaded', async event =>
 {
 	class frame
@@ -123,12 +124,41 @@ addEventListener('DOMContentLoaded', async event =>
 
 	}
 
+	
+
 	const
 	headers = {},
 	render = new frame(document.querySelector('iframe')),
 	sandbox = new frame(document.createElement('iframe')),
 	framer = src => render.draw(src);
+
+
+
+
 	event.currentTarget.framer = framer;
+
+
+	const prefetch = new Promise(resolve =>
+	{
+		const routelines = document.querySelectorAll('link[rel="dns-prefetch"]');
+		if (routelines.length)
+		{
+			Promise.any(Array.from(routelines).map(link =>
+				fetch(`${link.href}favicon.ico`))).then(response =>
+					resolve(response.url.slice(0, -11)), console.log);
+		}
+		else
+		{
+			resolve(`${location.origin}/`);
+		}
+	});
+	worker = async (src, option) => prefetch.then(fastestline =>
+		loader.worker(src.startsWith('/') ? `${fastestline}${src.substring(1)}` : src, option));
+	
+
+
+
+
 	//addEventListener('message', event => framer(event.data));
 	sandbox.hide(frame =>
 	{
@@ -137,6 +167,8 @@ addEventListener('DOMContentLoaded', async event =>
 		frame.style.cssText = 'position:fixed;border:none;overflow:hidden;background:white;display:none';
 		document.body.appendChild(frame);
 	});
+
+
 
 	framer.open = src => sandbox.open(src);
 	framer.close = () => sandbox.close();
@@ -181,6 +213,8 @@ addEventListener('DOMContentLoaded', async event =>
 	};
 	//framer.dialog.show(`This test dialog show style`);
 
+
+
 	if ('splashscreen' in render.dataset)
 	{
 		// console.log({
@@ -201,7 +235,7 @@ addEventListener('DOMContentLoaded', async event =>
 				sandbox.hide(frame => frame.style.background = 'white');
 				document.onclick = null
 			};
-			loader(splashscreen.picture, {mask: splashscreen.mask}).then(blob =>
+			worker(splashscreen.picture, {mask: splashscreen.mask}).then(blob =>
 			{
 				frame.style.background = `white url(${blob}) no-repeat center/cover`;
 				button.style.cssText = [
@@ -218,9 +252,10 @@ addEventListener('DOMContentLoaded', async event =>
 				].join(';');
 				document.onclick = event =>
 				{
+					console.log(event.target === button)
 					if (event.target === button)
 					{
-						if (splashscreen.duration < 0)
+						if (splashscreen.duration < 1)
 						{
 							clear();
 						}
