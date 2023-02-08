@@ -139,7 +139,7 @@ addEventListener('DOMContentLoaded', async event =>
 			const controller = new AbortController;
 			Promise.any(Array.from(routelines).map(link =>
 				fetch(`${link.href}${link.dataset.speedtest}`, {cache: 'no-cache', signal: controller.signal}))).then(async response =>
-					resolve(response.url.slice(0, -link.dataset.speedtest.length), await response.blob(), controller.abort()), reject);
+					resolve(response.url.slice(0, response.url.indexOf('/', 8) + 1), await response.blob(), controller.abort()), reject);
 		}
 		else
 		{
