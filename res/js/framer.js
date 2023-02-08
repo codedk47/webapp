@@ -225,8 +225,9 @@ addEventListener('DOMContentLoaded', async event =>
 			{
 				sandbox.hide(frame => frame.style.background = 'white');
 				document.onclick = null
-			};
-			worker(splashscreen.picture, {mask: splashscreen.mask}).then(blob =>
+			},
+			timeout = setTimeout(clear, splashscreen.timeout || 6000);
+			worker(splashscreen.picture, {mask: splashscreen.mask}).finally(() => clearTimeout(timeout)).then(blob =>
 			{
 				frame.style.background = `white url(${blob}) no-repeat center/cover`;
 				button.style.cssText = [
