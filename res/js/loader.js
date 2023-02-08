@@ -1,8 +1,8 @@
-async function loader(url, option = {})
+async function loader(resource, options = {})
 {
-	const response = await fetch(url, option);
+	const response = await fetch(resource, options);
 	let type = response.headers.get('content-type') || 'application/octet-stream', blob;
-	if (option.mask || type.startsWith('@'))
+	if (options.mask || type.startsWith('@'))
 	{
 		const reader = response.body.getReader(), key = new Uint8Array(8), buffer = [];
 		for (let read, len = 0, offset = 0;;)
@@ -41,7 +41,7 @@ async function loader(url, option = {})
 			}
 			buffer[buffer.length] = read.value;
 		}
-		type = option.type || type.startsWith('@') ? type.substring(1) : type;
+		type = options.type || type.startsWith('@') ? type.substring(1) : type;
 		blob = new Blob(buffer, {type});
 	}
 	else
@@ -49,7 +49,7 @@ async function loader(url, option = {})
 		blob = await response.blob();
 	}
 
-	switch (option.type || type.split(';')[0])
+	switch (options.type || type.split(';')[0])
 	{
 		case 'application/json': return JSON.parse(await blob.text());
 		case 'text/plain': return blob.text();
@@ -57,38 +57,8 @@ async function loader(url, option = {})
 	}
 }
 
-
-
 if (globalThis.window)
 {
-	// if (document.currentScript.dataset.config)
-	// {
-		
-	// 	Promise.any(document.currentScript.dataset.config.split(',').map(domain =>
-	// 		new Promise(resolve => new WebSocket(`wss://${domain}/test`).onmessage = event => resolve(event.data)))).then(data =>
-	// 		{
-
-	// 			console.log(data)
-
-	// 		});
-
-	// 	console.log()
-
-	// }
-	// window.router = async (websockets) =>
-	// {
-	// 	Promise.any(websockets.map(domain => new Promise(resolve => new WebSocket(`wss://${domain}/test`).onmessage = event => resolve(event.data)))).then(data =>
-	// 	{
-	// 		//console.log(a)
-
-	// 		// Promise.any(['r.yongyinsoft.com', 'r.ytgoo.com'].map(domain => fetch(`https://${domain}/favicon.ico`).then(()=>domain)   )).then(response=>{
-	// 		// 	console.log(response)
-	// 		// });
-			
-	
-	// 		console.log(data)
-	// 	});
-	// }
 	loader.worker = (function()
 	{
 		let id = 0;
@@ -107,7 +77,7 @@ if (globalThis.window)
 				callback[event.data.is](event.data.content);
 			}
 		};
-		function upload(url, files, progress)
+		function upload(resource, files, progress)
 		{
 			let size = 0, sent = 0;
 			return Promise.allSettled(Array.from(files).map(file => new Promise(async (resolve, reject) =>
@@ -134,7 +104,7 @@ if (globalThis.window)
 					}
 					offset += value.length;
 				} while (true);
-				const response = await fetch(url, {
+				const response = await fetch(resource, {
 					method: 'POST',
 					headers: {'Content-Type': 'application/json'},
 					body: JSON.stringify({
@@ -149,7 +119,7 @@ if (globalThis.window)
 
 				if (response.ok)
 				{
-					url = await response.text();
+					resource = await response.text();
 					key = hash.toString(16).padStart(16, 0).match(/.{2}/g).map(value => parseInt(value, 16));
 					console.log();
 return;
@@ -169,7 +139,7 @@ return;
 							{
 								value[i] = value[i] ^ key[read++ % 8];
 							}
-							backer.postMessage({id, url, options: {
+							backer.postMessage({id, src, options: {
 								method: 'POST',
 								headers: {'Mask-Key' : key.map(value => value.toString(16).padStart(2, 0)).join('')},
 								body: value.buffer}}, [value.buffer]);
@@ -197,7 +167,7 @@ return;
 						{
 							value[i] = value[i] ^ key[i % 8];
 						}
-						backer.postMessage({id, url, options : {
+						backer.postMessage({id, src, options : {
 							method: 'POST',
 							body: value.buffer
 						}}, [value.buffer]);
@@ -218,20 +188,20 @@ return;
 						{
 							value[i] = value[i] ^ key[i % 8];
 						}
-						backer.postMessage({id, url, options : {
+						backer.postMessage({id, src, options : {
 							method: 'POST',
 							body: value.buffer
 						}}, [value.buffer]);
 					}).then(() => reader.read().then(uploaddata)).catch(reject);
 				});
-				//console.log(url)
+				//console.log(src)
 		
 
 				return;
 				a.then(async response =>
 				{
 					if (response.ok === false) return reject();
-					const url = await response.text(), reader = file.stream().getReader();
+					const src = await response.text(), reader = file.stream().getReader();
 					reader.read().then(function uploaddata({done, value})
 					{
 						if (done) return resolve(file);
@@ -256,7 +226,7 @@ return;
 							console.log(value.buffer)
 							//resolve();
 
-							// backer.postMessage({id, url, options : {
+							// backer.postMessage({id, src, options : {
 							// 	method: 'POST',
 							// 	body: value.buffer
 							// }}, [value.buffer]);
@@ -265,9 +235,9 @@ return;
 				}).catch(reject);
 			})));
 		}
-		return (url, options, progress) => options instanceof FileList
-			? upload(url, options, progress || (value => value))
-			: new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && backer.postMessage({id, url, options}));
+		return async (src, options, progress) => options instanceof FileList
+			? upload(src, options, progress || (value => value))
+			: new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && backer.postMessage({id, src, options}));
 	}());
 }
 else
@@ -275,7 +245,7 @@ else
 	const controller = new AbortController, queue = [];
 	function worker(data)
 	{
-		loader(data.url, {...data.options, signal: controller.signal})
+		loader(data.src, {...data.options, signal: controller.signal})
 			.then(content => self.postMessage({id: data.id, is: 0, content}))
 			.catch(error => self.postMessage({id: data.id, is: 1, content: error}))
 			.finally(() =>

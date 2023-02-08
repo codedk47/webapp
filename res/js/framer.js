@@ -1,4 +1,3 @@
-
 addEventListener('DOMContentLoaded', async event =>
 {
 	class frame
@@ -32,20 +31,20 @@ addEventListener('DOMContentLoaded', async event =>
 			this.#frame.style.display = 'none';
 			callback && callback(this.#frame);
 		}
-		open(src)
+		open(resource)
 		{
-			this.show(() => this.load(src))
+			this.show(() => this.load(resource))
 		}
 		close()
 		{
 			this.hide(() => this.load());
 		}
-		async load(src = 'about:blank')
+		async load(resource = 'about:blank')
 		{
 			return new Promise(resolve =>
 			{
 				const frame = this.#frame, source = frame.contentDocument || {};
-				frame.src = src;
+				frame.src = resource;
 				requestAnimationFrame(function detect()
 				{
 					const target = frame.contentDocument || {};
@@ -55,13 +54,16 @@ addEventListener('DOMContentLoaded', async event =>
 				});
 			});
 		}
-		async draw(src)
+		async draw(resource)
 		{
 			this.#observes.clear(Array.from(this.#observes.keys()).forEach(element => this.#viewport.unobserve(element)));
-			return Promise.all([this.load(), loader(src, {headers})]).then(([frame, data]) => new Promise(resolve =>
+			return Promise.all([this.load(), loader(resource, {headers})]).then(([frame, data]) => new Promise(resolve =>
 			{
+				frame.contentWindow.framer = framer;
 				frame.contentWindow.viewport = element => this.viewport(element);
-				frame.contentWindow.close = () => this.close();
+
+				//frame.contentWindow.close = () => sandbox.close();
+
 				frame.contentDocument.open();
 				frame.contentDocument.write(data);
 				frame.contentDocument.close();
@@ -106,7 +108,7 @@ addEventListener('DOMContentLoaded', async event =>
 				};
 				document.querySelectorAll('img[data-src]').forEach(element =>
 					this.viewport(element).then(element =>
-						loader.worker(element.dataset.src, {mask: true}).then(blob =>
+						worker(element.dataset.src, {mask: true}).then(blob =>
 							element.src = blob)));
 			});
 		}
@@ -124,41 +126,30 @@ addEventListener('DOMContentLoaded', async event =>
 
 	}
 
-	
-
 	const
 	headers = {},
 	render = new frame(document.querySelector('iframe')),
 	sandbox = new frame(document.createElement('iframe')),
-	framer = src => render.draw(src);
-
-
-
-
-	event.currentTarget.framer = framer;
-
-
-	const prefetch = new Promise(resolve =>
+	framer = resource => render.draw(resource),
+	prefetch = new Promise((resolve, reject) =>
 	{
-		const routelines = document.querySelectorAll('link[rel="dns-prefetch"]');
+		const routelines = document.querySelectorAll('link[rel="dns-prefetch"][data-speedtest]');
 		if (routelines.length)
 		{
+			const controller = new AbortController;
 			Promise.any(Array.from(routelines).map(link =>
-				fetch(`${link.href}favicon.ico`))).then(response =>
-					resolve(response.url.slice(0, -11)), console.log);
+				fetch(`${link.href}${link.dataset.speedtest}`, {cache: 'no-cache', signal: controller.signal}))).then(async response =>
+					resolve(response.url.slice(0, -11), await response.blob(), controller.abort()), reject);
 		}
 		else
 		{
 			resolve(`${location.origin}/`);
 		}
 	});
-	worker = async (src, option) => prefetch.then(fastestline =>
-		loader.worker(src.startsWith('/') ? `${fastestline}${src.substring(1)}` : src, option));
-	
+	worker = async (resource, options) => prefetch.then(fastestline =>
+		loader.worker(resource.startsWith('/') ? `${fastestline}${resource.substring(1)}` : resource, options), () => Promise.reject(resource));
 
-
-
-
+	event.currentTarget.framer = framer;
 	//addEventListener('message', event => framer(event.data));
 	sandbox.hide(frame =>
 	{
@@ -168,9 +159,9 @@ addEventListener('DOMContentLoaded', async event =>
 		document.body.appendChild(frame);
 	});
 
-
-
-	framer.open = src => sandbox.open(src);
+	framer.worker = worker;
+	framer.loader = async (resource, options) => loader(resource, {...options, headers: options && 'headers' in options ? {...options.headers, ...headers} : headers});
+	framer.open = resource => sandbox.open(resource);
 	framer.close = () => sandbox.close();
 
 	framer.dialog = new class
@@ -252,7 +243,6 @@ addEventListener('DOMContentLoaded', async event =>
 				].join(';');
 				document.onclick = event =>
 				{
-					console.log(event.target === button)
 					if (event.target === button)
 					{
 						if (splashscreen.duration < 1)
