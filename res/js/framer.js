@@ -139,15 +139,15 @@ addEventListener('DOMContentLoaded', async event =>
 			const controller = new AbortController;
 			Promise.any(Array.from(routelines).map(link =>
 				fetch(`${link.href}${link.dataset.speedtest}`, {cache: 'no-cache', signal: controller.signal}))).then(async response =>
-					resolve(response.url.slice(0, response.url.indexOf('/', 8) + 1), await response.blob(), controller.abort()), reject);
+					resolve(response.url.slice(0, response.url.indexOf('/', 8)), await response.blob(), controller.abort()), reject);
 		}
 		else
 		{
-			resolve(`${location.origin}/`);
+			resolve(location.origin);
 		}
 	});
 	worker = async (resource, options) => prefetch.then(fastestline =>
-		loader.worker(resource.startsWith('/') ? `${fastestline}${resource.substring(1)}` : resource, options), () => Promise.reject(resource));
+		loader.worker(resource.startsWith('/') ? `${fastestline}${resource}` : resource, options), () => Promise.reject(resource));
 
 	event.currentTarget.framer = framer;
 	//addEventListener('message', event => framer(event.data));
