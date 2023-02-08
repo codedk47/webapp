@@ -301,4 +301,11 @@ addEventListener('DOMContentLoaded', async event =>
 	{
 		framer(render.dataset.query);
 	}
+
+
+	history.pushState(null, null, document.URL);
+window.addEventListener('popstate', function () {
+    history.pushState(null, null, document.URL);
+});
+
 });
