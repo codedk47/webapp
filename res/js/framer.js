@@ -18,6 +18,7 @@ addEventListener('DOMContentLoaded', async event =>
 		});
 		constructor(frame)
 		{
+			frame.style.background = 'white url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iNjQiIHdpZHRoPSI2NCIgdmlld0JveD0iMCAwIDEwMCAxMDAiPg0KPHN0eWxlPmNpcmNsZXtmaWxsOm5vbmU7c3Ryb2tlLXdpZHRoOi40cmVtO3N0cm9rZS1saW5lY2FwOnJvdW5kO30NCkBrZXlmcmFtZXMgbG9hZGluZ3sNCjAle3N0cm9rZS1kYXNoYXJyYXk6NDAgMjQyLjY7c3Ryb2tlLWRhc2hvZmZzZXQ6MDt9DQo1MCV7c3Ryb2tlLWRhc2hhcnJheToxNDEuMztzdHJva2UtZGFzaG9mZnNldDoxNDEuMzt9DQoxMDAle3N0cm9rZS1kYXNoYXJyYXk6NDAgMjQyLjY7c3Ryb2tlLWRhc2hvZmZzZXQ6MjgyLjY7fQ0KfTwvc3R5bGU+DQo8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgc3Ryb2tlPSJzaWx2ZXIiPjwvY2lyY2xlPg0KPGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIHN0cm9rZT0iYmxhY2siIHN0eWxlPSJhbmltYXRpb246bG9hZGluZyAxcyBjdWJpYy1iZXppZXIoMSwxLDEsMSkgMHMgaW5maW5pdGUiLz4NCjwvc3ZnPg==) center no-repeat';
 			this.dataset = frame.dataset;
 			this.#frame = frame;
 		}
@@ -31,9 +32,9 @@ addEventListener('DOMContentLoaded', async event =>
 			this.#frame.style.display = 'none';
 			callback && callback(this.#frame);
 		}
-		open(resource)
+		open(resource, close)
 		{
-			this.show(() => this.load(resource))
+			this.show(() => this.load(resource));
 		}
 		close()
 		{
@@ -151,18 +152,22 @@ addEventListener('DOMContentLoaded', async event =>
 
 	event.currentTarget.framer = framer;
 	//addEventListener('message', event => framer(event.data));
-	sandbox.hide(frame =>
-	{
-		frame.name = 'sandbox';
-		frame.width = frame.height = '100%';
-		frame.style.cssText = 'position:fixed;border:none;overflow:hidden;background:white;display:none';
-		document.body.appendChild(frame);
-	});
+
 
 	framer.worker = worker;
 	framer.loader = async (resource, options) => loader(resource, {...options, headers: options && 'headers' in options ? {...options.headers, ...headers} : headers});
 	framer.open = resource => sandbox.open(resource);
 	framer.close = () => sandbox.close();
+
+
+
+	sandbox.hide(frame =>
+	{
+		frame.name = 'sandbox';
+		frame.width = frame.height = '100%';
+		frame.style.cssText += 'position:fixed;border:none;overflow:hidden';
+		document.body.appendChild(frame);
+	});
 
 	framer.dialog = new class
 	{
@@ -204,8 +209,6 @@ addEventListener('DOMContentLoaded', async event =>
 	};
 	//framer.dialog.show(`This test dialog show style`);
 
-
-
 	if ('splashscreen' in render.dataset)
 	{
 		// console.log({
@@ -217,21 +220,19 @@ addEventListener('DOMContentLoaded', async event =>
 		// });
 		sandbox.show(frame =>
 		{
-			//frame.style.background = 'white url(/webapp/res/ps/loading.svg) center no-repeat';
-			frame.style.background = 'white url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIGhlaWdodD0iNjQiIHdpZHRoPSI2NCIgdmlld0JveD0iMCAwIDEwMCAxMDAiPg0KCTxzdHlsZT4NCgljaXJjbGV7DQoJCWZpbGw6IG5vbmU7DQoJCXN0cm9rZS13aWR0aDogLjRyZW07DQoJCXN0cm9rZS1saW5lY2FwOiByb3VuZDsNCgl9DQoJQGtleWZyYW1lcyBsb2FkaW5new0KCQkwJXsNCgkJCXN0cm9rZS1kYXNoYXJyYXk6IDQwIDI0Mi42Ow0KCQkJc3Ryb2tlLWRhc2hvZmZzZXQ6IDA7DQoJCX0NCgkJNTAlew0KCQkJc3Ryb2tlLWRhc2hhcnJheTogMTQxLjM7DQoJCQlzdHJva2UtZGFzaG9mZnNldDogMTQxLjM7DQoJCX0NCgkJMTAwJXsNCgkJCXN0cm9rZS1kYXNoYXJyYXk6IDQwIDI0Mi42Ow0KCQkJc3Ryb2tlLWRhc2hvZmZzZXQ6IDI4Mi42Ow0KCQl9DQoJfQ0KCTwvc3R5bGU+DQoJPGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIHN0cm9rZT0ic2lsdmVyIj48L2NpcmNsZT4NCgk8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgc3Ryb2tlPSJibGFjayIgc3R5bGU9ImFuaW1hdGlvbjpsb2FkaW5nIDFzIGN1YmljLWJlemllcigxLDEsMSwxKSAwcyBpbmZpbml0ZSIvPg0KPC9zdmc+) center no-repeat';
 			const
 			splashscreen = JSON.parse(render.dataset.splashscreen),
 			document = frame.contentDocument,
 			button = document.createElement('span'),
 			clear = () =>
 			{
-				sandbox.hide(frame => frame.style.background = 'white');
-				document.onclick = null
+				sandbox.hide();
+				document.body.style.background = document.onclick = null
 			},
 			timeout = setTimeout(clear, splashscreen.timeout || 6000);
 			worker(splashscreen.picture, {mask: splashscreen.mask}).finally(() => clearTimeout(timeout)).then(blob =>
 			{
-				frame.style.background = `white url(${blob}) no-repeat center/cover`;
+				document.body.style.background = `white url(${blob}) center/cover no-repeat`;
 				button.style.cssText = [
 					'position: fixed',
 					'top: .8rem',
