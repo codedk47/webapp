@@ -69,6 +69,7 @@ if (globalThis.window)
 		backer = new Worker(document.currentScript.src);
 		backer.onmessage = event =>
 		{
+			//alert(event.data)
 			//console.log(event);
 			const callback = promise.get(event.data.id);
 			if (callback)
@@ -242,8 +243,9 @@ return;
 }
 else
 {
-	let count = 0;
-	const queue = [];
+	//fix safari can't set variable bug
+	self.count = 0;
+	self.queue = [];
 	function worker(data)
 	{
 		loader(data.src, data.options)
@@ -251,24 +253,24 @@ else
 			.catch(error => self.postMessage({id: data.id, is: 1, content: error}))
 			.finally(() =>
 			{
-				--count;
-				// console.log(count);
-				if (queue.length)
+				--self.count;
+				//console.log(self.count);
+				if (self.queue.length)
 				{
-					worker(queue.shift());
+					worker(self.queue.shift());
 				}
-				
 			});
 	}
 	self.onmessage = event =>
 	{
-		if (++count < 6)
+		if (++self.count < 4)
 		{
 			worker(event.data);
 		}
 		else
 		{
-			queue[queue.length] = event.data;
+			//self.queue.push(event.data);
+			self.queue[self.queue.length] = event.data;
 		}
 	};
 }

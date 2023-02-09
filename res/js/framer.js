@@ -152,8 +152,6 @@ addEventListener('DOMContentLoaded', async event =>
 
 	event.currentTarget.framer = framer;
 	//addEventListener('message', event => framer(event.data));
-	addEventListener('message', event => alert(event.data));
-
 
 	framer.worker = worker;
 	framer.loader = async (resource, options) => loader(resource, {...options, headers: options && 'headers' in options ? {...options.headers, ...headers} : headers});
