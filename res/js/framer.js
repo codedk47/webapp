@@ -158,8 +158,6 @@ addEventListener('DOMContentLoaded', async event =>
 	framer.open = resource => sandbox.open(resource);
 	framer.close = () => sandbox.close();
 
-
-
 	sandbox.hide(frame =>
 	{
 		frame.name = 'sandbox';

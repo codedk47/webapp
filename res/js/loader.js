@@ -254,7 +254,6 @@ else
 			.finally(() =>
 			{
 				--self.count;
-				//console.log(self.count);
 				if (self.queue.length)
 				{
 					worker(self.queue.shift());
@@ -263,7 +262,7 @@ else
 	}
 	self.onmessage = event =>
 	{
-		if (++self.count < 4)
+		if (++self.count < 6)
 		{
 			worker(event.data);
 		}
