@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" height="64" width="64" viewBox="0 0 100 100">
+	<style>
+	circle{
+		fill: none;
+		stroke-width: .4rem;
+		stroke-linecap: round;
+	}
+	@keyframes loading{
+		0%{
+			stroke-dasharray: 40 242.6;
+			stroke-dashoffset: 0;
+		}
+		50%{
+			stroke-dasharray: 141.3;
+			stroke-dashoffset: 141.3;
+		}
+		100%{
+			stroke-dasharray: 40 242.6;
+			stroke-dashoffset: 282.6;
+		}
+	}
+	</style>
+	<circle cx="50" cy="50" r="45" stroke="silver"></circle>
+	<circle cx="50" cy="50" r="45" stroke="black" style="animation:loading 1s cubic-bezier(1,1,1,1) 0s infinite"/>
+</svg>

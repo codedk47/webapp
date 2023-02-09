@@ -217,6 +217,7 @@ addEventListener('DOMContentLoaded', async event =>
 		// });
 		sandbox.show(frame =>
 		{
+			frame.style.background = 'white url(/webapp/res/ps/loading.svg) center no-repeat';
 			const
 			splashscreen = JSON.parse(render.dataset.splashscreen),
 			document = frame.contentDocument,
