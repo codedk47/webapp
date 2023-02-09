@@ -32,7 +32,7 @@ addEventListener('DOMContentLoaded', async event =>
 			this.#frame.style.display = 'none';
 			callback && callback(this.#frame);
 		}
-		open(resource, close)
+		open(resource)
 		{
 			this.show(() => this.load(resource));
 		}
@@ -152,6 +152,7 @@ addEventListener('DOMContentLoaded', async event =>
 
 	event.currentTarget.framer = framer;
 	//addEventListener('message', event => framer(event.data));
+	addEventListener('message', event => alert(event.data));
 
 
 	framer.worker = worker;

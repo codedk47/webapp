@@ -242,10 +242,11 @@ return;
 }
 else
 {
-	const controller = new AbortController, queue = [];
+	let count = 0;
+	const queue = [];
 	function worker(data)
 	{
-		loader(data.src, {...data.options, signal: controller.signal})
+		loader(data.src, data.options)
 			.then(content => self.postMessage({id: data.id, is: 0, content}))
 			.catch(error => self.postMessage({id: data.id, is: 1, content: error}))
 			.finally(() =>
@@ -259,24 +260,15 @@ else
 				
 			});
 	}
-	let count = 0;
 	self.onmessage = event =>
 	{
-		if (event.data === 'abort')
+		if (++count < 6)
 		{
-			controller.abort();
-			queue.length = count = 0;
+			worker(event.data);
 		}
 		else
 		{
-			if (++count < 6)
-			{
-				worker(event.data);
-			}
-			else
-			{
-				queue[queue.length] = event.data;
-			}
+			queue[queue.length] = event.data;
 		}
 	};
 }
