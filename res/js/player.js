@@ -1,24 +1,28 @@
 customElements.define('webapp-video', class extends HTMLElement
 {
-	//#resolve;
-	//#promise = new Promise(resolve => this.#resolve = resolve);
+	#loader = framer.worker || loader || fetch;
 	#video = document.createElement('video');
 	#model;
-
-	#open;
+	#playdata;
+	#play;
 	#suspend;
 	#resume;
 	#close;
+
+
+
 	
 	#load;
 	#require;
-	#playdata;
+	
 	#playtime = 0;
 	#toggleplay = document.createElement('div');
 	#limitstart = 0;
 	#limitend = NaN;
+	
 	constructor()
 	{
+		
 		super();
 		this.#video.setAttribute('width', '100%');
 		this.#video.setAttribute('height', '100%');
@@ -26,9 +30,16 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.setAttribute('disablepictureinpicture', true);
 		//this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
 		this.#video.controlsList = 'nodownload';
+		this.#video.style.objectFit = 'cover';
 		//this.#video.preload = 'none';
 		
-		
+		this.#video.oncanplay = event =>
+		{
+			if (this.hasAttribute('autoheight'))
+			{
+				this.#video.height = event.target.videoHeight * (this.offsetWidth / event.target.videoWidth);
+			}
+		}
 		
 		// this.#video.addEventListener('timeupdate', () =>
 		// {
@@ -50,9 +61,9 @@ customElements.define('webapp-video', class extends HTMLElement
 		if (window.MediaSource && window.Hls)
 		{
 			this.#model = new window.Hls;
-			this.#open = (data) =>
+			this.#play = data =>
 			{
-				this.#playdata = URL.createObjectURL(new Blob([data], {type: 'application/x-mpegURL'}));
+				this.#playdata = URL.createObjectURL(new Blob(data, {type: 'application/x-mpegURL'}));
 				this.#model.config.autoStartLoad = this.#video.autoplay;
 				this.#model.loadSource(this.#playdata);
 				this.#model.attachMedia(this.#video);
@@ -62,6 +73,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				// 	this.#model.once(window.Hls.Events.MANIFEST_PARSED, () => resolve(this.#model));
 				// 	this.#model.once(window.Hls.Events.MEDIA_ATTACHED, () => this.#model.loadSource(url));
 				// });
+
 			};
 			this.#suspend = () =>
 			{
@@ -80,33 +92,33 @@ customElements.define('webapp-video', class extends HTMLElement
 		}
 		else
 		{
-			if (this.#video.canPlayType('application/vnd.apple.mpegurl')
-				|| this.#video.canPlayType('application/x-mpegURL')) {
-				this.#model = this.#video;
-				this.#video.addEventListener('pause', event =>
-				{
-					this.#toggleplay.style.opacity = '0.4';
-				});
-				this.#video.addEventListener('play', event =>
-				{
-					this.#toggleplay.style.opacity = 0;
-				});
-				this.#toggleplay.className = 'pb';
-				this.#toggleplay.addEventListener('click', event =>
-				{
-					this.#video.paused ? this.#video.play() : this.#video.pause();
-				});
-				// this.#video.addEventListener('click', () =>
+			if (this.#video.canPlayType('application/vnd.apple.mpegurl') || this.#video.canPlayType('application/x-mpegURL'))
+			{
+				// this.#model = this.#video;
+				// this.#video.addEventListener('pause', event =>
+				// {
+				// 	this.#toggleplay.style.opacity = '0.4';
+				// });
+				// this.#video.addEventListener('play', event =>
+				// {
+				// 	this.#toggleplay.style.opacity = 0;
+				// });
+				// this.#toggleplay.className = 'pb';
+				// this.#toggleplay.addEventListener('click', event =>
 				// {
 				// 	this.#video.paused ? this.#video.play() : this.#video.pause();
 				// });
+				this.#video.addEventListener('click', () =>
+				{
+					this.#video.paused ? this.#video.play() : this.#video.pause();
+				});
 				// this.#video.addEventListener('canplay', () =>
 				// {
 				// 	this.#video.currentTime = this.#playtime;
 				// });
-				this.#open = (data) =>
+				this.#play = data =>
 				{
-					this.#playdata = `data:application/vnd.apple.mpegurl;base64,${btoa(data)}`;
+					this.#playdata = `data:application/vnd.apple.mpegurl;base64,${btoa(data.join('\n'))}`;
 					if (this.#video.autoplay)
 					{
 						this.#video.src = this.#playdata;
@@ -124,7 +136,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			}
 			else
 			{
-				this.#open = (url) => console.log(`cant open ${url}`);
+				this.#play = data => alert(data);
 				this.#close = this.#resume = this.#suspend = () => null;
 			}
 		}
@@ -137,9 +149,55 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		this.#resume();
 	}
+	finish(then)
+	{
+		this.#video.onended = () => then(this);
+	}
+	async poster(resource)
+	{
+		return this.#loader(resource, {mask: this.hasAttribute('data-mask')}).then(blob => this.#video.poster = blob);
+	}
+	async play(resource, preview)
+	{
+		const [previewstart, previewend] = preview
+			? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
+			: [0, 0xffff];
+		return this.#loader(resource, {mask: this.hasAttribute('data-mask'), type: 'text/modify'}).then(([url, data]) =>
+		{
+			const buffer = [], rowdata = data.match(/#[^#]+/g), resource = url.substring(0, url.lastIndexOf('/'));
+			for (let duration = 0, i = 0; i < rowdata.length; ++i)
+			{
+				if (rowdata[i].startsWith('#EXTINF'))
+				{
+					if (duration > -1)
+					{
+						const pattern = rowdata[i].match(/#EXTINF:(\d+(?:\.\d+)?)\,\s*([^#]+)/);
+						duration += parseFloat(pattern[1]);
+						if (duration > previewstart)
+						{
+							buffer[buffer.length] = /^(?!https?:\/\/)/i.test(pattern[2])
+								? pattern[0].replace(pattern[2], `${resource}/${pattern[2]}`) : pattern[0];
+							if (duration > previewend)
+							{
+								duration = -1;
+							}
+						}
+					}
+				}
+				else
+				{
+					buffer[buffer.length] = rowdata[i].startsWith('#EXT-X-KEY')
+						? rowdata[i].replace(/URI="([^"]+)"/, `URI="${resource}/$1"`)
+						: rowdata[i];
+				}
+				
+			}
+			this.#play(buffer);
+			return this;
+		});
+	}
 	connectedCallback()
 	{
-		//this.hasAttribute('weblive');
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
 		this.appendChild(this.#video);
@@ -147,47 +205,8 @@ customElements.define('webapp-video', class extends HTMLElement
 		{
 			//this.appendChild(this.#toggleplay);
 		}
-		if (this.#load = this.dataset.load)
-		{
-			this.#require = this.dataset.require;
-			if (this.dataset.preview)
-			{
-				[this.#limitstart, this.#limitend] = this.dataset.preview.split(',').map(parseFloat);
-				this.#limitend += this.#limitstart;
-			}
-			loader(`${this.#load}/cover`, null, 'application/octet-stream').then(blob => this.#video.poster = URL.createObjectURL(blob));
-			loader(`${this.#load}/play`, null, 'text/plain').then(data =>
-			{
-				const playlist = [], m3u8 = data.match(/#[^#]+/g);
-				for (let duration = 0, i = 0; i < m3u8.length; ++i)
-				{
-					if (m3u8[i].startsWith('#EXTINF'))
-					{
-						let pattern;
-						if (duration !== null && (pattern = m3u8[i].match(/#EXTINF:(\d+(?:\.\d+)?)\,\s*([^\n]+)/)))
-						{
-							duration += parseFloat(pattern[1]);
-							if (duration >= this.#limitstart)
-							{
-								playlist[playlist.length] = /^(?!http:\/\/)/.test(pattern[2])
-									? pattern[0].replace(pattern[2], `${this.#load}/${pattern[2]}`) : pattern[0];
-								if (duration > this.#limitend)
-								{
-									duration = null;
-								}
-							}
-						}
-					}
-					else
-					{
-						playlist[playlist.length] = (m3u8[i].startsWith('#EXT-X-KEY')
-							? m3u8[i].replace(/URI="([^"]+)"/, `URI="${this.#load}/$1"`) : m3u8[i]).trimEnd();
-					}
-					
-				}
-				this.#open(playlist.join('\n'));
-			});
-		}
+		this.dataset.poster && this.poster(this.dataset.poster);
+		this.dataset.play && this.play(this.dataset.play, this.dataset.preview);
 	}
 	disconnectedCallback()
 	{
@@ -205,6 +224,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	// 	});
 	// }
 });
+/*
 document.head.appendChild(document.createElement('style')).textContent = `
 webapp-video{
 	position: relative;
@@ -387,3 +407,4 @@ customElements.define('webapp-slide', class extends HTMLElement
 		});
 	}
 });
+*/

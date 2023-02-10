@@ -243,7 +243,6 @@ class webapp_echo_html extends webapp_implementation
 class webapp_echo_htmlmask extends webapp_echo_html
 {
 	public readonly bool $entry;
-
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);

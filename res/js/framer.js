@@ -62,6 +62,7 @@ addEventListener('DOMContentLoaded', async event =>
 			{
 				frame.contentWindow.framer = framer;
 				frame.contentWindow.viewport = element => this.viewport(element);
+				frame.contentWindow.then = callback => frame.contentWindow.then = callback;
 
 				//frame.contentWindow.close = () => sandbox.close();
 
@@ -111,7 +112,8 @@ addEventListener('DOMContentLoaded', async event =>
 					this.viewport(element).then(element =>
 						worker(element.dataset.src, {mask: true}).then(blob =>
 							element.src = blob)));
-			});
+				return frame;
+			}).then(frame => frame.contentWindow.then(frame));
 		}
 		async viewport(element)
 		{
@@ -124,7 +126,6 @@ addEventListener('DOMContentLoaded', async event =>
 				}
 			});
 		}
-
 	}
 
 	const
@@ -198,6 +199,7 @@ addEventListener('DOMContentLoaded', async event =>
 		{
 			this.#section.innerHTML = context;
 			this.#dialog.open || this.#dialog.showModal();
+			return this.#section;
 		}
 		close()
 		{

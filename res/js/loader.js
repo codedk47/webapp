@@ -52,6 +52,7 @@ async function loader(resource, options = {})
 	switch (options.type || type.split(';')[0])
 	{
 		case 'application/json': return JSON.parse(await blob.text());
+		case 'text/modify': return [response.url, await blob.text(), Object.fromEntries(response.headers.entries())];
 		case 'text/plain': return blob.text();
 		default: return URL.createObjectURL(blob);
 	}
