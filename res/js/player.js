@@ -1,6 +1,6 @@
 customElements.define('webapp-video', class extends HTMLElement
 {
-	#loader = framer.worker || loader || fetch;
+	#loader = framer.worker || loader;
 	#video = document.createElement('video');
 	#model;
 	#playdata;
@@ -10,35 +10,27 @@ customElements.define('webapp-video', class extends HTMLElement
 	#close;
 
 
-
-	
-	#load;
-	#require;
-	
-	#playtime = 0;
 	#toggleplay = document.createElement('div');
-	#limitstart = 0;
-	#limitend = NaN;
+
 	
 	constructor()
 	{
-		
 		super();
 		this.#video.setAttribute('width', '100%');
 		this.#video.setAttribute('height', '100%');
 		this.#video.setAttribute('playsinline', true);
 		this.#video.setAttribute('disablepictureinpicture', true);
-		//this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
+		this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
 		this.#video.controlsList = 'nodownload';
 		this.#video.style.objectFit = 'cover';
-		//this.#video.preload = 'none';
-		
 		this.#video.oncanplay = event =>
 		{
-			if (this.hasAttribute('autoheight'))
-			{
-				this.#video.height = event.target.videoHeight * (this.offsetWidth / event.target.videoWidth);
-			}
+			// this.#video.height = this.hasAttribute('autoheight')
+			// 	? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
+			// 	: '100%';
+			this.#video.setAttribute('height', this.hasAttribute('autoheight')
+				? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
+				: '100%');
 		}
 		
 		// this.#video.addEventListener('timeupdate', () =>
@@ -58,9 +50,9 @@ customElements.define('webapp-video', class extends HTMLElement
 		// });
 		
 
-		if (window.MediaSource && window.Hls)
+		if (globalThis.MediaSource && globalThis.Hls)
 		{
-			this.#model = new window.Hls;
+			this.#model = new globalThis.Hls;
 			this.#play = data =>
 			{
 				this.#playdata = URL.createObjectURL(new Blob(data, {type: 'application/x-mpegURL'}));
@@ -73,7 +65,6 @@ customElements.define('webapp-video', class extends HTMLElement
 				// 	this.#model.once(window.Hls.Events.MANIFEST_PARSED, () => resolve(this.#model));
 				// 	this.#model.once(window.Hls.Events.MEDIA_ATTACHED, () => this.#model.loadSource(url));
 				// });
-
 			};
 			this.#suspend = () =>
 			{
@@ -149,10 +140,6 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		this.#resume();
 	}
-	finish(then)
-	{
-		this.#video.onended = () => then(this);
-	}
 	async poster(resource)
 	{
 		return this.#loader(resource, {mask: this.hasAttribute('data-mask')}).then(blob => this.#video.poster = blob);
@@ -161,7 +148,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		const [previewstart, previewend] = preview
 			? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
-			: [0, 0xffff];
+			: [0, 0xffffffff];
 		return this.#loader(resource, {mask: this.hasAttribute('data-mask'), type: 'text/modify'}).then(([url, data]) =>
 		{
 			const buffer = [], rowdata = data.match(/#[^#]+/g), resource = url.substring(0, url.lastIndexOf('/'));
@@ -196,15 +183,18 @@ customElements.define('webapp-video', class extends HTMLElement
 			return this;
 		});
 	}
+	finish(then)
+	{
+		this.#video.onended = () => then(this);
+		//return this;
+	}
 	connectedCallback()
 	{
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
+		this.#video.controls = this.hasAttribute('controls');
+
 		this.appendChild(this.#video);
-		if (this.#video.controls = this.hasAttribute('controls'))
-		{
-			//this.appendChild(this.#toggleplay);
-		}
 		this.dataset.poster && this.poster(this.dataset.poster);
 		this.dataset.play && this.play(this.dataset.play, this.dataset.preview);
 	}
