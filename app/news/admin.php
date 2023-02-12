@@ -482,11 +482,11 @@ class webapp_router_admin extends webapp_echo_html
 	function list_tag_level():array
 	{
 		return ['0 - 全局', '1 - 一级分类', '2 - 二级分类', '3 - 扩展',
-			4 => '4 - 交合玩法',
-			5 => '5 - 角色类型',
-			6 => '6 - 身体特征',
-			7 => '7 - 地点位置',
-			8 => '8 - 衣着服饰',
+			4 => '4 - （主题）主题玩法',
+			5 => '5 - （角色设定）角色类型',
+			6 => '6 - （人物身材）身体特征',
+			7 => '7 - （地点）地点位置',
+			8 => '8 - （服装）衣着服饰',
 			9 => '9 - 其他杂项',
 			10 => '10 - 传媒频道',
 			11 => '11 - 明星作者',
@@ -496,7 +496,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$form = new webapp_form($ctx);
 		
-		if ($this->webapp->admin[2])
+		if ($this->webapp->admin[2] || $this->webapp->admin[0] == 1200)
 		{
 			$form->fieldset('hash / name / level / count / click');
 			$form->field('hash', 'text', ['style' => 'width:4rem', 'minlength' => 4, 'maxlength' => 4, 'required' => NULL]);
