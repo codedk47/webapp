@@ -201,9 +201,10 @@ addEventListener('DOMContentLoaded', async event =>
 			this.#dialog.open || this.#dialog.showModal();
 			return this.#section;
 		}
-		close()
+		close(clear = dialog => dialog.firstElementChild.innerHTML = '')
 		{
 			this.#dialog.close();
+			clear(this.#dialog);
 		}
 	};
 	//framer.dialog.show(`This test dialog show style`);
