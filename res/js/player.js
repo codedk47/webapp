@@ -33,6 +33,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				: '100%');
 		}
 		
+		
 		// this.#video.addEventListener('timeupdate', () =>
 		// {
 		// 	//this.style.height = `${this.#video.offsetHeight}px`;
@@ -187,6 +188,14 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		this.#video.onended = () => then(this);
 		//return this;
+	}
+	interval(call)
+	{
+		this.#video.ontimeupdate = event =>
+		{
+
+			console.log(event)
+		};
 	}
 	connectedCallback()
 	{

@@ -503,7 +503,8 @@ class webapp_router_admin extends webapp_echo_html
 		if ($this->webapp->admin[2] || $this->webapp->admin[0] == 1200)
 		{
 			$form->fieldset('hash / name / level / count / click');
-			$form->field('hash', 'text', ['style' => 'width:4rem', 'minlength' => 4, 'maxlength' => 4, 'required' => NULL]);
+			$form->field('hash', 'text', ['style' => 'width:4rem', 'minlength' => 4, 'maxlength' => 4, 'required' => NULL,
+				'value' => substr($this->webapp->hash($this->webapp->random(8), TRUE), -4)]);
 			$form->field('name', 'text', ['style' => 'width:8rem', 'required' => NULL]);
 		}
 		else
@@ -529,11 +530,12 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		if (($this->webapp->admin[2] || $this->webapp->admin[0] == 1200)
 			&& $this->form_tag($this->webapp)->fetch($tag)
-			&& $this->webapp->mysql->tags->insert($tag += ['hash' => substr($this->webapp->randhash(TRUE), 6), 'time' => $this->webapp->time])
+			&& empty($this->webapp->mysql->tags('where name in(?S) limit 1', explode(',', $tag['alias']))->array())
+			&& $this->webapp->mysql->tags->insert($tag += ['time' => $this->webapp->time])
 			&& $this->webapp->call('saveTag', $this->webapp->tag_xml($tag))) {
 			return $this->okay("?admin/tags,search:{$tag['hash']}");
 		}
-		$this->warn($this->webapp->admin[2] ? '标签创建失败！' : '需要全局管理权限！');
+		$this->warn($this->webapp->admin[2] ? '标签创建失败！' : '需要全局管理权限，或者标签重复！');
 	}
 	function get_tag_create()
 	{
@@ -562,6 +564,7 @@ class webapp_router_admin extends webapp_echo_html
 		if ($tag
 			&& ($this->webapp->admin[2] || $this->webapp->admin[0] == 1200)
 			&& $this->form_tag($this->webapp)->fetch($tag)
+			&& empty($this->webapp->mysql->tags('where name in(?S) limit 1', explode(',', $tag['alias']))->array())
 			&& $this->webapp->mysql->tags('where hash=?s', $hash)->update($tag)
 			&& $this->webapp->call('saveTag', $this->webapp->tag_xml($tag))) {
 			return $this->okay("?admin/tags,search:{$hash}");
