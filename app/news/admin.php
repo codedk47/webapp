@@ -569,7 +569,7 @@ class webapp_router_admin extends webapp_echo_html
 			&& $this->webapp->call('saveTag', $this->webapp->tag_xml($tag))) {
 			return $this->okay("?admin/tags,search:{$hash}");
 		}
-		$this->warn($this->webapp->admin[2] ? '标签更新失败！' : '需要全局管理权限！');
+		$this->warn($this->webapp->admin[2] ? '标签更新失败！' : '需要全局管理权限，或者标签重复！');
 	}
 	function get_tag_update(string $hash)
 	{
