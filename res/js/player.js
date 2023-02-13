@@ -10,7 +10,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	#close;
 
 
-	#toggleplay = document.createElement('div');
+	//#toggleplay = document.createElement('div');
 
 	
 	constructor()
@@ -191,11 +191,11 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	interval(call)
 	{
-		this.#video.ontimeupdate = event =>
-		{
+		// this.#video.ontimeupdate = event =>
+		// {
 
-			console.log(event)
-		};
+		// 	console.log(event)
+		// };
 	}
 	connectedCallback()
 	{

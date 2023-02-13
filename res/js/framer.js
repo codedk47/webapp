@@ -207,6 +207,7 @@ addEventListener('DOMContentLoaded', async event =>
 			clear(this.#dialog);
 		}
 	};
+
 	//framer.dialog.show(`This test dialog show style`);
 
 	if ('splashscreen' in render.dataset)
