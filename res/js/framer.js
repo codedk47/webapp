@@ -197,7 +197,7 @@ addEventListener('DOMContentLoaded', async event =>
 		}
 		show(context)
 		{
-			this.#section.innerHTML = context;
+			this.#section.innerHTML = context || '';
 			this.#dialog.open || this.#dialog.showModal();
 			return this.#section;
 		}
