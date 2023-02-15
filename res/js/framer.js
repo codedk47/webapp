@@ -135,11 +135,11 @@ addEventListener('DOMContentLoaded', async event =>
 	framer = resource => render.draw(resource),
 	prefetch = new Promise((resolve, reject) =>
 	{
-		const routelines = document.querySelectorAll('link[rel="dns-prefetch"][data-speedtest]');
-		if (routelines.length)
+		const resources = document.querySelectorAll('link[rel="dns-prefetch"][data-speedtest]');
+		if (resources.length)
 		{
 			const controller = new AbortController;
-			Promise.any(Array.from(routelines).map(link =>
+			Promise.any(Array.from(resources).map(link =>
 				fetch(`${link.href}${link.dataset.speedtest}`, {cache: 'no-cache', signal: controller.signal}))).then(async response =>
 					resolve(response.url.slice(0, response.url.indexOf('/', 8)), await response.blob(), controller.abort()), reject);
 		}
@@ -148,8 +148,8 @@ addEventListener('DOMContentLoaded', async event =>
 			resolve(location.origin);
 		}
 	});
-	worker = async (resource, options) => prefetch.then(fastestline =>
-		loader.worker(resource.startsWith('/') ? `${fastestline}${resource}` : resource, options), () => Promise.reject(resource));
+	worker = async (resource, options) => prefetch.then(origin => framer.origin || origin).then(origin =>
+		loader.worker(resource.startsWith('/') ? `${origin}${resource}` : resource, options), () => Promise.reject(resource));
 
 	event.currentTarget.framer = framer;
 	//addEventListener('message', event => framer(event.data));

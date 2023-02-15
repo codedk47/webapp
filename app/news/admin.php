@@ -528,6 +528,8 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function post_tag_create()
 	{
+		var_dump($this->webapp->admin[0]);
+		return;
 		if (($this->webapp->admin[2] || $this->webapp->admin[0] == 1200)
 			&& $this->form_tag($this->webapp)->fetch($tag)
 			&& empty($this->webapp->mysql->tags('where name in(?S) limit 1', explode(',', $tag['alias']))->array())
