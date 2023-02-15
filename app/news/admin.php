@@ -500,7 +500,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$form = new webapp_form($ctx);
 		
-		if ($this->webapp->admin[2] || $this->webapp->admin[0] == 1200)
+		if ($this->webapp->admin[2] || $this->webapp->admin[0] === '1200')
 		{
 			$form->fieldset('hash / name / level / count / click');
 			$form->field('hash', 'text', ['style' => 'width:4rem', 'minlength' => 4, 'maxlength' => 4, 'required' => NULL,
@@ -528,9 +528,7 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function post_tag_create()
 	{
-		var_dump($this->webapp->admin[0]);
-		return;
-		if (($this->webapp->admin[2] || $this->webapp->admin[0] == 1200)
+		if (($this->webapp->admin[2] || $this->webapp->admin[0] === '1200')
 			&& $this->form_tag($this->webapp)->fetch($tag)
 			&& empty($this->webapp->mysql->tags('where name in(?S) limit 1', explode(',', $tag['alias']))->array())
 			&& $this->webapp->mysql->tags->insert($tag += ['time' => $this->webapp->time])
@@ -564,7 +562,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$tag = $this->webapp->mysql->tags('where hash=?s', $hash)->array();
 		if ($tag
-			&& ($this->webapp->admin[2] || $this->webapp->admin[0] == 1200)
+			&& ($this->webapp->admin[2] || $this->webapp->admin[0] === '1200')
 			&& $this->form_tag($this->webapp)->fetch($tag)
 			&& empty($this->webapp->mysql->tags('where name in(?S) limit 1', explode(',', $tag['alias']))->array())
 			&& $this->webapp->mysql->tags('where hash=?s', $hash)->update($tag)
