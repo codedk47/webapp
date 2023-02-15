@@ -735,8 +735,8 @@ class webapp_router_admin extends webapp_echo_html
 
 			if ($resource['sync'] === 'finished')
 			{
-				$this->xml->head->append('script', ['src' => '/webapp/app/news/hls.min.js']);
-				$this->xml->head->append('script', ['src' => '/webapp/app/news/wplayer.js']);
+				$this->xml->head->append('script', ['src' => '/webapp/res/js/hls.min.js']);
+				$this->xml->head->append('script', ['src' => '/webapp/res/js/player.js']);
 				$playvideo = $this->main->append('webapp-video', [
 					'style' => 'display:block;width:854px;height:480px',
 					'data-load' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}", date('ym', $resource['time'])),
