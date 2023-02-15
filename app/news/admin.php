@@ -736,10 +736,13 @@ class webapp_router_admin extends webapp_echo_html
 			if ($resource['sync'] === 'finished')
 			{
 				$this->xml->head->append('script', ['src' => '/webapp/res/js/hls.min.js']);
+				$this->xml->head->append('script', ['src' => '/webapp/res/js/loader.js']);
 				$this->xml->head->append('script', ['src' => '/webapp/res/js/player.js']);
 				$playvideo = $this->main->append('webapp-video', [
 					'style' => 'display:block;width:854px;height:480px',
-					'data-load' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}", date('ym', $resource['time'])),
+					'data-poster' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/cover", date('ym', $resource['time'])),
+					'data-play' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/play", date('ym', $resource['time'])),
+					'data-mask' => NULL,
 					'muted' => NULL,
 					'autoplay' => NULL,
 					'controls' => NULL
@@ -753,7 +756,7 @@ class webapp_router_admin extends webapp_echo_html
 					$preview_end = mktime(8 + $preview_end[0], $preview_end[1], $preview_end[2], 1, 1, 1970);
 					if ($preview_end >= $preview_start)
 					{
-						$playvideo['data-preview'] = sprintf('%d,%d', $preview_start, $preview_end - $preview_start);
+						$playvideo['data-preview'] = $preview_start << 16 | $preview_end - $preview_start;
 					}
 				}
 				

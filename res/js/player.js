@@ -1,6 +1,6 @@
 customElements.define('webapp-video', class extends HTMLElement
 {
-	#loader = framer.worker || loader;
+	#loader = globalThis.framer ? framer.worker : loader;
 	#video = document.createElement('video');
 	#model;
 	#playdata;
