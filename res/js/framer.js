@@ -58,7 +58,7 @@ addEventListener('DOMContentLoaded', async event =>
 		async draw(resource)
 		{
 			this.#observes.clear(Array.from(this.#observes.keys()).forEach(element => this.#viewport.unobserve(element)));
-			return Promise.all([this.load(), loader(resource, {headers})]).then(([frame, data]) => new Promise(resolve =>
+			return Promise.all([this.load(), loader(this.resource = resource, {headers})]).then(([frame, data]) => new Promise(resolve =>
 			{
 				frame.contentWindow.framer = framer;
 				frame.contentWindow.viewport = element => this.viewport(element);
@@ -208,8 +208,6 @@ addEventListener('DOMContentLoaded', async event =>
 		}
 	};
 
-	//framer.dialog.show(`This test dialog show style`);
-
 	if ('splashscreen' in render.dataset)
 	{
 		// console.log({
@@ -301,6 +299,23 @@ addEventListener('DOMContentLoaded', async event =>
 		delete framer.authorization;
 		headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
 	}
+
+
+	//framer.dialog.show(`This test dialog show style`);
+
+	//console.log( );
+
+	history.pushState(null, null, null);
+	window.onpopstate = event =>
+	{
+		framer.close();
+		if ('query' in render.dataset)
+		{
+			framer(render.dataset.query);
+		}
+		console.log(render.dataset.query)
+	};
+
 
 	if ('query' in render.dataset)
 	{
