@@ -12,7 +12,7 @@ customElements.define('webapp-video', class extends HTMLElement
 
 	//#toggleplay = document.createElement('div');
 
-	
+	#startplay;
 	constructor()
 	{
 		super();
@@ -25,6 +25,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.style.objectFit = 'cover';
 		this.#video.oncanplay = event =>
 		{
+			this.#startplay && this.#startplay(this);
 			// this.#video.height = this.hasAttribute('autoheight')
 			// 	? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
 			// 	: '100%';
@@ -197,6 +198,10 @@ customElements.define('webapp-video', class extends HTMLElement
 		// 	console.log(event)
 		// };
 	}
+	startplay(callback)
+	{
+		this.#startplay = callback;
+	}
 	connectedCallback()
 	{
 		this.#video.muted = this.hasAttribute('muted');
@@ -216,12 +221,22 @@ customElements.define('webapp-video', class extends HTMLElement
 	// {
 
 	// }
-	// get $()
-	// {
-	// 	return new Proxy(this, {
-
-	// 	});
-	// }
+	get size()
+	{
+		console.log(this.#video.videoWidth, this.#video.videoHeight)
+	}
+	get width()
+	{
+		return this.#video.videoWidth;
+	}
+	get height()
+	{
+		return this.#video.videoHeight;
+	}
+	get vertical()
+	{
+		return this.height > this.width;
+	}
 });
 /*
 document.head.appendChild(document.createElement('style')).textContent = `
