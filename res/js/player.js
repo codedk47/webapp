@@ -49,7 +49,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			this.#playm3u8 = data =>
 			{
 				this.#loading = true;
-				this.#playdata = URL.createObjectURL(new Blob(data, {type: 'application/x-mpegURL'}));
+				this.#playdata = Array.isArray(data) ? URL.createObjectURL(new Blob(data, {type: 'application/x-mpegURL'})) : data;
 				this.#model.config.autoStartLoad = this.#video.autoplay;
 				this.#model.loadSource(this.#playdata);
 				this.#model.attachMedia(this.#video);
@@ -94,7 +94,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#playm3u8 = data =>
 				{
 					this.#loading = true;
-					this.#playdata = `data:application/vnd.apple.mpegurl;base64,${btoa(data.join('\n'))}`;
+					this.#playdata = Array.isArray(data) ? `data:application/vnd.apple.mpegurl;base64,${btoa(data.join('\n'))}` : data;
 					if (this.#video.autoplay)
 					{
 						this.#video.src = this.#playdata;
@@ -131,11 +131,9 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	async m3u8(resource, preview)
 	{
-		const [previewstart, previewend] = preview
-			? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
-			: [0, 0xffffffff];
-		return this.#loader(resource, {mask: this.mask, type: 'text/modify'}).then(([url, data]) =>
+		Number.isInteger(preview *= 1) ? this.#loader(resource, {mask: this.mask, type: 'text/modify'}).then(([url, data]) =>
 		{
+			const [previewstart, previewend] = [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)];
 			const buffer = [], rowdata = data.match(/#[^#]+/g), resource = url.substring(0, url.lastIndexOf('/'));
 			for (let duration = 0, i = 0; i < rowdata.length; ++i)
 			{
@@ -165,8 +163,8 @@ customElements.define('webapp-video', class extends HTMLElement
 				
 			}
 			this.#playm3u8(buffer);
-			return this;
-		});
+		}) : this.#playm3u8(resource);
+		return this;
 	}
 	connectedCallback()
 	{

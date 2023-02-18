@@ -5,25 +5,27 @@ then(function(){
 	if (video)
 	{
 
-	    video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 600);
+		video.m3u8('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
 
-		video.loaded(function(){
+	    // video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 600);
 
-
-			console.log(video.horizontal)
-
-		});
-
-		const qq = ['/2302/MDSE00015528/play', '/2302/MDSE00015531/play', '/2302/MDSE00015503/play'];
+		// video.loaded(function(){
 
 
-		video.finish(asd=>{
-			//framer.dialog.show('接下来往后看。。。');
-			if (qq.length)
-			{
-				video.m3u8(qq.shift(), 1000 << 16 | 1);
-			}
-		});
+		// 	console.log(video.horizontal)
+
+		// });
+
+		// const qq = ['/2302/MDSE00015528/play', '/2302/MDSE00015531/play', '/2302/MDSE00015503/play'];
+
+
+		// video.finish(asd=>{
+		// 	//framer.dialog.show('接下来往后看。。。');
+		// 	if (qq.length)
+		// 	{
+		// 		video.m3u8(qq.shift(), 1000 << 16 | 1);
+		// 	}
+		// });
 
 		
 	}
