@@ -160,7 +160,6 @@ customElements.define('webapp-video', class extends HTMLElement
 						? rowdata[i].replace(/URI="([^"]+)"/, `URI="${resource}/$1"`)
 						: rowdata[i];
 				}
-				
 			}
 			this.#playm3u8(buffer);
 		}) : this.#playm3u8(resource);
