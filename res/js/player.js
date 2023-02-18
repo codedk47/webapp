@@ -23,6 +23,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.setAttribute('disablepictureinpicture', true);
 		this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
 		this.#video.controlsList = 'nodownload';
+		this.#video.style.display = 'block';
 		this.#video.style.objectFit = 'cover';
 
 		this.#video.oncanplay = event =>
@@ -37,7 +38,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			// 	? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
 			// 	: '100%';
 				this.#video.setAttribute('height', this.hasAttribute('autoheight')
-					? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
+					? Math.trunc(event.target.videoHeight * (this.offsetWidth / event.target.videoWidth))
 					: '100%');
 			}
 		}
@@ -89,6 +90,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#video.onpause = () => this.#controls.style.visibility = 'visible';
 				this.#video.onplay = () => this.#controls.style.visibility = 'hidden';
 				this.#video.onclick = () => this.#video.paused || this.#video.pause();
+
 				this.#playm3u8 = data =>
 				{
 					this.#loading = true;
@@ -168,6 +170,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	connectedCallback()
 	{
+		this.style.display = 'block';
 		this.style.position = 'relative';
 		this.#video.loop = this.hasAttribute('loop');
 		this.#video.muted = this.hasAttribute('muted');
@@ -186,9 +189,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	set mask(value)
 	{
-		value
-			? this.setAttributeNode(document.createAttribute('data-mask'))
-			: this.removeAttribute('data-mask');
+		value ? this.setAttributeNode(document.createAttribute('data-mask')) : this.removeAttribute('data-mask');
 	}
 	get mask()
 	{
