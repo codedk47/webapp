@@ -9,7 +9,8 @@ customElements.define('webapp-video', class extends HTMLElement
 	#resume;
 	#close;
 
-	//#toggleplay = document.createElement('div');
+	//#controls = document.createElement('div');
+	#controls;
 
 	#loading = false;
 	#loaded;
@@ -24,13 +25,6 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.controlsList = 'nodownload';
 		this.#video.style.objectFit = 'cover';
 
-
-
-
-		// this.#video.addEventListener('canplay', event =>
-		// {
-		// 	alert('event');
-		// }, {once: true});
 		this.#video.oncanplay = event =>
 		{
 			if (this.#loading)
@@ -47,24 +41,6 @@ customElements.define('webapp-video', class extends HTMLElement
 					: '100%');
 			}
 		}
-		
-		
-		// this.#video.addEventListener('timeupdate', () =>
-		// {
-		// 	//this.style.height = `${this.#video.offsetHeight}px`;
-		// 	//this.style.height = `${this.#video.offsetHeight}px`;
-		// 	if (this.#require && this.#video.currentTime > 10 && this.display && 0)
-		// 	{
-		// 		this.#video.currentTime = 10;
-		// 		this.#video.pause();
-		// 		this.display.show();
-		// 		//this.#suspend();
-		// 	}
-		// });
-		// this.#video.addEventListener('play', ()=>{
-		// 	this.style.height = `${this.#video.offsetHeight}px`;
-		// });
-		
 
 		if (globalThis.MediaSource && globalThis.Hls)
 		{
@@ -103,27 +79,16 @@ customElements.define('webapp-video', class extends HTMLElement
 			if (this.#video.canPlayType('application/vnd.apple.mpegurl') || this.#video.canPlayType('application/x-mpegURL'))
 			{
 				// this.#model = this.#video;
-				// this.#video.addEventListener('pause', event =>
-				// {
-				// 	this.#toggleplay.style.opacity = '0.4';
-				// });
-				// this.#video.addEventListener('play', event =>
-				// {
-				// 	this.#toggleplay.style.opacity = 0;
-				// });
-				// this.#toggleplay.className = 'pb';
-				// this.#toggleplay.addEventListener('click', event =>
-				// {
-				// 	this.#video.paused ? this.#video.play() : this.#video.pause();
-				// });
-				this.#video.addEventListener('click', () =>
-				{
-					this.#video.paused ? this.#video.play() : this.#video.pause();
-				});
-				// this.#video.addEventListener('canplay', () =>
-				// {
-				// 	this.#video.currentTime = this.#playtime;
-				// });
+				const template = document.createElement('template');
+				template.innerHTML = `<svg width="40%" height="40%" viewBox="0 0 24 24" style="position:absolute;top:0;left:0;right:0;bottom:10%;margin:auto;">
+<path d="M 12,2 C 17.52,2 22,6.48 22,12 22,17.52 17.52,22 12,22 6.48,22 2,17.52 2,12 2,6.48 6.48,2 12,2 Z" fill="black" opacity="0.6"></path>
+<path d="m 9.5,7.5 v 9 l 7,-4.5 z" fill="white"></path>
+</svg>`;
+				this.#controls = template.content.firstChild;
+				this.#controls.onclick = () => this.#video.play();
+				this.#video.onpause = () => this.#controls.style.visibility = 'visible';
+				this.#video.onplay = () => this.#controls.style.visibility = 'hidden';
+				this.#video.onclick = () => this.#video.paused || this.#video.pause();
 				this.#playm3u8 = data =>
 				{
 					this.#loading = true;
@@ -203,12 +168,14 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	connectedCallback()
 	{
+		this.style.position = 'relative';
 		this.#video.loop = this.hasAttribute('loop');
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
 		this.#video.controls = this.hasAttribute('controls');
 
 		this.appendChild(this.#video);
+		this.#controls && this.appendChild(this.#controls);
 
 		this.dataset.poster && this.poster(this.dataset.poster);
 		this.dataset.m3u8 && this.m3u8(this.dataset.m3u8, this.dataset.preview);

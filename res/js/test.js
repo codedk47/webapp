@@ -5,7 +5,7 @@ then(function(){
 	if (video)
 	{
 
-	    video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 1);
+	    video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 600);
 
 		video.loaded(function(){
 
