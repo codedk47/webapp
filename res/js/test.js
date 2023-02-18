@@ -1,26 +1,27 @@
 then(function(){
 	console.log( framer.asd );
 	// console.log(framer.asd)
-	const player = document.querySelector('webapp-video');
-	if (player)
+	const video = document.querySelector('webapp-video');
+	if (video)
 	{
 
-	    player.play('/2302/MDSE00015434/play', 1000 << 16 | 1);
+	    video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 1);
 
-		player.startplay(function(){
+		video.loaded(function(){
 
-			console.log(player.vertical)
+
+			console.log(video.horizontal)
 
 		});
 
 		const qq = ['/2302/MDSE00015528/play', '/2302/MDSE00015531/play', '/2302/MDSE00015503/play'];
 
 
-		player.finish(asd=>{
+		video.finish(asd=>{
 			//framer.dialog.show('接下来往后看。。。');
 			if (qq.length)
 			{
-				player.play(qq.shift(), 1000 << 16 | 1);
+				video.m3u8(qq.shift(), 1000 << 16 | 1);
 			}
 		});
 

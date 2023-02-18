@@ -4,15 +4,15 @@ customElements.define('webapp-video', class extends HTMLElement
 	#video = document.createElement('video');
 	#model;
 	#playdata;
-	#play;
+	#playm3u8;
 	#suspend;
 	#resume;
 	#close;
 
-
 	//#toggleplay = document.createElement('div');
 
-	#startplay;
+	#loading = false;
+	#loaded;
 	constructor()
 	{
 		super();
@@ -23,15 +23,29 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
 		this.#video.controlsList = 'nodownload';
 		this.#video.style.objectFit = 'cover';
+
+
+
+
+		// this.#video.addEventListener('canplay', event =>
+		// {
+		// 	alert('event');
+		// }, {once: true});
 		this.#video.oncanplay = event =>
 		{
-			this.#startplay && this.#startplay(this);
+			if (this.#loading)
+			{
+				this.#loading = false;
+				this.#loaded && this.#loaded(this);
+
+
 			// this.#video.height = this.hasAttribute('autoheight')
 			// 	? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
 			// 	: '100%';
-			this.#video.setAttribute('height', this.hasAttribute('autoheight')
-				? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
-				: '100%');
+				this.#video.setAttribute('height', this.hasAttribute('autoheight')
+					? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
+					: '100%');
+			}
 		}
 		
 		
@@ -55,8 +69,9 @@ customElements.define('webapp-video', class extends HTMLElement
 		if (globalThis.MediaSource && globalThis.Hls)
 		{
 			this.#model = new globalThis.Hls;
-			this.#play = data =>
+			this.#playm3u8 = data =>
 			{
+				this.#loading = true;
 				this.#playdata = URL.createObjectURL(new Blob(data, {type: 'application/x-mpegURL'}));
 				this.#model.config.autoStartLoad = this.#video.autoplay;
 				this.#model.loadSource(this.#playdata);
@@ -109,8 +124,9 @@ customElements.define('webapp-video', class extends HTMLElement
 				// {
 				// 	this.#video.currentTime = this.#playtime;
 				// });
-				this.#play = data =>
+				this.#playm3u8 = data =>
 				{
+					this.#loading = true;
 					this.#playdata = `data:application/vnd.apple.mpegurl;base64,${btoa(data.join('\n'))}`;
 					if (this.#video.autoplay)
 					{
@@ -129,7 +145,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			}
 			else
 			{
-				this.#play = data => alert(data);
+				this.#playm3u8 = data => console.error(data);
 				this.#close = this.#resume = this.#suspend = () => null;
 			}
 		}
@@ -144,14 +160,14 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	async poster(resource)
 	{
-		return this.#loader(resource, {mask: this.hasAttribute('data-mask')}).then(blob => this.#video.poster = blob);
+		return this.#loader(resource, {mask: this.mask}).then(blob => this.#video.poster = blob);
 	}
-	async play(resource, preview)
+	async m3u8(resource, preview)
 	{
 		const [previewstart, previewend] = preview
 			? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
 			: [0, 0xffffffff];
-		return this.#loader(resource, {mask: this.hasAttribute('data-mask'), type: 'text/modify'}).then(([url, data]) =>
+		return this.#loader(resource, {mask: this.mask, type: 'text/modify'}).then(([url, data]) =>
 		{
 			const buffer = [], rowdata = data.match(/#[^#]+/g), resource = url.substring(0, url.lastIndexOf('/'));
 			for (let duration = 0, i = 0; i < rowdata.length; ++i)
@@ -181,49 +197,35 @@ customElements.define('webapp-video', class extends HTMLElement
 				}
 				
 			}
-			this.#play(buffer);
+			this.#playm3u8(buffer);
 			return this;
 		});
 	}
-	finish(then)
-	{
-		this.#video.onended = () => then(this);
-		//return this;
-	}
-	interval(call)
-	{
-		// this.#video.ontimeupdate = event =>
-		// {
-
-		// 	console.log(event)
-		// };
-	}
-	startplay(callback)
-	{
-		this.#startplay = callback;
-	}
 	connectedCallback()
 	{
+		this.#video.loop = this.hasAttribute('loop');
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
 		this.#video.controls = this.hasAttribute('controls');
 
 		this.appendChild(this.#video);
+
 		this.dataset.poster && this.poster(this.dataset.poster);
-		this.dataset.play && this.play(this.dataset.play, this.dataset.preview);
+		this.dataset.m3u8 && this.m3u8(this.dataset.m3u8, this.dataset.preview);
 	}
 	disconnectedCallback()
 	{
 		this.#close();
 	}
-	
-	// set muted(value)
-	// {
-
-	// }
-	get size()
+	set mask(value)
 	{
-		console.log(this.#video.videoWidth, this.#video.videoHeight)
+		value
+			? this.setAttributeNode(document.createAttribute('data-mask'))
+			: this.removeAttribute('data-mask');
+	}
+	get mask()
+	{
+		return this.hasAttribute('data-mask');
 	}
 	get width()
 	{
@@ -233,10 +235,27 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		return this.#video.videoHeight;
 	}
-	get vertical()
+	get horizontal()
 	{
-		return this.height > this.width;
+		return this.width > this.height;
 	}
+	loaded(init)
+	{
+		this.#loaded = init;
+	}
+	finish(then)
+	{
+		this.#video.onended = () => then(this);
+		//return this;
+	}
+	// interval(call)
+	// {
+	// 	// this.#video.ontimeupdate = event =>
+	// 	// {
+
+	// 	// 	console.log(event)
+	// 	// };
+	// }
 });
 /*
 document.head.appendChild(document.createElement('style')).textContent = `
