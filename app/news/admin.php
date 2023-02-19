@@ -741,7 +741,7 @@ class webapp_router_admin extends webapp_echo_html
 				$playvideo = $this->main->append('webapp-video', [
 					'style' => 'display:block;width:854px;height:480px',
 					'data-poster' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/cover", date('ym', $resource['time'])),
-					'data-play' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/play", date('ym', $resource['time'])),
+					'data-m3u8' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/play", date('ym', $resource['time'])),
 					'data-mask' => NULL,
 					'muted' => NULL,
 					'autoplay' => NULL,
