@@ -226,6 +226,3 @@ ul.ad>li>label:active{
 td.tdlinkspan>a{
 	margin: 0 .4rem;
 }
-webapp-video>video{
-	object-fit: contain;
-}

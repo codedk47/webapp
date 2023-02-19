@@ -745,7 +745,8 @@ class webapp_router_admin extends webapp_echo_html
 					'data-mask' => NULL,
 					'muted' => NULL,
 					'autoplay' => NULL,
-					'controls' => NULL
+					'controls' => NULL,
+					'autoheight' => NULL
 				]);
 				if (isset($this->webapp->query['preview']))
 				{
