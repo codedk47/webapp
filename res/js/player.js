@@ -129,7 +129,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		return this.#loader(resource, {mask: this.mask}).then(blob => this.#video.poster = blob);
 	}
-	async m3u8(resource, preview)
+	m3u8(resource, preview)
 	{
 		Number.isInteger(preview *= 1) ? this.#loader(resource, {mask: this.mask, type: 'text/modify'}).then(([url, data]) =>
 		{
