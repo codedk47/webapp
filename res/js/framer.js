@@ -147,7 +147,7 @@ addEventListener('DOMContentLoaded', async event =>
 		{
 			resolve(location.origin);
 		}
-	});
+	}),
 	worker = async (resource, options) => prefetch.then(origin => framer.origin || origin).then(origin =>
 		loader.worker(resource.startsWith('/') ? `${origin}${resource}` : resource, options), () => Promise.reject(resource));
 

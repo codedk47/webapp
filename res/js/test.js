@@ -1,13 +1,12 @@
 then(function(){
-	console.log( framer.asd );
-	// console.log(framer.asd)
+
 	const video = document.querySelector('webapp-video');
 	if (video)
 	{
+		// video.mask = false;
+		// video.m3u8('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
 
-		//video.m3u8('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
-
-		video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 600);
+		video.m3u8('/2302/MDSE00015434/play' );
 
 		video.loaded(function(){
 

@@ -131,11 +131,12 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	m3u8(resource, preview)
 	{
-		Number.isInteger(preview *= 1) ? this.#loader(resource, {mask: this.mask, type: 'text/modify'}).then(([url, data]) =>
+		this.mask ? this.#loader(resource, {mask: true, type: 'text/modify'}).then(([url, data]) =>
 		{
-			const buffer = [], rowdata = data.match(/#[^#]+/g), resource = url.substring(0, url.lastIndexOf('/'));
-			let [previewstart, previewend] = [preview >> 16 & 0xffff, preview & 0xffff];
-			previewend += previewstart;
+			const buffer = [], rowdata = data.match(/#[^#]+/g), resource = url.substring(0, url.lastIndexOf('/')),
+			[previewstart, previewend] = Number.isInteger(preview *= 1)
+				? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
+				: [0, 0xffffffff];
 			for (let duration = 0, i = 0; i < rowdata.length; ++i)
 			{
 				if (rowdata[i].startsWith('#EXTINF'))
