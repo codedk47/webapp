@@ -24,7 +24,6 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
 		this.#video.controlsList = 'nodownload';
 		this.#video.style.display = 'block';
-		this.#video.style.objectFit = 'cover';
 
 		this.#video.oncanplay = event =>
 		{
@@ -175,6 +174,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
 		this.#video.controls = this.hasAttribute('controls');
+		this.#video.style.objectFit = this.dataset.fit || 'contain';
 
 		this.appendChild(this.#video);
 		this.#controls && this.appendChild(this.#controls);

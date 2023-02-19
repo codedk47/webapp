@@ -739,14 +739,13 @@ class webapp_router_admin extends webapp_echo_html
 				$this->xml->head->append('script', ['src' => '/webapp/res/js/loader.js']);
 				$this->xml->head->append('script', ['src' => '/webapp/res/js/player.js']);
 				$playvideo = $this->main->append('webapp-video', [
-					'style' => 'display:block;width:854px',
+					'style' => 'display:block;width:854px;height:480px',
 					'data-poster' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/cover", date('ym', $resource['time'])),
 					'data-m3u8' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/play", date('ym', $resource['time'])),
 					'data-mask' => NULL,
 					'muted' => NULL,
 					'autoplay' => NULL,
-					'controls' => NULL,
-					'autoheight' => NULL
+					'controls' => NULL
 				]);
 				if (isset($this->webapp->query['preview']))
 				{
