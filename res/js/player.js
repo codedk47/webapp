@@ -133,8 +133,9 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		Number.isInteger(preview *= 1) ? this.#loader(resource, {mask: this.mask, type: 'text/modify'}).then(([url, data]) =>
 		{
-			const [previewstart, previewend] = [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)];
 			const buffer = [], rowdata = data.match(/#[^#]+/g), resource = url.substring(0, url.lastIndexOf('/'));
+			let [previewstart, previewend] = [preview >> 16 & 0xffff, preview & 0xffff];
+			previewend += previewstart;
 			for (let duration = 0, i = 0; i < rowdata.length; ++i)
 			{
 				if (rowdata[i].startsWith('#EXTINF'))
