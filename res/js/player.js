@@ -38,7 +38,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			// 	? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
 			// 	: '100%';
 				this.#video.setAttribute('height', this.hasAttribute('autoheight')
-					? Math.trunc(event.target.videoHeight * (this.offsetWidth / event.target.videoWidth))
+					? Math.trunc(event.target.videoHeight * this.scalewidth)
 					: '100%');
 			}
 		}
@@ -200,6 +200,10 @@ customElements.define('webapp-video', class extends HTMLElement
 	get height()
 	{
 		return this.#video.videoHeight;
+	}
+	get scalewidth()
+	{
+		return this.offsetWidth / this.width;
 	}
 	get horizontal()
 	{
