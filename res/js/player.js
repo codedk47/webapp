@@ -174,11 +174,14 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
 		this.#video.controls = this.hasAttribute('controls');
-		this.#video.style.objectFit = this.dataset.fit || 'contain';
 
 		this.appendChild(this.#video);
 		this.#controls && this.appendChild(this.#controls);
 
+		if (this.dataset.fit)
+		{
+			this.#video.style.objectFit = this.dataset.fit;
+		}
 		this.dataset.poster && this.poster(this.dataset.poster);
 		this.dataset.m3u8 && this.m3u8(this.dataset.m3u8, this.dataset.preview);
 	}
