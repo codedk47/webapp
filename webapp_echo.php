@@ -34,15 +34,19 @@ class webapp_echo_xml extends webapp_implementation
 		$webapp->response_content_type('application/xml');
 		parent::__construct($root);
 	}
-	static function mobileconfig(webapp $webapp, array $values, bool $force = FALSE, bool $download = FALSE):webapp_implementation
+	static function mobileconfig(array $values, webapp $webapp = NULL, bool $config = FALSE):webapp_implementation
 	{
-		if ($force)
-		{
-			$webapp->response_content_type($download ? 'application/x-apple-aspen-config' : 'application/xml');
-		}
 		$mobileconfig = new webapp_implementation('plist', '-//Apple//DTD PLIST 1.0//EN', 'http://www.apple.com/DTDs/PropertyList-1.0.dtd');
-		$mobileconfig->document->encoding = $webapp['app_charset'];
 		$mobileconfig->xml['version'] = '1.0';
+		if ($webapp)
+		{
+			$webapp->response_content_type($config ? 'application/x-apple-aspen-config' : 'application/xml');
+			$mobileconfig->document->encoding = $webapp['app_charset'];
+		}
+		else
+		{
+			$mobileconfig->document->encoding = 'utf-8';
+		}
 		function config(webapp_xml $xml, array $values)
 		{
 			$node = $xml->append(array_is_list($values) ? 'array' : 'dict');
@@ -73,48 +77,45 @@ class webapp_echo_xml extends webapp_implementation
 				$nodekey->remove();
 			}
 		}
-		//----Web Cilp----
-		// config($mobileconfig->xml, [
-		// 	'PayloadContent' => [[
-		// 		'Icon' => 'D:/wmhp/work/asd/icon.png', //桌面图标
-		// 		'Label' => 'webapp', //桌面名称
-		// 		'URL' => 'http://192.168.0.155/a.php',
-		// 		'FullScreen' => FALSE,
-		// 		'IsRemovable' => TRUE,
-		// 		'IgnoreManifestScope' => TRUE,
-		// 		//'PayloadDisplayName' => 'WebApp',
-		// 		//以下四个必要固定字段
-		// 		'PayloadUUID' => 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
-		// 		'PayloadType' => 'com.apple.webClip.managed',
-		// 		'PayloadIdentifier' => 'Ignored',
-		// 		'PayloadVersion' => 1
-		// 	]],
-		// 	'PayloadDisplayName' => 'Web App',
-		// 	'PayloadDescription' => 'Web Application',
-		// 	//以下四个必要固定字段
-		// 	'PayloadUUID' => 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
-		// 	'PayloadType' => 'Configuration',
-		// 	'PayloadIdentifier' => 'WEBAPP.ID',
-		// 	'PayloadVersion' => 1
-		// ]);
-
-		//----Profile Service----
-		//openssl smime -sign -in unsigned.mobileconfig -out signed.mobileconfig -signer mbaike.crt -inkey mbaike.key -certfile ca-bundle.pem -outform der -nodetach
-		//openssl rsa -in mbaike.key -out mbaikenopass.key
-		//openssl smime -sign -in unsigned.mobileconfig -out signed.mobileconfig -signer mbaike.crt -inkey mbaikenopass.key -certfile ca-bundle.pem -outform der -nodetach
-		// config($mobileconfig->xml, [
-		// 	'PayloadContent' => [
-		// 		'URL' => 'https://kenb.cloud/a.php',
-		// 		'DeviceAttributes' => ['DEVICE_NAME', 'UDID', 'IMEI', 'ICCID', 'VERSION', 'PRODUCT', 'SERIAL', 'MAC_ADDRESS_EN0'],
-		// 	],
-		// 	'PayloadDisplayName' => 'Web App',
-		// 	'PayloadDescription' => 'Web Application',
-		// 	//以下四个必要固定字段
-		// 	'PayloadUUID' => 'FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF',
-		// 	'PayloadType' => 'Profile Service',
-		// 	'PayloadIdentifier' => 'WEBAPP.ID',
-		// 	'PayloadVersion' => 1
-		// ]);
+		$values += [
+			'PayloadDisplayName' => 'Web Application',
+			'PayloadDescription' => 'Web Application Description',
+			'PayloadOrganization' => 'Web Application Organization',
+			//以下四个必要固定字段
+			'PayloadUUID' => '00801462-0000-0000-0000-000000000000',
+			'PayloadType' => 'Configuration',
+			'PayloadIdentifier' => 'WEBAPP.ID',
+			'PayloadVersion' => 1
+		];
+		if ($values['PayloadType'] === 'Profile Service')
+		{
+			//----Profile Service----
+			//openssl smime -sign -in unsigned.mobileconfig -out signed.mobileconfig -signer mbaike.crt -inkey mbaike.key -certfile ca-bundle.pem -outform der -nodetach
+			//openssl rsa -in mbaike.key -out mbaikenopass.key
+			//openssl smime -sign -in unsigned.mobileconfig -out signed.mobileconfig -signer mbaike.crt -inkey mbaikenopass.key -certfile ca-bundle.pem -outform der -nodetach
+			$values['PayloadContent'] += [
+				'URL' => 'https://localhost/',
+				'DeviceAttributes' => ['DEVICE_NAME', 'UDID', 'IMEI', 'ICCID', 'VERSION', 'PRODUCT', 'SERIAL', 'MAC_ADDRESS_EN0']
+			];
+		}
+		else
+		{
+			//----Web Cilp----
+			$values['PayloadContent'][0] += [
+				// 'Icon' => 'D:/wmhp/work/asd/icon.png', //桌面图标
+				'Label' => 'WebApp', //桌面名称
+				'URL' => 'http://localhost/',
+				'FullScreen' => TRUE,
+				'IsRemovable' => TRUE,
+				'IgnoreManifestScope' => TRUE,
+				//'PayloadDisplayName' => 'WebApp',
+				//以下四个必要固定字段
+				'PayloadUUID' => '00801462-0000-0000-0000-000000000000',
+				'PayloadType' => 'com.apple.webClip.managed',
+				'PayloadIdentifier' => 'Ignored',
+				'PayloadVersion' => 1
+			];
+		}
 		config($mobileconfig->xml, $values);
 		return $mobileconfig;
 	}

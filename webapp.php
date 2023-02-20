@@ -736,6 +736,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			&& $this->uploadedfiles[$name] instanceof webapp_request_uploadedfile ? $this->uploadedfiles[$name]
 			: $this->uploadedfiles[$name] = new webapp_request_uploadedfile($this, $name, $this->uploadedfiles[$name] ?? [], $maximum);
 	}
+	function request_apple_device_enrollment():array
+	{
+		return preg_match_all('/\<(\w+\>)([^\<]+)\<\/\1\s*\<(\w+\>)([^\<]+)\<\/\3/',
+			$this->request_content('application/pkcs7-signature'), $pattern)
+				? array_combine($pattern[2], $pattern[4]) : [];
+	}
 	//response
 	function response_status(int $code):void
 	{
