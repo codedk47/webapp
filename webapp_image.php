@@ -376,13 +376,13 @@ class webapp_image implements IteratorAggregate
 		}
 		return $image;
 	}
-	static function qrcode(IteratorAggregate&Countable $draw, int $pixel = 4, int $margin = 2):static
+	static function qrcode(IteratorAggregate&Countable $draw, int $pixel = 4):static
 	{
-		$image = static::create($resize = count($draw) + $margin * 2, $resize);
+		$image = static::create($size = count($draw), $size);
 		foreach ($draw as $x => $y)
 		{
-			$image->setpixel($margin + $x, $margin + $y, 0);
+			$image->setpixel($x, $y, 0);
 		}
-		return $image->resize($resize *= $pixel, $resize);
+		return $image->resize($size *= $pixel, $size);
 	}
 }

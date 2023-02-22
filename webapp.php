@@ -70,6 +70,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			? static::$libary[$name]
 			: static::$libary[$name] = require __DIR__ . "/lib/{$name}";
 	}
+	static function qrcode(string $content, int $ecc = 0):IteratorAggregate&Countable
+	{
+		return webapp::lib('qrcode/interface.php')($content, $ecc);
+	}
 	static function random(int $length):string
 	{
 		return random_bytes($length);
@@ -738,6 +742,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function request_apple_device_enrollment():array
 	{
+		//Apple device enrollment must use HTTPS protocol request method POST and response status 301
 		return preg_match_all('/\<(\w+\>)([^\<]+)\<\/\1\s*\<(\w+\>)([^\<]+)\<\/\3/',
 			$this->request_content('application/pkcs7-signature'), $pattern)
 				? array_combine($pattern[2], $pattern[4]) : [];
@@ -846,7 +851,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		$this->response_cache_control('private, max-age=86400');
 		if ($this->nonematch($this->request_ip(), TRUE))
 		{
-			$this->app = webapp_echo_svg::favicon($this);
+			$this->app('webapp_echo_svg')->xml->favicon();
 			return 200;
 		}
 		return 304;
@@ -879,10 +884,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		if ($this['qrcode_echo'] && is_string($decode = $this->decrypt($encode)) && strlen($decode) < $this['qrcode_maxdata'])
 		{
-			if ($this->nonematch($encode, TRUE))
+			if ($this->nonematch($decode, TRUE))
 			{
-				$this->response_content_type('image/png');
-				webapp_image::qrcode(static::lib('qrcode/interface.php')($decode, $this['qrcode_ecc']), $this['qrcode_size'])->png($this->buffer);
+				$draw = static::qrcode($decode, $this['qrcode_ecc']);
+				$this->app('webapp_echo_svg')->xml->qrcode($draw, $this['qrcode_size']);
+				//$this->response_content_type('image/png');
+				//webapp_image::qrcode($draw, $this['qrcode_size'])->png($this->buffer);
 				return;
 			}
 			return 304;

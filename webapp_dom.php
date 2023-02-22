@@ -297,6 +297,33 @@ class webapp_xml extends SimpleXMLElement
 	// 	}
 	// 	return $this[0]->xpath(join($query));
 	// }
+	function svg(array $attributes = []):webapp_svg
+	{
+		return simplexml_import_dom($this->append('svg', $attributes), 'webapp_svg');
+		//return simplexml_import_dom($this->setattr(['xmlns' => 'http://www.w3.org/2000/svg'] + $attributes), 'webapp_svg');
+	}
+}
+class webapp_svg extends webapp_xml
+{
+	function favicon():static
+	{
+		$this->setattr(['viewBox' => '0 0 24 24']);
+		$this->append('path', ['d' => 'M12 2c-4.963 0-9 4.038-9 9v8h.051c.245 1.691 1.69 3 3.449 3 1.174 0 2.074-.417 2.672-1.174a3.99 3.99 0 0 0 5.668-.014c.601.762 1.504 1.188 2.66 1.188 1.93 0 3.5-1.57 3.5-3.5V11c0-4.962-4.037-9-9-9zm7 16.5c0 .827-.673 1.5-1.5 1.5-.449 0-1.5 0-1.5-2v-1h-2v1c0 1.103-.897 2-2 2s-2-.897-2-2v-1H8v1c0 1.845-.774 2-1.5 2-.827 0-1.5-.673-1.5-1.5V11c0-3.86 3.141-7 7-7s7 3.14 7 7v7.5z']);
+		$this->append('circle', ['cx' => 9, 'cy' => 10, 'r' => 2]);
+		$this->append('circle', ['cx' => 15, 'cy' => 10, 'r' => 2]);
+		return $this;
+	}
+	function qrcode(IteratorAggregate&Countable $draw, int $pixel = 4):static
+	{
+		$size = count($draw);
+		$resize = $size * $pixel;
+		$this->setattr(['width' => $resize, 'height' => $resize, 'viewBox' => "0 0 {$size} {$size}", 'fill' => 'black', 'shape-rendering' => 'crispEdges']);
+		foreach ($draw as $x => $y)
+		{
+			$this->append('rect', ['x' => $x, 'y' => $y, 'width' => 1, 'height' => 1]);
+		}
+		return $this;
+	}
 }
 class webapp_html extends webapp_xml
 {
@@ -518,10 +545,6 @@ class webapp_html extends webapp_xml
 		$form->button('Submit', 'submit')['class'] = 'primary';
 		return $form->xml;
 	}
-	function svg(array $attributes = []):webapp_svg
-	{
-		return new webapp_svg($this->append('svg', $attributes));
-	}
 	function form(?string $action = NULL):webapp_form
 	{
 		return new webapp_form($this, $action);
@@ -548,8 +571,12 @@ class webapp_implementation extends DOMImplementation implements Stringable
 	}
 	function __invoke(bool $loaded):bool
 	{
-		return $loaded && ($this->xml = ($this->document->doctype?->name === 'html'
-			? 'webapp_html' : 'webapp_xml')::from($this->document)) !== NULL;
+		return $loaded && ($this->xml = (match ($this->document->doctype?->name)
+		{
+			'html' => 'webapp_html',
+			'svg' => 'webapp_svg',
+			default => 'webapp_xml'
+		})::from($this->document)) !== NULL;
 	}
 	function __toString():string
 	{
@@ -601,21 +628,6 @@ class webapp_implementation extends DOMImplementation implements Stringable
 	// 	$document->loadHTML($data);
 	// 	return $document;
 	// }
-}
-class webapp_svg
-{
-	function __construct(public readonly webapp_xml $xml){}
-	function favicon()
-	{
-		$this->xml->append('style', 'path,line{fill:none;stroke:black;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;}');
-		$this->xml->append('path', [
-			'd' => 'M22,13L22,13c0-5-4-9-9-9h0c-5,0-9,4-9,9v6.1C4,24,8,28,12.9,28H22h7l-3.6-4.8C23.2,20.3,22,16.7,22,13z',
-			'style' => 'fill:none;stroke:black;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;'
-		]);
-		$this->xml->append('line', ['x1' => 9, 'y1' => 9, 'x2' => 9, 'y2' => 11]);
-		$this->xml->append('line', ['x1' => 13, 'y1' => 9, 'x2' => 13, 'y2' => 11]);
-		
-	}
 }
 class webapp_form implements ArrayAccess
 {
