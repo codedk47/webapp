@@ -838,7 +838,8 @@ class webapp_router_admin extends webapp_echo_html
 			default => ' ORDER BY time DESC'
 		};
 
-		$table = $this->main->table($this->webapp->mysql->resources(...$cond)->paging($page), function($table, $res, $type)
+		$buy = [];
+		$table = $this->main->table($this->webapp->mysql->resources(...$cond)->paging($page), function($table, $res, $type) use(&$buy)
 		{
 			$table->row()['data-cover'] = sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']));
 			$table->cell(['width' => 'width:100%;'])->append('a', ['❌',
@@ -857,6 +858,7 @@ class webapp_router_admin extends webapp_echo_html
 			$table->cell(number_format($data['favorite']));
 			$table->cell(number_format($data['view']));
 			$table->cell(number_format($data['like']));
+			$buy[$res['hash']] = $table->cell(0);
 			$table->cell()->append('div', [
 				'style' => 'width:30rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
 			])->append('a', [$data['name'], 'href' => "?admin/resource-update,hash:{$res['hash']}"]);
@@ -864,7 +866,7 @@ class webapp_router_admin extends webapp_echo_html
 			// 	'data-cover' => sprintf("{$this->webapp['app_resoutput']}%s/{$res['hash']}/cover", date('ym', $res['time']))]);
 			//$table->cell()->append('a', ['下载预览', 'href' => "{$this->webapp['app_resdomain']}?resourcepreview/{$res['hash']}"]);
 		}, $this->webapp['app_restype']);
-		$table->fieldset('❌', 'hash', 'time', 'preview', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'name')
+		$table->fieldset('❌', 'hash', 'time', 'preview', 'duration', 'type', 'require', 'favorite', 'view', 'like', 'buy', 'name')
 			->append('td')->append('button', ['view all cover', 'onclick' => 'viewallcover(this.parentNode.parentNode.parentNode)']);
 		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
@@ -890,6 +892,13 @@ class webapp_router_admin extends webapp_echo_html
 			'exception' => '异常'
 		])->setattr(['onchange' => 'g({sync:this.value})'])->selected($sync);
 		$table->paging($this->webapp->at(['page' => '']));
+
+		foreach ($this->webapp->mysql
+			->bills('WHERE `describe` IN(?S) GROUP BY `describe`', array_keys($buy))
+			->select('`describe`,count(1)as c') as $res) {
+			$buy[$res['describe']][0] = number_format($res['c']);
+		}
+
 		$this->main->append('script')->cdata(<<<'JS'
 function viewallcover(tbody)
 {
