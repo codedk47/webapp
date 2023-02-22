@@ -456,7 +456,7 @@ class interfaces extends webapp
 		$form->field('actors', 'text', ['value' => $form->echo ? $this->admin[0] : NULL, 'required' => NULL]);
 		
 		
-		$form->fieldset('tags（从小到大排列）');
+		$form->fieldset();
 		$tagc = [];
 		$tags = [];
 		foreach ($this->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
@@ -466,10 +466,17 @@ class interfaces extends webapp
 		}
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 
+		$blevel = null;
+		$nlevel = webapp_router_admin::list_tag_level();
 		foreach ($form->fieldset->xpath('ul/li') as $li)
 		{
 			$level = (string)$li->label->input['value'];
 			$li['class'] = "level{$tagc[$level]}";
+			if ($blevel !== $tagc[$level])
+			{
+				$blevel = $tagc[$level];
+				$li->insert('li', 'before')->setattr([$nlevel[$blevel], 'class' => 'part']);
+			}
 		}
 
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币) / 预览');

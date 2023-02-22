@@ -479,7 +479,7 @@ class webapp_router_admin extends webapp_echo_html
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
-	function list_tag_level():array
+	static function list_tag_level():array
 	{
 		return ['0 - 全局', '1 - 一级分类', '2 - 二级分类', '3 - 扩展',
 
