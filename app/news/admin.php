@@ -678,7 +678,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
 
-		$form->fieldset('tags（从小到大排列）');
+		$form->fieldset();
 		$tagc = [];
 		$tags = [];
 		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
@@ -688,10 +688,18 @@ class webapp_router_admin extends webapp_echo_html
 		}
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 
+
+		$blevel = null;
+		$nlevel = $this->list_tag_level();
 		foreach ($form->fieldset->xpath('ul/li') as $li)
 		{
 			$level = (string)$li->label->input['value'];
 			$li['class'] = "level{$tagc[$level]}";
+			if ($blevel !== $tagc[$level])
+			{
+				$blevel = $tagc[$level];
+				$li->insert('li', 'before')->setattr([$nlevel[$blevel], 'class' => 'part']);
+			}
 		}
 
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');

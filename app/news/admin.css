@@ -226,3 +226,9 @@ ul.ad>li>label:active{
 td.tdlinkspan>a{
 	margin: 0 .4rem;
 }
+li.part{
+	flex:0 0 100% !important;
+	font-weight: bold;
+	border-bottom:black .1rem solid;
+	margin: .2rem 0;
+}
