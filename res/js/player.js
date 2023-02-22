@@ -52,6 +52,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#model.config.autoStartLoad = this.#video.autoplay;
 				this.#model.loadSource(this.#playdata);
 				this.#model.attachMedia(this.#video);
+				this.#video.play();
 				// return new Promise((resolve, reject) =>
 				// {
 				// 	this.#model.attachMedia(this.#video);
