@@ -51,14 +51,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#playdata = Array.isArray(data) ? URL.createObjectURL(new Blob(data, {type: 'application/x-mpegURL'})) : data;
 				this.#model.config.autoStartLoad = this.#video.autoplay;
 				this.#model.loadSource(this.#playdata);
-				this.#model.attachMedia(this.#video);
-				this.#video.play();
-				// return new Promise((resolve, reject) =>
-				// {
-				// 	this.#model.attachMedia(this.#video);
-				// 	this.#model.once(window.Hls.Events.MANIFEST_PARSED, () => resolve(this.#model));
-				// 	this.#model.once(window.Hls.Events.MEDIA_ATTACHED, () => this.#model.loadSource(url));
-				// });
+				this.#model.media || this.#model.attachMedia(this.#video);
 			};
 			this.#suspend = () =>
 			{
@@ -73,6 +66,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			this.#close = () =>
 			{
 				this.#model.detachMedia(this.#video);
+				this.#model.destroy();
 			};
 		}
 		else

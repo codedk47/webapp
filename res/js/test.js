@@ -15,6 +15,14 @@ then(function(){
 
 		});
 
+
+		// setTimeout(() => {
+		// 	console.log(11)
+		// 	video.m3u8('/2302/MDSE00015528/play', 1000 << 16 | 1);
+		// }, 4000);
+
+
+
 		const qq = ['/2302/MDSE00015528/play', '/2302/MDSE00015531/play', '/2302/MDSE00015503/play'];
 
 

@@ -324,6 +324,25 @@ class webapp_svg extends webapp_xml
 		}
 		return $this;
 	}
+	function base641():string
+	{
+		return 'data:image/svg+xml;base64,' . base64_encode($this->asXML());
+	}
+	static function base64():static
+	{
+		return new class('<svg/>') extends webapp_svg
+		{
+			function __toString():string
+			{
+				return 'data:image/svg+xml;base64,' . base64_encode($this->asXML());
+			}
+		};
+		//return (new static('<svg/>'))->{$method}(...$params);
+	}
+	// static function new()
+	// {
+	// 	return new static('<svg/>');
+	// }
 }
 class webapp_html extends webapp_xml
 {
