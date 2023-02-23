@@ -376,8 +376,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			//Misc
 			'copy_webapp'		=> 'Web Application v' . self::version,
 			'gzip_level'		=> -1,
-			//'smtp_context'		=> ['ssl://smtp.gmail.com:465', 'username@gmail.com', 'password']
-			'smtp_host'			=> 'tcp://username:password@host']];
+			'manifests'			=> []]];
 		[$this->route, $this->entry] = method_exists($this, $route = sprintf('%s_%s', $this['request_method'],
 			$track = preg_match('/^[-\w]+(?=\/([\-\w]*))?/', $this['request_query'], $entry)
 				? strtr($entry[0], '-', '_') : $entry[] = $this['app_index']))
@@ -808,11 +807,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		$this->response_header('Etag', $hash = '"' . ($needhash ? static::hash($etag, TRUE) : $etag) . '"');
 		return $this->request_header('If-None-Match') !== $hash;
 	}
-	function allow(string|self $router, string ...$methods):bool
-	{
-		return $this->router === $router
-			&& in_array($this->method, $router === $this ? ['get_favicon', 'get_captcha', 'get_qrcode', ...$methods] : $methods, TRUE);
-	}
 	function not_sign_in(callable $authenticate = NULL, string $method = NULL):bool
 	{
 		if (method_exists(...$this->route))
@@ -846,16 +840,13 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return TRUE;
 	}
-	function get_favicon()
+	function allow(string|self $router, string ...$methods):bool
 	{
-		$this->response_cache_control('private, max-age=86400');
-		if ($this->nonematch($this->request_ip(), TRUE))
-		{
-			$this->app('webapp_echo_svg')->xml->favicon();
-			return 200;
-		}
-		return 304;
+		return $this->router === $router
+			&& in_array($this->method, $router === $this ? [
+				'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
 	}
+	//router extends
 	function get_captcha(string $random = NULL)
 	{
 		if ($this['captcha_length'])
@@ -893,6 +884,36 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 				return;
 			}
 			return 304;
+		}
+		return 404;
+	}
+	function get_favicon()
+	{
+		$this->response_cache_control('private, max-age=86400');
+		if ($this->nonematch($this->request_ip(), TRUE))
+		{
+			$this->app('webapp_echo_svg')->xml->favicon();
+			return 200;
+		}
+		return 304;
+	}
+	function get_manifests()
+	{
+		if ($this['manifests'])
+		{
+			$this->app('webapp_echo_json', $this['manifests']);
+			// [
+			// 	'background_color' => 'white',
+			// 	'description' => 'Web Application',
+			// 	'display' => 'fullscreen',
+			// 	'icons' => [
+			// 		['src' => '?favicon', 'sizes' => "192x192", 'type' => 'image/svg+xml']
+			// 	],
+			// 	'name' => 'WebApp',
+			// 	'short_name' => 'webapp',
+			// 	'start_url' => '/'
+			// ];
+			return;
 		}
 		return 404;
 	}

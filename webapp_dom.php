@@ -324,25 +324,19 @@ class webapp_svg extends webapp_xml
 		}
 		return $this;
 	}
-	function base641():string
+	static function base64(array $attributes = []):static
 	{
-		return 'data:image/svg+xml;base64,' . base64_encode($this->asXML());
-	}
-	static function base64():static
-	{
-		return new class('<svg/>') extends webapp_svg
+		//I don’t know if it’s good to write like this, try to use it as little as possible
+		return (new class('<svg/>') extends webapp_svg
 		{
 			function __toString():string
 			{
-				return 'data:image/svg+xml;base64,' . base64_encode($this->asXML());
+				$document = $this->dom()->ownerDocument;
+				return 'data:image/svg+xml;base64,' . base64_encode($document->saveXML($document->documentElement));
+				//return 'data:image/svg+xml;base64,' . base64_encode($this->asXML());
 			}
-		};
-		//return (new static('<svg/>'))->{$method}(...$params);
+		})->setattr($attributes);
 	}
-	// static function new()
-	// {
-	// 	return new static('<svg/>');
-	// }
 }
 class webapp_html extends webapp_xml
 {

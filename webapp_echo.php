@@ -29,10 +29,10 @@ trait webapp_echo
 class webapp_echo_xml extends webapp_implementation
 {
 	use webapp_echo;
-	function __construct(public readonly webapp $webapp, string $root = 'webapp')
+	function __construct(public readonly webapp $webapp, string $type = 'webapp', string ...$params)
 	{
 		$webapp->response_content_type('application/xml');
-		parent::__construct($root);
+		parent::__construct($type, ...$params);
 	}
 	static function mobileconfig(array $values, webapp $webapp = NULL, bool $config = FALSE):webapp_implementation
 	{
@@ -144,13 +144,10 @@ class webapp_echo_html extends webapp_implementation
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
 		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/res/ps/webapp.css', 'media' => 'all']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
-		//$this->link(['rel' => 'manifest', 'href' => '?webmanifest']);
-
-		// $head->append('meta', ['charset' => $webapp['app_charset']]);
-		// $head->append('meta', ['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
-		// $head->append('link', ['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
-		// $head->append('link', ['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/res/ps/webapp.css', 'media' => 'all']);
-		
+		if ($webapp['manifests'])
+		{
+			$this->link(['rel' => 'manifest', 'href' => '?webmanifest']);
+		}
 		//$head->append('script', ['type' => 'module', 'src' => '/webapp/res/js/webkit.js']);
 		//$this->script(['src' => '/webapp/res/js/webapp.js']);
 		//$this->script('import $ from "/webapp/res/js/webkit.js";');
@@ -209,24 +206,6 @@ class webapp_echo_html extends webapp_implementation
 		$form->button('Sign In', 'submit');
 		return $form;
 	}
-	static function frame(webapp_echo_html $context)//:webapp_html
-	{
-		if ($context instanceof webapp_echo_html)
-		{
-			unset($context->xml->head->link, $context->xml->body->div);
-			$context->xml->body['style'] = $context->xml['style'] = 'height:100%;margin:0;overflow:hidden';
-			$context = $context->xml->body;
-		}
-		
-		$frame = $context->append('iframe', [
-			'frameborder' => 0,
-			'loading' => 'lazy',
-			'width' => '100%',
-			'height' => '100%',
-			'src' => 'about:blank'
-		]);
-		return $frame;
-	}
 }
 class webapp_echo_htmlmask extends webapp_echo_html
 {
@@ -258,7 +237,6 @@ class webapp_echo_htmlmask extends webapp_echo_html
 	}
 	function __toString():string
 	{
-		//return $this->entry ? parent::__toString() : $this->webapp->maskdata(parent::__toString());
 		if ($this->entry)
 		{
 			return parent::__toString();
@@ -292,21 +270,6 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	function goto(string $url = NULL)
 	{
 		$this['goto'] = $url;
-	}
-	static function webmanifest(webapp $webapp, array $configs):static
-	{
-		// return new static($webapp, [
-		// 	'background_color' => 'white',
-		// 	'description' => 'Web Application',
-		// 	'display' => 'fullscreen',
-		// 	'icons' => [
-		// 		['src' => '?favicon', 'sizes' => "192x192", 'type' => 'image/svg+xml']
-		// 	],
-		// 	'name' => 'WebApp',
-		// 	'short_name' => 'webapp',
-		// 	'start_url' => '/'
-		// ]);
-		return new static($webapp, $configs);
 	}
 }
 /*
