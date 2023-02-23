@@ -130,7 +130,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			const buffer = [], rowdata = data.match(/#[^#]+/g), resource = url.substring(0, url.lastIndexOf('/')),
 			[previewstart, previewend] = Number.isInteger(preview *= 1)
 				? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
-				: [0, 0xffffffff];
+				: [0, 0xffff];
 			for (let duration = 0, i = 0; i < rowdata.length; ++i)
 			{
 				if (rowdata[i].startsWith('#EXTINF'))
