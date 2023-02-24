@@ -8,9 +8,11 @@ require 'webapp_mysql.php';
 interface webapp_io
 {
 	function request_ip():string;
-	function request_header(string $name):?string;
+	function request_scheme():string;
 	function request_method():string;
+	function request_entry():string;
 	function request_query():string;
+	function request_header(string $name):?string;
 	function request_cookie(string $name):?string;
 	function request_content():string;
 	function request_formdata():array;
@@ -349,6 +351,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			'request_method'	=> in_array($method = strtolower($io->request_method()), ['get', 'post', 'put', 'patch', 'delete', 'options'], TRUE) ? $method : 'get',
 			'request_query'		=> $io->request_query(),
 			//Application
+			'app_hostname'		=> 'localhost',
 			'app_charset'		=> 'utf-8',
 			'app_router'		=> 'webapp_router_',
 			'app_index'			=> 'home',
@@ -668,10 +671,26 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		//X-Forwarded-For
 		return $this->io->request_ip();
 	}
-	// function request_host():string
-	// {
-	// 	return $this->io->request_header('Host') ?? '';
-	// }
+	function request_scheme():string
+	{
+		return $this->io->request_scheme();
+	}
+	function request_host():string
+	{
+		return $this->io->request_header('Host') ?? $this['app_hostname'];
+	}
+	function request_origin():string
+	{
+		return sprintf('%s://%s', $this->request_scheme(), $this->request_host());
+	}
+	function request_entry():string
+	{
+		return $this->request_origin() . $this->io->request_entry();
+	}
+	function request_dir():string
+	{
+		return dirname($this->request_entry());
+	}
 	// function request_cond(string $name = 'cond'):array
 	// {
 	// 	$cond = [];
@@ -901,19 +920,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		if ($this['manifests'])
 		{
+			//https://developer.mozilla.org/zh-CN/docs/Web/Progressive_web_apps
+			//https://developer.mozilla.org/zh-CN/docs/Web/Manifest
 			$this->app('webapp_echo_json', $this['manifests']);
-			// [
-			// 	'background_color' => 'white',
-			// 	'description' => 'Web Application',
-			// 	'display' => 'fullscreen',
-			// 	'icons' => [
-			// 		['src' => '?favicon', 'sizes' => "192x192", 'type' => 'image/svg+xml']
-			// 	],
-			// 	'name' => 'WebApp',
-			// 	'short_name' => 'webapp',
-			// 	'start_url' => '/'
-			// ];
-			return;
+			return 200;
 		}
 		return 404;
 	}

@@ -1,39 +1,31 @@
-then(function(){
-
+function asd()
+{
 	const video = document.querySelector('webapp-video');
 	if (video)
 	{
+		video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 1);
+	}
+}
+
+self.onmessage = event =>
+{
+	//alert('eeeeeeeeeeeeeee');
+	const video = document.querySelector('webapp-video1');
+	if (video)
+	{
+
 		// video.mask = false;
 		// video.m3u8('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8');
 
-		video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 1);
+		//video.m3u8('/2302/MDSE00015434/play', 1000 << 16 | 1);
 
-		video.loaded(function(){
+		// video.loaded(function(){
+		// 	video.loaded(null);
+		// 	setTimeout(()=>{
+		// 		video.m3u8('/2302/MDSE00015434/play');
 
+		// 	}, 5000)
+		// });
 
-			console.log(video.horizontal)
-
-		});
-
-
-		// setTimeout(() => {
-		// 	console.log(11)
-		// 	video.m3u8('/2302/MDSE00015528/play', 1000 << 16 | 1);
-		// }, 4000);
-
-
-
-		const qq = ['/2302/MDSE00015528/play', '/2302/MDSE00015531/play', '/2302/MDSE00015503/play'];
-
-
-		video.finish(asd=>{
-			//framer.dialog.show('接下来往后看。。。');
-			if (qq.length)
-			{
-				video.m3u8(qq.shift(), 1000 << 16 | 1);
-			}
-		});
-
-		
 	}
-});
+};

@@ -5,27 +5,7 @@ trait webapp_echo
 	public readonly webapp $webapp;
 	abstract function __construct(webapp $webapp);
 	abstract function __toString():string;
-	// function __get(string $name):mixed
-	// {
-	// 	return $this->{$name} = &$this->webapp->{$name};
-	// }
-	// function __call(string $name, array $params):mixed
-	// {
-	// 	return $this->webapp->{$name}(...$params);
-	// }
 }
-// class webapp_echo_text implements Stringable
-// {
-// 	use webapp_echo;
-// 	function __construct(public readonly webapp $webapp, private string $content = '')
-// 	{
-// 		$webapp->response_content_type("text/plain; charset={$webapp['app_charset']}");
-// 	}
-// 	function __toString():string
-// 	{
-// 		return $this->content;
-// 	}
-// }
 class webapp_echo_xml extends webapp_implementation
 {
 	use webapp_echo;
@@ -146,7 +126,9 @@ class webapp_echo_html extends webapp_implementation
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
 		if ($webapp['manifests'])
 		{
-			$this->link(['rel' => 'manifest', 'href' => '?webmanifest']);
+			//$this->script(['src' => '/webapp/res/js/sw.js', 'defer' => NULL]);
+			$this->link(['rel' => 'manifest', 'href' => '?manifests']);
+
 		}
 		//$head->append('script', ['type' => 'module', 'src' => '/webapp/res/js/webkit.js']);
 		//$this->script(['src' => '/webapp/res/js/webapp.js']);
@@ -216,6 +198,7 @@ class webapp_echo_htmlmask extends webapp_echo_html
 		if ($this->entry = $webapp->method === "{$webapp['request_method']}_{$webapp['app_index']}")
 		{
 			unset($this->xml->head->link[0], $this->xml->body->div);
+	
 			$this->script(['src' => '/webapp/res/js/loader.js']);
 			$this->script(['src' => '/webapp/res/js/framer.js']);
 			$this->xml->body['style'] = 'margin:0px;padding:0px;overflow:hidden';
@@ -241,7 +224,19 @@ class webapp_echo_htmlmask extends webapp_echo_html
 		{
 			return parent::__toString();
 		}
-		$this->webapp->response_content_type('@text/plain');
+		$this->webapp->response_content_type('@text/html');
+		foreach ($this->xml->xpath('//*[@src]|//*[@href]') as $node)
+		{
+			if (strlen($source = (string)$node[$type = isset($node['src']) ? 'src' : 'href'])
+				&& preg_match('/^\w+\:/', $source) === 0) {
+				$node[$type] = match($source[0])
+				{
+					'/' => "{$this->webapp->request_origin}{$source}",
+					'?' => "{$this->webapp->request_entry}{$source}",
+					default => "{$this->webapp->request_dir}/{$source}"
+				};
+			}
+		}
 		return $this->webapp->maskdata(parent::__toString());
 	}
 }

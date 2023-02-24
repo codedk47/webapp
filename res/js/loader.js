@@ -49,16 +49,31 @@ async function loader(resource, options = {})
 		blob = await response.blob();
 	}
 
+	// switch (options.type || type.split(';')[0])
+	// {
+	// 	case 'application/json': return JSON.parse(await blob.text());
+	// 	case 'text/modify': return [response.url, await blob.text(), Object.fromEntries(response.headers.entries())];
+	// 	case 'text/plain': return blob.text();
+	// 	default: return URL.createObjectURL(blob);
+	// }
+
+	const text = async blob => new Promise(resolve =>
+	{
+		const reader = new FileReader;
+		reader.onload = () => resolve(reader.result);
+		reader.readAsText(blob);
+	});
+
 	switch (options.type || type.split(';')[0])
 	{
-		case 'application/json': return JSON.parse(await blob.text());
-		case 'text/modify': return [response.url, await blob.text(), Object.fromEntries(response.headers.entries())];
-		case 'text/plain': return blob.text();
+		case 'application/json': return JSON.parse(await text(blob));
+		case 'text/modify': return [response.url, await text(blob)];
+		case 'text/plain': return text(blob);
 		default: return URL.createObjectURL(blob);
 	}
 }
 
-if (globalThis.window)
+if (self.window)
 {
 	loader.worker = (function()
 	{

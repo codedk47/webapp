@@ -8,17 +8,25 @@ if (PHP_SAPI === 'cli')
 		{
 			return '127.0.0.1';
 		}
-		function request_header(string $name):?string
+		function request_scheme():string
 		{
-			return $_SERVER[strtoupper($name)] ?? NULL;
+			return 'php';
 		}
 		function request_method():string
 		{
 			return $_SERVER['argv'][1] ?? 'GET';
 		}
+		function request_entry():string
+		{
+			return $_SERVER['SCRIPT_NAME'];
+		}
 		function request_query():string
 		{
 			return substr($_SERVER['argv'][2] ?? '?', 1);
+		}
+		function request_header(string $name):?string
+		{
+			return $_SERVER[strtoupper($name)] ?? NULL;
 		}
 		function request_cookie(string $name):?string
 		{
@@ -70,6 +78,22 @@ else
 		{
 			return $_SERVER['REMOTE_ADDR'];
 		}
+		function request_scheme():string
+		{
+			return $_SERVER['REQUEST_SCHEME'];
+		}
+		function request_method():string
+		{
+			return $_SERVER['REQUEST_METHOD'];
+		}
+		function request_entry():string
+		{
+			return $_SERVER['SCRIPT_NAME'];
+		}
+		function request_query():string
+		{
+			return $_SERVER['QUERY_STRING'] ?? '';
+		}
 		function request_header(string $name):?string
 		{
 			return array_change_key_case(apache_request_headers(), CASE_UPPER)[$same = strtoupper($name)]
@@ -85,14 +109,6 @@ else
 						=> 'Basic ' . base64_encode("{$_SERVER['PHP_AUTH_USER']}:{$_SERVER['PHP_AUTH_PW']}"),
 					default => $_SERVER['AUTHORIZATION'] ?? NULL
 				} : NULL);
-		}
-		function request_method():string
-		{
-			return $_SERVER['REQUEST_METHOD'];
-		}
-		function request_query():string
-		{
-			return $_SERVER['QUERY_STRING'] ?? '';
 		}
 		function request_cookie(string $name):?string
 		{

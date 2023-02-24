@@ -324,6 +324,25 @@ class webapp_svg extends webapp_xml
 		}
 		return $this;
 	}
+
+	function close()
+	{
+		$this->setattr([
+			'width'=>"48px",
+			'height'=>"48px",
+			'viewBox'=>"0 0 24 24",
+			'stroke'=>"#2329D6",
+			'stroke-width'=>"1",
+			'stroke-linecap'=>"square",
+			'stroke-linejoin'=>"miter",
+			'fill'=>"none",
+			'color'=>"#2329D6"
+		]);
+		$this->append('path', ['d' => 'M6.34314575 6.34314575L17.6568542 17.6568542M6.34314575 17.6568542L17.6568542 6.34314575']);
+		return $this;
+	}
+
+
 	static function base64(array $attributes = []):static
 	{
 		//I don’t know if it’s good to write like this, try to use it as little as possible
