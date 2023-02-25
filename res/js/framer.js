@@ -80,10 +80,11 @@ addEventListener('DOMContentLoaded', async event =>
 							}
 							else
 							{
-								if (target.href.startsWith(location.origin))
+								//if (target.href.startsWith(location.origin))
+								if (/^\w+\:/.test(target.getAttribute('href')) === false)
 								{
 									event.preventDefault();
-									render.draw(target.href);
+									render.draw(target.getAttribute('href'));
 									sandbox.close();
 									break;
 								}
