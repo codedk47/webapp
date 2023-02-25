@@ -65,7 +65,6 @@ addEventListener('DOMContentLoaded', async event =>
 				{
 					for (let target = event.target; target.parentNode; target = target.parentNode)
 					{
-						console.log(target.getAttribute('href'))
 						if (target.tagName === 'A' && target.hasAttribute('href'))
 						{
 							if (target.hasAttribute('target'))
