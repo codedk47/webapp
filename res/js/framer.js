@@ -260,7 +260,9 @@ addEventListener('DOMContentLoaded', async event =>
 
 	if ('query' in render.dataset)
 	{
-		framer(render.dataset.query);
+		console.log('asdasd');
+		render.load().then(frame => framer(frame.dataset.query))
+		//framer(render.dataset.query);
 	}
 
 });
