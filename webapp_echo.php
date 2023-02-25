@@ -201,21 +201,19 @@ class webapp_echo_htmlmask extends webapp_echo_html
 	
 			$this->script(['src' => '/webapp/res/js/loader.js']);
 			$this->script(['src' => '/webapp/res/js/framer.js']);
-			$this->xml->body['style'] = 'margin:0px;padding:0px;overflow:hidden';
+			$this->xml->body['style'] = 'margin:0px';//;padding:0px;overflow:hidden
 			$this->xml->body->append('iframe', [
 				'importance' => 'high',
 				'width' => '100%',
 				'height' => '100%',
-				'src' => 'about:blank',
-				//'src' => '?asd',
-				'style'=> 'position:fixed;border:none'
+				'style'=> 'position:fixed;border:none',
+				'data-load' => '?load',
+				'src' => 'about:blank'
 			]);
 		}
 		else
 		{
 			unset($this->xml->head->link[1]);
-
-
 		}
 	}
 	function __toString():string

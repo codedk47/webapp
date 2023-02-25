@@ -49,26 +49,11 @@ async function loader(resource, options = {})
 		blob = await response.blob();
 	}
 
-	// switch (options.type || type.split(';')[0])
-	// {
-	// 	case 'application/json': return JSON.parse(await blob.text());
-	// 	case 'text/modify': return [response.url, await blob.text(), Object.fromEntries(response.headers.entries())];
-	// 	case 'text/plain': return blob.text();
-	// 	default: return URL.createObjectURL(blob);
-	// }
-
-	const text = async blob => new Promise(resolve =>
-	{
-		const reader = new FileReader;
-		reader.onload = () => resolve(reader.result);
-		reader.readAsText(blob);
-	});
-
 	switch (options.type || type.split(';')[0])
 	{
-		case 'application/json': return JSON.parse(await text(blob));
-		case 'text/modify': return [response.url, await text(blob)];
-		case 'text/plain': return text(blob);
+		case 'application/json': return JSON.parse(await blob.text());
+		case 'text/modify': return [response.url, await blob.text(), Object.fromEntries(response.headers.entries())];
+		case 'text/plain': return blob.text();
 		default: return URL.createObjectURL(blob);
 	}
 }
@@ -82,8 +67,8 @@ if (self.window)
 		byte = 16,
 		code = '0123456789ABCDEFGHIJKLMNOPQRSTUV',
 		promise = new Map,
-		backer = new Worker(document.currentScript.src);
-		backer.onmessage = event =>
+		worker = new Worker(document.currentScript.src);
+		worker.onmessage = event =>
 		{
 			//alert(event.data)
 			//console.log(event);
@@ -156,7 +141,7 @@ return;
 							{
 								value[i] = value[i] ^ key[read++ % 8];
 							}
-							backer.postMessage({id, src, options: {
+							worker.postMessage({id, src, options: {
 								method: 'POST',
 								headers: {'Mask-Key' : key.map(value => value.toString(16).padStart(2, 0)).join('')},
 								body: value.buffer}}, [value.buffer]);
@@ -184,7 +169,7 @@ return;
 						{
 							value[i] = value[i] ^ key[i % 8];
 						}
-						backer.postMessage({id, src, options : {
+						worker.postMessage({id, src, options : {
 							method: 'POST',
 							body: value.buffer
 						}}, [value.buffer]);
@@ -205,7 +190,7 @@ return;
 						{
 							value[i] = value[i] ^ key[i % 8];
 						}
-						backer.postMessage({id, src, options : {
+						worker.postMessage({id, src, options : {
 							method: 'POST',
 							body: value.buffer
 						}}, [value.buffer]);
@@ -243,7 +228,7 @@ return;
 							console.log(value.buffer)
 							//resolve();
 
-							// backer.postMessage({id, src, options : {
+							// worker.postMessage({id, src, options : {
 							// 	method: 'POST',
 							// 	body: value.buffer
 							// }}, [value.buffer]);
@@ -254,7 +239,7 @@ return;
 		}
 		return async (src, options, progress) => options instanceof FileList
 			? upload(src, options, progress || (value => value))
-			: new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && backer.postMessage({id, src, options}));
+			: new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && worker.postMessage({id, src, options}));
 	}());
 }
 else

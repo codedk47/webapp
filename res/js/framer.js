@@ -2,34 +2,35 @@ addEventListener('DOMContentLoaded', async event =>
 {
 	class frame
 	{
+		#frame;
+		#observes = new Map;
+		#viewport = new IntersectionObserver(entries =>
+		{
+			entries.forEach(entry =>
+			{
+				if (entry.isIntersecting && this.#observes.has(entry.target))
+				{
+					this.#viewport.unobserve(entry.target);
+					this.#observes.get(entry.target).resolve(entry.target);
+					this.#observes.delete(entry.target);
+				}
+			});
+		});
 		constructor(frame)
 		{
 			frame.style.background = 'white url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iNjQiIHdpZHRoPSI2NCIgdmlld0JveD0iMCAwIDEwMCAxMDAiPg0KPHN0eWxlPmNpcmNsZXtmaWxsOm5vbmU7c3Ryb2tlLXdpZHRoOi40cmVtO3N0cm9rZS1saW5lY2FwOnJvdW5kO30NCkBrZXlmcmFtZXMgbG9hZGluZ3sNCjAle3N0cm9rZS1kYXNoYXJyYXk6NDAgMjQyLjY7c3Ryb2tlLWRhc2hvZmZzZXQ6MDt9DQo1MCV7c3Ryb2tlLWRhc2hhcnJheToxNDEuMztzdHJva2UtZGFzaG9mZnNldDoxNDEuMzt9DQoxMDAle3N0cm9rZS1kYXNoYXJyYXk6NDAgMjQyLjY7c3Ryb2tlLWRhc2hvZmZzZXQ6MjgyLjY7fQ0KfTwvc3R5bGU+DQo8Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgc3Ryb2tlPSJzaWx2ZXIiPjwvY2lyY2xlPg0KPGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIHN0cm9rZT0iYmxhY2siIHN0eWxlPSJhbmltYXRpb246bG9hZGluZyAxcyBjdWJpYy1iZXppZXIoMSwxLDEsMSkgMHMgaW5maW5pdGUiLz4NCjwvc3ZnPg==) center/20% no-repeat';
 			this.dataset = frame.dataset;
-			this._frame = frame;
-			this._observes = new Map;
-			this._viewport = new IntersectionObserver(entries =>
-			{
-				entries.forEach(entry =>
-				{
-					if (entry.isIntersecting && this._observes.has(entry.target))
-					{
-						this._viewport.unobserve(entry.target);
-						this._observes.get(entry.target)(entry.target);
-						this._observes.delete(entry.target);
-					}
-				});
-			});
+			this.#frame = frame;
 		}
 		show(callback)
 		{
-			callback && callback(this._frame);
-			this._frame.style.display = 'block';
+			callback && callback(this.#frame);
+			this.#frame.style.display = 'block';
 		}
 		hide(callback)
 		{
-			this._frame.style.display = 'none';
-			callback && callback(this._frame);
+			this.#frame.style.display = 'none';
+			callback && callback(this.#frame);
 		}
 		open(resource)
 		{
@@ -43,7 +44,7 @@ addEventListener('DOMContentLoaded', async event =>
 		{
 			return new Promise(resolve =>
 			{
-				const frame = this._frame, source = frame.contentDocument || {};
+				const frame = this.#frame, source = frame.contentDocument || {};
 				frame.src = resource;
 				requestAnimationFrame(function detect()
 				{
@@ -56,7 +57,7 @@ addEventListener('DOMContentLoaded', async event =>
 		}
 		async draw(resource)
 		{
-			this._observes.clear(Array.from(this._observes.keys()).forEach(element => this._viewport.unobserve(element)));
+			this.#observes.clear(Array.from(this.#observes.keys()).forEach(element => this.#viewport.unobserve(element)));
 			return loader(resource, {headers}).then(blob => this.load(blob)).then(frame =>
 			{
 				const document = frame.contentDocument;
@@ -90,27 +91,22 @@ addEventListener('DOMContentLoaded', async event =>
 						}
 					}
 				};
-				document.querySelectorAll('img[data-src]').forEach(element =>
-					this.viewport(element).then(element =>
-						worker(element.dataset.src, {mask: true}).then(blob =>
-							element.src = blob)));
-				frame.contentWindow.framer = framer;
-				frame.contentWindow.viewport = element => this.viewport(element);
-				//alert(frame.contentWindow.onmessage)
-				frame.contentWindow.asd && frame.contentWindow.asd();
-				
+				document.querySelectorAll('img[data-src]').forEach(image =>
+					this.viewport(image).then(image =>
+						framer.worker(image.dataset.src, {mask: image.hasAttribute('data-mask')}).then(blob =>
+							image.src = blob)));
+				frame.contentWindow.framer && frame.contentWindow.framer(framer, element => this.viewport(element));
 			});
 		}
 		async viewport(element)
 		{
-			return new Promise(resolve =>
+			const observes = this.#observes.get(element) || {};
+			return observes.promise || (observes.promise = new Promise(resolve =>
 			{
-				if (this._observes.has(element) === false)
-				{
-					this._observes.set(element, resolve);
-					this._viewport.observe(element);
-				}
-			});
+				observes.resolve = resolve;
+				this.#observes.set(element, observes);
+				this.#viewport.observe(element);
+			}));
 		}
 	}
 
@@ -124,24 +120,24 @@ addEventListener('DOMContentLoaded', async event =>
 		const resources = document.querySelectorAll('link[rel="dns-prefetch"][data-speedtest]');
 		if (resources.length)
 		{
-			resolve('https://r.yongyinsoft.com');
-			// const controller = new AbortController;
-			// Promise.any(Array.from(resources).map(link =>
-			// 	fetch(`${link.href}${link.dataset.speedtest}`, {cache: 'no-cache', signal: controller.signal}))).then(async response =>
-			// 		resolve(response.url.slice(0, response.url.indexOf('/', 8)), await response.blob(), controller.abort()), reject);
+			const controller = new AbortController;
+			Promise.any(Array.from(resources).map(link =>
+				fetch(`${link.href}${link.dataset.speedtest}`, {cache: 'no-cache', signal: controller.signal}))).then(async response =>
+					resolve(response.url.slice(0, response.url.indexOf('/', 8)), await response.blob(), controller.abort()), reject);
 		}
 		else
 		{
 			resolve(location.origin);
 		}
 	}),
-	worker = async (resource, options) => prefetch.then(origin => framer.origin || origin).then(origin =>
-		loader.worker(resource.startsWith('/') ? `${origin}${resource}` : resource, options), () => Promise.reject(resource));
+	request = async (method, resource, options) => prefetch.then(origin => framer.origin || origin).then(origin =>
+		method(resource.startsWith('/') ? `${origin}${resource}` : resource, options), () => Promise.reject(resource));
 
 	event.currentTarget.framer = framer;
 	//addEventListener('message', event => framer(event.data));
 
-	framer.worker = worker;
+	framer.source = async (resource, options) => request(loader, resource, options);
+	framer.worker = async (resource, options) => request(loader.worker, resource, options);
 	framer.loader = async (resource, options) => loader(resource, {...options, headers: options && 'headers' in options ? {...options.headers, ...headers} : headers});
 	framer.open = resource => sandbox.open(resource);
 	framer.close = () => sandbox.close();
@@ -246,23 +242,17 @@ addEventListener('DOMContentLoaded', async event =>
 		headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
 	}
 
-	history.pushState(null, null, null);
-	window.onpopstate = event =>
-	{
-		framer.close();
-		if ('query' in render.dataset)
-		{
-			framer(render.dataset.query);
-		}
-		console.log(render.dataset.query)
-	};
+	// history.pushState(null, null, null);
+	// window.onpopstate = event =>
+	// {
+	// 	framer.close();
+	// 	if ('entry' in render.dataset)
+	// 	{
+	// 		framer(render.dataset.entry);
+	// 	}
+	// 	console.log(render.dataset.entry)
+	// };
 
 
-	if ('query' in render.dataset)
-	{
-		console.log('asdasd');
-		render.load().then(frame => framer(frame.dataset.query))
-		//framer(render.dataset.query);
-	}
-
+	render.load().then(frame => framer(frame.dataset.load));
 });
