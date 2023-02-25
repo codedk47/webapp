@@ -65,6 +65,7 @@ addEventListener('DOMContentLoaded', async event =>
 				{
 					for (let target = event.target; target.parentNode; target = target.parentNode)
 					{
+						console.log(target.getAttribute('href'))
 						if (target.tagName === 'A' && target.hasAttribute('href'))
 						{
 							if (target.hasAttribute('target'))
@@ -72,16 +73,16 @@ addEventListener('DOMContentLoaded', async event =>
 								if (target.getAttribute('target') === 'sandbox')
 								{
 									event.preventDefault();
-									/^\w+\:/.test(target.getAttribute('href'))
-										? sandbox.open(target.getAttribute('href'))
-										: sandbox.show(() => sandbox.draw(target.getAttribute('href')));
+									target.getAttribute('href').startsWith(location.origin) || /^\w+\:/.test(target.getAttribute('href')) === false
+										? sandbox.show(() => sandbox.draw(target.getAttribute('href')))
+										: sandbox.open(target.getAttribute('href'));
 									break;
 								}
 							}
 							else
 							{
-								//if (target.href.startsWith(location.origin))
-								if (/^\w+\:/.test(target.getAttribute('href')) === false)
+								//if (target.getAttribute('href').startsWith(location.origin))
+								if (target.getAttribute('href').startsWith(location.origin) || /^\w+\:/.test(target.getAttribute('href')) === false)
 								{
 									event.preventDefault();
 									render.draw(target.getAttribute('href'));
