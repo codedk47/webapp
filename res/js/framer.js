@@ -72,9 +72,9 @@ addEventListener('DOMContentLoaded', async event =>
 								if (target.getAttribute('target') === 'sandbox')
 								{
 									event.preventDefault();
-									target.href.startsWith(location.origin)
-										? sandbox.show(() => sandbox.draw(target.href))
-										: sandbox.open(target.href);
+									/^\w+\:/.test(target.getAttribute('href'))
+										? sandbox.open(target.getAttribute('href'))
+										: sandbox.show(() => sandbox.draw(target.getAttribute('href')));
 									break;
 								}
 							}
