@@ -668,16 +668,19 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	function request_ip():string
 	{
 		//CF-Connecting-IP
-		//X-Forwarded-For
-		return $this->io->request_ip();
+		return $this->io->request_header('X-Forwarded-For')
+			?? $this->io->request_ip();
 	}
 	function request_scheme():string
 	{
-		return $this->io->request_scheme();
+		return $this->io->request_header('X-Forwarded-Proto')
+			?? $this->io->request_scheme();
 	}
 	function request_host():string
 	{
-		return $this->io->request_header('Host') ?? $this['app_hostname'];
+		return $this->io->request_header('X-Forwarded-Host')
+			?? $this->io->request_header('Host')
+			?? $this['app_hostname'];
 	}
 	function request_origin():string
 	{

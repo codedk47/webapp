@@ -32,7 +32,6 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#loading = false;
 				this.#loaded && this.#loaded(this);
 
-
 			// this.#video.height = this.hasAttribute('autoheight')
 			// 	? event.target.videoHeight * (this.offsetWidth / event.target.videoWidth)
 			// 	: '100%';

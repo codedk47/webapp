@@ -237,9 +237,9 @@ return;
 				}).catch(reject);
 			})));
 		}
-		return async (src, options, progress) => options instanceof FileList
-			? upload(src, options, progress || (value => value))
-			: new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && worker.postMessage({id, src, options}));
+		return async (resource, options, progress) => options instanceof FileList
+			? upload(resource, options, progress || (value => value))
+			: new Promise((resolve, reject) => promise.set(++id, [resolve, reject]) && worker.postMessage({id, resource, options}));
 	}());
 }
 else
@@ -249,7 +249,7 @@ else
 	self.queue = [];
 	function worker(data)
 	{
-		loader(data.src, data.options)
+		loader(data.resource, data.options)
 			.then(content => self.postMessage({id: data.id, is: 0, content}))
 			.catch(error => self.postMessage({id: data.id, is: 1, content: error}))
 			.finally(() =>
