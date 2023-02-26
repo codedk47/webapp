@@ -665,11 +665,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	//function redis():webapp_redis{}
 	//request
-	function request_ip():string
+	function request_ip(bool $proxy = FALSE):string
 	{
 		//CF-Connecting-IP
-		return $this->io->request_header('X-Forwarded-For')
-			?? $this->io->request_ip();
+		return $proxy && ($ip = $this->io->request_header('X-Forwarded-For'))
+			? current(explode(',', $ip))
+			: $this->io->request_ip();
 	}
 	function request_scheme():string
 	{

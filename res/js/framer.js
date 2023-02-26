@@ -243,17 +243,13 @@ addEventListener('DOMContentLoaded', async event =>
 		headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
 	}
 
-	// history.pushState(null, null, null);
-	// window.onpopstate = event =>
-	// {
-	// 	framer.close();
-	// 	if ('entry' in render.dataset)
-	// 	{
-	// 		framer(render.dataset.entry);
-	// 	}
-	// 	console.log(render.dataset.entry)
-	// };
-
+	history.pushState(null, null, null);
+	window.onpopstate = () =>
+	{
+		framer.close();
+		framer(render.dataset.load);
+		console.log(render.dataset.load)
+	};
 
 	render.load().then(frame => framer(frame.dataset.load));
 });
