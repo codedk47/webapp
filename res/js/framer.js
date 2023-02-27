@@ -45,6 +45,7 @@ addEventListener('DOMContentLoaded', async event =>
 			return new Promise(resolve =>
 			{
 				const frame = this.#frame, source = frame.contentDocument || {};
+				//URL.revokeObjectURL(frame.src);
 				frame.src = resource;
 				requestAnimationFrame(function detect()
 				{
@@ -134,9 +135,8 @@ addEventListener('DOMContentLoaded', async event =>
 	request = async (method, resource, options) => prefetch.then(origin => framer.origin || origin).then(origin =>
 		method(resource.startsWith('/') ? `${origin}${resource}` : resource, options), () => Promise.reject(resource));
 
-	event.currentTarget.framer = framer;
 	//addEventListener('message', event => framer(event.data));
-
+	event.currentTarget.framer = framer;
 	framer.source = async (resource, options) => request(loader, resource, options);
 	framer.worker = async (resource, options) => request(loader.worker, resource, options);
 	framer.loader = async (resource, options) => loader(resource, {...options, headers: options && 'headers' in options ? {...options.headers, ...headers} : headers});

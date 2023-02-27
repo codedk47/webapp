@@ -223,9 +223,14 @@ class webapp_echo_htmlmask extends webapp_echo_html
 			return parent::__toString();
 		}
 		$this->webapp->response_content_type('@text/html');
-		foreach ($this->xml->xpath('//*[@src]|//*[@href]') as $node)
+		foreach ($this->xml->xpath('//*[@src]|//*[@href]|//*[@action]') as $node)
 		{
-			if (strlen($source = (string)$node[$type = isset($node['src']) ? 'src' : 'href'])
+			if (strlen($source = (string)$node[$type = match (TRUE)
+				{
+					isset($node['src']) => 'src',
+					isset($node['href']) => 'href',
+					default => 'action'
+				}])
 				&& preg_match('/^\w+\:/', $source) === 0) {
 				$node[$type] = match($source[0])
 				{

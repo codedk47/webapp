@@ -893,12 +893,14 @@ class webapp_router_admin extends webapp_echo_html
 		])->setattr(['onchange' => 'g({sync:this.value})'])->selected($sync);
 		$table->paging($this->webapp->at(['page' => '']));
 
-		foreach ($this->webapp->mysql
-			->bills('WHERE `describe` IN(?S) GROUP BY `describe`', array_keys($buy))
-			->select('`describe`,count(1)as c') as $res) {
-			$buy[$res['describe']][0] = number_format($res['c']);
+		if ($buy)
+		{
+			foreach ($this->webapp->mysql
+				->bills('WHERE `describe` IN(?S) GROUP BY `describe`', array_keys($buy))
+				->select('`describe`,count(1)as c') as $res) {
+				$buy[$res['describe']][0] = number_format($res['c']);
+			}
 		}
-
 		$this->main->append('script')->cdata(<<<'JS'
 function viewallcover(tbody)
 {
