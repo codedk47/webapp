@@ -73,7 +73,10 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 		$commands = ['Supported commands:'];
 		foreach (get_class_methods($this) as $command)
 		{
-			$commands[] = "/{$command}";
+			if (str_starts_with($command, 'cmd_'))
+			{
+				$commands[] = "/{$command}";
+			}
 		}
 		$this->reply_message(join("\n", $commands));
 	}
