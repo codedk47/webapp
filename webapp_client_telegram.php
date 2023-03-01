@@ -45,9 +45,9 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	{
 		return substr($this['text'], $offset, $length);
 	}
-	function send_message(int|string $chat_id, string $text):array
+	function send_message(int|string $chat_id, string $text):bool
 	{
-		return $this->webapp->telegram->send_message($chat_id, $text);
+		return $this->webapp->telegram->send_message($chat_id, $text)['ok'];
 	}
 	function __invoke(int $chat_id, int $from_id)
 	{
@@ -57,9 +57,18 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	{
 		return json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 	}
-	function reply_message(string $text, bool $private = FALSE)
+	function reply_message(string $text, bool $private = FALSE):bool
 	{
-		$this->send_message($this[$private ? 'from' : 'chat']['id'], $text);
+		return $this->send_message($this[$private ? 'from' : 'chat']['id'], $text);
+	}
+	function cmd_start()
+	{
+		$commands = ['Supported commands'];
+		foreach (get_class_methods($this) as $command)
+		{
+			$commands[] = "/{$command}";
+		}
+		$this->reply_message(join("\n", $commands));
 	}
 	function cmd_version()
 	{
