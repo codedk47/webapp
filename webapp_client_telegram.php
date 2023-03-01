@@ -34,7 +34,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 					$method = new ReflectionMethod($this, $command);
 
 
-					$this->reply_message(sprintf('%s--%s', $params, $method->getNumberOfRequiredParameters()));
+					$this->reply_message(sprintf('%s--%s', count($params), $method->getNumberOfRequiredParameters()));
 
 
 					if (count($params) >= $method->getNumberOfRequiredParameters())
