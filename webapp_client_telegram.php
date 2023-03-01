@@ -9,6 +9,26 @@ declare(strict_types=1);
 https://api.telegram.org/bot{token}/{method}
 https://core.telegram.org/bots/api#available-methods
 */
+class webapp_telegram_message extends ArrayObject implements Stringable
+{
+	public readonly ?webapp $webapp;
+	public readonly int $update_id;
+	function __construct(array|webapp $context)
+	{
+		[$this->webapp, $this->update_id, $message] = is_array($context)
+			? [NULL, ...array_values($context)]
+			: [$context, ...array_values($context->request_content())];
+		parent::__construct($message, ArrayObject::STD_PROP_LIST);
+	}
+	function __toString()
+	{
+		return $this['text'];
+	}
+	function reply_message(string $text, bool $private = FALSE)
+	{
+		$this->webapp->telegram->send_message($this[$private ? 'from' : 'chat']['id'], $text);
+	}
+}
 class webapp_client_telegram extends webapp_client_http
 {
 	function __construct(string $token)
@@ -23,26 +43,6 @@ class webapp_client_telegram extends webapp_client_http
 			&& is_array($content = $this->content())
 			&& ($content['ok'] ?? FALSE) ? $content['result'] : FALSE;
 	}
-	static function message(array $data, ?webapp_client_telegram $telegram = NULL)
-	{
-		return new class($data, $telegram) extends ArrayObject
-		{
-			public readonly int $update_id;
-			function __construct(array $data, public readonly webapp_client_telegram $telegram)
-			{
-				parent::__construct($data['message'], ArrayObject::STD_PROP_LIST);
-				$this->update_id = $data['update_id'];
-			}
-			function __toString()
-			{
-				return $this['text'];
-			}
-			function reply_message(string $text, bool $private = FALSE)
-			{
-				$this->telegram->send_message($this[$private ? 'from' : 'chat']['id'], $text);
-			}
-		};
-	}
 	#https://core.telegram.org/bots/api#getupdates
 	function get_updates(int $offset = -1):array
 	{
@@ -53,11 +53,11 @@ class webapp_client_telegram extends webapp_client_http
 	{
 		return $this->api('setWebhook', is_string($url) ? ['url' => $url] : NULL);
 	}
-		#https://api.telegram.org/bot{token}/getWebhookInfo
-		function get_webhook_info():array
-		{
-			return $this->api('getWebhookInfo');
-		}
+	#https://core.telegram.org/bots/api#getwebhookinfo
+	function get_webhook_info():array
+	{
+		return $this->api('getWebhookInfo');
+	}
 	function delete_message(int|string $chat_id, int $message_id):bool
 	{
 		return $this->api('deleteMessage', ['chat_id' => $chat_id, 'message_id' => $message_id]);
