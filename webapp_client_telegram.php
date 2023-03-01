@@ -49,7 +49,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	{
 		return $this->webapp->telegram->send_message($chat_id, $text);
 	}
-	function __invoke()
+	function __invoke(int $chat_id, int $from_id)
 	{
 		$this->reply_message((string)$this);
 	}
