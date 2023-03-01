@@ -26,17 +26,9 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			{
 				if ($entitie['type'] === 'bot_command'
 					&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1))) {
-
-					
-
 					$extend = $this->text($entitie['offset'] + $entitie['length']);
 					$params = $extend ? explode(' ', $extend) : [];
 					$method = new ReflectionMethod($this, $command);
-
-
-					$this->reply_message(sprintf('%s--%s', count($params), $method->getNumberOfRequiredParameters()));
-
-
 					if (count($params) >= $method->getNumberOfRequiredParameters())
 					{
 						try
