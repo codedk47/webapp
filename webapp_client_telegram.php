@@ -33,7 +33,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	}
 	function reply()
 	{
-		$this->webapp->telegram->send_message('chat', json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+		$this->webapp->telegram->send_message($this['chat']['id'], json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 	}
 	function __toString()
 	{
