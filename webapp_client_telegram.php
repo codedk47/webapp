@@ -19,43 +19,53 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			? [NULL, ...array_values($context)]
 			: [$context, ...array_values($context->request_content())];
 		parent::__construct($message, ArrayObject::STD_PROP_LIST);
-		if (isset($this['entities'], $this['entities'][0], $this['entities'][0]['type']) && $this['entities'][0]['type'] === 'bot_command')
+		if (isset($this['entities']))
 		{
-			$prarms = explode(' ', $this['text']);
-			if (method_exists($this, $command = 'cmd_' . substr(array_shift($prarms), 1)))
+			foreach ($this['entities'] as $entitie)
 			{
-				$this->{$command}(...$prarms);
+				if ($entitie['type'] === 'bot_command')
+				{
+					$this->send_message($this['chat']['id'], $this->text($entitie['offset']));
+				}
 			}
-			else
-			{
-				$this->webapp->telegram->send_message($this['chat']['id'], (string)$this);
-			}
+			// $prarms = explode(' ', $this['text']);
+			// if (method_exists($this, $command = 'cmd_' . substr(array_shift($prarms), 1)))
+			// {
+			// 	$this->{$command}(...$prarms);
+			// }
+			// else
+			// {
+			// 	$this->send_message($this['chat']['id'], (string)$this);
+			// }
 		}
 		else
 		{
-			$this->receive($this['chat']['id'], $this['from']['id']);
+			$this($this['chat']['id'], $this['from']['id']);
 		}
 	}
-	function receive(int $chat_id, int $from_id)
+	function text(int $offset = 0, int $length = NULL):string
 	{
-		$this->webapp->telegram->send_message($chat_id, (string)$this);
-	}
-	function __toString():string
-	{
-		return json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-	}
-	function save(string $context):bool
-	{
-		$data = (string)$this;
-		return file_put_contents($context, $data) === strlen($data);
+		return substr($this['text'], $offset, $length);
 	}
 	function send_message(int|string $chat_id, string $text):array
 	{
 		return $this->webapp->telegram->send_message($chat_id, $text);
 	}
+	function __invoke(int $chat_id, int $from_id)
+	{
+		$this->send_message($chat_id, (string)$this);
+	}
+	function __toString():string
+	{
+		return json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	}
 	function reply_message(string $text, bool $private = FALSE)
 	{
 		$this->send_message($this[$private ? 'from' : 'chat']['id'], $text);
+	}
+	function cmd_clear()
+	{
+
 	}
 }
 class webapp_client_telegram extends webapp_client_http
