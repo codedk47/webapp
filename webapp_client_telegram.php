@@ -24,6 +24,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 		{
 			foreach ($this['entities'] as $entitie)
 			{
+				$this->reply_message($command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1));
 				if ($entitie['type'] === 'bot_command'
 					&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1))) {
 					$extend = $this->text($entitie['offset'] + $entitie['length']);
@@ -31,8 +32,6 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 					$method = new ReflectionMethod($this, $command);
 					if (count($params) >= $method->getNumberOfRequiredParameters())
 					{
-						$this->reply_message(count($params) >= $method->getNumberOfRequiredParameters() ? 'ww' : 'ee');
-						
 						try
 						{
 							$this->{$command}(...$params);
