@@ -31,7 +31,14 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 					$method = new ReflectionMethod($this, $command);
 					if (count($params) >= $method->getNumberOfRequiredParameters())
 					{
-						$this->{$command}(...$params);
+						try
+						{
+							$this->{$command}(...$params);
+						}
+						catch (Error $error)
+						{
+							$this->reply_message((string)$error);
+						}
 					}
 					else
 					{
@@ -63,7 +70,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	}
 	function cmd_start()
 	{
-		$commands = ['Supported commands'];
+		$commands = ['Supported commands:'];
 		foreach (get_class_methods($this) as $command)
 		{
 			$commands[] = "/{$command}";
