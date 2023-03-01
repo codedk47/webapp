@@ -24,7 +24,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 		{
 			foreach ($this['entities'] as $entitie)
 			{
-				$this->reply_message($command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1));
+				$this->reply_message('cmd_asd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1));
 				if ($entitie['type'] === 'bot_command'
 					&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1))) {
 					$extend = $this->text($entitie['offset'] + $entitie['length']);
@@ -59,7 +59,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	}
 	function __invoke(int $chat_id, int $from_id)
 	{
-		$this->reply_message((string)$this);
+		//$this->reply_message((string)$this);
 	}
 	function __toString():string
 	{
