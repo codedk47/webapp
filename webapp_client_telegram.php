@@ -33,7 +33,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 					{
 						try
 						{
-							$this->{$command}(...$params);
+							$this->ddd(...$params);
 						}
 						catch (Error $error)
 						{
