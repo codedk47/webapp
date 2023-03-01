@@ -259,9 +259,10 @@ class news_driver extends webapp
 			// 	return $this->request('register', ['uid' => $uid, 'channel' => $channel]);
 			// }
 			//进入游戏，不用注册可以直接进入
-			function entergame(string $uid, int $game = 8):string
+			function entergame(string $uid, int $game = 0):string
 			{
-				return is_array($game = $this->request('enterGame', ['uid' => $uid])) && $game['code'] === 0 ? $game['data']['gameUrl'] : '';
+				return is_array($game = $this->request('enterGame', ['uid' => $uid, 'game' => $game]))
+					&& $game['code'] === 0 ? $game['data']['gameUrl'] : '';
 			}
 			//划拨
 			function transfer(string $uid, float $credit, ?string &$orderid):bool
@@ -281,30 +282,6 @@ class news_driver extends webapp
 					&& $status['data']['reason'] === 'ok';
 			}
 		};
-	}
-	//---
-	function get_game_credit(string $uid, int $coin)
-	{
-		if ($this->authorization)
-		{
-			if ($this->game->transfer($uid, $coin, $orderid))
-			{
-				echo $orderid;
-			}
-		}
-	}
-	function get_game_enter(string $uid)
-	{
-		if($acc = $this->authorize($this->request_authorization(), fn($uid) => [$uid]))
-		{
-			echo $this->game->entergame($uid);
-			return;
-		}
-		echo 11;
-	}
-	function game_balance(string $uid):int
-	{
-		return $this->game->balance($uid);
 	}
 	function game_exchange(string $uid, array $exchange, &$error):bool
 	{
