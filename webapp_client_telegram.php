@@ -49,9 +49,13 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 		$data = (string)$this;
 		return file_put_contents($context, $data) === strlen($data);
 	}
+	function send_message(int|string $chat_id, string $text):array
+	{
+		return $this->webapp->telegram->send_message($chat_id, $text);
+	}
 	function reply_message(string $text, bool $private = FALSE)
 	{
-		$this->webapp->telegram->send_message($this[$private ? 'from' : 'chat']['id'], $text);
+		$this->send_message($this[$private ? 'from' : 'chat']['id'], $text);
 	}
 }
 class webapp_client_telegram extends webapp_client_http
