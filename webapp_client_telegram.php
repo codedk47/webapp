@@ -19,10 +19,21 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			? [NULL, ...array_values($context)]
 			: [$context, ...array_values($context->request_content())];
 		parent::__construct($message, ArrayObject::STD_PROP_LIST);
+		// if (isset($this['entities'], $this['entities']['type'])
+		// 	&& $this['entities']['type'] === 'bot_command'
+		// 	&& method_exists($this, ))
+		// {
+
+		// }
 	}
 	function __toString()
 	{
 		return $this['text'];
+	}
+	function save(string $context):bool
+	{
+		$data = json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		return file_put_contents($context, $data) === strlen($data);
 	}
 	function reply_message(string $text, bool $private = FALSE)
 	{
