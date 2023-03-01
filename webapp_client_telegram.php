@@ -31,6 +31,8 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 					$method = new ReflectionMethod($this, $command);
 					if (count($params) >= $method->getNumberOfRequiredParameters())
 					{
+						$this->reply_message(count($params) >= $method->getNumberOfRequiredParameters() ? 'ww' : 'ee');
+						
 						try
 						{
 							$this->{$command}(...$params);
@@ -68,18 +70,18 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	{
 		return $this->send_message($this[$private ? 'from' : 'chat']['id'], $text);
 	}
-	function cmd_start()
-	{
-		$commands = ['Supported commands:'];
-		foreach (get_class_methods($this) as $command)
-		{
-			if (str_starts_with($command, 'cmd_'))
-			{
-				$commands[] = substr($command, 4);
-			}
-		}
-		$this->reply_message(join("\n", $commands));
-	}
+	// function cmd_start()
+	// {
+	// 	$commands = ['Supported commands:'];
+	// 	foreach (get_class_methods($this) as $command)
+	// 	{
+	// 		if (str_starts_with($command, 'cmd_'))
+	// 		{
+	// 			$commands[] = substr($command, 4);
+	// 		}
+	// 	}
+	// 	$this->reply_message(join("\n", $commands));
+	// }
 	function cmd_version()
 	{
 		$this->reply_message($this->webapp['copy_webapp']);
