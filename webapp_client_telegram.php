@@ -75,7 +75,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 		{
 			if (str_starts_with($command, 'cmd_'))
 			{
-				$commands[] = substr($command, 4);
+				$commands[] = '/' . substr($command, 4);
 			}
 		}
 		$this->reply_message(join("\n", $commands));
