@@ -12,41 +12,33 @@ https://core.telegram.org/bots/api#available-methods
 class webapp_telegram_message extends ArrayObject implements Stringable
 {
 	public readonly ?webapp $webapp;
-	public readonly int $update_id;
+	public readonly int $update_id, $chat_id, $from_id;
 	function __construct(array|webapp $context)
 	{
 		[$this->webapp, $this->update_id, $message] = is_array($context)
 			? [NULL, ...array_values($context)]
 			: [$context, ...array_values($context->request_content())];
 		parent::__construct($message, ArrayObject::STD_PROP_LIST);
+		$this($message['chat']['id'], $message['from']['id']);
 		if (isset($this['entities']))
 		{
 			foreach ($this['entities'] as $entitie)
 			{
 				if ($entitie['type'] === 'bot_command'
 					&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length']))) {
+					$extend = $this->text($entitie['offset'] + $entitie['length']);
+					$params = $extend ? explode(' ', $extend) : [];
 					$method = new ReflectionMethod($this, $command);
-
-
-					$params = $this->text($entitie['offset'] + $entitie['length']);
-
-
-					$this->send_message($this['chat']['id'], "{$command}--{$params}");
+					if (count($params) >= $method->getNumberOfRequiredParameters())
+					{
+						$this->{$command}(...$params);
+					}
+					else
+					{
+						$this->reply_message('The command parameter is not enough');
+					}
 				}
 			}
-			// $prarms = explode(' ', $this['text']);
-			// if (method_exists($this, $command = 'cmd_' . substr(array_shift($prarms), 1)))
-			// {
-			// 	$this->{$command}(...$prarms);
-			// }
-			// else
-			// {
-			// 	$this->send_message($this['chat']['id'], (string)$this);
-			// }
-		}
-		else
-		{
-			$this($this['chat']['id'], $this['from']['id']);
 		}
 	}
 	function text(int $offset = 0, int $length = NULL):string
@@ -57,9 +49,9 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	{
 		return $this->webapp->telegram->send_message($chat_id, $text);
 	}
-	function __invoke(int $chat_id, int $from_id)
+	function __invoke()
 	{
-		$this->send_message($chat_id, (string)$this);
+		$this->reply_message((string)$this);
 	}
 	function __toString():string
 	{
@@ -69,9 +61,9 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	{
 		$this->send_message($this[$private ? 'from' : 'chat']['id'], $text);
 	}
-	function cmd_clear()
+	function cmd_version()
 	{
-
+		$this->reply_message($this->webapp['copy_webapp']);
 	}
 }
 class webapp_client_telegram extends webapp_client_http
