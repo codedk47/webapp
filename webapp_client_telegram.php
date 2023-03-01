@@ -19,21 +19,27 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			? [NULL, ...array_values($context)]
 			: [$context, ...array_values($context->request_content())];
 		parent::__construct($message, ArrayObject::STD_PROP_LIST);
-		if (isset($this['entities'], $this['entities'][0], $this['entities'][0]['type'])
-			&& $this['entities'][0]['type'] === 'bot_command'
-			&& count($prarms = explode(' ', $this['text']))
-			&& method_exists($this, $command = 'cmd_' . substr(array_shift($prarms), 1)))
+		if (isset($this['entities'], $this['entities'][0], $this['entities'][0]['type']) && $this['entities'][0]['type'] === 'bot_command')
 		{
-			$this->{$command}(...$prarms);
+			$prarms = explode(' ', $this['text']);
+			if (method_exists($this, $command = 'cmd_' . substr(array_shift($prarms), 1)))
+			{
+				$this->{$command}(...$prarms);
+			}
+			else
+			{
+				$this->webapp->telegram->send_message($this['chat']['id'], 'unknown command');
+			}
 		}
 		else
 		{
-			$this->reply();
+			$this->receive($this['chat']['id']);
 		}
 	}
-	function reply()
+	function receive(int $chat_id)
 	{
-		$this->webapp->telegram->send_message($this['chat']['id'], json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+		$this->webapp->telegram->send_message($chat_id,
+			json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 	}
 	function __toString()
 	{
