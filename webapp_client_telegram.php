@@ -19,19 +19,24 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			? [NULL, ...array_values($context)]
 			: [$context, ...array_values($context->request_content())];
 		parent::__construct($message, ArrayObject::STD_PROP_LIST);
-		$this($message['chat']['id'], $message['from']['id']);
+		//$this($message['chat']['id'], $message['from']['id']);
 		if (isset($this['entities']))
 		{
 			foreach ($this['entities'] as $entitie)
 			{
-				$this->reply_message(
-					method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1)) ? 'y' : 'n'
-				);
 				if ($entitie['type'] === 'bot_command'
 					&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1))) {
+
+					
+
 					$extend = $this->text($entitie['offset'] + $entitie['length']);
 					$params = $extend ? explode(' ', $extend) : [];
 					$method = new ReflectionMethod($this, $command);
+
+
+					$this->reply_message(sprintf('%s--%s', $params, $method->getNumberOfRequiredParameters()));
+
+
 					if (count($params) >= $method->getNumberOfRequiredParameters())
 					{
 						try
@@ -61,7 +66,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	}
 	function __invoke(int $chat_id, int $from_id)
 	{
-		//$this->reply_message((string)$this);
+		$this->reply_message((string)$this);
 	}
 	function __toString():string
 	{
