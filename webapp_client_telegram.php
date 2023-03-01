@@ -28,26 +28,25 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			}
 			else
 			{
-				$this->webapp->telegram->send_message($this['chat']['id'], 'unknown command');
+				$this->webapp->telegram->send_message($this['chat']['id'], (string)$this);
 			}
 		}
 		else
 		{
-			$this->receive($this['chat']['id']);
+			$this->receive($this['chat']['id'], $this['from']['id']);
 		}
 	}
-	function receive(int $chat_id)
+	function receive(int $chat_id, int $from_id)
 	{
-		$this->webapp->telegram->send_message($chat_id,
-			json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+		$this->webapp->telegram->send_message($chat_id, (string)$this);
 	}
-	function __toString()
+	function __toString():string
 	{
-		return $this['text'];
+		return json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 	}
 	function save(string $context):bool
 	{
-		$data = json_encode($this->getArrayCopy(), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		$data = (string)$this;
 		return file_put_contents($context, $data) === strlen($data);
 	}
 	function reply_message(string $text, bool $private = FALSE)
