@@ -19,33 +19,33 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			? [NULL, ...array_values($context)]
 			: [$context, ...array_values($context->request_content())];
 		parent::__construct($message, ArrayObject::STD_PROP_LIST);
-		//$this($message['chat']['id'], $message['from']['id']);
-		if (isset($this['entities']))
+		try
 		{
-			foreach ($this['entities'] as $entitie)
+			$this($message['chat']['id'], $message['from']['id']);
+			if (isset($this['entities']))
 			{
-				if ($entitie['type'] === 'bot_command'
-					&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1))) {
-					$extend = $this->text($entitie['offset'] + $entitie['length']);
-					$params = $extend ? explode(' ', $extend) : [];
-					$method = new ReflectionMethod($this, $command);
-					if (count($params) >= $method->getNumberOfRequiredParameters())
-					{
-						try
+				foreach ($this['entities'] as $entitie)
+				{
+					if ($entitie['type'] === 'bot_command'
+						&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1))) {
+						$extend = $this->text($entitie['offset'] + $entitie['length']);
+						$params = $extend ? explode(' ', $extend) : [];
+						$method = new ReflectionMethod($this, $command);
+						if (count($params) >= $method->getNumberOfRequiredParameters())
 						{
 							$this->{$command}(...$params);
 						}
-						catch (Error $error)
+						else
 						{
-							$this->reply_message((string)$error);
+							$this->reply_message('The command parameter is not enough');
 						}
-					}
-					else
-					{
-						$this->reply_message('The command parameter is not enough');
 					}
 				}
 			}
+		}
+		catch (Error $error)
+		{
+			$this->reply_message((string)$error);
 		}
 	}
 	function text(int $offset = 0, int $length = NULL):string
@@ -54,7 +54,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	}
 	function send_message(int|string $chat_id, string $text):bool
 	{
-		return $this->webapp->telegram->send_message($chat_id, $text)['ok'];
+		return array_key_exists('message_id', $this->webapp->telegram->send_message($chat_id, $text));
 	}
 	function __invoke(int $chat_id, int $from_id)
 	{
@@ -68,18 +68,18 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	{
 		return $this->send_message($this[$private ? 'from' : 'chat']['id'], $text);
 	}
-	// function cmd_start()
-	// {
-	// 	$commands = ['Supported commands:'];
-	// 	foreach (get_class_methods($this) as $command)
-	// 	{
-	// 		if (str_starts_with($command, 'cmd_'))
-	// 		{
-	// 			$commands[] = substr($command, 4);
-	// 		}
-	// 	}
-	// 	$this->reply_message(join("\n", $commands));
-	// }
+	function cmd_start()
+	{
+		$commands = ['Supported commands:'];
+		foreach (get_class_methods($this) as $command)
+		{
+			if (str_starts_with($command, 'cmd_'))
+			{
+				$commands[] = substr($command, 4);
+			}
+		}
+		$this->reply_message(join("\n", $commands));
+	}
 	function cmd_version()
 	{
 		$this->reply_message($this->webapp['copy_webapp']);
