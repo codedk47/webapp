@@ -459,10 +459,10 @@ class interfaces extends webapp
 		$form->fieldset();
 		$tagc = [];
 		$tags = [];
-		foreach ($this->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+		foreach ($this->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name,alias') as $tag)
 		{
 			$tagc[$tag['hash']] = $tag['level'];
-			$tags[$tag['hash']] = $tag['name'];
+			$tags[$tag['hash']] = join(',', array_unique(explode(',', $tag['name'] . ',' . $tag['alias'])));
 		}
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 
