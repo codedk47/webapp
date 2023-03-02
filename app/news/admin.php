@@ -18,13 +18,14 @@ class webapp_router_admin extends webapp_echo_html
 				}
 				else
 				{
-					webapp_echo_html::form_sign_in($this->main);
+					webapp_echo_html::form_sign_in($this->main)->xml['class'] = 'webapp-blur';
 				}
 				return $webapp->response_status(200);
 			}
 			$this->main->setattr(['Unauthorized', 'style' => 'font-size:2rem']);
 			return $webapp->response_status(401);
 		}
+		
 		$this->xml->head->append('link', ['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/news/admin.css']);
 		$this->xml->head->append('script', ['src' => '/webapp/app/news/admin.js']);
 		$nav = $this->nav([
@@ -692,10 +693,10 @@ class webapp_router_admin extends webapp_echo_html
 		$form->fieldset();
 		$tagc = [];
 		$tags = [];
-		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name,alias') as $tag)
 		{
 			$tagc[$tag['hash']] = $tag['level'];
-			$tags[$tag['hash']] = $tag['name'];
+			$tags[$tag['hash']] = join(',', array_unique(explode(',', $tag['name'] . ',' . $tag['alias'])));
 		}
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
 
@@ -717,6 +718,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('require', 'number', ['min' => -2, 'required' => NULL]);
 		$form->fieldset();
 		$form->button('Update Resource', 'submit');
+		$form->xml->append('script', 'document.querySelectorAll("ul.restag>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		return $form;
 	}
 	function post_resource_update(string $hash)

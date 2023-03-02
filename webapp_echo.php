@@ -163,7 +163,7 @@ class webapp_echo_html extends webapp_implementation
 	function wallpaper()
 	{
 		$this->script(['src' => '/webapp/res/js/tgwallpaper.min.js']);
-		$wallpaper = $this->xml->body->append('div', ['style' => 'position:fixed;z-index:1;top:0;left:0;right:0;bottom:0;']);
+		$wallpaper = $this->xml->body->insert('div', 'first')->setattr(['style' => 'position:fixed;z-index:-1;top:0;left:0;right:0;bottom:0;']);
 		$wallpaper->append('canvas', [
 			'id'=>"wallpaper",
 			'width' => 50,

@@ -142,23 +142,29 @@ table[class*=-stat]>tbody>tr>td{
 }
 ul.restag{
 	padding:0;
-	width:76rem;
+	width:90rem;
 	display:flex;
 	align-content: flex-start;
 	flex-flow:wrap;
 	list-style-type:none;
 	gap:.3rem;
 }
-ul.restag>li{
-	flex:0 0 9rem;
+
+ul.restag>li>label.checked{
+	background-color: dodgerblue;
+	border: .1rem solid darkblue;
+	color: white;
 }
 ul.restag>li>label{
-	padding:.3rem;
+	padding:.2rem .4rem;
 	border-radius:.3rem;
 	white-space:nowrap;
+	display: block;
+	border: .1rem solid gray;
 }
-ul.restag>li>label:hover{
-	background:whitesmoke;
+ul.restag>li>label:hover:not(.checked){
+	background:lightyellow;
+	border: .1rem solid goldenrod;
 }
 ul.restag>li>label:active{
 	background:gainsboro;
