@@ -160,6 +160,30 @@ class webapp_echo_html extends webapp_implementation
 	// {
 	// 	return ($this->style ??= $this->xml->head->append('style', ['media' => 'all']))->text($rule);
 	// }
+	function wallpaper()
+	{
+		$this->script(['src' => '/webapp/res/js/tgwallpaper.min.js']);
+		$wallpaper = $this->xml->body->append('div', ['style' => 'position:fixed;z-index:1;top:0;left:0;right:0;bottom:0;']);
+		$wallpaper->append('canvas', [
+			'id'=>"wallpaper",
+			'width' => 50,
+			'height' => 50,
+			'data-colors' => 'dbddbb,6ba587,d5d88d,88b884',
+			'style' => 'position:absolute;width:100%;height:100%'
+		]);
+		$wallpaper->append('div', [
+			'style' => 'position:absolute;width:100%;height:100%;background-image:url(/webapp/res/ps/pattern-telegram.svg);mix-blend-mode: overlay;opacity:.4'
+		]);
+		$this->xml->body->append('script', <<<JS
+const wallpaper = document.getElementById('wallpaper');
+if (wallpaper)
+{
+	TWallpaper.init(wallpaper);
+	TWallpaper.animate(true);
+	TWallpaper.update();
+}
+JS);
+	}
 	function nav(array $link):webapp_html
 	{
 		$node = $this->header->append('nav', ['class' => 'webapp']);
@@ -201,6 +225,7 @@ class webapp_echo_htmlmask extends webapp_echo_html
 	
 			$this->script(['src' => '/webapp/res/js/loader.js']);
 			$this->script(['src' => '/webapp/res/js/framer.js']);
+			$this->wallpaper();
 			$this->xml->body['style'] = 'margin:0px';//;padding:0px;overflow:hidden
 			$this->xml->body->append('iframe', [
 				'importance' => 'high',

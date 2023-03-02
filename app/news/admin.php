@@ -530,7 +530,7 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		if (($this->webapp->admin[2] || $this->webapp->admin[0] === '1200')
 			&& $this->form_tag($this->webapp)->fetch($tag)
-			&& empty($this->webapp->mysql->tags('where name in(?S) limit 1', explode(',', $tag['alias']))->array())
+			&& $this->check_tags($tag['alias'])
 			&& $this->webapp->mysql->tags->insert($tag += ['time' => $this->webapp->time])
 			&& $this->webapp->call('saveTag', $this->webapp->tag_xml($tag))) {
 			return $this->okay("?admin/tags,search:{$tag['hash']}");
@@ -558,13 +558,24 @@ class webapp_router_admin extends webapp_echo_html
 		}
 		$this->warn($this->webapp->admin[2] ? '标签删除失败！' : '需要全局管理权限！');
 	}
+	function check_tags(string $alias, string $hash = NULL):bool
+	{
+		$ul = NULL;
+		foreach ($this->webapp->mysql->tags(...$hash === NULL
+			? ['where name in(?S)', explode(',', $alias)]
+			: ['where name in(?S) and hash!=?s', explode(',', $alias), $hash]) as $tag) {
+			$ul ??= $this->main->append('ul');
+			$ul->append('li', sprintf('%s - %s - %s', $tag['hash'], $tag['name'], $tag['alias']));
+		}
+		return $ul === NULL;
+	}
 	function post_tag_update(string $hash)
 	{
 		$tag = $this->webapp->mysql->tags('where hash=?s', $hash)->array();
 		if ($tag
 			&& ($this->webapp->admin[2] || $this->webapp->admin[0] === '1200')
 			&& $this->form_tag($this->webapp)->fetch($tag)
-			&& empty($this->webapp->mysql->tags('where name in(?S) limit 1', explode(',', $tag['alias']))->array())
+			&& $this->check_tags($tag['alias'], $hash)
 			&& $this->webapp->mysql->tags('where hash=?s', $hash)->update($tag)
 			&& $this->webapp->call('saveTag', $this->webapp->tag_xml($tag))) {
 			return $this->okay("?admin/tags,search:{$hash}");
