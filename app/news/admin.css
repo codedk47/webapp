@@ -149,13 +149,12 @@ ul.restag{
 	list-style-type:none;
 	gap:.3rem;
 }
-
 ul.restag>li>label.checked{
 	background-color: dodgerblue;
 	border: .1rem solid darkblue;
 	color: white;
 }
-ul.restag>li>label{
+ul.restag>li>label,ul.restags>li{
 	padding:.2rem .4rem;
 	border-radius:.3rem;
 	white-space:nowrap;

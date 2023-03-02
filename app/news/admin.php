@@ -598,14 +598,14 @@ class webapp_router_admin extends webapp_echo_html
 			{
 				$div->append('br');
 				$ul[$level] = $div->fieldset($class)->setattr('style', 'display:inline-block')
-					->append('ul', ['class' => 'restag', 'style' => 'margin:0;font-family:var(--webapp-font-monospace)']);
+					->append('ul', ['class' => 'restag restags', 'style' => 'margin:0;font-family:var(--webapp-font-monospace)']);
 			}
-			foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name') as $tag)
+			foreach ($this->webapp->mysql->tags('ORDER BY level ASC,click DESC,count DESC')->select('hash,level,name,alias') as $tag)
 			{
 				if (isset($ul[$tag['level']]))
 				{
 					$ul[$tag['level']]->append('li', [
-						"{$tag['hash']} {$tag['name']}",
+						"{$tag['hash']}:{$tag['name']}={$tag['alias']}",
 						'class' => "level{$tag['level']}"
 					]);
 				}
