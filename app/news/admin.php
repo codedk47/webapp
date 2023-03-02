@@ -565,7 +565,7 @@ class webapp_router_admin extends webapp_echo_html
 			? ['where name in(?S)', explode(',', $alias)]
 			: ['where name in(?S) and hash!=?s', explode(',', $alias), $hash]) as $tag) {
 			$ul ??= $this->main->append('ul');
-			$ul->append('li', sprintf('%s - %s - %s', $tag['hash'], $tag['name'], $tag['alias']));
+			$ul->append('li', sprintf('【%s】%s：%s', $tag['hash'], $tag['name'], $tag['alias']));
 		}
 		return $ul === NULL;
 	}
