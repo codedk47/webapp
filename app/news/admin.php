@@ -601,9 +601,8 @@ class webapp_router_admin extends webapp_echo_html
 				if (isset($ul[$tag['level']]))
 				{
 					$ul[$tag['level']]->append('li', [
-						"{$tag['hash']}:{$tag['name']}={$tag['alias']}",
 						'class' => "level{$tag['level']}"
-					]);
+					])->append('label', "{$tag['hash']}:{$tag['name']}={$tag['alias']}");
 				}
 			}
 			return;

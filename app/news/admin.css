@@ -147,19 +147,19 @@ ul.restag{
 	align-content: flex-start;
 	flex-flow:wrap;
 	list-style-type:none;
-	gap:.3rem;
+	gap:.6rem;
 }
 ul.restag>li>label.checked{
-	background-color: dodgerblue;
-	border: .1rem solid darkblue;
-	color: white;
+	background-color: dodgerblue !important;
+	border: .1rem solid darkblue !important;
+	color: white !important;
 }
-ul.restag>li>label,ul.restags>li{
+ul.restag>li>label{
 	padding:.2rem .4rem;
 	border-radius:.3rem;
 	white-space:nowrap;
 	display: block;
-	border: .1rem solid gray;
+	border: .1rem solid transparent;
 }
 ul.restag>li>label:hover:not(.checked){
 	background:lightyellow;
@@ -168,19 +168,19 @@ ul.restag>li>label:hover:not(.checked){
 ul.restag>li>label:active{
 	background:gainsboro;
 }
-ul.restag>li.level0{color:black;}
-ul.restag>li.level1{color:DimGrey;}
-ul.restag>li.level2{color:SlateGrey;}
-ul.restag>li.level3{color:RoyalBlue;}
-ul.restag>li.level4{color:Navy;}
-ul.restag>li.level5{color:brown;}
-ul.restag>li.level6{color:blueviolet;}
-ul.restag>li.level7{color:chocolate;}
-ul.restag>li.level8{color:CadetBlue;}
-ul.restag>li.level9{color:Teal;}
-ul.restag>li.level10{color:darkslategray;}
-ul.restag>li.level11{color:DarkGreen;}
-ul.restag>li.level12{color:deeppink;}
+ul.restag>li.level0>label{color:black;border: .1rem solid black;}
+ul.restag>li.level1>label{color:deeppink;border: .1rem solid deeppink;}
+ul.restag>li.level2>label{color:SlateGrey;border: .1rem solid SlateGrey;}
+ul.restag>li.level3>label{color:RoyalBlue;border: .1rem solid RoyalBlue;}
+ul.restag>li.level4>label{color:Navy;border: .1rem solid Navy;}
+ul.restag>li.level5>label{color:brown;border: .1rem solid brown;}
+ul.restag>li.level6>label{color:blueviolet;border: .1rem solid blueviolet;}
+ul.restag>li.level7>label{color:chocolate;border: .1rem solid chocolate;}
+ul.restag>li.level8>label{color:CadetBlue;border: .1rem solid CadetBlue;}
+ul.restag>li.level9>label{color:Teal;border: .1rem solid Teal;}
+ul.restag>li.level10>label{color:darkslategray;border: .1rem solid darkslategray;}
+ul.restag>li.level11>label{color:DarkGreen;border: .1rem solid DarkGreen;}
+ul.restag>li.level12>label{color:DimGrey;border: .1rem solid DimGrey;}
 ul.mo{
 	padding:0;
 	width:62rem;
