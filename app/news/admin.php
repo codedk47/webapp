@@ -292,7 +292,7 @@ class webapp_router_admin extends webapp_echo_html
 		else
 		{
 			$pretty_lu = 151;
-			$pretty_feerate = 269.38;
+			$pretty_feerate = 269;
 			foreach ($unitorders as $unitname => &$unitorders_unit)
 			{
 				if ($unitname)
