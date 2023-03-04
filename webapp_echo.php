@@ -156,6 +156,10 @@ class webapp_echo_html extends webapp_implementation
 	{
 		$this->xml->head->title = $title;
 	}
+	// function script_variables(array $variables, string $name = 'webapp')
+	// {
+	// 	$this->script("const {$name}=" . json_encode($variables, JSON_UNESCAPED_UNICODE));
+	// }
 	// function addstyle(string $rule):DOMText
 	// {
 	// 	return ($this->style ??= $this->xml->head->append('style', ['media' => 'all']))->text($rule);

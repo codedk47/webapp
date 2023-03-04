@@ -291,8 +291,8 @@ class webapp_router_admin extends webapp_echo_html
 		}
 		else
 		{
-			$pretty_lu = $pretty * 2.2;
-			$pretty_feerate = 4;
+			$pretty_lu = 151;
+			$pretty_feerate = 269.38;
 			foreach ($unitorders as $unitname => &$unitorders_unit)
 			{
 				if ($unitname)
@@ -476,7 +476,7 @@ class webapp_router_admin extends webapp_echo_html
 		$header->append('input', ['type' => 'text', 'value' => is_string($type) && strlen($type) === 4 ? $type : NULL,
 			'placeholder' => '单位代码',
 			'style' => 'width:4rem', 'minlength' => 4, 'maxlength' => 4, 'onchange' => 'g({type:this.value||null})']);
-		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:3.3})']);
+		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:1600})']);
 		$table->xml['class'] = 'webapp-stateven';
 	}
 	//标签
