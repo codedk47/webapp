@@ -404,7 +404,7 @@ class webapp_router_admin extends webapp_echo_html
 			if (isset($unitorders[$stat['unit']]))
 			{
 				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count']));
-				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
+				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee']));
 			}
 			else
 			{
