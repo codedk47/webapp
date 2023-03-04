@@ -288,11 +288,12 @@ class webapp_router_admin extends webapp_echo_html
 		if ($pretty == 1)
 		{
 			$pretty_lu = 1;
+			
 		}
 		else
 		{
 			$pretty_lu = 151;
-			$pretty_feerate = 269;
+			$pretty_feerate = 268.38;
 			foreach ($unitorders as $unitname => &$unitorders_unit)
 			{
 				if ($unitname)
@@ -402,8 +403,8 @@ class webapp_router_admin extends webapp_echo_html
 			$t7->append('td', number_format($stat['$6$0']));
 			if (isset($unitorders[$stat['unit']]))
 			{
-				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count'] * $pretty));
-				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * $pretty * 0.01));
+				$t8->append('td', number_format($unitorders[$stat['unit']][0]['count']));
+				$t9->append('td', number_format($unitorders[$stat['unit']][0]['fee'] * 0.01));
 			}
 			else
 			{
