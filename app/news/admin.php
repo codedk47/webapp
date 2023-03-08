@@ -52,6 +52,7 @@ class webapp_router_admin extends webapp_echo_html
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				//['Runstatus（服务器状态，轻点）', '?admin/runstatus'],
+				['创建数据板块（不要随便点！！！）', '?admin/generatedata'],
 				['前台配置参数设置，更新APK包', '?admin/config'],
 				['长视频修改标签🚨谨慎使用❗', '?admin/tt']
 			]]
@@ -119,6 +120,78 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function get_home(string $ym = '', string $unit = NULL, string $type = NULL, string $admin = NULL)
 	{
+		if (isset($this->webapp->query['excel']) === FALSE)
+		{
+			$save = $this->webapp->query['save'] ?? 0;
+			$ym = preg_match('/^\d{4}\-\d{2}/', $ym, $pattren) ? $pattren[0] : date('Y-m');
+			//$ym = '2023-01';
+			$day = date('t', strtotime($ym));
+			$count = ['pv' => 0, 'ua' => 0, 'lu' => 0, 'ru' => 0, 'dv' => 0, 'dc' => 0, 'ia' => 0, 'pay_count' => 0, 'pay_fee' => 0, 'unit_ia' => 0, 'unit_fee' => 0];
+			$table = $this->main->table($this->webapp->mysql->generate('WHERE site=?i AND save=?i AND date like ?s ORDER BY date ASC', $this->webapp->site, $save, "{$ym}%"), function($table, $data, $week) use(&$count)
+			{
+				$w = date('w', strtotime($data['date']));
+				$table->row();
+				$table->cell("{$data['date']}（{$week[$w]}）");
+				$table->cell(number_format($data['pv']));
+				$table->cell(number_format($data['ua']));
+				$table->cell(number_format($data['lu']));
+				$table->cell(number_format($data['ru']));
+				$table->cell(number_format($data['dv']));
+				$table->cell(number_format($data['dc']));
+				$table->cell(number_format($data['ia']));
+				$table->cell(number_format($data['pay_count']));
+				$table->cell(number_format($data['pay_fee']));
+				$table->cell(number_format($data['unit_ia']));
+				$table->cell(number_format($data['unit_fee']));
+				$count['pv'] += $data['pv'];
+				$count['ua'] += $data['ua'];
+				$count['lu'] += $data['lu'];
+				$count['ru'] += $data['ru'];
+				$count['dv'] += $data['dv'];
+				$count['dc'] += $data['dc'];
+				$count['ia'] += $data['ia'];
+				$count['pay_count'] += $data['pay_count'];
+				$count['pay_fee'] += $data['pay_fee'];
+				$count['unit_ia'] += $data['unit_ia'];
+				$count['unit_fee'] += $data['unit_fee'];
+
+			}, ['日', '一', '二', '三', '四', '五', '六']);
+			$c = $table->fieldset('日期（周）', '浏览', '独立', '日活', '注册', '访问量', '点击量', '下载量', '订单数', '订单金额', '扣量下载', '结算金额')->insert('tr', 'after');
+			$c->append('td', '当月总计');
+			$c->append('td', number_format($count['pv']));
+			$c->append('td', number_format($count['ua']));
+			$c->append('td', number_format($count['lu']));
+			$c->append('td', number_format($count['ru']));
+			$c->append('td', number_format($count['dv']));
+			$c->append('td', number_format($count['dc']));
+			$c->append('td', number_format($count['ia']));
+			$c->append('td', number_format($count['pay_count']));
+			$c->append('td', number_format($count['pay_fee']));
+			$c->append('td', number_format($count['unit_ia']));
+			$c->append('td', number_format($count['unit_fee']));
+			$table->xml['class'] = 'webapp-stat';
+			$table->colgroup->append('col', ['style' => 'background-color:lightgrey']);
+			$table->colgroup->append('col', ['span' => 2]);
+			$table->colgroup->append('col', ['style' => 'background-color:antiquewhite']);
+			$table->colgroup->append('col', ['style' => 'background-color:bisque']);
+			$table->colgroup->append('col', ['span' => 2]);
+			$table->colgroup->append('col', ['style' => 'background-color:powderblue']);
+			$table->colgroup->append('col', ['span' => 1]);
+			$table->colgroup->append('col', ['style' => 'background-color:lightgreen']);
+			$table->colgroup->append('col', ['span' => 1]);
+			$table->colgroup->append('col', ['style' => 'background-color:lightpink']);
+
+			$header = $table->header('');
+			$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
+			$sl = $this->webapp->mysql->generate('WHERE site=?i GROUP BY save', $this->webapp->site)->column('save');
+			$header->select(array_combine($sl, array_map(fn($v) => "数据标识：{$v}", $sl)))
+				->setattr(['onchange' => 'g({save:this.value===""?null:this.value})'])->selected($save);
+			$header->append('input', ['type' => 'search', 'placeholder' => '请输入查询条件']);
+			$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({excel:1})']);
+			return;
+		}
+
+
 		[$y, $m] = preg_match('/^\d{4}(?=\-(\d{2}))/', $ym, $pattren) ? $pattren : explode('-', $ym = date('Y-m'));
 		if ($unit)
 		{
@@ -284,57 +357,17 @@ class webapp_router_admin extends webapp_echo_html
 			}
 		}
 
-		$pretty = floatval($this->webapp->query['pretty'] ?? 1);
-		if ($pretty == 1)
-		{
-			$pretty_lu = 1;
-			
-		}
-		else
-		{
-			$pretty_lu = 151;
-			$pretty_feerate = 268.38;
-			
-			foreach ($unitorders as $unitname => &$unitorders_unit)
-			{
-				if ($unitname)
-				{
-					$unitorders_unit_all_count = 0;
-					$unitorders_unit_all_fee = 0;
-					foreach ($unitorders_unit as $unitorders_unit_day_index => &$unitorders_unit_day)
-					{
-						if ($unitorders_unit_day_index)
-						{
-
-							$unitorders_unit_all_count += $unitorders_unit_day['count'] *= $pretty_feerate;
-							$unitorders_unit_all_fee += $unitorders_unit_day['fee'] *= $pretty_feerate;
-
-							$unitorders[NULL][$unitorders_unit_day_index]['count'] += $unitorders_unit_day['count'];
-							$unitorders[NULL][$unitorders_unit_day_index]['fee'] += $unitorders_unit_day['fee'];
-						}
-					}
-					$unitorders_unit[0] = [
-						'count' => $unitorders_unit_all_count,
-						'fee' => $unitorders_unit_all_fee
-					];
-					$unitorders[NULL][0]['count'] += $unitorders_unit_all_count;
-					$unitorders[NULL][0]['fee'] += $unitorders_unit_all_fee;
-				}
-			}
-			
-		}
-
 		$stat = $this->webapp->mysql->unitstats(...$cond)->statmonth($ym, 'unit', 'right(date,2)', [
-			"SUM(IF({day}=0 OR right(date,2)={day},ceil(pv*{$pretty}),0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ceil(ua*{$pretty}),0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ceil(lu*{$pretty_lu}),0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ceil(ru*{$pretty}),0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ceil(dv*{$pretty}),0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ceil(dc*{$pretty}),0))",
-			"SUM(IF({day}=0 OR right(date,2)={day},ceil(ia*{$pretty}),0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},pv,0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ua,0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},lu,0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ru,0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},dv,0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},dc,0))",
+			"SUM(IF({day}=0 OR right(date,2)={day},ia,0))",
 		], 'ORDER BY $6$0 DESC LIMIT 50');
 
-		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $unitrates, $pretty)
+		$table = $this->main->table($stat, function($table, $stat, $days, $ym, $unitorders, $unitrates)
 		{
 
 			$t1 = $table->tbody->append('tr');
@@ -352,7 +385,7 @@ class webapp_router_admin extends webapp_echo_html
 
 			if ($stat['unit'])
 			{
-				$t1->append('td', ['rowspan' => 12])->append('a', [$stat['unit'], 'href' => "?admin,ym:{$ym},unit:{$stat['unit']}"]);
+				$t1->append('td', ['rowspan' => 12])->append('a', [$stat['unit'], 'href' => "?admin,excel:1,ym:{$ym},unit:{$stat['unit']}"]);
 			}
 			else
 			{
@@ -415,8 +448,8 @@ class webapp_router_admin extends webapp_echo_html
 			}
 			if (isset($unitrates[$stat['unit']]))
 			{
-				$t10->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fia'] * $pretty)));
-				$t11->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fee'] * $pretty)));
+				$t10->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fia'])));
+				$t11->append('td', number_format(ceil($unitrates[$stat['unit']][0]['fee'])));
 			}
 			else
 			{
@@ -458,8 +491,8 @@ class webapp_router_admin extends webapp_echo_html
 				}
 				if (isset($unitrates[$stat['unit']]))
 				{
-					$t10->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fia'] * $pretty)));
-					$t11->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fee'] * $pretty)));
+					$t10->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fia'])));
+					$t11->append('td', number_format(ceil($unitrates[$stat['unit']][$i]['fee'])));
 				}
 				else
 				{
@@ -468,7 +501,7 @@ class webapp_router_admin extends webapp_echo_html
 				}
 			}
 
-		}, $days, $ym, $unitorders, $unitrates, $pretty);
+		}, $days, $ym, $unitorders, $unitrates);
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$header = $table->header('');
 		$header->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);
@@ -479,8 +512,120 @@ class webapp_router_admin extends webapp_echo_html
 		$header->append('input', ['type' => 'text', 'value' => is_string($type) && strlen($type) === 4 ? $type : NULL,
 			'placeholder' => '单位代码',
 			'style' => 'width:4rem', 'minlength' => 4, 'maxlength' => 4, 'onchange' => 'g({type:this.value||null})']);
-		$header->append('button', ['下载 Excel 数据', 'onclick' => 'g({pretty:1600})']);
+		$header->append('button', ['返回', 'onclick' => 'g({excel:null})']);
 		$table->xml['class'] = 'webapp-stateven';
+	}
+	function form_generatedata($ctx):webapp_form
+	{
+		$form = new webapp_form($ctx);
+		$form->fieldset('每天基准【日活】数据 / 上下浮动（建议浮动不要太大） / 【浏览】【独立】【日活】0.001 - 100.001之间');
+		$form->field('alive', 'number', ['min' => 1, 'max' => 1000000, 'value' => 315381, 'required' => NULL]);
+		$form->field('alive_float', 'number', ['min' => 0.60, 'max' => 0.99, 'step' => 0.01, 'value' => 0.87, 'required' => NULL]);
+		$form->field('alive_pv', 'number', ['min' => 0.001, 'max' => 100.001, 'step' => 0.001, 'value' => 16.19, 'required' => NULL]);
+		$form->field('alive_ua', 'number', ['min' => 0.001, 'max' => 100.001, 'step' => 0.001, 'value' => 1.113, 'required' => NULL]);
+		$form->field('alive_lu', 'number', ['min' => 0.001, 'max' => 100.001, 'step' => 0.001, 'value' => 1.013, 'required' => NULL]);
+
+		$form->fieldset('每天基准【新增】数据 / 上下浮动（建议浮动不要太大） / 【注册】【访问量】【点击量】【下载量】0.001 - 100.001之间');
+		$form->field('newadd', 'number', ['min' => 1, 'max' => 1000000, 'value' => 45381, 'required' => NULL]);
+		$form->field('newadd_float', 'number', ['min' => 0.60, 'max' => 0.99, 'step' => 0.01, 'value' => 0.73, 'required' => NULL]);
+		$form->field('newadd_ru', 'number', ['min' => 0.001, 'max' => 100.001, 'step' => 0.001, 'value' => 1.033, 'required' => NULL]);
+		$form->field('newadd_dv', 'number', ['min' => 0.001, 'max' => 100.001, 'step' => 0.001, 'value' => 4.003, 'required' => NULL]);
+		$form->field('newadd_dc', 'number', ['min' => 0.001, 'max' => 100.001, 'step' => 0.001, 'value' => 2.011, 'required' => NULL]);
+		$form->field('newadd_ia', 'number', ['min' => 0.001, 'max' => 100.001, 'step' => 0.001, 'value' => 0.973, 'required' => NULL]);
+
+		$form->fieldset('充值单数 以 最终随机【注册】作为基数乘以比率（0.001 - 1之间） / 充值额度范围权重概率');
+		$form->field('pay_ru', 'number', ['min' => 0.001, 'max' => 1, 'step' => 0.001, 'value' => 0.027, 'required' => NULL]);
+		$form->field('pay_list', 'text', ['value' => '30:8,50:6,100:4,200:3,300:2,500:1', 'style' => 'width:20rem', 'required' => NULL]);
+
+		$form->fieldset('修正【每周日】到【每周六】数据浮动比率0.5 - 1.5之间');
+		$form->field('w0', 'number', ['min' => 0.5, 'max' => 1.5, 'step' => 0.01, 'value' => 1.44, 'required' => NULL]);
+		$form->field('w1', 'number', ['min' => 0.5, 'max' => 1.5, 'step' => 0.01, 'value' => 1.21, 'required' => NULL]);
+		$form->field('w2', 'number', ['min' => 0.5, 'max' => 1.5, 'step' => 0.01, 'value' => 0.86, 'required' => NULL]);
+		$form->field('w3', 'number', ['min' => 0.5, 'max' => 1.5, 'step' => 0.01, 'value' => 0.98, 'required' => NULL]);
+		$form->field('w4', 'number', ['min' => 0.5, 'max' => 1.5, 'step' => 0.01, 'value' => 1.01, 'required' => NULL]);
+		$form->field('w5', 'number', ['min' => 0.5, 'max' => 1.5, 'step' => 0.01, 'value' => 1.11, 'required' => NULL]);
+		$form->field('w6', 'number', ['min' => 0.5, 'max' => 1.5, 'step' => 0.01, 'value' => 1.35, 'required' => NULL]);
+
+		$form->fieldset('修正【一月】到【十二月】数据比率0.5 - 8.5之间（最多从一月至今）');
+		$form->field('m1', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 0.91, 'required' => NULL]);
+		$form->field('m2', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 0.75, 'required' => NULL]);
+		$form->field('m3', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 0.88, 'required' => NULL]);
+		$form->field('m4', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 0.99, 'required' => NULL]);
+		$form->field('m5', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 1.25, 'required' => NULL]);
+		$form->field('m6', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 1.51, 'required' => NULL]);
+		$form->fieldset();
+		$form->field('m7', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 1.64, 'required' => NULL]);
+		$form->field('m8', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 1.57, 'required' => NULL]);
+		$form->field('m9', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 1.46, 'required' => NULL]);
+		$form->field('m10', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 1.33, 'required' => NULL]);
+		$form->field('m11', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 1.21, 'required' => NULL]);
+		$form->field('m12', 'number', ['min' => 0.5, 'max' => 8.5, 'step' => 0.01, 'value' => 1.02, 'required' => NULL]);
+
+		$form->fieldset('扣量下载，以 最终随机【下载】作为基数乘以比率（0.1 - 1之间） / 下载单价（1 - 4元之间）');
+		$form->field('unit_rate', 'number', ['min' => 0.1, 'max' => 1, 'step' => 0.1, 'value' => 0.7, 'required' => NULL]);
+		$form->field('unit_price', 'number', ['min' => 1, 'max' => 4, 'step' => 0.1, 'value' => 2.1, 'required' => NULL]);
+
+		$form->fieldset('保存到（年） / 保存数据标识，以便日后查看 / 保存模式');
+		$form->field('year', 'number', ['min' => 2000, 'max' => date('Y'), 'value' => date('Y'), 'required' => NULL]);
+		$form->field('save', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
+		$form->field('mode', 'select', ['options' => ['appends' => '增加模式', 'overwrite' => '覆盖写入']]);
+
+		$form->fieldset();
+		$form->button('Generate data', 'submit');
+		return $form;
+	}
+	function post_generatedata()
+	{
+		if ($this->form_generatedata($this->webapp)->fetch($base) === FALSE) return 404;
+		$payw = array_map(fn($v) => explode(':', $v), explode(',', $base['pay_list']));
+		$code = str_pad($this->webapp->site, 3, 0, STR_PAD_LEFT) . str_pad($base['save'], 3, 0, STR_PAD_LEFT);
+		if ($base['mode'] === 'overwrite')
+		{
+			$this->webapp->mysql->generate('WHERE site=?i AND save=?i', $this->webapp->site, $base['save'])->delete();
+		}
+		for ($stday = mktime(0, 0, 0, 1, 1, $base['year']), $stend = mktime(0, 0, 0); $stday <= $stend; $stday += 86400)
+		{
+			$float = floor($base['alive'] * $base['alive_float']);
+			$alive = $this->webapp->random_int($float, $base['alive'] - $float + $base['alive']);
+
+			$float = floor($base['newadd'] * $base['newadd_float']);
+			$newadd = $this->webapp->random_int($float, $base['newadd'] - $float + $base['newadd']);
+
+			[$m, $w] = explode(',', date('n,w', $stday), 2);
+			$data = [
+				'code' => date('Ymd', $stday) . $code,
+				'site' => $this->webapp->site,
+				'save' => $base['save'],
+				'date' => date('Y-m-d', $stday),
+				'pv' => $alive * $base['alive_pv'] * $base["m{$m}"] * $base["w{$w}"],
+				'ua' => $alive * $base['alive_ua'] * $base["m{$m}"] * $base["w{$w}"],
+				'lu' => $alive * $base['alive_lu'] * $base["m{$m}"] * $base["w{$w}"],
+				'ru' => $newadd * $base['newadd_ru'] * $base["m{$m}"] * $base["w{$w}"],
+				'dv' => $newadd * $base['newadd_dv'] * $base["m{$m}"] * $base["w{$w}"],
+				'dc' => $newadd * $base['newadd_dc'] * $base["m{$m}"] * $base["w{$w}"],
+				'ia' => $newadd * $base['newadd_ia'] * $base["m{$m}"] * $base["w{$w}"]
+			];
+			$data['pay_count'] = round($data['ru'] * $base['pay_ru']);
+			$data['pay_fee'] = 0;
+			for ($i = 0; $i < $data['pay_count']; ++$i)
+			{
+				$data['pay_fee'] += $this->webapp->random_weights($payw, 1)[0];
+			}
+			$data['unit_ia'] = $data['ia'] * $base['unit_rate'];
+			$data['unit_fee'] = $data['unit_ia'] * $base['unit_price'];
+			if ($stday === $stend)
+			{
+				$g = date('G') + 1;
+				$data = array_map(fn($v) => is_numeric($v) ? $v / 24 * $g : $v, $data);
+				$this->webapp->mysql->generate('WHERE code=?s LIMIT 1', $data['code'])->delete();
+			}
+			$this->webapp->mysql->generate->insert($data);
+		}
+		$this->okay('?admin/home');
+	}
+	function get_generatedata()
+	{
+		$this->form_generatedata($this->main);
 	}
 	//标签
 	static function list_tag_level():array
