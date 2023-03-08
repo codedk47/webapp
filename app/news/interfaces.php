@@ -328,7 +328,7 @@ class interfaces extends webapp
 
 		$form->fieldset('名称跳转');
 		$form->field('name', 'text', ['style' => 'width:8rem', 'placeholder' => '广告名称', 'required' => NULL]);
-		$form->field('goto', 'text', ['style' => 'width:42rem', 'placeholder' => '跳转地址', 'value' => 'javascript:;']);
+		$form->field('goto', 'text', ['style' => 'width:42rem', 'placeholder' => '跳转地址', 'value' => '']);
 
 		$form->fieldset('有效时间段，每天展示时间段');
 		$form->field('timestart', 'datetime-local', ['value' => date('Y-m-d\T00:00'), 'required' => NULL],
