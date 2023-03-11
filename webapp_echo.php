@@ -229,7 +229,7 @@ class webapp_echo_htmlmask extends webapp_echo_html
 	
 			$this->script(['src' => '/webapp/res/js/loader.js']);
 			$this->script(['src' => '/webapp/res/js/framer.js']);
-			$this->wallpaper();
+			//$this->wallpaper();
 			$this->xml->body['style'] = 'margin:0px';//;padding:0px;overflow:hidden
 			$this->xml->body->append('iframe', [
 				'importance' => 'high',
