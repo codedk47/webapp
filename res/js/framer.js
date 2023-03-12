@@ -172,7 +172,7 @@ addEventListener('DOMContentLoaded', async event =>
 				document.body.style.background = document.onclick = null
 			},
 			timeout = setTimeout(clear, splashscreen.timeout || 6000);
-			worker(splashscreen.picture, {mask: splashscreen.mask}).finally(() => clearTimeout(timeout)).then(blob =>
+			framer.worker(splashscreen.picture, {mask: splashscreen.mask}).finally(() => clearTimeout(timeout)).then(blob =>
 			{
 				document.body.style.background = `white url(${blob}) center/cover no-repeat`;
 				button.style.cssText = [

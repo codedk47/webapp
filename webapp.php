@@ -540,7 +540,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	final function break(Closure|array $router, mixed ...$params):void
 	{
 		[$this->route[0], $this->route[1]] = [$router, '__invoke'];
-		
 		if (func_num_args() > 1)
 		{
 			$this->entry = $params;
