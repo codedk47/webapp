@@ -537,9 +537,14 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return $this($this->app = new $name($this, ...$params));
 	}
-	final function break(Closure $router, mixed ...$params):void
+	final function break(Closure|array $router, mixed ...$params):void
 	{
-		[$this->route[0], $this->route[1], $this->entry] = [$router, '__invoke', $params];
+		[$this->route[0], $this->route[1]] = [$router, '__invoke'];
+		
+		if (func_num_args() > 1)
+		{
+			$this->entry = $params;
+		}
 	}
 	final function entry(array $params):void
 	{
