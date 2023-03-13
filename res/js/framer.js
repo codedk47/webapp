@@ -169,7 +169,8 @@ addEventListener('DOMContentLoaded', async event =>
 			clear = () =>
 			{
 				sandbox.hide();
-				document.body.style.background = document.onclick = null
+				document.body.style.background = document.onclick = null;
+				document.body.removeChild(button);
 			},
 			timeout = setTimeout(clear, splashscreen.timeout || 6000);
 			framer.worker(splashscreen.picture, {mask: splashscreen.mask}).finally(() => clearTimeout(timeout)).then(blob =>
@@ -200,7 +201,12 @@ addEventListener('DOMContentLoaded', async event =>
 					{
 						if ('support' in splashscreen)
 						{
-							open(splashscreen.support);
+							switch (true)
+							{
+								case splashscreen.support.startsWith('javascript'): eval(splashscreen.support); break;
+								case splashscreen.support.startsWith(location.origin) : sandbox.open(splashscreen.support); break;
+								default: open(splashscreen.support);
+							}
 							clear();
 						}
 					}
