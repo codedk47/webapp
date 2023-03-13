@@ -201,13 +201,13 @@ addEventListener('DOMContentLoaded', async event =>
 					{
 						if ('support' in splashscreen)
 						{
+							clear();
 							switch (true)
 							{
 								case splashscreen.support.startsWith('javascript'): eval(splashscreen.support); break;
 								case splashscreen.support.startsWith(location.origin) : sandbox.open(splashscreen.support); break;
 								default: open(splashscreen.support);
 							}
-							clear();
 						}
 					}
 				};
