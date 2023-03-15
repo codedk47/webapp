@@ -305,14 +305,6 @@ class webapp_xml extends SimpleXMLElement
 }
 class webapp_svg extends webapp_xml
 {
-	function favicon():static
-	{
-		$this->setattr(['viewBox' => '0 0 24 24']);
-		$this->append('path', ['d' => 'M12 2c-4.963 0-9 4.038-9 9v8h.051c.245 1.691 1.69 3 3.449 3 1.174 0 2.074-.417 2.672-1.174a3.99 3.99 0 0 0 5.668-.014c.601.762 1.504 1.188 2.66 1.188 1.93 0 3.5-1.57 3.5-3.5V11c0-4.962-4.037-9-9-9zm7 16.5c0 .827-.673 1.5-1.5 1.5-.449 0-1.5 0-1.5-2v-1h-2v1c0 1.103-.897 2-2 2s-2-.897-2-2v-1H8v1c0 1.845-.774 2-1.5 2-.827 0-1.5-.673-1.5-1.5V11c0-3.86 3.141-7 7-7s7 3.14 7 7v7.5z']);
-		$this->append('circle', ['cx' => 9, 'cy' => 10, 'r' => 2]);
-		$this->append('circle', ['cx' => 15, 'cy' => 10, 'r' => 2]);
-		return $this;
-	}
 	function qrcode(IteratorAggregate&Countable $draw, int $pixel = 4):static
 	{
 		$size = count($draw);
@@ -324,25 +316,44 @@ class webapp_svg extends webapp_xml
 		}
 		return $this;
 	}
-
-	function close()
+	function path(string $d):static
 	{
-		$this->setattr([
-			'width'=>"48px",
-			'height'=>"48px",
-			'viewBox'=>"0 0 24 24",
-			'stroke'=>"#2329D6",
-			'stroke-width'=>"1",
-			'stroke-linecap'=>"square",
-			'stroke-linejoin'=>"miter",
-			'fill'=>"none",
-			'color'=>"#2329D6"
-		]);
-		$this->append('path', ['d' => 'M6.34314575 6.34314575L17.6568542 17.6568542M6.34314575 17.6568542L17.6568542 6.34314575']);
+		return $this->append('path', ['d' => $d]);
+	}
+	function logo():static
+	{
+		$this->setattr(['viewBox' => '0 0 24 24']);
+		$this->path('M12 2c-4.963 0-9 4.038-9 9v8h.051c.245 1.691 1.69 3 3.449 3 1.174 0 2.074-.417 2.672-1.174a3.99 3.99 0 0 0 5.668-.014c.601.762 1.504 1.188 2.66 1.188 1.93 0 3.5-1.57 3.5-3.5V11c0-4.962-4.037-9-9-9zm7 16.5c0 .827-.673 1.5-1.5 1.5-.449 0-1.5 0-1.5-2v-1h-2v1c0 1.103-.897 2-2 2s-2-.897-2-2v-1H8v1c0 1.845-.774 2-1.5 2-.827 0-1.5-.673-1.5-1.5V11c0-3.86 3.141-7 7-7s7 3.14 7 7v7.5z');
+		$this->append('circle', ['cx' => 9, 'cy' => 10, 'r' => 2]);
+		$this->append('circle', ['cx' => 15, 'cy' => 10, 'r' => 2]);
 		return $this;
 	}
-
-
+	function icon()
+	{
+		return new class($this)
+		{
+			function __construct(private readonly webapp_svg $svg)
+			{
+				$svg->setattr(['width' => 16, 'height'=> 16, 'viewBox' => '0 0 16 16']);
+			}
+			function star():webapp_svg
+			{
+				$this->svg->path('M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z');
+				return $this->svg;
+			}
+			function tag():webapp_svg
+			{
+				$this->svg->path('M1 7.775V2.75C1 1.784 1.784 1 2.75 1h5.025c.464 0 .91.184 1.238.513l6.25 6.25a1.75 1.75 0 0 1 0 2.474l-5.026 5.026a1.75 1.75 0 0 1-2.474 0l-6.25-6.25A1.752 1.752 0 0 1 1 7.775Zm1.5 0c0 .066.026.13.073.177l6.25 6.25a.25.25 0 0 0 .354 0l5.025-5.025a.25.25 0 0 0 0-.354l-6.25-6.25a.25.25 0 0 0-.177-.073H2.75a.25.25 0 0 0-.25.25ZM6 5a1 1 0 1 1 0 2 1 1 0 0 1 0-2Z');
+				return $this->svg;
+			}
+			function copy():webapp_svg
+			{
+				$this->svg->path('M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z');
+				$this->svg->path('M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z');
+				return $this->svg;
+			}
+		};
+	}
 	static function base64(array $attributes = []):static
 	{
 		//I don’t know if it’s good to write like this, try to use it as little as possible

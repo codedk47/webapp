@@ -69,6 +69,7 @@ class webapp_router_admin extends webapp_echo_html
 			$nav->ul->append('li')->append('a', ['Setpwd', 'href' => '?admin/setpwd']);
 		}
 		$nav->ul->append('li')->append('a', ['Logout', 'href' => "javascript:void(document.cookie='{$webapp['admin_cookie']}=0',location.href='?admin');", 'style' => 'color:darkred']);
+		//$nav->svg()->icon()->copy();
 	}
 	function admin(?string $signature = NULL)
 	{

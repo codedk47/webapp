@@ -919,7 +919,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		$this->response_cache_control('private, max-age=86400');
 		if ($this->nonematch($this->request_ip(), TRUE))
 		{
-			$this->app('webapp_echo_svg')->xml->favicon();
+			$this->app('webapp_echo_svg')->xml->logo();
 			return 200;
 		}
 		return 304;
