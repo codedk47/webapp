@@ -542,12 +542,12 @@ class interfaces extends webapp
 		$preview = $preview_end > $preview_start ? $preview_start << 16 | ($preview_end - $preview_start) & 0xffff : 10;
 		//资源更新权限
 		$name = webapp::lib('hanzi/interface.php')($data['name']);
-		$update = ['preview=?i,data=JSON_SET(data,\'$."?i".require\',?i,\'$."?i".name\',?s),type=?s,tags=?s',
-			$preview, $this->site, $data['require'] ?? 0, $this->site, $name, $data['type'], $data['tags']];
+		$update = ['name=?s,preview=?i,data=JSON_SET(data,\'$."?i".require\',?i,\'$."?i".name\',?s),type=?s,tags=?s',
+			$name, $preview, $this->site, $data['require'] ?? 0, $this->site, $name, $data['type'], $data['tags']];
 		if ($this->admin[2])
 		{
-			$update[0] .= ',type=?s,tags=?s,actors=?s,name=?s';
-			array_push($update, $data['type'], $data['tags'], $data['actors'], $name);
+			$update[0] .= ',type=?s,tags=?s,actors=?s';
+			array_push($update, $data['type'], $data['tags'], $data['actors']);
 		}
 		return $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s LIMIT 1', $this->site, $hash)->update(...$update);
 	}
