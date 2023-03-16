@@ -26,9 +26,9 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			parent::__construct($message, ArrayObject::STD_PROP_LIST);
 		}
 		//$this['chat']['id'], $this['from']['id']
+		$callbacks = [];
 		if (isset($this['entities']))
 		{
-			$callbacks = [];
 			foreach ($this['entities'] as $entitie)
 			{
 				if ($entitie['type'] === 'bot_command'
