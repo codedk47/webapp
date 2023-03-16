@@ -14,8 +14,17 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	public readonly int $update_id;
 	function __construct(public readonly webapp $webapp, array $message = NULL)
 	{
-		[$this->update_id, $message] = $message ? [0, $message] : array_values($webapp->request_content());
-		parent::__construct($message, ArrayObject::STD_PROP_LIST);
+		if ($message === NULL)
+		{
+			$message = $webapp->request_content();
+			$this->update_id = $message['update_id'];
+			parent::__construct($message['message'], ArrayObject::STD_PROP_LIST);
+		}
+		else
+		{
+			$this->update_id = 0;
+			parent::__construct($message, ArrayObject::STD_PROP_LIST);
+		}
 		try
 		{
 			$this($this['chat']['id'], $this['from']['id']);
