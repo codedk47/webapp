@@ -2,5 +2,5 @@
 include 'ffmpeg.php';
 return function(string $filename)
 {
-    return new ffmpeg($filename);
+	return new ffmpeg($filename);
 };

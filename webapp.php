@@ -991,7 +991,7 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 	}
 	function open(int $index = 0)
 	{
-		return fopen($this->uploadedfiles[$index]['file'], 'r+');
+		return fopen($this->uploadedfiles[$index]['file'], 'r');
 	}
 	function content(int $index = 0):string
 	{

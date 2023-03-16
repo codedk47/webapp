@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<meta http-equiv='X-UA-Compatible' content='IE=edge'>
+	<title>html5-qrcode.min.js</title>
+	<meta name='viewport' content='width=device-width, initial-scale=1'>
+	<script type="text/javascript" src="zxing-browser.min.js"></script>
+	<!-- https://github.com/zxing-js/browser -->
+</head>
+<body>
+	<input type="file" onchange="decode(this)"/>
+	<script>
+		const codeReader = new ZXingBrowser.BrowserQRCodeReader();
+		function decode(input)
+		{
+			if (input.files.length == 0) {
+				// No file selected, ignore 
+				return;
+			}
+			codeReader.decodeFromImageUrl(URL.createObjectURL(input.files[0])).then(result => {
+				console.log(result)
+			});
+		}
+		/*
+		codeReader.decodeFromVideoDevice(null, 'webcam-preview', (result, err) => {
+			if (result) {
+				// properly decoded qr code
+				console.log('Found QR code!', result)
+				document.getElementById('result').textContent = result.text
+			}
+
+			if (err) {
+				// As long as this error belongs into one of the following categories
+				// the code reader is going to continue as excepted. Any other error
+				// will stop the decoding loop.
+				//
+				// Excepted Exceptions:
+				//
+				//  - NotFoundException
+				//  - ChecksumException
+				//  - FormatException
+
+				if (err instanceof ZXing.NotFoundException) {
+					console.log('No QR code found.')
+				}
+
+				if (err instanceof ZXing.ChecksumException) {
+					console.log('A code was found, but it\'s read value was not valid.')
+				}
+
+				if (err instanceof ZXing.FormatException) {
+					console.log('A code was found, but it was in a invalid format.')
+				}
+			}
+		});
+		*/
+	</script>
+</body>
+</html>
