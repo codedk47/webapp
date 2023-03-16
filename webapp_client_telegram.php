@@ -11,10 +11,11 @@ https://core.telegram.org/bots/api#available-methods
 */
 class webapp_telegram_message extends ArrayObject implements Stringable
 {
-	public readonly int $id, $chat_id, $from_id;
+	public readonly int $update_id;
 	function __construct(public readonly webapp $webapp, array $message = NULL)
 	{
-		parent::__construct($message ?? $webapp->request_content(), ArrayObject::STD_PROP_LIST);
+		[$this->update_id, $message] = $message ? [0, $message] : array_values($webapp->request_content());
+		parent::__construct($message, ArrayObject::STD_PROP_LIST);
 		try
 		{
 			$this($this['chat']['id'], $this['from']['id']);
