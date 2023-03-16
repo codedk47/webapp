@@ -25,26 +25,32 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 			$this->update_id = 0;
 			parent::__construct($message, ArrayObject::STD_PROP_LIST);
 		}
+		//$this['chat']['id'], $this['from']['id']
+		if (isset($this['entities']))
+		{
+			$callbacks = [];
+			foreach ($this['entities'] as $entitie)
+			{
+				if ($entitie['type'] === 'bot_command'
+					&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1))) {
+					$extend = $this->text($entitie['offset'] + $entitie['length']);
+					$callbacks[$command] = $extend ? explode(' ', $extend) : [];
+				}
+			}
+		}
 		try
 		{
-			$this($this['chat']['id'], $this['from']['id']);
-			if (isset($this['entities']))
+			if ($this(count($callbacks)))
 			{
-				foreach ($this['entities'] as $entitie)
+				foreach ($callbacks as $method => $params)
 				{
-					if ($entitie['type'] === 'bot_command'
-						&& method_exists($this, $command = 'cmd_' . $this->text($entitie['offset'] + 1, $entitie['length'] - 1))) {
-						$extend = $this->text($entitie['offset'] + $entitie['length']);
-						$params = $extend ? explode(' ', $extend) : [];
-						$method = new ReflectionMethod($this, $command);
-						if (count($params) >= $method->getNumberOfRequiredParameters())
-						{
-							$this->{$command}(...$params);
-						}
-						else
-						{
-							$this->reply_message('The command parameter is not enough');
-						}
+					if (count($params) >= (new ReflectionMethod($this, $method))->getNumberOfRequiredParameters())
+					{
+						$this->{$method}(...$params);
+					}
+					else
+					{
+						$this->reply_message('The command parameter is not enough');
 					}
 				}
 			}
@@ -62,9 +68,9 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	{
 		return array_key_exists('message_id', $this->webapp->telegram->send_message($chat_id, $text));
 	}
-	function __invoke(int $chat_id, int $from_id)
+	function __invoke(int $hits):bool
 	{
-		$this->reply_message((string)$this);
+		return $this->reply_message((string)$this);
 	}
 	function __toString():string
 	{
