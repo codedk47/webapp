@@ -13,10 +13,10 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 {
 	public readonly ?webapp $webapp;
 	public readonly int $update_id, $chat_id, $from_id;
-	function __construct(array|webapp $context)
+	function __construct(array|webapp $context, webapp $webapp = NULL)
 	{
 		[$this->webapp, $this->update_id, $message] = is_array($context)
-			? [NULL, ...array_values($context)]
+			? [$webapp, ...array_values($context)]
 			: [$context, ...array_values($context->request_content())];
 		parent::__construct($message, ArrayObject::STD_PROP_LIST);
 		try
