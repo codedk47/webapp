@@ -70,7 +70,7 @@ class webapp_telegram_message extends ArrayObject implements Stringable
 	}
 	function __invoke(int $hits):bool
 	{
-		return $this->reply_message((string)$this);
+		return $hits > 0 || $this->reply_message((string)$this);
 	}
 	function __toString():string
 	{
