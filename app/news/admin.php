@@ -1010,8 +1010,13 @@ class webapp_router_admin extends webapp_echo_html
 				date('G:i:s', ($res['preview'] & 0xffff) + $start)));
 			$table->cell(date('G:i:s', $res['duration'] + 57600));
 			$table->cell($type[$res['type']]);
-			$data = json_decode($res['data'], TRUE)[$this->webapp->site] ?? [];
-			$table->cell([-2 => '下架', -1 => '会员', 0 => '免费'][$require = $data['require'] ?? 0] ?? $require);
+			$data = json_decode($res['data'], TRUE)[$this->webapp->site] ?? [
+				'require' => -2,
+				'favorite' => -1,
+				'view' => -1,
+				'like' => -1
+			];
+			$table->cell([-2 => '下架', -1 => '会员', 0 => '免费'][$require = $data['require']] ?? $require);
 			$table->cell(number_format($data['favorite']));
 			$table->cell(number_format($data['view']));
 			$table->cell(number_format($data['like']));
