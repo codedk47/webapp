@@ -1014,7 +1014,8 @@ class webapp_router_admin extends webapp_echo_html
 				'require' => -2,
 				'favorite' => -1,
 				'view' => -1,
-				'like' => -1
+				'like' => -1,
+				'name' => $res['name']
 			];
 			$table->cell([-2 => '下架', -1 => '会员', 0 => '免费'][$require = $data['require']] ?? $require);
 			$table->cell(number_format($data['favorite']));
