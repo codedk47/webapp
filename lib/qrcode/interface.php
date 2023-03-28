@@ -41,7 +41,7 @@ include 'qrframefiller.php';
 class qrcode implements IteratorAggregate, Countable
 {
 	private array $data;
-	function __construct(string $string, int $level)
+	function __construct(string $string, int $level, int $mode = QR_MODE_8)
 	{
 		// switch (1)
 		// {
@@ -50,7 +50,7 @@ class qrcode implements IteratorAggregate, Countable
 		// 	default: $mode = QR_MODE_8;
 		// }
 		$input = new QRinput(0, $level);
-		$input->append(QR_MODE_8, strlen($string), str_split($string));
+		$input->append($mode, strlen($string), str_split($string));
 
 		$raw = new QRrawcode($input);
 
@@ -117,4 +117,4 @@ class qrcode implements IteratorAggregate, Countable
 		return count($this->data);
 	}
 }
-return fn(string $data, int $level) => new qrcode($data, $level);
+return fn(string $data, int $level, int $mode = QR_MODE_8) => new qrcode($data, $level, $mode);
