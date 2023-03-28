@@ -122,7 +122,7 @@ class interfaces extends webapp
 		$units = array_combine($unit = $this->mysql->unitsets->column('unit'), $unit);
 		foreach ($this['app_site'] as $site => $ip)
 		{
-			if (in_array($site, [0, 255]) === FALSE) break;
+			if (in_array($site, [0, 255]) === FALSE) continue;
 			if ($site == 255) {
 				$this['app_site'][0] = '10.220.22.4:81';
 				$this->site = 0;
