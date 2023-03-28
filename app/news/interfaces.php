@@ -1488,7 +1488,7 @@ class interfaces extends webapp
 				// 	break;
 				// }
 				// $update['trade_no'] = $game->content();
-				$update['trade_no'] = $this->remote('http://10.220.22.4:81/index.php', 'game_credit', $order['notify_url'], intval($goods[1]));
+				$update['trade_no'] = $this->remote('http://10.220.22.4:81/index.php', 'game_credit', [$order['notify_url'], intval($goods[1])]);
 				if ($update['trade_no'] === NULL)
 				{
 					break;
