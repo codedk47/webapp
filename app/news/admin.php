@@ -210,39 +210,22 @@ class webapp_router_admin extends webapp_echo_html
 
 				$t1->append('td', [$stat['date'], 'rowspan' => 8]);
 
-				if ($this->webapp->admin[2])
-				{
-					$t1->append('td', '浏览');
-					$t2->append('td', '独立');
-					$t3->append('td', '日活');
-					$t4->append('td', '注册');
-				}
-				else
-				{
-					$t1->append('td', '-');
-					$t2->append('td', '-');
-					$t3->append('td', '日活');
-					$t4->append('td', '-');
-				}
+				$t1->append('td', '浏览');
+				$t2->append('td', '独立');
+				$t3->append('td', '日活');
+				$t4->append('td', '注册');
+	
 				$t5->append('td', '展示');
 				$t6->append('td', '点击');
 				$t7->append('td', '下载');
 				$t8->append('td', ['-', 'colspan' => 26]);
 
-				if ($this->webapp->admin[2])
-				{
-					$t1->append('td', number_format($stat['pv']));
-					$t2->append('td', number_format($stat['ua']));
-					$t3->append('td', number_format($stat['lu']));
-					$t4->append('td', number_format($stat['ru']));
-				}
-				else
-				{
-					$t1->append('td', '-');
-					$t2->append('td', '-');
-					$t3->append('td', number_format($stat['lu']));
-					$t4->append('td', '-');
-				}
+		
+				$t1->append('td', number_format($stat['pv']));
+				$t2->append('td', number_format($stat['ua']));
+				$t3->append('td', number_format($stat['lu']));
+				$t4->append('td', number_format($stat['ru']));
+				
 				$t5->append('td', number_format($stat['dv']));
 				$t6->append('td', number_format($stat['dc']));
 				$t7->append('td', number_format($stat['ia']));
