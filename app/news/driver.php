@@ -251,7 +251,7 @@ class news_driver extends webapp
 			//余额，参数为空查商户，否则查用户余额
 			function balance(string $uid = NULL):int
 			{
-				return $this->request(...$uid === NULL ? ['getAgentBalance'] : ['getbalance', ['uid' => $uid]])['data']['balance'] ?? 0;
+				return $this->request(...$uid === NULL ? ['getAgentBalance'] : ['getBalance', ['uid' => $uid]])['data']['balance'] ?? 0;
 			}
 			//注册账号
 			// function register(string $uid, string $channel):array
