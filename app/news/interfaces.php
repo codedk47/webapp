@@ -27,6 +27,19 @@ class interfaces extends webapp
 				$value = $value->asXML();
 			}
 		}
+		if ($this->site == 0)
+		{
+			webapp_client_http::open("http://10.220.22.4:81/index.php?sync/{$method}", [
+				'autoretry' => 2,
+				'method' => 'POST',
+				'type' => 'application/json',
+				'data' => $params,
+				'headers' => [
+					'Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password']),
+					'X-Client-IP' => $this->clientip
+				]
+			]);
+		}
 		$sync = $this->sync();
 		return is_string($content = $sync->goto("/index.php?sync/{$method}", [
 			'method' => 'POST',
