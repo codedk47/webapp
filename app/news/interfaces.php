@@ -1476,18 +1476,23 @@ class interfaces extends webapp
 			//C{增加金币}E{会员时间}B{视频金币}
 			if (preg_match('/^C(\d+)(E\d+)(B\d+)$/', $order['order_no'], $goods))
 			{
-				$game = webapp_client_http::open("http://10.220.22.4:81/index.php?game-credit/{$order['notify_url']},coin:{$goods[1]}", [
-					'autoretry' => 2,
-					'headers' => [
-						'Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password']),
-						'X-Client-IP' => $this->clientip]
-				]);
-				//$game = $this->sync(81)->goto("/index.php?game-credit/{$order['notify_url']},coin:{$goods[1]}");
-				if ($game->status($response) !== 200)
+				// $game = webapp_client_http::open("http://10.220.22.4:81/index.php?game-credit/{$order['notify_url']},coin:{$goods[1]}", [
+				// 	'autoretry' => 2,
+				// 	'headers' => [
+				// 		'Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password']),
+				// 		'X-Client-IP' => $this->clientip]
+				// ]);
+				// $game = $this->sync()->goto("/index.php?game-credit/{$order['notify_url']},coin:{$goods[1]}");
+				// if ($game->status($response) !== 200)
+				// {
+				// 	break;
+				// }
+				// $update['trade_no'] = $game->content();
+				$update['trade_no'] = $this->remote('http://10.220.22.4:81/index.php', 'game_credit', $order['notify_url'], intval($goods[1]));
+				if ($update['trade_no'] === NULL)
 				{
 					break;
 				}
-				$update['trade_no'] = $game->content();
 				$update['status'] = 'notified';
 				$update_acc = [[]];
 				if ($e = intval(substr($goods[2], 1)))
