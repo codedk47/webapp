@@ -232,20 +232,12 @@ class webapp_router_admin extends webapp_echo_html
 
 				foreach (json_decode($stat['details'], TRUE) as $details)
 				{
-					if ($this->webapp->admin[2])
-					{
-						$t1->append('td', number_format($details['pv']));
-						$t2->append('td', number_format($details['ua']));
-						$t3->append('td', number_format($details['lu']));
-						$t4->append('td', number_format($details['ru']));
-					}
-					else
-					{
-						$t1->append('td', '-');
-						$t2->append('td', '-');
-						$t3->append('td', number_format($details['lu']));
-						$t4->append('td', '-');
-					}
+	
+					$t1->append('td', number_format($details['pv']));
+					$t2->append('td', number_format($details['ua']));
+					$t3->append('td', number_format($details['lu']));
+					$t4->append('td', number_format($details['ru']));
+		
 					$t5->append('td', number_format($details['dv']));
 					$t6->append('td', number_format($details['dc']));
 					$t7->append('td', number_format($details['ia']));
