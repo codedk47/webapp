@@ -461,7 +461,10 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 					substr($contents, 0, -4) . "; filename=\"%s\"\r\nContent-Type: %s\r\n\r\n")
 						&& $this->echo("--{$boundary}--", $type .= "; boundary={$boundary}"),
 				'application/json' => $this->echo(json_encode($data, JSON_UNESCAPED_UNICODE)),
-				'application/xml' => $this->echo($data instanceof DOMDocument ? $data->saveXML() : (string)$data),
+				'application/xml' => $this->echo(match (TRUE) {
+						$data instanceof DOMDocument => $data->saveXML(),
+						$data instanceof SimpleXMLElement => $data->asXML(),
+						default => (string)$data}),
 				'application/octet-stream' => $this->from($data),
 				default => FALSE})
 			&& is_resource($buffer = fopen('php://memory', 'r+'))
@@ -557,9 +560,21 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 		$this->clear();
 		return FALSE;
 	}
-	function status(?array &$response):int
+	function status(array &$response = NULL, bool $raw = FALSE):int
 	{
-		return ($response = $this->response) ? intval(substr($this[0], 9)) : 0;
+		if ($raw)
+		{
+			$response[] = $this[0];
+			foreach (array_slice($this->response, 1) as $name => $value)
+			{
+				$response[] = "{$name}: {$value}";
+			}
+		}
+		else
+		{
+			$response = $this->response;
+		}
+		return $this->response ? intval(substr($this[0], 9)) : 0;
 	}
 	function then(Closure $success, Closure $failure = NULL):static
 	{

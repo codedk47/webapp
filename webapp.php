@@ -32,7 +32,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	public object|string $router;
 	public string $method;
 	private array $errors = [], $cookies = [], $headers = [], $uploadedfiles, $configs, $route, $entry;
-	private static array $libary = [];
+	private static array $libary = [], $remote = [];
 	// static private array $locks = [];
 	// static function lock(string $filename = __FILE__):bool
 	// {
@@ -366,7 +366,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			'mysql_password'	=> '',
 			'mysql_database'	=> 'webapp',
 			'mysql_maptable'	=> 'webapp_maptable_',
-			'mysql_charset'		=> 'utf8mb4',//latin1
+			'mysql_charset'		=> 'utf8mb4',
 			//Captcha
 			'captcha_length'	=> 4,
 			'captcha_expire'	=> 99,
@@ -595,7 +595,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function authorized(string $additional = NULL):array
 	{
-		return ['Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password'], $additional)];
+		return ['Authorization' => 'Bearer ' . static::signature($this['admin_username'], $this['admin_password'], $additional)];
 	}
 	function generatetext(int $count, int $start = 0x4e00, int $end = 0x9fa5)
 	{
@@ -617,12 +617,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	//----------------
 	function open(string $url, array $options = []):webapp_client_http
 	{
-		// $options['headers']['Authorization'] ??= 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password']);
+		// $options['headers']['Authorization'] ??= 'Bearer ' . static::signature($this['admin_username'], $this['admin_password']);
 		$options['headers']['User-Agent'] ??= 'WebApp/' . self::version;
 		return webapp_client_http::open($url, $options);
 
 		// return $this(new webapp_client_http($url, $timeout))->headers([
-		// 	'Authorization' => 'Digest ' . $this->signature($this['admin_username'], $this['admin_password']),
+		// 	'Authorization' => 'Digest ' . static::signature($this['admin_username'], $this['admin_password']),
 		// 	'User-Agent' => 'WebApp/' . self::version
 		// ]);
 		// $client = new webapp_client_http($url);
@@ -766,6 +766,15 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			&& $this->uploadedfiles[$name] instanceof webapp_request_uploadedfile ? $this->uploadedfiles[$name]
 			: $this->uploadedfiles[$name] = new webapp_request_uploadedfile($this, $name, $this->uploadedfiles[$name] ?? [], $maximum);
 	}
+
+	// function request_app_channel():string
+	// {
+	// 	$this->query['wacid'] ?? $this->request_header('webapp-cid')
+	// }
+	// function request_client_info():string
+	// {
+	// 	$this->query['cid'] ?? $this->request_header('webapp-cid')
+	// }
 	function request_apple_device_enrollment():array
 	{
 		//Apple device enrollment must use HTTPS protocol request method POST and response status 301
@@ -873,7 +882,76 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			&& in_array($this->method, $router === $this ? [
 				'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
 	}
+	private function remote_encode_value(NULL|bool|int|float|string|array|webapp_xml $value):array
+	{
+		return match (get_debug_type($value))
+		{
+			'null' => ['null', 'NULL'],
+			'bool' => ['boolean', $value ? 'TRUE' : 'FALSE'],
+			'int' => ['integer', (string)$value],
+			'float' => ['float', (string)$value],
+			'string' => ['string', $value],
+			'array' => ['array', json_encode($value, JSON_UNESCAPED_UNICODE)],
+			default => ['xml' => $value->asXML()]
+		};
+	}
+	private function remote_decode_value(string $type, string $value):NULL|bool|int|float|string|array|webapp_xml
+	{
+		return match ($type)
+		{
+			'null' => NULL,
+			'boolean' => $value === 'TRUE',
+			'integer' => intval($value),
+			'float' => floatval($value),
+			'string' => $value,
+			'array' => json_decode($value, TRUE),
+			default => $this->xml($value)
+		};
+	}
+	function remote(string $url, string $method, array $params):NULL|bool|int|float|string|array|webapp_xml
+	{
+		$host = self::$remote[$url] ??= new webapp_client_http($url, ['autoretry' => 1, 'headers' => $this->authorized()]);
+		$input = $this->xml("<?xml version=\"1.0\" encoding=\"{$this['app_charset']}\"?><webapp/>");
+		foreach ($params as $name => $value)
+		{
+			[$type, $data] = $this->remote_encode_value($value);
+			$input->append('entry', ['name' => $name, 'type' => $type])->cdata($data);
+		}
+		$output = $host->goto("{$host->path}?called/{$method}", ['method' => 'POST', 'type' => 'application/xml', 'data' => $input])->content();
+		if (is_object($output) === FALSE || (string)$output['type'] === 'error')
+		{
+			$host->status($response, TRUE);
+			$response[] = (string)$output;
+			throw new Error(join(PHP_EOL, $response));
+		}
+		return $this->remote_decode_value((string)$output['type'], (string)$output);
+	}
 	//router extends
+	function post_called(string $method)
+	{
+		if ($this->authorization())
+		{
+			try
+			{
+				$params = [];
+				if (is_object($input = $this->request_content()))
+				{
+					foreach ($input->entry as $entry)
+					{
+						$params[(string)$entry['name']] = $this->remote_decode_value((string)$entry['type'], (string)$entry);
+					}
+				}
+				[$type, $data] = $this->remote_encode_value($this->{$method}(...$params));
+			}
+			catch (Error $error)
+			{
+				[$type, $data] = ['error', (string)$error];
+			}
+			$this->app('webapp_echo_xml')->xml->setattr(['type' => $type])->cdata($data);
+			return 200;
+		}
+		return 401;
+	}
 	function get_captcha(string $random = NULL)
 	{
 		if ($this['captcha_length'])
