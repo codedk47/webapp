@@ -122,8 +122,15 @@ class interfaces extends webapp
 		$units = array_combine($unit = $this->mysql->unitsets->column('unit'), $unit);
 		foreach ($this['app_site'] as $site => $ip)
 		{
-			if ($site > 0) break;
-			$this->site = $site;
+			if (in_array($site, [0, 255]) === FALSE) break;
+			if ($site == 255) {
+				$this['app_site'][0] = '10.220.22.4:81';
+				$this->site = 0;
+			}
+			else
+			{
+				$this->site = $site;
+			}
 			echo "\n\nSTART PULL SITE:{$this->site}";
 			$status = [0, 0];
 			echo "\n-------- PULL ACC LOG --------\n";
