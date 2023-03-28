@@ -126,7 +126,7 @@ class interfaces extends webapp
 			if ($site == 255) {
 				unset($this->sync[0]);
 				$this['app_site'][0] = '10.220.22.4:81';
-				$this->site = 0;
+				$this->site = $site = 0;
 			}
 			else
 			{
