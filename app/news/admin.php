@@ -418,20 +418,12 @@ class webapp_router_admin extends webapp_echo_html
 
 			$t12->append('td', ['低调内涵不失奢华的分割线', 'colspan' => count($days) + 2]);
 
-			if ($this->webapp->admin[2])
-			{
-				$t1->append('td', number_format($stat['$0$0']));
-				$t2->append('td', number_format($stat['$1$0']));
-				$t3->append('td', number_format($stat['$2$0']));
-				$t4->append('td', number_format($stat['$3$0']));
-			}
-			else
-			{
-				$t1->append('td', '-');
-				$t2->append('td', '-');
-				$t3->append('td', number_format($stat['$2$0']));
-				$t4->append('td', '-');
-			}
+		
+			$t1->append('td', number_format($stat['$0$0']));
+			$t2->append('td', number_format($stat['$1$0']));
+			$t3->append('td', number_format($stat['$2$0']));
+			$t4->append('td', number_format($stat['$3$0']));
+		
 
 			$t5->append('td', number_format($stat['$4$0']));
 			//$t5->append('td', ($stat['$5$0'] ? round($stat['$6$0'] / $stat['$5$0'] * 100, 2) : 0) . '%');
@@ -461,21 +453,12 @@ class webapp_router_admin extends webapp_echo_html
 
 			foreach ($days as $i)
 			{
-				if ($this->webapp->admin[2])
-				{
-					$t1->append('td', number_format($stat["\$0\${$i}"]));
-					$t2->append('td', number_format($stat["\$1\${$i}"]));
-					$t3->append('td', number_format($stat["\$2\${$i}"]));
-					$t4->append('td', number_format($stat["\$3\${$i}"]));
-				}
-				else
-				{
-					$t1->append('td', '-');
-					$t2->append('td', '-');
-					$t3->append('td', number_format($stat["\$2\${$i}"]));
-					$t4->append('td', '-');
-				}
 
+				$t1->append('td', number_format($stat["\$0\${$i}"]));
+				$t2->append('td', number_format($stat["\$1\${$i}"]));
+				$t3->append('td', number_format($stat["\$2\${$i}"]));
+				$t4->append('td', number_format($stat["\$3\${$i}"]));
+	
 				$t5->append('td', number_format($stat["\$4\${$i}"]));
 				//$t5->append('td', ($stat["\$5\${$i}"] ? round($stat["\$6\${$i}"] / $stat["\$5\${$i}"] * 100, 2) : 0) . '%');
 				$t6->append('td', number_format($stat["\$5\${$i}"]));
