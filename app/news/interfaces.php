@@ -126,6 +126,7 @@ class interfaces extends webapp
 			if ($site == 255) {
 				$this['app_site'][0] = '10.220.22.4:81';
 				$this->site = 0;
+				print_r($this['app_site']);
 			}
 			else
 			{
