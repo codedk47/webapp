@@ -72,9 +72,9 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			? static::$libary[$name]
 			: static::$libary[$name] = require __DIR__ . "/lib/{$name}";
 	}
-	static function qrcode(string $content, int $ecc = 0, int $mode = 2):IteratorAggregate&Countable
+	static function qrcode(string $content, int $ecc = 0):IteratorAggregate&Countable
 	{
-		return webapp::lib('qrcode/interface.php')($content, $ecc, $mode);
+		return webapp::lib('qrcode/interface.php')($content, $ecc);
 	}
 	static function random(int $length):string
 	{

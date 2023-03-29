@@ -1825,9 +1825,9 @@ JS);
 				else
 				{
 					$cell = $table->cell();
-					$cell->append('a', ['同意', 'href' => "?admin/exchange,hash:{$order['hash']}"]);
-					$cell->append('span', ' | ');
-					$cell->append('a', ['拒绝', 'href' => "?admin/exchange,hash:{$order['hash']}"]);
+					// $cell->append('a', ['同意提现', 'href' => "?admin/exchange,hash:{$order['hash']},action:okexchange"]);
+					// $cell->append('span', ' | ');
+					// $cell->append('a', ['退回分数', 'href' => "?admin/exchange,hash:{$order['hash']},action:rebackcoin"]);
 				}
 				
 				
@@ -1949,12 +1949,18 @@ JS);
 		}
 		$this->warn('提现失败！');
 	}
-	function get_exchange(string $hash)
+	function get_exchange(string $hash, string $action)
 	{
-		if ($this->webapp->mysql->orders('WHERE hash=?s', $hash)->fetch($order))
+		if ($action === 'okexchange')
 		{
-			$this->form_exchange($this->main, $order);
+			if ($this->webapp->mysql->orders('WHERE hash=?s', $hash)->fetch($order))
+			{
+				$this->form_exchange($this->main, $order);
+			}
+			return;
 		}
+
+
 	}
 	function get_ordernotify(string $hash)
 	{
