@@ -1740,6 +1740,11 @@ JS);
 			$cond[0] .= ' AND status=?s';
 			$cond[] = $status;
 		}
+		if ($prod = $this->webapp->query['prod'] ?? '')
+		{
+			$cond[0] .= ' AND LEFT(order_no, 1)=?s';
+			$cond[] = $prod;
+		}
 		if ($search)
 		{
 			$cond[0] .= strlen($search) === 10 ? ' AND notify_url=?s' : ' AND hash=?s';
@@ -1797,6 +1802,12 @@ JS);
 		])->setattr(['onchange' => 'g({status:this.value||null})'])->selected($status);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->bar->select([
+			'' => '全部产品',
+			'视频金币' => 'B',
+			'视频会员' => 'E',
+			'游戏金币' => 'C'
+		])->setattr(['onchange' => 'g({prod:this.value||null})'])->selected($prod);
 		$table->bar->append('span', [sprintf('全部：%.2f，金币：%.2f，会员：%.2f，游戏：%.2f',
 			$counts['all'] * 0.01,
 			$counts['b'] * 0.01,
