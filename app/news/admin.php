@@ -1752,7 +1752,7 @@ JS);
 		}
 
 		$counts = $this->webapp->mysql->orders(...$cond)
-			->select('IFNULL(SUM(order_fee),0) all,IFNULL(SUM(IF(LEFT(order_no, 1)="B",order_fee,0)),0) b,IFNULL(SUM(IF(LEFT(order_no, 1)="E",order_fee,0)),0) e,IFNULL(SUM(IF(LEFT(order_no, 1)="C",order_fee,0)),0) c')->array();
+			->select('IFNULL(SUM(order_fee),0) `all`,IFNULL(SUM(IF(LEFT(order_no, 1)="B",order_fee,0)),0) b,IFNULL(SUM(IF(LEFT(order_no, 1)="E",order_fee,0)),0) e,IFNULL(SUM(IF(LEFT(order_no, 1)="C",order_fee,0)),0) c')->array();
 
 		$cond[0] .= ' ORDER BY time DESC';
 
