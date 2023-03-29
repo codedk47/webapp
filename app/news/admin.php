@@ -1804,9 +1804,9 @@ JS);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->bar->select([
 			'' => '全部产品',
-			'视频金币' => 'B',
-			'视频会员' => 'E',
-			'游戏金币' => 'C'
+			'B' => '视频金币',
+			'E' => '视频会员',
+			'C' => '游戏金币'
 		])->setattr(['onchange' => 'g({prod:this.value||null})'])->selected($prod);
 		$table->bar->append('span', [sprintf('全部：%.2f，金币：%.2f，会员：%.2f，游戏：%.2f',
 			$counts['all'] * 0.01,
