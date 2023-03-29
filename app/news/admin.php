@@ -1189,7 +1189,7 @@ JS);
 	function get_gameinfo(string $uid)
 	{
 		$form = $this->main->form();
-		$gameinfo = $this->webapp->remote('https://10.220.22.4:81/index.php', 'game_loginfo', [$uid]);
+		$gameinfo = $this->webapp->remote('http://10.220.22.4:81/index.php', 'game_loginfo', [$uid]);
 		$form->fieldset("游戏余额：{$gameinfo['balance']}");
 
 	}
