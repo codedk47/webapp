@@ -1782,7 +1782,7 @@ JS);
 		{
 			if ($prod === 'exchange')
 			{
-				$cond[0] .= ' AND exchange NOT IS NULL';
+				$cond[0] .= ' AND exchange IS NOT NULL';
 			}
 			else
 			{
