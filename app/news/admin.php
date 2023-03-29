@@ -1209,7 +1209,7 @@ JS);
 		{
 			$order['order_fee'] *= 0.01;
 			[$value, $list] = $order['exchange'] ? ['excharge', 'excharges'] : ['recharge', 'recharges'];
-			$orders[$list][] = sprintf("{$order['hash']}: %s, ￥%.2f",
+			$orders[$list][] = sprintf("{$order['hash']}: %s, ￥%.2f -> {$order['status']}",
 				date('Y-m-d\\TH:i:s', $order['time']),
 				$order['order_fee']);
 			if ($order['status'] !== 'unpay')
@@ -1217,8 +1217,8 @@ JS);
 				$orders[$value] += $order['order_fee'];
 			}
 		}
-		$form->fieldset("充值记录：{$orders['recharge']}")->append('code', join(PHP_EOL, $orders['recharges']));
-		$form->fieldset("提现记录：{$orders['excharge']}")->append('code', join(PHP_EOL, $orders['excharges']));
+		$form->fieldset("充值记录：{$orders['recharge']}")->append('pre', join(PHP_EOL, $orders['recharges']));
+		$form->fieldset("提现记录：{$orders['excharge']}")->append('pre', join(PHP_EOL, $orders['excharges']));
 
 
 		$form->xml['style'] = 'width:60rem';
