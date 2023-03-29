@@ -1217,8 +1217,8 @@ JS);
 				$orders[$value] += $order['order_fee'];
 			}
 		}
-		$form->fieldset("充值记录：{$orders['recharge']}")->append('pre', join(PHP_EOL, $orders['recharges']));
-		$form->fieldset("提现记录：{$orders['excharge']}")->append('pre', join(PHP_EOL, $orders['excharges']));
+		$form->fieldset("充值记录：{$orders['recharge']}")->append('pre', join(PHP_EOL, $orders['recharges']))['style'] = 'margin:0';
+		$form->fieldset("提现记录：{$orders['excharge']}")->append('pre', join(PHP_EOL, $orders['excharges']))['style'] = 'margin:0';
 
 
 		$form->xml['style'] = 'width:60rem';
