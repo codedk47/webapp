@@ -1072,7 +1072,7 @@ JS);
 
 		$form->fieldset('name / password');
 		$form->field('name', 'text');
-		$form->field('pwd', 'text');
+		//$form->field('pwd', 'text');
 
 		$form->fieldset('expire / balance');
 		$form->field('expire', 'date', [],
@@ -1189,9 +1189,40 @@ JS);
 	function get_gameinfo(string $uid)
 	{
 		$form = $this->main->form();
-		$gameinfo = $this->webapp->remote('http://10.220.22.4:81/index.php', 'game_loginfo', [$uid]);
-		$form->fieldset("游戏余额：{$gameinfo['balance']}");
+		//$gameinfo = $this->webapp->remote('http://10.220.22.4:81/index.php', 'game_loginfo', [$uid]);
+		//$gameinfo = $this->webapp->remote('http://154.207.189.133/index.php', 'game_loginfo', [$uid]);
+		$form->fieldset->append('legend', '账号');
+		$form->fieldset->append('label', $uid);
+		$gameinfo = ['balance' => 0];
 
+		$form->fieldset("分数");
+		$form->fieldset->append('label', join('，', [
+			"余额：{$gameinfo['balance']}"
+		]));
+
+
+		$orders = [
+			'recharge' => 0, 'recharges' => [],
+			'excharge' => 0, 'excharges' => []
+		];
+		foreach ($this->webapp->mysql->orders('WHERE notify_url=?s', $uid) as $order)
+		{
+			$order['order_fee'] *= 0.01;
+			[$value, $list] = $order['exchange'] ? ['excharge', 'excharges'] : ['recharge', 'recharges'];
+			$orders[$list][] = sprintf("{$order['hash']}: %s, ￥%.2f",
+				date('Y-m-d\\TH:i:s', $order['time']),
+				$order['order_fee']);
+			if ($order['status'] !== 'unpay')
+			{
+				$orders[$value] += $order['order_fee'];
+			}
+		}
+		$form->fieldset("充值记录：{$orders['recharge']}")->append('code', join(PHP_EOL, $orders['recharges']));
+		$form->fieldset("提现记录：{$orders['excharge']}")->append('code', join(PHP_EOL, $orders['excharges']));
+
+
+		$form->xml['style'] = 'width:60rem';
+		unset($form->xml['class']);
 	}
 	//广告
 	function get_ads(string $search = NULL)
