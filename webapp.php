@@ -74,33 +74,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	static function qrcode(string $content, int $ecc = 0):IteratorAggregate&Countable
 	{
-		return webapp::lib('qrcode/interface.php')($content, $ecc);
-	}
-	static function random(int $length):string
-	{
-		return random_bytes($length);
-	}
-	static function random_int(int $min, int $max):int
-	{
-		return random_int($min, $max);
-	}
-	static function random_weights(array $items, string $key = 'weight'):array
-	{
-		if ($items)
-		{
-			$weight = array_combine(array_keys($items), array_column($items, $key));
-			$random = static::random_int($current = 0, max(0, array_sum($weight) - 1));
-			foreach ($weight as $index => $value)
-			{
-				if ($random >= $current && $random < $current + $value)
-				{
-					break;
-				}
-				$current += $value;
-			}
-			return $items[$index];
-		}
-		return $items;
+		return static::lib('qrcode/interface.php')($content, $ecc);
 	}
 	static function time(int $offset = 0):int
 	{
@@ -134,16 +108,40 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return static::time33hash(static::time33($data), $care);
 	}
-
-
 	static function hashfile(string $filename, bool $care = FALSE):?string
 	{
 		return is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
 	}
-	// static function randhash(bool $care = FALSE):string
-	// {
-	// 	return static::hash(static::random(8), $care);
-	// }
+	static function random(int $length):string
+	{
+		return random_bytes($length);
+	}
+	static function random_int(int $min, int $max):int
+	{
+		return random_int($min, $max);
+	}
+	static function random_hash(bool $care):string
+	{
+		return static::hash(static::random(8), $care);
+	}
+	static function random_weights(array $items, string $key = 'weight'):array
+	{
+		if ($items)
+		{
+			$weight = array_combine(array_keys($items), array_column($items, $key));
+			$random = static::random_int($current = 0, max(0, array_sum($weight) - 1));
+			foreach ($weight as $index => $value)
+			{
+				if ($random >= $current && $random < $current + $value)
+				{
+					break;
+				}
+				$current += $value;
+			}
+			return $items[$index];
+		}
+		return $items;
+	}
 	static function iphex(string $ip):string
 	{
 		return str_pad(bin2hex(inet_pton($ip)), 32, '0', STR_PAD_LEFT);
@@ -611,6 +609,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return iconv_strlen($text, $this['app_charset']);
 	}
+	function webappxml():webapp_xml
+	{
+		return static::xml(sprintf('<?xml version="1.0" encoding="%s"?><webapp version="%s"/>', $this['app_charset'], static::version));
+	}
 	//---------------------
 
 
@@ -911,7 +913,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	function remote(string $url, string $method, array $params):NULL|bool|int|float|string|array|webapp_xml
 	{
 		$host = self::$remote[$url] ??= new webapp_client_http($url, ['autoretry' => 1, 'headers' => $this->authorized()]);
-		$input = $this->xml("<?xml version=\"1.0\" encoding=\"{$this['app_charset']}\"?><webapp/>");
+		$input = $this->webappxml();
 		foreach ($params as $name => $value)
 		{
 			[$type, $data] = $this->remote_encode_value($value);
@@ -920,6 +922,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		$output = $host->goto("{$host->path}?called/{$method}", ['method' => 'POST', 'type' => 'application/xml', 'data' => $input])->content();
 		if (is_object($output) === FALSE || (string)$output['type'] === 'error')
 		{
+			$response = [];
 			$host->status($response, TRUE);
 			$response[] = (string)$output;
 			throw new Error(join(PHP_EOL, $response));
