@@ -1750,8 +1750,15 @@ JS);
 		}
 		if ($prod = $this->webapp->query['prod'] ?? '')
 		{
-			$cond[0] .= ' AND LEFT(order_no, 1)=?s';
-			$cond[] = $prod;
+			if ($prod === 'exchange')
+			{
+				$cond[0] .= ' AND order_no IS NULL';
+			}
+			else
+			{
+				$cond[0] .= ' AND LEFT(order_no, 1)=?s';
+				$cond[] = $prod;
+			}
 		}
 		if ($search)
 		{
@@ -1783,13 +1790,19 @@ JS);
 			{
 				$table->cell()->append('a', ['确认提现', 'href' => "?admin/exchange,hash:{$order['hash']}"]);
 			}
-
 			$table->cell($order['order_no']);
 			$table->cell($order['trade_no']);
-			$table->cell()->append('a', [$order['notify_url'],
-				'href' => "?admin/ordernotify,hash:{$order['hash']}",
-				'onclick' => 'return confirm(this.dataset.notifyurl)',
-				'data-notifyurl' => $order['notify_url']]);
+			if ($order['pay_name'] && $order['pay_type'] && $order['order_no'])
+			{
+				$table->cell()->append('a', [$order['notify_url'],
+					'href' => "?admin/ordernotify,hash:{$order['hash']}",
+					'onclick' => 'return confirm(this.dataset.notifyurl)',
+					'data-notifyurl' => $order['notify_url']]);
+			}
+			else
+			{
+				$table->cell()->append('a', ['游戏信息', 'href' => "?admin/gameinfo,uid:{$order['notify_url']}"]);
+			}
 			
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
 		$table->fieldset('我方订单', '创建时间', '最后更新', '状态', '实际支付', '订单价格', '商户', '平台@类型', '订单（内部产品）', '对方订单', '回调地址');
@@ -1814,8 +1827,8 @@ JS);
 			'' => '全部产品',
 			'B' => '视频金币',
 			'E' => '视频会员',
-			'C' => '游戏金币',
-			//-------------------------
+			'C' => '游戏充值',
+			'exchange' => '游戏提现'
 		])->setattr(['onchange' => 'g({prod:this.value||null})'])->selected($prod);
 		$table->bar->append('span', [sprintf('全部：%.2f，金币：%.2f，会员：%.2f，游戏：%.2f',
 			$counts['all'] * 0.01,
