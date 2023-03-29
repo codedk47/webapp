@@ -1752,7 +1752,7 @@ JS);
 		{
 			if ($prod === 'exchange')
 			{
-				$cond[0] .= ' AND order_no IS NULL';
+				$cond[0] .= ' AND order_no=""';
 			}
 			else
 			{
