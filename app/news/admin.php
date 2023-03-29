@@ -1782,13 +1782,17 @@ JS);
 		{
 			if ($prod === 'exchange')
 			{
-				$cond[0] .= ' AND order_no=""';
+				$cond[0] .= ' AND exchange NOT IS NULL';
 			}
 			else
 			{
 				$cond[0] .= ' AND LEFT(order_no, 1)=?s';
 				$cond[] = $prod;
 			}
+		}
+		else
+		{
+			$cond[0] .= ' AND exchange IS NULL';
 		}
 		if ($search)
 		{
@@ -1812,26 +1816,39 @@ JS);
 			$table->cell(number_format($order['order_fee'] * 0.01, 2));
 			$table->cell($order['pay_user']);
 
-			if ($order['pay_name'] && $order['pay_type'])
+			if ($order['exchange'])
 			{
-				$table->cell("{$order['pay_name']}@{$order['pay_type']}");
+				if ($order['trade_no'])
+				{
+					$table->cell();
+				}
+				else
+				{
+					$cell = $table->cell();
+					$cell->append('a', ['同意', 'href' => "?admin/exchange,hash:{$order['hash']}"]);
+					$cell->append('span', ' | ');
+					$cell->append('a', ['拒绝', 'href' => "?admin/exchange,hash:{$order['hash']}"]);
+				}
+				
+				
 			}
 			else
 			{
-				$table->cell()->append('a', ['确认提现', 'href' => "?admin/exchange,hash:{$order['hash']}"]);
+				$table->cell("{$order['pay_name']}@{$order['pay_type']}");
 			}
 			$table->cell($order['order_no']);
 			$table->cell($order['trade_no']);
-			if ($order['pay_name'] && $order['pay_type'] && $order['order_no'])
+			
+			if ($order['exchange'])
+			{
+				$table->cell()->append('a', ['游戏信息', 'href' => "?admin/gameinfo,uid:{$order['notify_url']}"]);
+			}
+			else
 			{
 				$table->cell()->append('a', [$order['notify_url'],
 					'href' => "?admin/ordernotify,hash:{$order['hash']}",
 					'onclick' => 'return confirm(this.dataset.notifyurl)',
 					'data-notifyurl' => $order['notify_url']]);
-			}
-			else
-			{
-				$table->cell()->append('a', ['游戏信息', 'href' => "?admin/gameinfo,uid:{$order['notify_url']}"]);
 			}
 			
 		}, ['unpay' => 'red', 'payed' => 'blue', 'notified' => 'green']);
@@ -1854,7 +1871,7 @@ JS);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->bar->select([
-			'' => '全部产品',
+			'' => '全部充值',
 			'B' => '视频金币',
 			'E' => '视频会员',
 			'C' => '游戏充值',
