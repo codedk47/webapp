@@ -283,9 +283,15 @@ class news_driver extends webapp
 			}
 		};
 	}
+	function game_loginfo(string $acc):array
+	{
+		return [
+			'balance' => $this->game->balance($acc)
+		];
+	}
 	function game_credit(string $acc, int $coin):?string
 	{
-		return $this->game()->transfer($acc, $coin, $orderid) ? $orderid : NULL;
+		return $this->game->transfer($acc, $coin, $orderid) ? $orderid : NULL;
 	}
 	function game_exchange(string $uid, array $exchange, &$error):bool
 	{

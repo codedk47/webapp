@@ -1159,6 +1159,7 @@ JS);
 			$table->cell($acc['date']);
 			$table->cell(date('Y-m-d', $acc['expire']));
 			$table->cell(number_format($acc['balance']));
+			$table->cell()->append('a', ['游戏信息', 'href' => "?admin/gameinfo,uid:{$acc['uid']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $acc['lasttime']));
 			$table->cell($this->webapp->hexip($acc['lastip']));
 			$table->cell($acc['device']);
@@ -1176,7 +1177,7 @@ JS);
 			$table->cell($acc['name']);
 			$table->cell(strlen($acc['history']) / 12);
 		});
-		$table->fieldset('账号(uid)', '注册日期(date)', '会员过期(expire)', '余额(balance)', '最后登录时间(lasttime)', '最后登录IP(lastip)', '设备类型(device)', '单位(unit)', '邀请账号(code)', '设备ID(did)', '绑定手机(phone)', '名称(name)', '记录(history)');
+		$table->fieldset('账号(uid)', '注册日期(date)', '会员过期(expire)', '余额(balance)', '游戏信息', '最后登录时间(lasttime)', '最后登录IP(lastip)', '设备类型(device)', '单位(unit)', '邀请账号(code)', '设备ID(did)', '绑定手机(phone)', '名称(name)', '记录(history)');
 		$table->header('Found %s item', number_format($table->count()));
 		$table->bar->select(['' => '全部单位', '0000' => '官方单位'] + $this->webapp->mysql->unitsets('where site=?i', $this->webapp->site)->column('name', 'unit'))
 			->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
@@ -1184,6 +1185,13 @@ JS);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
 		$table->bar->append('span', [join(', ', $counts), 'style' => 'padding-left:1rem;font-weight:bold;color:green']);
 		$table->paging($this->webapp->at(['page' => '']));
+	}
+	function get_gameinfo(string $uid)
+	{
+		$form = $this->main->form();
+		$gameinfo = $this->webapp->remote('https://10.220.22.4:81/index.php', 'game_loginfo', [$uid]);
+		$form->fieldset("游戏余额：{$gameinfo['balance']}");
+
 	}
 	//广告
 	function get_ads(string $search = NULL)
@@ -1806,7 +1814,8 @@ JS);
 			'' => '全部产品',
 			'B' => '视频金币',
 			'E' => '视频会员',
-			'C' => '游戏金币'
+			'C' => '游戏金币',
+			//-------------------------
 		])->setattr(['onchange' => 'g({prod:this.value||null})'])->selected($prod);
 		$table->bar->append('span', [sprintf('全部：%.2f，金币：%.2f，会员：%.2f，游戏：%.2f',
 			$counts['all'] * 0.01,
