@@ -72,9 +72,9 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			? static::$libary[$name]
 			: static::$libary[$name] = require __DIR__ . "/lib/{$name}";
 	}
-	static function qrcode(string $content, int $ecc = 0):IteratorAggregate&Countable
+	static function qrcode(string $content, int $level = 0):IteratorAggregate&Countable
 	{
-		return static::lib('qrcode/interface.php')($content, $ecc);
+		return static::lib('qrcode/interface.php')($content, $level);
 	}
 	static function time(int $offset = 0):int
 	{
@@ -351,6 +351,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			//Application
 			'app_hostname'		=> 'localhost',
 			'app_charset'		=> 'utf-8',
+			'app_called'		=> FALSE,
 			'app_router'		=> 'webapp_router_',
 			'app_index'			=> 'home',
 			//Admin
@@ -611,7 +612,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function webappxml():webapp_xml
 	{
-		return static::xml(sprintf('<?xml version="1.0" encoding="%s"?><webapp version="%s"/>', $this['app_charset'], static::version));
+		return static::xml(sprintf('<?xml version="1.0" encoding="%s"?><webapp version="%s"/>', $this['app_charset'], self::version));
 	}
 	//---------------------
 
@@ -932,6 +933,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	//router extends
 	function post_called(string $method)
 	{
+		//$this['app_called'];
 		if ($this->authorization())
 		{
 			try

@@ -41,7 +41,7 @@ include 'qrframefiller.php';
 class qrcode implements IteratorAggregate, Countable
 {
 	private array $data;
-	function __construct(string $string, int $level = 0)
+	function __construct(string $string, int $level)
 	{
 		// switch (1)
 		// {
@@ -101,13 +101,13 @@ class qrcode implements IteratorAggregate, Countable
 	function getIterator():Traversable
 	{
 		$size = count($this);
-		for ($y = 0; $y < $size; ++$y)
+		for ($row = 0; $row < $size; ++$row)
 		{
-			for ($x = 0; $x < $size; ++$x)
+			for ($column = 0; $column < $size; ++$column)
 			{
-				if (ord($this->data[$x][$y]) & 1)
+				if (ord($this->data[$column][$row]) & 1)
 				{
-					yield $x => $y;
+					yield $row => $column;
 				}
 			}
 		}
