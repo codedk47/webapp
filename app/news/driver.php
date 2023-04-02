@@ -171,9 +171,13 @@ class news_driver extends webapp
 		//var_dump($result);
 		return [];
 	}
-	function request_unitcode():string
+	function request_cid():string
 	{
-		return is_string($unitcode = $this->request_header('Unit-Code')) && preg_match('/^\w{4}$/', $unitcode) ? $unitcode : '0000';
+		return preg_match('/; CID\/(\w{4})/', $this->request_device, $cid) ? $cid[1] : '0000';
+	}
+	function request_did():?string
+	{
+		return preg_match('/; DID\/(\w{4})/', $this->request_device, $did) ? $did[1] : NULL;
 	}
 	//账号操作
 	function request_account(?string &$signature = NULL):array
