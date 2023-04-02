@@ -87,7 +87,7 @@ class webapp_echo_xml extends webapp_implementation
 				'URL' => 'http://localhost/',
 				'FullScreen' => TRUE,
 				'IsRemovable' => TRUE,
-				'IgnoreManifestScope' => TRUE,
+				'IgnoreManifestScope' => FALSE,
 				//'PayloadDisplayName' => 'WebApp',
 				//以下四个必要固定字段
 				'PayloadUUID' => '00801462-0000-0000-0000-000000000000',
