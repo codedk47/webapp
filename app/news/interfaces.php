@@ -747,8 +747,8 @@ class interfaces extends webapp
 		{
 			$ym = date('ym', $resource['time']);
 			$res = $this->resource_xml($resource);
-			$res['play'] = "http://154.207.189.135/{$ym}/{$resource['hash']}/play.m3u8";
-			$res['cover'] = "http://154.207.189.135/{$ym}/{$resource['hash']}/cover.jpg";
+			$res['play'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/play.m3u8";
+			$res['cover'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/cover.jpg";
 		}
 	}
 	function get_pres(int $time, int $page = 1, int $size = 100)
