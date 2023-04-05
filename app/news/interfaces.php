@@ -731,6 +731,27 @@ class interfaces extends webapp
 			$this->resource_xml($resource);
 		}
 	}
+	function get_hjs()
+	{
+		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished" AND hash LIKE "HJS0%"', $this->site = 0];
+		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
+		{
+			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+			$cond[] = $this->query['tag'];
+		}
+		$cond[0] .= ' ORDER BY time ASC';
+		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
+		$this->app('webapp_echo_xml')->xml->setattr(['site' => $this->site]);
+		$this->xml = $this->app->xml;
+		$this->app->xml->setattr($resources->paging);
+		foreach ($resources as $resource)
+		{
+			$ym = date('ym', $resource['time']);
+			$res = $this->resource_xml($resource);
+			$res['play'] = "http://154.207.189.135/{$ym}/{$resource['hash']}/play.m3u8";
+			$res['cover'] = "http://154.207.189.135/{$ym}/{$resource['hash']}/cover.jpg";
+		}
+	}
 	function get_pres(int $time, int $page = 1, int $size = 100)
 	{
 		$cond = ['WHERE FIND_IN_SET(?i,site) AND sync="finished" AND time>?i', $this->site = 0, $time];
