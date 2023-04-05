@@ -740,10 +740,9 @@ class interfaces extends webapp
 			$cond[] = $this->query['tag'];
 		}
 		$cond[0] .= ' ORDER BY time ASC';
-		$resources = $this->mysql->resources(...$cond)->paging($page, $size);
+		$resources = $this->mysql->resources(...$cond);
 		$this->app('webapp_echo_xml')->xml->setattr(['site' => $this->site]);
 		$this->xml = $this->app->xml;
-		$this->app->xml->setattr($resources->paging);
 		foreach ($resources as $resource)
 		{
 			$ym = date('ym', $resource['time']);
