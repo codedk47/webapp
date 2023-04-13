@@ -774,7 +774,7 @@ class interfaces extends webapp
 	}
 	function get_shares(int $page = 1, int $size = 100)
 	{
-		$cond = ['WHERE FIND_IN_SET(?i,site)', $this->site = 0];
+		$cond = ['WHERE FIND_IN_SET(?i,site) AND hash not like "HJS0%"', $this->site = 0];
 		if (array_key_exists('tag', $this->query) && is_string($this->query['tag']))
 		{
 			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
