@@ -10,7 +10,7 @@ https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/android_bu
 
 -------------------编译参考指令--------------------
 1：git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
-2：export PATH="$PATH:/path/to/depot_tools"
+2：export PATH="$PATH:~/depot_tools"
 3：mkdir ~/chromium && cd ~/chromium
 4：fetch --no-history --nohooks android
 5：cd src
@@ -25,10 +25,14 @@ https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/android_bu
 -------------------编译跟多指令--------------------
 cd src
 bash build/install-build-deps.sh --android
+export PATH="/media/user/chrome/src/third_party/depot_tools:$PATH"
 bash third_party/depot_tools/gn clean out/Default
+bash third_party/depot_tools/gn args out/Default
 bash third_party/depot_tools/autoninja -C out/Default -j12 chrome_public_apk
-
-
+bash third_party/depot_tools/autoninja -C out/Default -j12 weblayer_instrumentation_test_apk
+bash third_party/depot_tools/autoninja -C out/Default -j12 content_shell_apk
+bash third_party/depot_tools/autoninja -C out/Default -j12 system_webview_apk
+bash third_party/depot_tools/autoninja -C out/webview -j12 webview_instrumentation_apk
 
 ------------[gn args out/Default --list]------------
 #args.gn文件
@@ -213,5 +217,6 @@ v8_symbol_level = 0
 
 
 
+对于除 arm64 之外的所有架构，我们禁用帧指针以减小二进制大小（搜索enable_frame_pointers）。
 
 

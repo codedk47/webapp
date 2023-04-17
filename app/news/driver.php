@@ -177,7 +177,7 @@ class news_driver extends webapp
 	}
 	function request_did():?string
 	{
-		return preg_match('/; DID\/([a-z]{16})/', $this->request_device, $did) ? $did[1] : NULL;
+		return preg_match('/; DID\/(\w{16})/', $this->request_device, $did) ? $did[1] : NULL;
 	}
 	//账号操作
 	function request_account(?string &$signature = NULL):array

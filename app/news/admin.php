@@ -1254,7 +1254,7 @@ JS);
 		['日', '一', '二', '三', '四', '五', '六'],
 		$this->webapp->signature($this->webapp['admin_username'], $this->webapp['admin_password'], (string)$this->webapp->site));
 		$table->fieldset('❌', 'hash', 'name', 'seat', 'weight', 'timestart - timeend', 'weekset', 'count', 'click', 'view', 'goto');
-		$table->header('Found ' . $this->webapp->mysql->ads->count() . ' item');
+		$table->header('Found ' . $this->webapp->mysql->ads(...$cond)->count() . ' item');
 		$table->bar->append('button', ['Create Ad', 'onclick' => 'location.href="?admin/ad-create"']);
 	}
 	function get_ad_create()
