@@ -691,7 +691,7 @@ class interfaces extends webapp
 			'view' => $data['view'] ?? 0,
 			'like' => $data['like'] ?? 0
 		]);
-		$node->cdata($data['name']);
+		$node->cdata(htmlentities($data['name']));
 		return $node;
 	}
 	function get_updatecover(string $hash)
