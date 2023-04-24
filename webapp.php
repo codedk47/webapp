@@ -314,33 +314,28 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		return str_replace(['\\', '/', ':', '*', '?', '"', '<', '>'], '_', $basename);
 	}
 	
-	static function maskdata(string $origin):string
+	static function maskdata(string $source):string
 	{
 		$bin = static::random(8);
 		$key = array_map(ord(...), str_split($bin));
-		$length = strlen($origin);
+		$length = strlen($source);
 		for ($i = 0; $i < $length; ++$i)
 		{
-			$origin[$i] = chr(ord($origin[$i]) ^ $key[$i % 8]);
-			// $origin[$i] = chr(($k = ord($origin[$i])) ^ $key[$i % 8]);
-			// $key[$i % 8] = $k;
+			$source[$i] = chr(ord($source[$i]) ^ $key[$i % 8]);
+			//$source[$i] = chr($key[$i % 8] = ord($source[$i]) ^ $key[$i % 8]);
 		}
-		return $bin . $origin;
+		return $bin . $source;
 	}
-	// static function maskfile(string $source, string $output):bool
-	// {
-	// 	return file_put_contents($output, static::maskdata($buffer = file_get_contents($source))) === strlen($buffer) + 8;
-	// }
 	static function unmasker(string $masked):string
 	{
 		$key = array_map(ord(...), str_split(substr($masked, 0, 8)));
-		$length = strlen($buffer = substr($masked, 8));
+		$length = strlen($source = substr($masked, 8));
 		for ($i = 0; $i < $length; ++$i)
 		{
-			$buffer[$i] = chr(ord($buffer[$i]) ^ $key[$i % 8]);
-			//$buffer[$i] = chr($key[$i % 8] = ord($buffer[$i]) ^ $key[$i % 8]);
+			$source[$i] = chr(ord($source[$i]) ^ $key[$i % 8]);
+			//$source[$i] = chr($key[$i % 8] ^ $key[$i % 8] = ord($source[$i]));
 		}
-		return $buffer;
+		return $source;
 	}
 	function __construct(array $config = [], private readonly webapp_io $io = new webapp_stdio)
 	{

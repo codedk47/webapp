@@ -148,6 +148,16 @@ addEventListener('DOMContentLoaded', async event =>
 		frame.name = 'sandbox';
 		frame.width = frame.height = '100%';
 		frame.style.cssText += 'position:fixed;border:none;overflow:hidden';
+		frame.sandbox = [
+			'allow-forms',
+			'allow-modals',
+			'allow-orientation-lock',
+			'allow-pointer-lock',
+			'allow-popups',
+			'allow-popups-to-escape-sandbox',
+			'allow-presentation',
+			'allow-scripts',
+		].join(' ');
 		document.body.appendChild(frame);
 	});
 

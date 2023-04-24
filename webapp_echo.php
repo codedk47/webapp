@@ -16,6 +16,7 @@ class webapp_echo_xml extends webapp_implementation
 	}
 	static function mobileconfig(array $values, webapp $webapp = NULL, bool $config = FALSE):webapp_implementation
 	{
+		#https://developer.apple.com/documentation/devicemanagement/webclip?changes=latest_beta&language=objc
 		$mobileconfig = new webapp_implementation('plist', '-//Apple//DTD PLIST 1.0//EN', 'http://www.apple.com/DTDs/PropertyList-1.0.dtd');
 		$mobileconfig->xml['version'] = '1.0';
 		if ($webapp)
