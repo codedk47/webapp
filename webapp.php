@@ -246,13 +246,17 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			&& extract(unpack('Vexpire/Clength', $binary)) === 2
 			&& strlen($binary) > 4 + $length * 3
 			&& is_array($values = unpack("a{$length}code/c{$length}size/c{$length}angle", $binary, 5))) {
-			for ($result = [$expire, '', [], []], $i = 0; $i < $length;)
+			if ($length > 1)
 			{
-				$result[1] .= $values['code'][$i++];
-				$result[2][] = $values["size{$i}"];
-				$result[3][] = $values["angle{$i}"];
+				for ($result = [$expire, '', [], []], $i = 0; $i < $length;)
+				{
+					$result[1] .= $values['code'][$i++];
+					$result[2][] = $values["size{$i}"];
+					$result[3][] = $values["angle{$i}"];
+				}
+				return $result;
 			}
-			return $result;
+			return [$expire, $values['code'], [$values['size']], [$values['angle']]];
 		}
 		return NULL;
 	}
