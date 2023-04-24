@@ -1193,7 +1193,7 @@ JS);
 		$form->fieldset->append('legend', '账号');
 		$form->fieldset->append('label', $uid);
 
-		$gameinfo = $this->webapp->remote('http://10.220.22.4:81/index.php', 'game_loginfo', [$uid]);
+		$gameinfo = $this->webapp->remote('http://10.220.22.4:80/index.php', 'game_loginfo', [$uid]);
 		$form->fieldset("分数");
 		$form->fieldset->append('label', join('，', [
 			"余额：{$gameinfo['balance']}"
