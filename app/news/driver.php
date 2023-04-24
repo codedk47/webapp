@@ -173,8 +173,7 @@ class news_driver extends webapp
 	}
 	function request_cid():string
 	{
-		return is_string($cid = $this->request_cookie('CID')) && preg_match('/^\w{4}$/', $cid)
-			? $cid : (preg_match('/; CID\/(\w{4})/', $this->request_device, $cid) ? $cid[1] : '0000');
+		return preg_match('/; CID\/(\w{4})/', $this->request_device, $cid) ? $cid[1] : '0000';
 	}
 	function request_did():?string
 	{
