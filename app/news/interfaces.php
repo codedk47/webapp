@@ -110,7 +110,7 @@ class interfaces extends webapp
 		$units = array_combine($unit = $this->mysql->unitsets->column('unit'), $unit);
 		foreach ($this['app_site'] as $site => $ip)
 		{
-			if (in_array($site, [0, 255]) === FALSE) continue;
+			if (in_array($site, [0]) === FALSE) continue;
 			$this->site = $site;
 			echo "\n\nSTART PULL SITE:{$this->site}";
 			$status = [0, 0];
@@ -1484,8 +1484,8 @@ class interfaces extends webapp
 			//C{增加金币}E{会员时间}B{视频金币}
 			if (preg_match('/^C(\d+)(E\d+)(B\d+)$/', $order['order_no'], $goods))
 			{
-				$update['trade_no'] = NULL;
 				//$update['trade_no'] = $this->remote('http://10.220.22.4:81/index.php', 'game_credit', [$order['notify_url'], intval($goods[1])]);
+				$update['trade_no'] = NULL;
 				if ($update['trade_no'] === NULL)
 				{
 					break;
