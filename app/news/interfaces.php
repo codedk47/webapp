@@ -27,18 +27,6 @@ class interfaces extends webapp
 				$value = $value->asXML();
 			}
 		}
-		if ($this->site == 0)
-		{
-			webapp_client_http::open("http://10.220.22.4:81/index.php?sync/{$method}", [
-				'autoretry' => 2,
-				'method' => 'POST',
-				'type' => 'application/json',
-				'data' => $params,
-				'headers' => [
-					'Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password']),
-					'X-Client-IP' => $this->clientip]
-			]);
-		}
 		$sync = $this->sync();
 		return is_string($content = $sync->goto("/index.php?sync/{$method}", [
 			'method' => 'POST',
@@ -123,15 +111,7 @@ class interfaces extends webapp
 		foreach ($this['app_site'] as $site => $ip)
 		{
 			if (in_array($site, [0, 255]) === FALSE) continue;
-			if ($site == 255) {
-				unset($this->sync[0]);
-				$this['app_site'][0] = '10.220.22.4:81';
-				$this->site = $site = 0;
-			}
-			else
-			{
-				$this->site = $site;
-			}
+			$this->site = $site;
 			echo "\n\nSTART PULL SITE:{$this->site}";
 			$status = [0, 0];
 			echo "\n-------- PULL ACC LOG --------\n";
@@ -1504,19 +1484,8 @@ class interfaces extends webapp
 			//C{增加金币}E{会员时间}B{视频金币}
 			if (preg_match('/^C(\d+)(E\d+)(B\d+)$/', $order['order_no'], $goods))
 			{
-				// $game = webapp_client_http::open("http://10.220.22.4:81/index.php?game-credit/{$order['notify_url']},coin:{$goods[1]}", [
-				// 	'autoretry' => 2,
-				// 	'headers' => [
-				// 		'Authorization' => 'Bearer ' . $this->signature($this['admin_username'], $this['admin_password']),
-				// 		'X-Client-IP' => $this->clientip]
-				// ]);
-				// $game = $this->sync()->goto("/index.php?game-credit/{$order['notify_url']},coin:{$goods[1]}");
-				// if ($game->status($response) !== 200)
-				// {
-				// 	break;
-				// }
-				// $update['trade_no'] = $game->content();
-				$update['trade_no'] = $this->remote('http://10.220.22.4:81/index.php', 'game_credit', [$order['notify_url'], intval($goods[1])]);
+				$update['trade_no'] = NULL;
+				//$update['trade_no'] = $this->remote('http://10.220.22.4:81/index.php', 'game_credit', [$order['notify_url'], intval($goods[1])]);
 				if ($update['trade_no'] === NULL)
 				{
 					break;
