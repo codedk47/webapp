@@ -769,8 +769,8 @@ class interfaces extends webapp
 		{
 			$ym = date('ym', $resource['time']);
 			$res = $this->resource_xml($resource);
-			$res['play'] = "https://r.yongyinsoft.com/{$ym}/{$resource['hash']}/play";
-			$res['cover'] = "https://r.yongyinsoft.com/{$ym}/{$resource['hash']}/cover";
+			$res['play'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/play";
+			$res['cover'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/cover";
 		}
 	}
 	//标签
