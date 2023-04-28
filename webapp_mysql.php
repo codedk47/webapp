@@ -175,8 +175,8 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	}
 	function sync(callable $submit, ...$params):bool
 	{
-		return $this->autocommit(FALSE) && [($success = $submit(...$params) && $this->commit())
-			|| $this->rollback(), $this->autocommit(TRUE)] ? $success : FALSE;
+		return $this->autocommit(FALSE) && [($result = $submit(...$params) && $this->commit())
+			|| $this->rollback(), $this->autocommit(TRUE)] ? $result : FALSE;
 		// if ($this->autocommit(FALSE))
 		// {
 		// 	if ($submit->call($this, ...$params))
