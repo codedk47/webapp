@@ -317,7 +317,18 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return str_replace(['\\', '/', ':', '*', '?', '"', '<', '>'], '_', $basename);
 	}
-	
+	static function build_test_router(bool $dataurl = FALSE, ...$urls):string
+	{
+		$code = stream_get_line(fopen(__DIR__ . '/res/js/test_router.js', 'r'), 0xffff, "\n");
+		$code = str_replace('{ERRORPAGE}', array_shift($urls), $code);
+		$code = str_replace('{BASE64URLS}', base64_encode(join(',', $urls)), $code);
+		return $dataurl
+			? 'data:text/html;base64,' . base64_encode("<script>{$code}</script>")
+			: 'javascript:eval(atob(\''. base64_encode($code) .'\'));';
+			//: 'javascript:'. rawurlencode($code) .';';
+			//: 'javascript:Function(atob(\''. base64_encode($code) .'\'))();';
+
+	}
 	static function maskdata(string $source):string
 	{
 		$bin = static::random(8);
