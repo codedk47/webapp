@@ -1128,9 +1128,10 @@ JS);
 			}
 			else
 			{
-				if (strlen($search) === 10 && trim($search, webapp::key) === '')
+				$len = strlen($search);
+				if (($len === 10 || $len === 16) && trim($search, webapp::key) === '')
 				{
-					$cond[0] .= ' and uid=?s';
+					$cond[0] .= $len === 10 ? ' and uid=?s' : ' and did=?s';
 					$cond[] = $search;
 				}
 				else
