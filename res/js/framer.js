@@ -237,7 +237,8 @@ addEventListener('DOMContentLoaded', async event =>
 
 	if ('authorization' in render.dataset)
 	{
-		while (!(localStorage.getItem('token') && 'token' in await loader(`${render.dataset.authorization}/${localStorage.getItem('token')}`)))
+		const url = render.dataset.authorization.split(','), auth = url[0];
+		while (!(localStorage.getItem('token') && url.splice(0, 1, `${auth}/${localStorage.getItem('token')}`) && 'token' in await loader(url.join(','))))
 		{
 			localStorage.setItem('token', await new Promise(resolve =>
 			{
