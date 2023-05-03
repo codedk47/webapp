@@ -272,6 +272,11 @@ class webapp_buffer implements Stringable
 	static function client(string $socket, array $contexts = [])
 	{
 	}
+	function ip():string
+	{
+		return is_string($ip = stream_socket_get_name($this->stream, TRUE))
+			? join(':', array_slice(explode(':', $ip), 0, -1)) : '127.0.0.1';
+	}
 }
 
 
@@ -285,6 +290,10 @@ class webapp_buffer_http extends webapp_buffer
 		'version' => 'HTTP/1.1',
 		'headers' => []
 	];
+	function request_ip():string
+	{
+		return is_string($ip = $this->request_header('X-Forwarded-For')) ? explode(',', $ip, 2)[0] : $this->ip();
+	}
 	function request_method():string
 	{
 		return $this->requests['method'];
