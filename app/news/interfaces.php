@@ -912,21 +912,16 @@ class interfaces extends webapp
 			$this->account_xml($account, $signature);
 		}
 	}
-	function post_changedid()
+	function get_accdid(string $did)
 	{
-		$input = $this->request_content();
-		if (isset($input['old'], $input['new'], $input['did'])
-			&& is_string($input['old'])
-			&& is_string($input['new'])
-			&& is_string($input['did'])
-			&& count($old = $this->authorize($input['old'], fn($uid) => [$uid]))
-			&& count($new = $this->authorize($input['new'], fn($uid) => [$uid]))) {
-			$input['old'] = $old[0];
-			$input['new'] = $new[0];
-			if ($this->mysql->sync(fn() => $this->mysql->accounts('WHERE uid=?s LIMIT 1', $input['old'])->update('did=NULL')
-				&& $this->mysql->accounts('WHERE uid=?s LIMIT 1', $input['new'])->update('did=?s', $input['did']))) {
-				$this->account_xml($this->mysql->accounts('WHERE uid=?s LIMIT 1', $input['new'])->array());
-			}
+		if ($this->mysql->accounts('WHERE did=?s LIMIT 1', $did)->fetch($account))
+		{
+			$this->xml['status'] = 'sign-in';
+			$this->mysql->accounts('WHERE uid=?s LIMIT 1', $account['uid'])->update([
+				'lasttime' => $account['lasttime'] = $this->time,
+				'lastip' => $account['lastip'] = $this->clientiphex
+			]);
+			$this->account_xml($account);
 		}
 	}
 	function post_register()

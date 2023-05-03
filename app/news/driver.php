@@ -209,7 +209,14 @@ class news_driver extends webapp
 	}
 
 
-
+	function accdid(string $did):array
+	{
+		return is_object($account = $this->get("accdid/{$did}")) && isset($account['status'])
+			? [...$account->account->getattr(),
+				'resources' => (string)$account->account->resources,
+				'favorite' => (string)$account->account->favorite,
+				'history' => (string)$account->account->history] : [];
+	}
 
 
 	//一下是实验测试函数
