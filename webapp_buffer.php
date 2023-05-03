@@ -461,13 +461,15 @@ class webapp_buffer_websocket extends webapp_buffer_http
 			&& $this->request_header('Connection') === 'Upgrade'
 			&& $this->request_header('Sec-WebSocket-Version') === '13'
 			&& is_string($key = $this->request_header('Sec-WebSocket-Key'))) {
-			return $this->shakehand = $this->send(join("\r\n", [
+			$this->shakehand = $this->send(join("\r\n", [
 				'HTTP/1.1 101 Switching Protocols',
 				'Upgrade: websocket',
 				'Connection: Upgrade',
 				'Sec-WebSocket-Version: 13',
 				'Sec-WebSocket-Accept: ' . base64_encode(sha1("{$key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11", TRUE)),
 				"\r\n"]));
+			return $this->shakehand && (isset($this->struct['webapp']['shakehand'])
+				? $this->struct['webapp']['shakehand']->call($this) : TRUE);
 		}
 		return $this->send(join("\r\n", [
 			'HTTP/1.1 404 Not Found',
