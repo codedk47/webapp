@@ -2317,7 +2317,7 @@ JS);
 		}
 		$cond[0] .= ' ORDER BY time DESC';
 
-		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit, $admin, $promoteurl)
+		$table = $this->main->table($this->webapp->mysql->unitsets(...$cond)->paging($page), function($table, $unit, $admin)
 		{
 			$table->row();
 			$table->cell()->append('a', ['❌',
@@ -2332,10 +2332,10 @@ JS);
 			$table->cell()->append('a', [$unit['name'], 'href' => "?admin/unitset,unit:{$unit['unit']}"]);
 			$table->cell($unit['max']);
 			$table->cell($admin[$unit['admin']] ?? $unit['admin']);
-			$table->cell("https://{$promoteurl}/pwa/website.html#{$unit['unit']}");
-			$table->cell("https://{$promoteurl}/?packer/{$unit['unit']}");
-		}, $this->adminlists(), $this->webapp['app_unit'][$this->webapp->site]);
-		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name', 'max', 'admin', '推广链接', '直接下载');
+			$table->cell()->append('a', ['跳转测试', 'href' => $this->webapp->test_router("PD/{$unit['unit']}")]);
+			$table->cell()->append('button', ['点击复制', 'onclick' => 'navigator.clipboard.writeText(this.parentNode.previousElementSibling.firstElementChild.href).then(()=>alert("复制成功！"))']);
+		}, $this->adminlists());
+		$table->fieldset('❌', 'time', 'unit:code', 'type', 'rate', 'price', 'name', 'max', 'admin', '跳转测试', '点击复制');
 		$table->header('Found ' . $table->count() . ' item');
 		$table->bar->append('button', ['Create Unit', 'onclick' => 'location.href="?admin/unitset"']);
 		$table->bar->select(['' => '全部'] + $this->adminlists())->setattr(['onchange' => 'g({admin:this.value||null})'])->selected($admin);

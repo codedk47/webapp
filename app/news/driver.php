@@ -179,9 +179,9 @@ class news_driver extends webapp
 	{
 		return preg_match('/; DID\/(\w{16})/', $this->request_device, $did) ? $did[1] : NULL;
 	}
-	function build_dataurl(string $path):string
+	function build_dataurl(string $path, bool $dataurl = TRUE):string
 	{
-		return $this->build_test_router(TRUE, $this['git_pub'], ...array_map(fn($origin) => "{$origin}/{$path}", $this['ws_router']));
+		return $this->build_test_router($dataurl, $this['git_pub'], ...array_map(fn($origin) => "{$origin}/{$path}", $this['ws_router']));
 	}
 	//账号操作
 	function request_account(?string &$signature = NULL):array

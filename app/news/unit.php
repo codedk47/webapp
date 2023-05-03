@@ -80,7 +80,7 @@ class webapp_router_unit extends webapp_echo_html
 		]);
 
 		$skip = TRUE;
-		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders, $units, $types, $promoteurl) use(&$skip)
+		$table = $this->main->table($stat, function($table, $stat, $days, $unitorders, $units, $types) use(&$skip)
 		{
 			if ($skip) return $skip = FALSE;
 			$t1 = $table->tbody->append('tr');
@@ -121,14 +121,11 @@ class webapp_router_unit extends webapp_echo_html
 			$t7->append('td', '-');
 			$t8->append('td', '-');
 			$t9->append('td', '费用');
-			$t10->append('td', [sprintf('类型: %s, 推广:【 https://%s/pwa/website.html#%s 】 下载:【 https://%s/?packer/%s 】', $type,
-				$promoteurl, $stat['unit'], $promoteurl, $stat['unit']),
-				'colspan' => count($days) + 2,
-				'style' => 'text-align:left']);
-			// $t10->append('td', [sprintf('类型: %s, 单价: %0.2f, 推广:【 https://%s/pwa/website.html#%s 】 下载:【 https://%s/?packer/%s 】', $type, $units[$stat['unit']] ?? 0,
-			// 	$promoteurl, $stat['unit'], $promoteurl, $stat['unit']),
-			// 	'colspan' => count($days) + 2,
-			// 	'style' => 'text-align:left']);
+			$t10->append('td', ["类型: {$type}", 'colspan' => 2]);
+			$t10->append('td', ['colspan' => 3])->append('a', ['点击跳转测试', 'href' => $this->webapp->test_router("PD/{$stat['unit']}")]);
+			$t10->append('td', ['colspan' => 3])->append('button', ['点击复制跳转地址', 'onclick' => 'navigator.clipboard.writeText(this.parentNode.previousElementSibling.firstElementChild.href).then(()=>alert("复制成功！"))']);
+			$t10->append('td', ['-', 'colspan' => count($days) - 6]);
+			
 			if ($type === 'cpc')
 			{
 				$t1->append('td', number_format($stat['$0$0']));
@@ -200,7 +197,7 @@ class webapp_router_unit extends webapp_echo_html
 			}
 			$tp[0] = number_format($pt);
 
-		}, $days, $unitorders, $units, $types, $this->webapp['app_unit'][$this->unit['site']]);
+		}, $days, $unitorders, $units, $types);
 		
 		$table->fieldset('单位', '统计', '总和', ...$days);
 		$table->header('')->append('input', ['type' => 'month', 'value' => "{$ym}", 'onchange' => 'g({ym:this.value})']);

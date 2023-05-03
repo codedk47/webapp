@@ -1664,4 +1664,8 @@ class interfaces extends webapp
 	{
 		var_dump( $this->sync($this->site = 0)->goto('/t.php?game-balance/1234567890,coin:50')->content() );
 	}
+	function test_router(string $path, bool $dataurl = FALSE):string
+	{
+		return $this->build_test_router($dataurl, $this['app_homepage'], ...array_map(fn($origin) => "{$origin}/{$path}", $this['app_websockets']));
+	}
 }
