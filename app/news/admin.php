@@ -792,6 +792,14 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
 
+		$form->fieldset('扩展数据，特殊站点外带数据');
+		$form->field('publisher', 'text', ['placeholder' => '发行商、片商']);
+		$form->field('actor', 'text', ['placeholder' => '作者']);
+		$form->field('director', 'text', ['placeholder' => '导演']);
+		$form->field('actress', 'text', ['placeholder' => '女优，多个用英文逗号间隔']);
+		$form->field('series', 'text', ['placeholder' => '系列，后面是发行日期']);
+		$form->field('issue', 'date', ['value' => date('Y-m-d')]);
+
 		$form->fieldset();
 		$tagc = [];
 		$tags = [];
@@ -818,8 +826,10 @@ class webapp_router_admin extends webapp_echo_html
 
 		$form->fieldset('require(下架：-2、会员：-1、免费：0、金币)');
 		$form->field('require', 'number', ['min' => -2, 'required' => NULL]);
+
 		$form->fieldset();
 		$form->button('Update Resource', 'submit');
+
 		$form->xml->append('script', 'document.querySelectorAll("ul.restag>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		return $form;
 	}
@@ -882,7 +892,7 @@ class webapp_router_admin extends webapp_echo_html
 						$playvideo['data-preview'] = $preview_start << 16 | $preview_end - $preview_start;
 					}
 				}
-				
+				$resource += json_decode($resource['extdat'], TRUE);
 			}
 			$form = $this->form_resource($this->main);
 

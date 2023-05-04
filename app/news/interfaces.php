@@ -549,6 +549,22 @@ class interfaces extends webapp
 			$update[0] .= ',type=?s,tags=?s,actors=?s';
 			array_push($update, $data['type'], $data['tags'], $data['actors']);
 		}
+		if ($data['publisher'] || $data['actor'] || $data['director'] || $data['actress'] || $data['series'])
+		{
+			$update[0] .= ',extdat=?s';
+			$update[] = json_encode([
+				'publisher' => $data['publisher'],
+				'actor' => $data['actor'],
+				'director' => $data['director'],
+				'actress' => $data['actress'],
+				'series' => $data['series'],
+				'issue' => $data['issue']
+			], JSON_UNESCAPED_UNICODE);
+		}
+		else
+		{
+			$update[0] .= ',extdat=null';
+		}
 		return $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s LIMIT 1', $this->site, $hash)->update(...$update);
 	}
 

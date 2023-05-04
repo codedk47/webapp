@@ -720,7 +720,7 @@ CSS);
 			// 	$attr['required'] = NULL;
 			// }
 			$form->field($field['Field'], $type, $attr, $pattern[1] === 'json'
-				? fn($v, $i) => $i ? $v : json_encode(json_decode($v, TRUE), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
+				? fn($v, $i) => $i ? $v : ($v ? json_encode(json_decode($v, TRUE), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : '')
 				: NULL);
 		}
 		$form->fieldset();
