@@ -891,6 +891,7 @@ class interfaces extends webapp
 			'unit' => $account['unit'],
 			'code' => $account['code'],
 			'phone' => $account['phone'],
+			'did' => $account['did'],
 			'name' => $account['name']
 		]);
 		$node->append('resources')->cdata($account['resources']);
