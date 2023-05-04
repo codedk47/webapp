@@ -1496,8 +1496,9 @@ class interfaces extends webapp
 			//C{增加金币}E{会员时间}B{视频金币}
 			if (preg_match('/^C(\d+)(E\d+)(B\d+)$/', $order['order_no'], $goods))
 			{
-				//$update['trade_no'] = $this->remote('http://10.220.22.4:81/index.php', 'game_credit', [$order['notify_url'], intval($goods[1])]);
-				$update['trade_no'] = NULL;
+				//$this['app_site'][$this->site]
+				$update['trade_no'] = $this->remote("http://{$this['app_site'][$this->site]}/index.php", 'game_credit', [$order['notify_url'], intval($goods[1])]);
+				//$update['trade_no'] = NULL;
 				if ($update['trade_no'] === NULL)
 				{
 					break;
