@@ -892,7 +892,10 @@ class webapp_router_admin extends webapp_echo_html
 						$playvideo['data-preview'] = $preview_start << 16 | $preview_end - $preview_start;
 					}
 				}
-				$resource += json_decode($resource['extdat'], TRUE);
+				if ($resource['extdat'])
+				{
+					$resource += json_decode($resource['extdat'], TRUE);
+				}
 			}
 			$form = $this->form_resource($this->main);
 
