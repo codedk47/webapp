@@ -614,7 +614,7 @@ class webapp_router_admin extends webapp_echo_html
 		else
 		{
 			$form->fieldset('name / level / count / click');
-			$form->field('hash', 'text', ['required' => NULL]);
+			$form->field('hash', 'hidden', ['value' => substr($this->webapp->hash($this->webapp->random(8), TRUE), -4), 'required' => NULL]);
 		}
 		$form->field('level', 'select', ['style' => 'width:9rem', 'required' => NULL, 'options' => $this->list_tag_level()]);
 		$form->field('count', 'number', ['style' => 'width:8rem', 'min' => 0, 'required' => NULL]);
