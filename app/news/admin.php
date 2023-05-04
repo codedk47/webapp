@@ -632,7 +632,7 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function post_tag_create()
 	{
-		if (($this->webapp->admin[2] || $this->webapp->admin[0] == '1200') //<--------------
+		if (($this->webapp->admin[2] || $this->webapp->admin[0] == 1200) //<--------------
 			&& $this->form_tag($this->webapp)->fetch($tag)
 			&& $this->check_tags($tag['alias'])
 			&& ($this->webapp->admin[0] == '1200' ? boolval($tag['level'] = 9) : TRUE)
