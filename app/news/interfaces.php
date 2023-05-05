@@ -549,7 +549,7 @@ class interfaces extends webapp
 			$update[0] .= ',type=?s,tags=?s,actors=?s';
 			array_push($update, $data['type'], $data['tags'], $data['actors']);
 		}
-		if ($data['publisher'] || $data['actor'] || $data['director'] || $data['actress'] || $data['series'])
+		if ($data['publisher'] || $data['actor'] || $data['director'] || $data['actress'] || $data['series'] || $data['issue'])
 		{
 			$update[0] .= ',extdat=?s';
 			$update[] = json_encode([

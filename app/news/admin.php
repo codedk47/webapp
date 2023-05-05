@@ -800,8 +800,8 @@ class webapp_router_admin extends webapp_echo_html
 		$form->field('actor', 'text', ['placeholder' => '作者']);
 		$form->field('director', 'text', ['placeholder' => '导演']);
 		$form->field('actress', 'text', ['placeholder' => '女优，多个用英文逗号间隔']);
-		$form->field('series', 'text', ['placeholder' => '系列，后面是发行日期']);
-		$form->field('issue', 'date', ['value' => date('Y-m-d')]);
+		$form->field('series', 'text', ['placeholder' => '系列']);
+		$form->field('issue', 'text', ['placeholder' => '发行日期 YYYY-MM-DD']);
 
 		$form->fieldset();
 		$tagc = [];
