@@ -1841,10 +1841,9 @@ JS);
 				}
 				else
 				{
-					$cell = $table->cell();
-					// $cell->append('a', ['同意提现', 'href' => "?admin/exchange,hash:{$order['hash']},action:okexchange"]);
-					// $cell->append('span', ' | ');
-					// $cell->append('a', ['退回分数', 'href' => "?admin/exchange,hash:{$order['hash']},action:rebackcoin"]);
+					$table->cell()->append('a', ['同意提现', 'href' => "?admin/exchange,hash:{$order['hash']},action:okexchange"]);
+					$table->cell();
+					//$table->cell()->append('a', ['退回分数', 'href' => "?admin/exchange,hash:{$order['hash']},action:rebackcoin"]);
 				}
 				
 				
@@ -1852,8 +1851,9 @@ JS);
 			else
 			{
 				$table->cell("{$order['pay_name']}@{$order['pay_type']}");
+				$table->cell($order['order_no']);
 			}
-			$table->cell($order['order_no']);
+			
 			$table->cell($order['trade_no']);
 			
 			if ($order['exchange'])
@@ -1931,7 +1931,7 @@ JS);
 	function post_exchange(string $hash)
 	{
 		if ($this->form_exchange($this->webapp)->fetch($aisle)
-			&& $this->webapp->mysql->orders('WHERE hash=?s AND status="unpay"', $hash)->fetch($order)) {
+			&& $this->webapp->mysql->orders('WHERE hash=?s AND status="unpay" AND trade_no=""', $hash)->fetch($order)) {
 			[$order['pay_name'], $order['pay_type']] = explode('@', $aisle['aisle']);
 			$exchange = json_decode($order['exchange'], TRUE);
 			if (is_array($result = webapp_client_http::open("{$this->webapp['app_hostpay']}?exchange", [
@@ -1962,7 +1962,7 @@ JS);
 				$this->okay("?admin/orders,search:{$hash}");
 				return;
 			}
-			print_r($result);
+			//print_r($result);
 		}
 		$this->warn('提现失败！');
 	}
