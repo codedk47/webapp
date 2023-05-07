@@ -28,15 +28,7 @@ class webapp_buffer implements Stringable
 	{
 		return TRUE;
 	}
-	function onCreate():bool
-	{
-		return is_resource($this->buffer ??= fopen('php://memory', 'r+'));
-	}
-	function onClose():void
-	{
-		fclose($this->buffer);
-		//$this->buffer = NULL;
-	}
+
 	// function filter($in, $out, &$consumed, bool $closing):int
 	// {
 	// 	while ($bucket = stream_bucket_make_writeable($in))
@@ -213,14 +205,7 @@ class webapp_buffer implements Stringable
 		// $this->context
 		// $this->sockets[get_resource_id($stream)] = static::open($stream);
 	}
-	function del($id)
-	{
-		unset($this->sockets[$id], $this->buffers[$id]);
-	}
-	function get()
-	{
-		
-	}
+
 
 
 	function readable():bool
@@ -240,6 +225,12 @@ class webapp_buffer implements Stringable
 			{
 				if ($stream = @stream_socket_accept($read[0]))
 				{
+					$buffer = new static($this->struct, $stream);
+					$buffer->context = $this->context;
+					$id = get_resource_id($stream);
+					$this->sockets[$id] = $stream;
+					$this->buffers[$id] = $buffer;
+					$buffer->readable = $this->struct['webapp']['readable'] ?? NULL;
 					$this->add($stream);
 					
 				}
@@ -282,7 +273,6 @@ class webapp_buffer implements Stringable
 
 class webapp_buffer_http extends webapp_buffer
 {
-	//const server_name = static::class;
 	private int $offset = -1;
 	private array $requests = [
 		'method' => 'GET',

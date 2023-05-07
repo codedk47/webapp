@@ -792,7 +792,7 @@ class webapp_router_admin extends webapp_echo_html
 		$form->button('观看完整')['onclick'] = 'g({preview:null})';
 
 		$form->fieldset('name / actors');
-		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
+		$form->field('name', 'textarea', ['rows' => 3, 'cols' => 114, 'required' => NULL]);
 		$form->field('actors', 'text', ['value' => '素人', 'required' => NULL]);
 
 		$form->fieldset('扩展数据，特殊站点外带数据');
