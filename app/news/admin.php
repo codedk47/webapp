@@ -1221,17 +1221,14 @@ JS);
 			'recharge' => 0, 'recharges' => [],
 			'excharge' => 0, 'excharges' => []
 		];
-		foreach ($this->webapp->mysql->orders('WHERE notify_url=?s', $uid) as $order)
+		foreach ($this->webapp->mysql->orders('WHERE notify_url=?s AND status="notified" AND order_no LIKE "C%"', $uid) as $order)
 		{
 			$order['order_fee'] *= 0.01;
 			[$value, $list] = $order['exchange'] ? ['excharge', 'excharges'] : ['recharge', 'recharges'];
-			$orders[$list][] = sprintf("{$order['hash']}: %s, ￥%.2f -> {$order['status']}",
-				date('Y-m-d\\TH:i:s', $order['time']),
-				$order['order_fee']);
-			if ($order['status'] !== 'unpay')
-			{
-				$orders[$value] += $order['order_fee'];
-			}
+			$orders[$list][] = sprintf("{$order['hash']}: %s, %s -> ￥%.2f",
+				date('Y-m-d\\TH:i:s', $order['time']), $order['order_no'], $order['order_fee']);
+			$orders[$value] += $order['order_fee'];
+			
 		}
 		$form->fieldset("充值记录：{$orders['recharge']}")->append('pre', join(PHP_EOL, $orders['recharges']))['style'] = 'margin:0';
 		$form->fieldset("提现记录：{$orders['excharge']}")->append('pre', join(PHP_EOL, $orders['excharges']))['style'] = 'margin:0';
