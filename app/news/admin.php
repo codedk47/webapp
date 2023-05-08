@@ -1225,8 +1225,8 @@ JS);
 		{
 			$order['order_fee'] *= 0.01;
 			[$value, $list] = $order['exchange'] ? ['excharge', 'excharges'] : ['recharge', 'recharges'];
-			$orders[$list][] = sprintf("{$order['hash']}: %s, %s -> ￥%.2f",
-				date('Y-m-d\\TH:i:s', $order['time']), $order['order_no'], $order['order_fee']);
+			$orders[$list][] = sprintf("{$order['hash']}: %s, %s = ￥%.2f -> %s",
+				date('Y-m-d\\TH:i:s', $order['time']), $order['order_no'], $order['order_fee'], $order['status']);
 			if ($order['status'] !== 'unpay')
 			{
 				$orders[$value] += $order['order_fee'];
