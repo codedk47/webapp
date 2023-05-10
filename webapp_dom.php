@@ -1078,7 +1078,11 @@ class webapp_table implements Countable
 				$node->append('a', ['Prev', 'href' => $url . ($this->paging['index'] - 1)]);
 				foreach ($ranges as $index)
 				{
-					$node->append('a', [$index, 'href' => "{$url}{$index}"]);
+					$curr = $node->append('a', [$index, 'href' => "{$url}{$index}"]);
+					if ($index === $this->paging['index'])
+					{
+						$page = $curr;
+					}
 				}
 				$node->append('a', ['Next', 'href' => $url . ($this->paging['index'] + 1)]);
 				$node->append('input', ['type' => 'number', 'min' => 1, 'max' => $this->paging['max'], 'value' => $this->paging['index'], 'onkeypress' => 'event.keyCode===13&&location.assign(this.nextElementSibling.href+this.value)']);
@@ -1088,8 +1092,16 @@ class webapp_table implements Countable
 			{
 				for ($i = 1;$i <= $this->paging['max']; ++$i)
 				{
-					$node->append('a', [$i, 'href' => "{$url}{$i}"]);
+					$curr = $node->append('a', [$i, 'href' => "{$url}{$i}"]);
+					if ($i === $this->paging['index'])
+					{
+						$page = $curr;
+					}
 				}
+			}
+			if (isset($page))
+			{
+				$page->setattr('style', 'background:var(--webapp-anchor);color:white');
 			}
 		}
 		return $this;
