@@ -934,8 +934,8 @@ class webapp_router_admin extends webapp_echo_html
 			$sync = $this->webapp->query['sync'] ?? 'finished'];
 		if (is_string($search))
 		{
-			$cond[0] .= ' AND (hash=?s or data->>\'$."?i".name\' like ?s)';
-			array_push($cond, $search = urldecode($search), $this->webapp->site, "%{$search}%");
+			$cond[0] .= ' AND (hash=?s or actors=?s or name like ?s)';
+			array_push($cond, $search = urldecode($search), $search, "%{$search}%");
 		}
 		if (strlen($tag = $this->webapp->query['tag'] ?? ''))
 		{
