@@ -1956,7 +1956,7 @@ JS);
 					'trade_no' => $result['data']['hash'],
 					'status' => 'payed'
 				])) {
-				$this->okay("?admin/orders,search:{$hash}");
+				$this->okay("?admin/orders,prod:exchange,search:{$hash},date:");
 				return;
 			}
 			//print_r($result);
@@ -1978,7 +1978,7 @@ JS);
 			$exchange = json_decode($order['exchange'], TRUE);
 			if (is_string($trade_no = $this->webapp->remote("http://{$this->webapp['app_site'][$this->webapp->site]}/index.php", 'game_credit', [$order['notify_url'], intval($exchange['coins'])]))
 				&& $this->webapp->mysql->orders('WHERE hash=?s AND trade_no=""', $hash)->update('trade_no=?s', $trade_no)) {
-					$this->okay("?admin/orders,search:{$hash}");
+					$this->okay("?admin/orders,prod:exchange,search:{$hash},date:");
 					return;
 			}
 			$this->warn('退回分数失败！');
