@@ -1836,16 +1836,14 @@ JS);
 			{
 				if ($order['trade_no'])
 				{
-					$table->cell();
+					$table->cell("{$order['pay_name']}@{$order['pay_type']}");
+					$table->cell($order['order_no']);
 				}
 				else
 				{
 					$table->cell()->append('a', ['同意提现', 'href' => "?admin/exchange,hash:{$order['hash']},action:okexchange"]);
-					$table->cell();
-					//$table->cell()->append('a', ['退回分数', 'href' => "?admin/exchange,hash:{$order['hash']},action:rebackcoin"]);
+					$table->cell()->append('a', ['退回分数', 'href' => "?admin/exchange,hash:{$order['hash']},action:rebackcoin"]);
 				}
-				
-				
 			}
 			else
 			{
@@ -1969,14 +1967,22 @@ JS);
 	{
 		if ($action === 'okexchange')
 		{
-			if ($this->webapp->mysql->orders('WHERE hash=?s', $hash)->fetch($order))
+			if ($this->webapp->mysql->orders('WHERE hash=?s AND trade_no=""', $hash)->fetch($order))
 			{
 				$this->form_exchange($this->main, $order);
 			}
 			return;
 		}
-
-
+		if ($action === 'rebackcoin' && $this->webapp->mysql->orders('WHERE hash=?s AND trade_no=""', $hash)->fetch($order))
+		{
+			$exchange = json_decode($order['exchange'], TRUE);
+			if (is_string($trade_no = $this->remote("http://{$this['app_site'][$this->site]}/index.php", 'game_credit', [$order['notify_url'], intval($exchange['coins'])]))
+				&& $this->webapp->mysql->orders('WHERE hash=?s AND trade_no=""', $hash)->update('trade_no=?s', $trade_no)) {
+					$this->okay("?admin/orders,search:{$hash}");
+					return;
+			}
+			$this->warn('退回分数失败！');
+		}
 	}
 	function get_ordernotify(string $hash)
 	{
