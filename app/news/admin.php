@@ -1836,8 +1836,8 @@ JS);
 			{
 				if ($order['trade_no'])
 				{
-					$table->cell("{$order['pay_name']}@{$order['pay_type']}");
-					$table->cell($order['order_no']);
+					$table->cell($order['pay_name'] && $order['pay_type'] ? "{$order['pay_name']}@{$order['pay_type']}" : '内部处理');
+					$table->cell($order['order_no'] ?: '退回分数');
 				}
 				else
 				{
