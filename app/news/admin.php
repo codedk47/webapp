@@ -1976,7 +1976,7 @@ JS);
 		if ($action === 'rebackcoin' && $this->webapp->mysql->orders('WHERE hash=?s AND trade_no=""', $hash)->fetch($order))
 		{
 			$exchange = json_decode($order['exchange'], TRUE);
-			if (is_string($trade_no = $this->remote("http://{$this['app_site'][$this->site]}/index.php", 'game_credit', [$order['notify_url'], intval($exchange['coins'])]))
+			if (is_string($trade_no = $this->webapp->remote("http://{$this['app_site'][$this->site]}/index.php", 'game_credit', [$order['notify_url'], intval($exchange['coins'])]))
 				&& $this->webapp->mysql->orders('WHERE hash=?s AND trade_no=""', $hash)->update('trade_no=?s', $trade_no)) {
 					$this->okay("?admin/orders,search:{$hash}");
 					return;
