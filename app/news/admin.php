@@ -46,7 +46,6 @@ class webapp_router_admin extends webapp_echo_html
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Orderstat（订单统计，可以查看支付情况）', '?admin/orderstat'],
 				['Orders（订单数据，对接支付中心）', '?admin/orders'],
-				//['Payaisle（支付通道，设置修改）', '?admin/payaisle'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Unitsets（单位设置，开设需要后台的单位）', '?admin/unitsets'],
 				['Unitcost（单位成本，统计计算单位费用）', '?admin/unitcost'],
@@ -2063,110 +2062,6 @@ JS);
 		} while (0);
 		$this->warn($error);
 	}
-	// //支付
-	// function form_payaisle($ctx):webapp_form
-	// {
-	// 	$form = new webapp_form($ctx);
-	// 	$form->field('name', 'text', ['maxlength' => 16, 'placeholder' => '支付通道名称', 'style' => 'width:8rem', 'required' => NULL]);
-	// 	$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 255, 'style' => 'width:4rem', 'required' => NULL]);
-	// 	$form->field('code', 'text', ['minlength' => 2, 'maxlength' => 2, 'placeholder' => '??', 'style' => 'width:2rem', 'required' => NULL]);
-	// 	$form->button('Set', 'submit');
-	// 	$form->fieldset();
-	// 	$form->field('type', 'textarea', [
-	// 		'placeholder' => 'type@name:open[,type@name:open]',
-	// 		'cols' => 60,
-	// 		'rows' => 8,
-	// 		'pattern' => '[01]#\w+\[\d+(\,\d+)*\][^\r]+(\r\n[01]#\w+\[\d+(\,\d+)*\][^\r]+)*',
-	// 		'required' => NULL
-	// 	]);
-	// 	return $form;
-	// }
-	// function post_payaisle(string $code = NULL)
-	// {
-	// 	if ($this->form_payaisle($this->webapp)->fetch($data)
-	// 		&& class_exists("webapp_pay_{$data['code']}", FALSE)
-	// 		&& ($code
-	// 		? $this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $code)->update([
-	// 			'sort' => $data['sort'],
-	// 			'name' => $data['name'],
-	// 			'type' => $data['type']])
-	// 		: $this->webapp->mysql->payaisle->insert([
-	// 			'time' => $this->webapp->time,
-	// 			'keep' => 'off'] + $data))) {
-	// 		return $this->okay('?admin/payaisle');
-	// 	}
-	// 	$this->warn('支付通道添加失败');
-	// }
-	// function get_payaisle(string $code = NULL, string $onoff = NULL)
-	// {
-	// 	if (($this->webapp->admin[2]
-	// 		|| $this->webapp->admin[0] == 1001
-	// 		|| $this->webapp->admin[0] == 1005
-	// 	) === FALSE) return $this->warn('需要超级管理员授权才可以使用！');
-	// 	$form = $this->form_payaisle($this->main);
-	// 	$form->xml['style'] = 'display:block;margin:1rem 0';
-	// 	if ($code || $onoff)
-	// 	{
-	// 		$form->echo($this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $code ?? $onoff)->array());
-	// 		if ($onoff)
-	// 		{
-	// 			$this->webapp->mysql->payaisle('WHERE code=?s LIMIT 1', $onoff)->update('keep=IF(keep="on","off","on")');
-	// 		}
-	// 	}
-
-	// 	$orderstat = [
-	// 		'24h' => [],
-	// 		'15m' => []
-	// 	];
-	// 	$t24 = $this->webapp->time(-86400);
-	// 	$t15 = $t24 + (86400 - 900);
-	// 	foreach ($this->webapp->mysql->orders('where time>=?i', $t24) as $order)
-	// 	{
-	// 		$name = "{$order['pay_name']}{$order['pay_type']}";
-	// 		if (isset($orderstat['24h'][$name]))
-	// 		{
-	// 			$orderstat['24h'][$name][0] += 1;
-	// 			$orderstat['24h'][$name][1] += intval($order['status'] != 'unpay');
-	// 		}
-	// 		else
-	// 		{
-	// 			$orderstat['24h'][$name] = [1, intval($order['status'] != 'unpay')];
-	// 		}
-	// 		if ($order['time'] > $t15)
-	// 		{
-	// 			if (isset($orderstat['15m'][$name]))
-	// 			{
-	// 				$orderstat['15m'][$name][0] += 1;
-	// 				$orderstat['15m'][$name][1] += intval($order['status'] != 'unpay');
-	// 			}
-	// 			else
-	// 			{
-	// 				$orderstat['15m'][$name] = [1, intval($order['status'] != 'unpay')];
-	// 			}
-	// 		}
-	// 	}
-	// 	$table = $this->main->table($this->webapp->mysql->payaisle('ORDER BY sort ASC'), function($table, $pay, $orderstat)
-	// 	{
-	// 		preg_match_all('/\d#([^\[]+)/', $pay['type'], $aisle);
-	// 		$stat = ['24h' => [], '15m' => []];
-	// 		foreach ($aisle[1] as $name)
-	// 		{
-	// 			$name = "{$pay['code']}{$name}";
-	// 			$stat['24h'][] = sprintf('%.02f%%', isset($orderstat['24h'][$name]) ? $orderstat['24h'][$name][1] / $orderstat['24h'][$name][0] * 100 : 0);
-	// 			$stat['15m'][] = sprintf('%.02f%%', isset($orderstat['15m'][$name]) ? $orderstat['15m'][$name][1] / $orderstat['15m'][$name][0] * 100 : 0);
-	// 		}
-	// 		$table->row();
-	// 		$table->cell(date('Y-m-d\\TH:i:s', $pay['time']));
-	// 		$table->cell($pay['name']);
-	// 		$table->cell($pay['sort']);
-	// 		$table->cell($pay['code']);
-	// 		$table->cell(join("\n", $stat['24h']));
-	// 		$table->cell(join("\n", $stat['15m']));
-	// 		$table->cell()->append('a', [$pay['type'], 'href' => "?admin/payaisle,code:{$pay['code']}"]);
-	// 		$table->cell()->append('a', [$pay['keep'], 'href' => "?admin/payaisle,onoff:{$pay['code']}"]);
-	// 	}, $orderstat);
-	// 	$table->fieldset('创建时间', '名称', '排序', '代码', '24h成功', '15m成功', '类型', 'on/off');
-	// }
 	//运行
 	function get_runstatus()
 	{
