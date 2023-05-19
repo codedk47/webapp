@@ -1875,7 +1875,12 @@ JS);
 			$table->bar->select(['' => '全部商户'] + array_combine($paysers, $paysers))->setattr(['onchange' => 'g({payuser:this.value||null})'])->selected($payuser);
 		}
 
-		$table->bar->select(['' => '全部平台'] + $this->webapp->mysql->payaisle('ORDER BY sort ASC')->column('name', 'code'))->setattr(['onchange' => 'g({pn:this.value||null})'])->selected($pay_name);
+		$pn = $this->webapp->mysql->orders('GROUP BY pay_name')->column('pay_name');
+
+
+		$table->bar->select(['' => '全部平台'] + array_combine($pn, $pn))->setattr(['onchange' => 'g({pn:this.value||null})'])->selected($pay_name);
+		
+		
 		$table->bar->select([
 			'' => '全部状态',
 			'notified' => 'notified',
