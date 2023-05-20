@@ -1202,18 +1202,30 @@ JS);
 		$table->bar->append('span', [join(', ', $counts), 'style' => 'padding-left:1rem;font-weight:bold;color:green']);
 		$table->paging($this->webapp->at(['page' => '']));
 	}
+	function get_gamekick(string $uid)
+	{
+		if ($this->webapp->remote("http://{$this->webapp['app_site'][$this->webapp->site]}/index.php", 'game_kick', [$uid]))
+		{
+			$this->okay("?admin/gameinfo,uid:{$uid}");
+			return;
+		}
+		$this->warn('账号踢出失败！');
+	}
 	function get_gameinfo(string $uid)
 	{
 		$form = $this->main->form();
 
 		$form->fieldset->append('legend', '账号');
-		$form->fieldset->append('label', $uid);
-
-		$gameinfo = $this->webapp->remote('http://10.220.22.4:80/index.php', 'game_loginfo', [$uid]);
-		$form->fieldset("分数");
-		$form->fieldset->append('label', join('，', [
-			"余额：{$gameinfo['balance']}"
-		]));
+		$label = $form->fieldset->append('label');
+		$label->append('span')->append('a', ['返回账号', 'href' => "?admin/account-update,uid:{$uid}"]);
+		$label->append('span', [$uid, 'style' => 'margin:auto 1rem']);
+		$label->append('span')->append('a', ['踢出玩家', 'href' => "?admin/gamekick,uid:{$uid}"]);
+		
+		// $gameinfo = $this->webapp->remote("http://{$this->webapp['app_site'][$this->webapp->site]}/index.php", 'game_loginfo', [$uid]);
+		// $form->fieldset("分数");
+		// $form->fieldset->append('label', join('，', [
+		// 	"余额：{$gameinfo['balance']}"
+		// ]));
 
 
 		$orders = [

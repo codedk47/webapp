@@ -298,6 +298,10 @@ class news_driver extends webapp
 			}
 		};
 	}
+	function game_kick(string $uid):bool
+	{
+		return $this->game->kick($uid);
+	}
 	function game_loginfo(string $acc):array
 	{
 		return [
