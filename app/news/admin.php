@@ -1221,11 +1221,11 @@ JS);
 		$label->append('span', [$uid, 'style' => 'margin:auto 1rem']);
 		$label->append('span')->append('a', ['踢出玩家', 'href' => "?admin/gamekick,uid:{$uid}"]);
 		
-		// $gameinfo = $this->webapp->remote("http://{$this->webapp['app_site'][$this->webapp->site]}/index.php", 'game_loginfo', [$uid]);
-		// $form->fieldset("分数");
-		// $form->fieldset->append('label', join('，', [
-		// 	"余额：{$gameinfo['balance']}"
-		// ]));
+		$gameinfo = $this->webapp->remote("http://{$this->webapp['app_site'][$this->webapp->site]}/index.php", 'game_loginfo', [$uid]);
+		$form->fieldset("分数");
+		$form->fieldset->append('label', join('，', [
+			"余额：{$gameinfo['balance']}"
+		]));
 
 
 		$orders = [
