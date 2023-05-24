@@ -39,8 +39,7 @@ class webapp_router_admin extends webapp_echo_html
 				//['Web Socket Chat System（在线客服）', '?admin/wschat'],
 				//['Comments（评论记录，暂时没用）', '?admin/comments'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
-				['Set Tags（设置首页标签，包含哪些点播）', '?admin/settags'],
-				['Set Vods（设置点播集合，类型资源）', '?admin/setvods'],
+				['Serials（剧集管理，设置修改连续剧）', '?admin/serials'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
 				['Stat Bills（统计账单，包括资源购买）', '?admin/statbills'],
 				['', '', 'style' => 'color:black;text-decoration:none;border-top:.1rem solid black;padding:0;margin:.3rem'],
@@ -1455,198 +1454,47 @@ JS);
 		])->setattr(['onchange' => 'g({status:this.value?this.value:null})'])->selected($this->webapp->query['status'] ?? '');
 		$table->paging($this->webapp->at(['page' => '']));
 	}
-	//合集标签
-	function form_settag($ctx):webapp_form
+	function form_serial($ctx):webapp_form
 	{
 		$form = new webapp_form($ctx);
-		$form->fieldset('sort / name');
-		$form->field('sort', 'number', ['value' => 0, 'min' => 0, 'required' => NULL]);
-		$form->field('name', 'text', ['required' => NULL]);
-		
-		$form->fieldset('vods');
+		$form->fieldset('title');
+		$form->field('title', 'text', ['style' => 'width:40rem', 'required' => NULL]);
+		$form->fieldset('lists');
+		$form->field('lists', 'textarea', ['rows' => 30, 'cols' => 65]);
 
-		$vods = [];
-		$type = ['long' => '长', 'short' => '短', 'live' => '直', 'movie' => '电'];
-		foreach ($this->webapp->mysql->setvods('WHERE site=?i ORDER BY type ASC,sort ASC,time DESC', $this->webapp->site) as $vod)
-		{
-			$vods[$vod['hash']] = "{$type[$vod['type']]}:{$vod['name']}";
-		}
-		$form->field('vods', 'checkbox', ['options' => $vods], 
-			fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'mo';
-
-		$form->fieldset('ads');
-		$ads = $this->webapp->mysql->ads('WHERE site=?i ORDER BY time DESC', $this->webapp->site)->column('name', 'hash');
-		$form->field('ads', 'checkbox', ['options' => $ads], fn($v,$i)=>$i?join($v):str_split($v,12))['class'] = 'mo';
-		$form->fieldset();
-		$form->button('Submit', 'submit');
 		return $form;
 	}
-	function post_settag_create()
+	function get_serial($hash = NULL)
 	{
-		if ($this->form_settag($this->webapp)->fetch($data)
-			&& $this->webapp->mysql->settags->insert($data += [
-				'hash' => $this->webapp->randhash(TRUE),
-				'site' => $this->webapp->site,
-				'time' => $this->webapp->time])
-			&& $this->webapp->call('saveSettag', $this->webapp->settag_xml($data))) {
-			return $this->okay('?admin/settags');
-		}
-		$this->warn('合集标签创建失败！');
-	}
-	function get_settag_create()
-	{
-		$this->form_settag($this->main);
-	}
-	function get_settag_delete(string $hash)
-	{
-		if ($this->webapp->call('delSettag', $hash)
-			&& $this->webapp->mysql->settags->delete('WHERE site=?s AND hash=?s', $this->webapp->site, $hash)) {
-			return $this->okay('?admin/settags');
-		}
-		$this->warn('合集标签删除失败！');
-	}
-	function post_settag_update(string $hash)
-	{
-		if ($this->form_settag($this->webapp)->fetch($data)
-			&& $this->webapp->mysql->settags('WHERE site=?s AND hash=?s LIMIT 1', $this->webapp->site, $hash)->update($data)
-			&& ($newdata = $this->webapp->mysql->settags('WHERE site=?s AND hash=?s LIMIT 1', $this->webapp->site, $hash)->array())
-			&& $this->webapp->call('saveSettag', $this->webapp->settag_xml($newdata))) {
-			return $this->okay('?admin/settags');
-		}
-		$this->warn('合集标签更新失败！');
-	}
-	function get_settag_update(string $hash)
-	{
-		if ($data = $this->webapp->mysql->settags('WHERE hash=?s LIMIT 1', $hash)->array())
+		$form = $this->form_serial($this->main);
+		if ($this->webapp->mysql->serials('WHERE site=?s AND hash=?s LIMIT 1', $this->webapp->site, $hash)->fetch($ser))
 		{
-			$this->form_settag($this->main)->echo($data);
+			$ser['lists'] = json_encode(json_decode($ser['lists'], TRUE), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+			$form->echo($ser);
 		}
 	}
-	function get_settags()
+	function get_serials(string $search = NULL, int $page = 1)
 	{
-		$count = 0;
-		$table = $this->main->table($this->webapp->mysql->settags(
-			'WHERE site=?i ORDER BY sort ASC', $this->webapp->site), function($table, $tag) use(&$count)
-		{
-			++$count;
-			$table->row();
-			$table->cell()->append('a', ['❌',
-				'href' => "?admin/settag-delete,hash:{$tag['hash']}",
-				'onclick' => 'return confirm(`Delete Settag ${this.dataset.name}`)',
-				'data-name' => $tag['name']]);
-			$table->cell()->append('a', [$tag['hash'], 'href' => "?admin/settag-update,hash:{$tag['hash']}"]);
-			$table->cell(date('Y-m-d H:i:s', $tag['time']));
-			$table->cell($tag['sort']);
-			$table->cell($tag['name']);
-			$table->cell($tag['ads'] ? floor(strlen($tag['ads']) / 12) : 0);
-			$table->cell($tag['vods'] ? floor(strlen($tag['vods']) / 12) : 0);
-		});
-		$table->fieldset('❌', 'hash', 'time', 'sort', 'name', 'ads', 'VOD');
-		$table->header('Found %d item', $count);
-		$table->button('Create Set Tag', ['onclick' => 'location.href="?admin/settag-create"']);
-	}
-	//合集资源
-	function get_setvod_create()
-	{
-		$this->webapp->form_setvod($this->main)->xml->fieldset[1]->input['required'] = NULL;
-	}
-	function get_setvod_delete(string $hash)
-	{
-		if ($this->webapp->call('delSetvod', $hash)
-			&& $this->webapp->mysql->setvods->delete('WHERE site=?s AND hash=?s', $this->webapp->site, $hash)) {
-			return $this->okay('?admin/setvods');
-		}
-		$this->warn('合集资源删除失败！');
-	}
-	function get_setvod_update(string $hash, string $type)
-	{
-		if ($data = $this->webapp->mysql->setvods('WHERE hash=?s LIMIT 1', $hash)->array())
-		{
-			$this->webapp->form_setvod($this->main, $hash, $type)->echo($data)->xml->fieldset->setattr([
-				'style' => 'display:block;width:480px;height:280px;border:.1rem solid black;',
-				'data-src' => "{$this->webapp['app_resoutput']}vods/{$data['hash']}"
-			])->append('script')->cdata('const pic = document.querySelector("fieldset[data-src]");
-			loader(pic.dataset.src,null,"application/octet-stream").then(b=>pic.style.background=`center/contain no-repeat url(${URL.createObjectURL(b)}) silver`)');
-		}
-	}
-	function get_setvods(string $type = NULL, string $tags = NULL, string $search = NULL)
-	{
-		$settags = [];
-		$seltags = [];
-		foreach ($this->webapp->mysql->settags('WHERE site=?i ORDER BY sort ASC,time DESC', $this->webapp->site) as $settag)
-		{
-			$settags[$settag['hash']] = [
-				'name' => $seltags[$settag['hash']] = $settag['name'],
-				'vods' => $settag['vods'] ? str_split($settag['vods'], 12) :[]
-			];
-		}
 		$cond = ['WHERE site=?i', $this->webapp->site];
-		if (is_string($type) && strlen($type))
-		{
-			$cond[0] .= ' AND type=?s';
-			$cond[] = $type;
-		}
-		if (is_string($search) && strlen($search))
+		if ($search)
 		{
 			$search = urldecode($search);
-			$cond[0] .= ' AND (name LIKE ?s OR `describe` LIKE ?s)';
-			$cond[] = "%{$search}%";
+			$cond[0] .= ' AND title LIKE ?s';
 			$cond[] = "%{$search}%";
 		}
-		$cond[0] .= ' ORDER BY sort ASC,view DESC';
-		$count = 0;
-		$table = $this->main->table($this->webapp->mysql->setvods(...$cond), function($table, $vod, $type, $viewtype, $settags, $tags) use(&$count)
+		$table = $this->main->table($this->webapp->mysql->serials(...$cond)->paging($page, 12), function($table, $ser)
 		{
-			if ($tags)
-			{
-				if (in_array($vod['hash'], $tags, TRUE) === FALSE)
-				{
-					return;
-				}
-			}
-			++$count;
 			$table->row();
-			$table->cell()->append('a', ['❌',
-				'href' => "?admin/setvod-delete,hash:{$vod['hash']}",
-				'onclick' => 'return confirm(`Delete Setvod ${this.dataset.name}`)',
-				'data-name' => $vod['name']]);
-			$table->cell()->append('a', [$vod['hash'], 'href' => "?admin/setvod-update,hash:{$vod['hash']},type:{$vod['type']}"]);
-			$table->cell(date('Y-m-d H:i:s', $vod['time']));
-			$table->cell($vod['view']);
-			$table->cell($vod['sort']);
-			$table->cell($type[$vod['type']]);
-			$table->cell($viewtype[$vod['viewtype']]);
-			if ($vod['ad'])
-			{
-				$table->cell()->append('a', [sprintf('%d个广告', strlen($vod['ad']) / 12), 'href' => "?admin/ads,search:{$vod['ad']}"]);
-			}
-			else
-			{
-				$table->cell('无广告');
-			}
-			$table->cell($vod['resources'] ? floor(strlen($vod['resources']) / 12) : 0);
-			$table->cell($vod['name']);
-			$table->cell($vod['describe']);
-
-			$node = $table->cell(['class' => 'tdlinkspan']);
-			foreach ($settags as $hash => $settag)
-			{
-				if (in_array($vod['hash'], $settag['vods']))
-				{
-					$node->append('a', [$settag['name'], 'href' => "?admin/settag-update,hash:{$hash}"]);
-				}
-			}
-			if (count($node->children()) === 0)
-			{
-				$node->append('a', ['未设置 ', 'href' => '?admin/settag-create', 'style' => 'color:red']);
-			}
-		}, $this->webapp['app_restype'], ['双联', '横中滑动', '大一偶小', '横小滑动', '竖小', '大横图'], $settags, array_key_exists($tags, $settags) ? $settags[$tags]['vods'] : []);
-		$table->fieldset('❌', 'hash', 'time', 'view', 'sort', 'type', 'viewtype', 'ad', 'RES', 'name', 'describe', '首页标签');
-		$table->header('Found %d item', $count);
-		$table->button('Create Set Vod', ['onclick' => 'location.href="?admin/setvod-create"']);
-		$table->bar->select(['' => '全部'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
-		$table->bar->select(['' => '全部'] + $seltags)->setattr(['onchange' => 'g({tags:this.value===""?null:this.value})'])->selected($tags);
+			$table->cell($ser['hash']);
+			$table->cell(date('Y-m-d H:i:s', $ser['time']));
+			$table->cell(date('Y-m-d H:i:s', $ser['last']));
+			$table->cell()->append('a', [$ser['title'], 'href' => "?admin/serial,hash:{$ser['hash']}"]);
+			$table->cell(count(json_decode($ser['lists'], TRUE)));
+		});
+		$table->fieldset('hash', 'time', 'last', 'title', 'count');
+		$table->header('Found %d item', $table->count());
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->paging($this->webapp->at(['page' => '']));
 	}
 	//账单统计
 	function get_statbills(string $type = 'undef', string $ym = '', int $top = 10)

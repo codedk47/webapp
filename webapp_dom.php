@@ -1079,7 +1079,7 @@ class webapp_table implements Countable
 				foreach ($ranges as $index)
 				{
 					$curr = $node->append('a', [$index, 'href' => "{$url}{$index}"]);
-					if ($index === $this->paging['index'])
+					if ($index == $this->paging['index'])
 					{
 						$page = $curr;
 					}
@@ -1090,7 +1090,7 @@ class webapp_table implements Countable
 			}
 			else
 			{
-				for ($i = 1;$i <= $this->paging['max']; ++$i)
+				for ($i = 1; $i <= $this->paging['max']; ++$i)
 				{
 					$curr = $node->append('a', [$i, 'href' => "{$url}{$i}"]);
 					if ($i === $this->paging['index'])
