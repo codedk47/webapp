@@ -595,10 +595,11 @@ CSS);
 						$commands[0] .= ' COMMENT ?s';
 						$commands[] = $field['comment'];
 					}
-					// if ($values['after'])
-					// {
-					// 	$fields[] = $values['after'] === '1' ? 'first' : 'after ' . wa::$sql->quote($values['after']);
-					// }
+					if ($field['after'])
+					{
+						$commands[0] .= $field['after'] === '.' ? 'first' : 'after ?a';
+						$commands[] = $field['after'];
+					}
 					//print_r($commands);
 			
 					//var_dump( $this->mysql->format(...$commands) );
