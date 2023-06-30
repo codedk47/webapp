@@ -1,3 +1,28 @@
+document.head.appendChild(document.createElement('style')).textContent = `
+webapp-video{
+	display: block;
+	position: relative;
+}
+webapp-videos{
+	height: 100%;
+	display: block;
+	position: relative;
+	overflow: hidden;
+}
+webapp-videos>div{
+	position: absolute;
+	width:100%;
+	height:100%;
+}
+webapp-videos>div.shifting{
+	transition: top .4s;
+}
+webapp-videos>div>webapp-video{
+	height: 100%;
+}
+webapp-videos>div>webapp-video>video{
+	object-fit: cover;
+}`;
 customElements.define('webapp-video', class extends HTMLElement
 {
 	#loader = 'framer' in top ? top.framer.source : loader;
@@ -55,6 +80,7 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#model.config.autoStartLoad = this.#video.autoplay;
 				this.#model.loadSource(this.#playdata);
 				this.#model.attachMedia(this.#video);
+
 			};
 			this.#suspend = () =>
 			{
@@ -121,6 +147,10 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		this.#resume();
 	}
+	close()
+	{
+		this.#close();
+	}
 	async poster(resource)
 	{
 		return this.#loader(resource, {mask: this.mask}).then(blob => this.#video.poster = blob);
@@ -165,15 +195,15 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	connectedCallback()
 	{
-		this.style.display = 'block';
-		this.style.position = 'relative';
+		// this.style.display = 'block';
+		// this.style.position = 'relative';
 		this.#video.loop = this.hasAttribute('loop');
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
 		this.#video.controls = this.hasAttribute('controls');
 
 		this.appendChild(this.#video);
-		this.#controls && this.appendChild(this.#controls);
+		//this.#controls && this.appendChild(this.#controls);
 
 		if (this.dataset.fit)
 		{
@@ -228,62 +258,24 @@ customElements.define('webapp-video', class extends HTMLElement
 	// 	// };
 	// }
 });
-/*
-document.head.appendChild(document.createElement('style')).textContent = `
-webapp-video{
-	position: relative;
-}
-webapp-video>div.pb{
-	cursor: pointer;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 100px;
-	height: 100px;
-	margin-top: -50px;
-	margin-left: -50px;
-	background-image: url(/webapp/app/news/play-pause.png);
-	background-size: 200px;
-	background-repeat: no-repeat;
-	background-position: left 4px center;
-	transition: opacity .4s;
-	opacity: .5;
-}
-webapp-video>div.pb:hover{
-	opacity: 1;
-}
-webapp-slide{
-	height: 100%;
-	display: block;
-	position: relative;
-	overflow: hidden;
-}
-webapp-slide>div{
-	position: absolute;
-}
-webapp-slide>div.shifting{
-	transition: top .4s;
-}
-webapp-slide>div>webapp-video{
-	display: block;
-	position: relative;
-}
-webapp-slide>div>webapp-video>video{
-	height: 100%;
-	object-fit: fill;
-}`;
-
-customElements.define('webapp-slide', class extends HTMLElement
+customElements.define('webapp-videos', class extends HTMLElement
 {
+	#loader = 'framer' in top ? top.framer.source : loader;
+	#slide = document.createElement('div');
+	#shift = true;
+	#index = 0;
+	#each;
+
+
+
 	#template;
 	#callback;
 	#require;
 	#height;
 	#load;
 	#page;
-	#slide = document.createElement('div');
-	#index = 0;
-	#shift = true;
+	
+
 	#position;
 	constructor()
 	{
@@ -294,7 +286,6 @@ customElements.define('webapp-slide', class extends HTMLElement
 			this.#slide.classList.remove('shifting');
 			this.#shift = false;
 		});
-		
 		this.addEventListener('touchstart', event =>
 		{
 			if (this.#shift) return;
@@ -330,19 +321,21 @@ customElements.define('webapp-slide', class extends HTMLElement
 						++this.#index;
 						if (this.#slide.children.length - this.#index === 1)
 						{
-							this.loaddata();
+							this.#loading();
 						}
 					}
 				}
 			}
-			const top = this.#index * this.#height;
+			const top = this.#index * this.offsetHeight;
 			if (parseInt(this.#slide.style.top) === -top) return;
 			this.#shift = true;
 			this.#slide.classList.add('shifting');
 			this.#slide.style.top = `-${top}px`;
 			if (this.#index === index) return;
-			this.#slide.childNodes[index].suspend();
-			this.#slide.childNodes[this.#index].resume();
+			this.#slide.childNodes[index].close();
+			this.#slide.childNodes[this.#index].m3u8(this.#slide.childNodes[this.#index].dataset.playm3u8);
+			//this.#slide.childNodes[index].suspend();
+			//this.#slide.childNodes[this.#index].resume();
 		});
 	}
 	loaddata()
@@ -393,22 +386,37 @@ customElements.define('webapp-slide', class extends HTMLElement
 			});
 		}
 	}
+	
 	connectedCallback()
 	{
 		this.appendChild(this.#slide);
-		this.#callback = window[this.dataset.callback];
-		if (this.dataset.display)
+		this.#loading(this.#each = window[this.dataset.each]).then(() =>
 		{
-			this.#require = document.querySelector(this.dataset.display);
-		}
-		requestAnimationFrame(() =>
-		{
-			this.#template = this.querySelector('template');
-			this.#height = this.offsetHeight;
-			this.#load = this.dataset.load;
-			this.#page = this.dataset.page || 1;
-			this.loaddata();
+			if (this.#slide.childNodes.length)
+			{
+				this.#shift = false;
+				this.#slide.firstChild.m3u8(this.#slide.firstChild.dataset.playm3u8);
+				//this.#slide.firstChild.firstChild.setAttributeNode(document.createAttribute('autoplay'));
+				//this.#slide.firstChild.m3u8(this.#slide.firstChild.dataset.a);
+				//this.#slide.firstChild.resume();
+				// this.#slide.firstChild.oncanplay = () =>
+				// {
+				// 	console.log(123);
+				// };
+				//console.log(this.#slide.firstChild.resume())
+			
+			}
 		});
 	}
+	#loading()
+	{
+		return this.#loader(`${this.dataset.url}${this.dataset.page++}`, {mask: this.hasAttribute('data-mask')}).then(data => data.forEach(data =>
+		{
+			const video = document.createElement('webapp-video');
+			video.setAttributeNode(document.createAttribute('autoplay'));
+			video.setAttributeNode(document.createAttribute('controls'));
+			this.#each.call(video, data);
+			this.#slide.appendChild(video);
+		}));
+	}
 });
-*/
