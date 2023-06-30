@@ -120,9 +120,13 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return random_int($min, $max);
 	}
+	static function random_time33():int
+	{
+		return static::time33(static::random(16));
+	}
 	static function random_hash(bool $care):string
 	{
-		return static::hash(static::random(8), $care);
+		return static::hash(static::random(16), $care);
 	}
 	static function random_weights(array $items, string $key = 'weight'):array
 	{

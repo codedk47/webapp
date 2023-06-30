@@ -690,6 +690,18 @@ class interfaces extends webapp
 			'like' => $data['like'] ?? 0
 		]);
 		$node->cdata(htmlentities($data['name'] ?? $resource['name']));
+		if ($resource['extdat'])
+		{
+			$extdat = json_decode($resource['extdat'], TRUE);
+			$node->append('extdat', [
+				'publisher' => $extdat['publisher'],
+				'actor' => $extdat['actor'],
+				'director' => $extdat['director'],
+				'actress' => $extdat['actress'],
+				'series' => $extdat['series'],
+				'issue' => $extdat['issue']
+			]);
+		}
 		return $node;
 	}
 	function get_updatecover(string $hash)
@@ -789,6 +801,21 @@ class interfaces extends webapp
 			$res = $this->resource_xml($resource);
 			$res['play'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/play";
 			$res['cover'] = "http://45.113.115.135/{$ym}/{$resource['hash']}/cover";
+		}
+	}
+	function get_serials(int $page = 1, int $size = 1000)
+	{
+		$cond = ['WHERE site=?i ORDER BY time ASC', $this->site];
+		$serials = $this->mysql->serials(...$cond)->paging($page, $size);
+		$this->app->xml->setattr($serials->paging);
+		foreach ($serials as $serial)
+		{
+			$this->xml->append('serial', [
+				'hash' => $serial['hash'],
+				'time' => $serial['time'],
+				'last' => $serial['last'],
+				'title' => $serial['title']
+			])->cdata($serial['lists']);
 		}
 	}
 	//标签
