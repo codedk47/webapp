@@ -286,6 +286,13 @@ customElements.define('webapp-videos', class extends HTMLElement
 			this.#slide.classList.remove('shifting');
 			this.#shift = false;
 		});
+		this.addEventListener('click', event =>
+		{
+			if (this.#slide.childNodes.length > this.#index)
+			{
+				this.#slide.childNodes[this.#index].firstChild.play();
+			}
+		});
 		this.addEventListener('touchstart', event =>
 		{
 			if (this.#shift) return;
@@ -332,8 +339,10 @@ customElements.define('webapp-videos', class extends HTMLElement
 			this.#slide.classList.add('shifting');
 			this.#slide.style.top = `-${top}px`;
 			if (this.#index === index) return;
+
 			this.#slide.childNodes[index].close();
 			this.#slide.childNodes[this.#index].m3u8(this.#slide.childNodes[this.#index].dataset.playm3u8);
+
 			//this.#slide.childNodes[index].suspend();
 			//this.#slide.childNodes[this.#index].resume();
 		});
@@ -414,7 +423,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 		{
 			const video = document.createElement('webapp-video');
 			video.setAttributeNode(document.createAttribute('autoplay'));
-			video.setAttributeNode(document.createAttribute('controls'));
+			//video.setAttributeNode(document.createAttribute('controls'));
 			this.#each.call(video, data);
 			this.#slide.appendChild(video);
 		}));
