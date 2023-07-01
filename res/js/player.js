@@ -21,7 +21,8 @@ webapp-videos>div>webapp-video{
 	height: 100%;
 }
 webapp-videos>div>webapp-video>video{
-	object-fit: cover;
+	background-color: black;
+	object-fit: scale-down;
 }`;
 customElements.define('webapp-video', class extends HTMLElement
 {
