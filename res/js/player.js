@@ -22,7 +22,7 @@ webapp-videos>div>webapp-video{
 }
 webapp-videos>div>webapp-video>video{
 	background-color: black;
-	object-fit: scale-down;
+	object-fit: cover;
 }`;
 customElements.define('webapp-video', class extends HTMLElement
 {
@@ -148,9 +148,9 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		this.#resume();
 	}
-	play()
+	play_pause()
 	{
-		this.#video.play();
+		this.#video.paused ? this.#video.play() : this.#video.pause();
 	}
 	close()
 	{
@@ -295,7 +295,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 		{
 			if (this.#slide.childNodes.length > this.#index)
 			{
-				this.#slide.childNodes[this.#index].play();
+				this.#slide.childNodes[this.#index].play_pause();
 			}
 		});
 		this.addEventListener('touchstart', event =>
