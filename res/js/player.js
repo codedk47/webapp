@@ -147,6 +147,10 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		this.#resume();
 	}
+	play()
+	{
+		this.#video.play();
+	}
 	close()
 	{
 		this.#close();
@@ -290,7 +294,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 		{
 			if (this.#slide.childNodes.length > this.#index)
 			{
-				this.#slide.childNodes[this.#index].firstChild.play();
+				this.#slide.childNodes[this.#index].play();
 			}
 		});
 		this.addEventListener('touchstart', event =>
