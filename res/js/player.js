@@ -31,7 +31,7 @@ webapp-videos>div>webapp-video>div{
 	right: 0;
 	bottom: 0;
 	background: url(${top.location.origin}/webapp/res/ps/pause-button.png) center center / 40% no-repeat;
-	display: none;
+	visibility: hidden;
 }`;
 customElements.define('webapp-video', class extends HTMLElement
 {
@@ -163,12 +163,12 @@ customElements.define('webapp-video', class extends HTMLElement
 		if (this.#video.paused)
 		{
 			this.#video.play();
-			pp.style.display = 'none';
+			pp.style.visibility = 'hidden';
 		}
 		else
 		{
 			this.#video.pause();
-			pp.style.display = 'block';
+			pp.style.visibility = 'visible';
 		}
 	}
 	close()
@@ -367,8 +367,8 @@ customElements.define('webapp-videos', class extends HTMLElement
 			this.#slide.childNodes[index].close();
 			this.#slide.childNodes[this.#index].m3u8(this.#slide.childNodes[this.#index].dataset.playm3u8);
 
-			this.#slide.childNodes[this.#index].querySelector('div.pp').style.display =
-				this.#slide.childNodes[this.#index].querySelector('video').paused ? 'block' : 'none';
+			this.#slide.childNodes[this.#index].querySelector('div.pp').style.visibility =
+				this.#slide.childNodes[this.#index].querySelector('video').paused ? 'visible' : 'hidden';
 			//this.#slide.childNodes[index].suspend();
 			//this.#slide.childNodes[this.#index].resume();
 		});
@@ -432,8 +432,8 @@ customElements.define('webapp-videos', class extends HTMLElement
 				this.#shift = false;
 				this.#slide.firstChild.m3u8(this.#slide.firstChild.dataset.playm3u8);
 
-				this.#slide.firstChild.querySelector('div.pp').style.display =
-					this.#slide.firstChild.querySelector('video').paused ? 'block' : 'none';
+				this.#slide.firstChild.querySelector('div.pp').style.visibility =
+					this.#slide.firstChild.querySelector('video').paused ? 'visible' : 'hidden';
 
 				//this.#slide.firstChild.firstChild.setAttributeNode(document.createAttribute('autoplay'));
 				//this.#slide.firstChild.m3u8(this.#slide.firstChild.dataset.a);
