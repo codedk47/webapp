@@ -24,7 +24,7 @@ webapp-videos>div>webapp-video>video{
 	background-color: black;
 	object-fit: cover;
 }
-webapp-videos>div>webapp-video>div{
+webapp-videos>div>webapp-video>div.pp{
 	position: absolute;
 	top: 0;
 	left: 0;
