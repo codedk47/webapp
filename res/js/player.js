@@ -30,7 +30,7 @@ webapp-videos>div>webapp-video>div{
 	left: 0;
 	right: 0;
 	bottom: 0;
-	background: url(/webapp/res/ps/pause-button.png) center center / 40% no-repeat;
+	background: url(${top.location.origin}/webapp/res/ps/pause-button.png) center center / 40% no-repeat;
 	display: none;
 }`;
 customElements.define('webapp-video', class extends HTMLElement
