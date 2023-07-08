@@ -73,6 +73,12 @@ customElements.define('webapp-video', class extends HTMLElement
 				this.#video.setAttribute('height', this.hasAttribute('autoheight')
 					? Math.trunc(event.target.videoHeight * this.scalewidth)
 					: '100%');
+
+				const pp = this.querySelector('div.pp');
+				if (pp)
+				{
+					pp.style.visibility = this.#video.paused ? 'visible' : 'hidden';
+				}
 			}
 		}
 
