@@ -49,7 +49,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return $this->use_result()->fetch_array($mode) ?? [];
 	}
-	function fetch(?array &$data, int $mode = MYSQLI_ASSOC):bool
+	function fetch(?array &$data = NULL, int $mode = MYSQLI_ASSOC):bool
 	{
 		return boolval($data = $this->array($mode));
 	}
@@ -408,7 +408,7 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	{
 		return $this->getIterator()->array($mode);
 	}
-	function fetch(?array &$data, int $mode = MYSQLI_ASSOC):bool
+	function fetch(?array &$data = NULL, int $mode = MYSQLI_ASSOC):bool
 	{
 		return $this->getIterator()->fetch($data, $mode);
 	}

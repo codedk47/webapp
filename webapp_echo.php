@@ -291,6 +291,10 @@ class webapp_echo_json extends ArrayObject implements Stringable
 		// {
 		// }
 	}
+	function error(string $error):void
+	{
+		$this['errors'][] = $error;
+	}
 	// function dialog(string|array $context, )
 	// {
 	// 	$this['dialog'] = $context;

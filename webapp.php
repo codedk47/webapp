@@ -345,16 +345,19 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return $bin . $source;
 	}
-	static function unmasker(string $masked):string
+	static function unmasker(string $binkey, string $bindata):?string
 	{
-		$key = array_map(ord(...), str_split(substr($masked, 0, 8)));
-		$length = strlen($source = substr($masked, 8));
-		for ($i = 0; $i < $length; ++$i)
+		if (count($key = array_map(ord(...), str_split($binkey))) > 7)
 		{
-			$source[$i] = chr(ord($source[$i]) ^ $key[$i % 8]);
-			//$source[$i] = chr($key[$i % 8] ^ $key[$i % 8] = ord($source[$i]));
+			$length = strlen($bindata);
+			for ($i = 0; $i < $length; ++$i)
+			{
+				$bindata[$i] = chr(ord($bindata[$i]) ^ $key[$i % 8]);
+				//$bindata[$i] = chr($key[$i % 8] ^ $key[$i % 8] = ord($bindata[$i]));
+			}
+			return $bindata;
 		}
-		return $source;
+		return NULL;
 	}
 	function __construct(array $config = [], private readonly webapp_io $io = new webapp_stdio)
 	{
@@ -783,6 +786,35 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			&& $this->uploadedfiles[$name] instanceof webapp_request_uploadedfile ? $this->uploadedfiles[$name]
 			: $this->uploadedfiles[$name] = new webapp_request_uploadedfile($this, $name, $this->uploadedfiles[$name] ?? [], $maximum);
 	}
+	function request_maskdata():?string
+	{
+		return is_string($key = $this->request_header('Mask-Key'))
+			? $this->unmasker(hex2bin($key), $this->io->request_content()) : NULL;
+	}
+	function request_uploading():array
+	{
+		return json_decode($this->request_maskdata(), TRUE) ?? [];
+	}
+	function request_uploaddata(string $filename):int
+	{
+		$length = -1;
+		if (is_string($data = $this->request_maskdata()) && is_resource($stream = fopen($filename, 'a')))
+		{
+			if (flock($stream, LOCK_EX))
+			{
+				
+				fwrite($stream, $data);
+				$length = ftell($stream);
+			}
+			fclose($stream);
+		}
+		return $length;
+	}
+	function response_uploading(string $uploadurl, int $offset = 0):void
+	{
+		$this->app('webapp_echo_json', ['uploadurl' => $uploadurl, 'offset' => $offset]);
+	}
+
 
 	// function request_app_channel():string
 	// {
