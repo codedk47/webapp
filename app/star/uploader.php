@@ -26,7 +26,7 @@ class webapp_router_uploader
 		if ($this->echo->entry)
 		{
 			$this->echo->script(['src' => '/webapp/res/js/uploader.js']);
-			$this->echo->script(['src' => '/webapp/app/va/uploader.js']);
+			$this->echo->script(['src' => '/webapp/app/star/uploader.js']);
 		}
 		$this->echo->title($title);
 		if (in_array($this->webapp->method, ['get_home', 'get_auth', 'get_play']) === FALSE)
@@ -153,7 +153,7 @@ class webapp_router_uploader
 		$table->bar->append('input', [
 			'type' => 'file',
 			//'accept' => 'video/mp4',
-			'data-uploadurl' => '?uploader/test',
+			'data-uploadurl' => "?uploading/{$this->user}",
 			'onchange' => 'top.uploader.uploadlist(this.files,document.querySelector("main>table.webapp:first-child>tbody"))',
 			'multiple' => NULL
 		]);

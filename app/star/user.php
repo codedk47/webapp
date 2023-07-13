@@ -10,7 +10,7 @@ class user extends ArrayObject
 	//获取token
 	function __toString():string
 	{
-		return $this->webapp->signature($this->id, $this['cid']);
+		return $this->id ? $this->webapp->signature($this->id, $this['cid']) : '';
 	}
 	//用户（可选条件）表操作
 	function cond(string ...$conds):webapp_mysql_table
@@ -70,6 +70,7 @@ class user extends ArrayObject
 	function like_video(string $hash):bool
 	{
 
+		
 	}
 	//购买商品
 	function buy_prod(string $hash):bool
