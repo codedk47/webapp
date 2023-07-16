@@ -22,7 +22,7 @@ webapp-videos>div>webapp-video{
 }
 webapp-videos>div>webapp-video>video{
 	background-color: black;
-	object-fit: cover;
+	object-fit: scale-down;
 }
 webapp-videos>div>webapp-video>div.pp{
 	position: absolute;

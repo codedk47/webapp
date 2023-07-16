@@ -53,14 +53,85 @@ class base extends webapp
 			yield $video;
 		}
 	}
-	//获取所有广告
-	function ads():iterable
+	//获取指定广告（位置）
+	function fetch_ads(int $seat):array
 	{
-		foreach ($this->mysql->ads('ORDER BY mtime DESC') as $ad)
-		{
-			yield $ad;
-		}
+		return $this->mysql->ads('WHERE seat=?i', $seat)->all();
 	}
+	//获取标签（级别）
+	function fetch_tags(int $level):array
+	{
+		return $this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level)->column('name', 'hash');
+	}
+
+	//获取开屏广告
+	function adsplashscreen():array
+	{
+		return $this->mysql->ads('WHERE seat=0 LIMIT 1')->fetch($ad) ? [
+			'duration' => 5,
+			'mask' => TRUE,
+			'picture' => '/news/EQER68CKNC74',
+			'support' => 'https://pr.yfuykzst.com/?i_code=3205765',
+			'autoskip' => TRUE
+		] : [];
+	}
+	//专题
+	function subjects()
+	{
+
+	}
+	//话题
+	function topics()
+	{
+
+	}
+
+
+
+
+	//标获取签（参数级别）
+
+
+	//获取全部专题数据
+
+
+	//专题获取视频数据
+
+
+	//获取索引数据
+	function fetch_indexdata():array
+	{
+		$data = [
+			'ads' => $this->fetch_ads(1),
+			'tags' => $this->fetch_tags(1)
+		];
+		if ($data['tags'])
+		{
+			$subjects = $this->mysql->subjects('WHERE tagid IN(?S)', array_keys($data['tags']));
+			
+
+
+			$data['subjects'] = [];
+		}
+
+
+		
+		
+
+
+
+
+		return $data;
+
+	}
+
+	//获取首页展示数据结构
+	function topdata()
+	{
+		
+	}
+
+
 	//用户上传接口
 	function post_uploading(string $token)
 	{
@@ -79,11 +150,13 @@ class base extends webapp
 		return 404;
 	}
 
+
 	function get_test(){
 
-		foreach($this->videos() as $v){
-			print_r($v);
-		};
+		print_r($this->fetch_indexdata());
+		// foreach($this->videos() as $v){
+		// 	print_r($v);
+		// };
 	}
 
 }

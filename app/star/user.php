@@ -19,7 +19,7 @@ class user extends ArrayObject
 			? sprintf('WHERE id=?s %s LIMIT 1', array_shift($conds))
 			: 'WHERE id=?s LIMIT 1', $this->id, ...$conds]);
 	}
-	//率刷新用户最后登录状态
+	//刷新用户最后登录状态
 	function sign_in():bool
 	{
 		return $this->id && $this->cond()->update([
