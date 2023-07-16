@@ -35,6 +35,30 @@ function slideshow(element, duration = 4)
 		node.href = support;
 	}
 
+	duration *= 1000;
+	let beforetime = +new Date;
+	requestAnimationFrame(function slider()
+	{
+		const nowtime = +new Date;
+		if (nowtime - beforetime > duration)
+		{
+			beforetime = nowtime;
+			if (transitioning === false && contents.length)
+			{
+				beforeindex = currentindex;
+				if (++currentindex >= contents.length)
+				{
+					currentindex = 0;
+				}
+				direction = 1;
+				slidebox.style.transition = 'left .4s ease';
+				slidebox.style.left = leftoffset = '-200%';
+				transitioning = true;
+			}
+		}
+		setTimeout(() => requestAnimationFrame(slider), 1000);
+	});
+
 	slidebox.style.cssText = 'width:300%;position:absolute;top:0;bottom:0;overflow:hidden;display:flex;left:-100%';
 	slidebox.addEventListener('transitionend', () =>
 	{
@@ -43,6 +67,7 @@ function slideshow(element, duration = 4)
 		
 		if (leftoffset !== '-100%')
 		{
+			beforetime = +new Date;
 			slidebox.style.left = leftoffset = '-100%';
 			if (direction < 0)
 			{
@@ -57,8 +82,6 @@ function slideshow(element, duration = 4)
 					content.picture, content.support);
 			}
 			indexchange();
-
-			
 		}
 		transitioning = false;
 	});
@@ -115,7 +138,7 @@ function slideshow(element, duration = 4)
 		node.style.backgroundPosition = 'center';
 		node.style.backgroundRepeat = 'no-repeat';
 		node.style.backgroundSize = 'cover';
-		//node.style.backgroundColor = ['red', 'blue', 'green'][i];
+		// node.style.backgroundColor = ['red', 'blue', 'green'][i];
 		// node.textContent = ['red', 'blue', 'green'][i];
 		return node;
 	}));
@@ -131,37 +154,14 @@ function slideshow(element, duration = 4)
 		{
 			switch (contents.length)
 			{
+				case 0: setcontent(1, picture, support); indexchange();
 				case 1: setcontent(2, picture, support);
-				case 2: setcontent(0, picture, support); break;
-				default: setcontent(1, picture, support); indexchange();
+				case 2: setcontent(0, picture, support);
 			}
 		}
 		contents[contents.length] = {picture, support};
 	}
 
-	duration *= 1000;
-	let beforetime = +new Date;
-	requestAnimationFrame(function slider()
-	{
-		const nowtime = +new Date;
-		if (nowtime - beforetime > duration)
-		{
-			beforetime = nowtime;
-			if (transitioning === false && contents.length)
-			{
-				beforeindex = currentindex;
-				if (++currentindex >= contents.length)
-				{
-					currentindex = 0;
-				}
-				direction = 1;
-				slidebox.style.transition = 'left .4s ease';
-				slidebox.style.left = leftoffset = '-200%';
-				transitioning = true;
-			}
-		}
-		setTimeout(() => requestAnimationFrame(slider), 1000);
-	});
 	return (additions, loader) =>
 	{
 		loader
