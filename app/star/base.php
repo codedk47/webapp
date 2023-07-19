@@ -42,7 +42,7 @@ class base extends webapp
 				fn($id) => $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array()));
 	}
 	//获取所有视频
-	function videos():iterable
+	function fetch_videos():iterable
 	{
 		foreach ($this->mysql->videos('ORDER BY mtime DESC') as $video)
 		{
@@ -83,13 +83,27 @@ class base extends webapp
 	{
 		return $this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level)->column('name', 'hash');
 	}
+	//专题
+	function fetch_subjects(string $tagid):array
+	{
+		$subjects = [];
+		foreach ($this->mysql->subjects('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
+		{
 
 
-	// //专题
-	// function subjects()
-	// {
 
-	// }
+			$subjects[$subject['hash']] = [
+				'name' => $subject['name'],
+				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
+			];
+		}
+		
+
+
+		return $subjects;
+	}
+
+
 	// //话题
 	// function topics()
 	// {
@@ -145,7 +159,7 @@ class base extends webapp
 
 	function get_test(){
 
-		print_r($this->fetch_adsplashscreen());
+		print_r($this->fetch_subjects('ayiE'));
 		//print_r($this->fetch_indexdata());
 		// foreach($this->videos() as $v){
 		// 	print_r($v);
