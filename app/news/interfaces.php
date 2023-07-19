@@ -694,7 +694,7 @@ class interfaces extends webapp
 	}
 	function get_updatecover(string $hash)
 	{
-		if (($resource = $this->mysql->resources('WHERE FIND_IN_SET(?i,site) AND hash=?s', $this->site, $hash)->array())
+		if (($resource = $this->mysql->resources('WHERE hash=?s', $hash)->array())
 			&& $resource['sync'] === 'finished') {
 			$ym = date('ym', $resource['time']);
 			if (is_dir($dir = "{$this['app_resoutdir']}/{$ym}/{$resource['hash']}") || mkdir($dir, recursive: TRUE))
