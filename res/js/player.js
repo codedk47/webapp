@@ -319,6 +319,8 @@ customElements.define('webapp-videos', class extends HTMLElement
 		});
 		this.addEventListener('click', event =>
 		{
+			event.preventDefault();
+			event.stopPropagation();
 			if (this.#slide.childNodes.length > this.#index)
 			{
 				this.#slide.childNodes[this.#index].play_pause();
