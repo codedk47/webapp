@@ -101,10 +101,9 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function get_tags(int $page = 1)
 	{
-		$conds = [''];
+		$conds = [[]];
 
-
-		$conds[0] .= ' ORDER BY level ASC,sort DESC';
+		$conds[0] = sprintf('%sORDER BY level ASC,sort DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->tags(...$conds)->paging($page), function($table, $value, $level)
 		{
 			$table->row();
@@ -179,6 +178,9 @@ class webapp_router_control extends webapp_echo_html
 		$form->fieldset('专题名称');
 		$form->field('name', 'text', ['required' => NULL]);
 
+		$form->fieldset('专题影片');
+		$form->field('videos', 'text', ['required' => NULL]);
+
 		$form->fieldset();
 		$form->button('提交', 'submit');
 
@@ -187,10 +189,14 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function get_subjects(int $page = 1)
 	{
-		$conds = [''];
+		$conds = [[]];
+		if ($tagid = $this->webapp->query['tagid'] ?? '')
+		{
+			$conds[0][] = 'tagid=?s';
+			$conds[] = $tagid;
+		}
 
-
-		$conds[0] .= ' ORDER BY tagid ASC,sort DESC';
+		$conds[0] = sprintf('%sORDER BY tagid ASC,sort DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $tag)
 		{
 			$table->row();
@@ -208,6 +214,12 @@ class webapp_router_control extends webapp_echo_html
 		$table->fieldset('创建时间', '修改时间', 'HASH', '排序', '标签', '名称');
 		$table->header('专题 %d 项', $table->count());
 		$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
+
+
+		
+		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
+			->select(['' => '全部', ...$this->webapp->mysql->tags->column('name', 'hash')])
+			->setattr(['onchange' => 'g({tagid:this.value||null})', 'style' => 'padding:.1rem'])->selected($tagid);
 	}
 	function get_subject(string $hash = NULL)
 	{
@@ -266,8 +278,7 @@ class webapp_router_control extends webapp_echo_html
 		}
 
 		
-		$conds[0] = $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) : '';
-		$conds[0] .= 'ORDER BY mtime DESC,ctime DESC';
+		$conds[0] = sprintf('%sORDER BY mtime DESC,ctime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value)
 		{
 			$ym = date('ym', $value['mtime']);
@@ -343,10 +354,10 @@ class webapp_router_control extends webapp_echo_html
 
 	function get_users(int $page = 1)
 	{
-		$conds = [''];
+		$conds = [[]];
 
 
-		$conds[0] .= ' ORDER BY time DESC';
+		$conds[0] = sprintf('%sORDER BY time DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->users(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
@@ -427,10 +438,10 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function get_ads(int $page = 1)
 	{
-		$conds = [''];
+		$conds = [[]];
 
 
-		$conds[0] .= ' ORDER BY seat ASC,weight DESC';
+		$conds[0] = sprintf('%sORDER BY seat ASC,weight DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seat)
 		{
 			// $table->row();

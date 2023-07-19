@@ -104,11 +104,11 @@ class base extends webapp
 	}
 
 
-	// //话题
-	// function topics()
-	// {
+	//话题
+	function fetch_topics()
+	{
 
-	// }
+	}
 
 
 
@@ -122,14 +122,6 @@ class base extends webapp
 	//专题获取视频数据
 
 
-	//获取索引数据
-	function fetch_indexdata():array
-	{
-		return [
-			'ads' => $this->fetch_ads(1),
-			'tags' => $this->fetch_tags(1)
-		];
-	}
 
 	// //获取首页展示数据结构
 	// function topdata()

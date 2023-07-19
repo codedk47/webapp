@@ -463,8 +463,8 @@ customElements.define('webapp-videos', class extends HTMLElement
 			//video.setAttributeNode(document.createAttribute('controls'));
 			const div = video.appendChild(document.createElement('div'));
 			div.className = 'pp';
-			this.#each.call(video, data);
 			this.#slide.appendChild(video);
+			this.#each.call(video, data);
 		}));
 	}
 });
