@@ -345,6 +345,10 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return $bin . $source;
 	}
+	static function maskfile(string $source, string $destination):bool
+	{
+		return file_put_contents($destination, static::maskdata($data = file_get_contents($source))) === strlen($data) + 8;
+	}
 	static function unmasker(string $binkey, string $bindata):?string
 	{
 		if (count($key = array_map(ord(...), str_split($binkey))) > 7)
@@ -1137,6 +1141,7 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 		}
 		return FALSE;
 	}
+	
 	// function movefile(int $index, string $filename):bool
 	// {
 	// 	//$index = max(1, $index) < count($this)
@@ -1180,6 +1185,15 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 	// 	}
 	// 	return TRUE;
 	// }
+	function maskfile(string $filename, int $index = 0):bool
+	{
+		if ($this->offsetExists($index) && $this->webapp->maskfile($this->uploadedfiles[$index]['file'], $filename))
+		{
+			$this->uploadedfiles[$index]['file'] = $filename;
+			return TRUE;
+		}
+		return FALSE;
+	}
 	function post(string $url):webapp_client_http
 	{
 		return webapp_client_http::open($url, ['method' => 'POST',

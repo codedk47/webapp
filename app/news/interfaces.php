@@ -218,18 +218,6 @@ class interfaces extends webapp
 		}
 		return $bin . $data;
 	}
-	function maskfile(string $src, string $dst):bool
-	{
-		$bin = random_bytes(8);
-		$key = array_map(ord(...), str_split($bin));
-		$buffer = file_get_contents($src);
-		$length = strlen($buffer);
-		for ($i = 0; $i < $length; ++$i)
-		{
-			$buffer[$i] = chr(ord($buffer[$i]) ^ $key[$i % 8]);
-		}
-		return file_put_contents($dst, $bin . $buffer) === $length + 8;
-	}
 	function randhash(bool $care = FALSE):string
 	{
 		return $this->hash($this->random(16), $care);

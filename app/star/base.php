@@ -56,7 +56,27 @@ class base extends webapp
 	//获取指定广告（位置）
 	function fetch_ads(int $seat):array
 	{
-		return $this->mysql->ads('WHERE seat=?i', $seat)->all();
+		$ads = [];
+		foreach ($this->mysql->ads('WHERE seat=?i AND display="show"', $seat) as $ad)
+		{
+			$ads[] = [
+				'weight' => $ad['weight'],
+				'imgurl' => "/news/{$ad['hash']}?{$ad['ctime']}",
+				'acturl' => $ad['acturl']
+			];
+		}
+		return $ads;
+	}
+	//获取开屏广告
+	function fetch_adsplashscreen():array
+	{
+		return empty($ad = $this->random_weights($this->fetch_ads(0))) ? $ad : [
+			'duration' => 5,
+			'mask' => TRUE,
+			'picture' => $ad['imgurl'],
+			'support' => $ad['acturl'],
+			'autoskip' => TRUE
+		];
 	}
 	//获取标签（级别）
 	function fetch_tags(int $level):array
@@ -64,27 +84,17 @@ class base extends webapp
 		return $this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level)->column('name', 'hash');
 	}
 
-	//获取开屏广告
-	function adsplashscreen():array
-	{
-		return $this->mysql->ads('WHERE seat=0 LIMIT 1')->fetch($ad) ? [
-			'duration' => 5,
-			'mask' => TRUE,
-			'picture' => '/news/EQER68CKNC74',
-			'support' => 'https://pr.yfuykzst.com/?i_code=3205765',
-			'autoskip' => TRUE
-		] : [];
-	}
-	//专题
-	function subjects()
-	{
 
-	}
-	//话题
-	function topics()
-	{
+	// //专题
+	// function subjects()
+	// {
 
-	}
+	// }
+	// //话题
+	// function topics()
+	// {
+
+	// }
 
 
 
@@ -101,35 +111,17 @@ class base extends webapp
 	//获取索引数据
 	function fetch_indexdata():array
 	{
-		$data = [
+		return [
 			'ads' => $this->fetch_ads(1),
 			'tags' => $this->fetch_tags(1)
 		];
-		if ($data['tags'])
-		{
-			$subjects = $this->mysql->subjects('WHERE tagid IN(?S)', array_keys($data['tags']));
-			
-
-
-			$data['subjects'] = [];
-		}
-
-
-		
-		
-
-
-
-
-		return $data;
-
 	}
 
-	//获取首页展示数据结构
-	function topdata()
-	{
+	// //获取首页展示数据结构
+	// function topdata()
+	// {
 		
-	}
+	// }
 
 
 	//用户上传接口
@@ -153,7 +145,8 @@ class base extends webapp
 
 	function get_test(){
 
-		print_r($this->fetch_indexdata());
+		print_r($this->fetch_adsplashscreen());
+		//print_r($this->fetch_indexdata());
 		// foreach($this->videos() as $v){
 		// 	print_r($v);
 		// };
