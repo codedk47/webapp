@@ -81,7 +81,15 @@ class base extends webapp
 	//获取标签（级别）
 	function fetch_tags(int $level):array
 	{
-		return $this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level)->column('name', 'hash');
+		$tags = [];
+		foreach ($this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level) as $tag)
+		{
+			$tags[] = [
+				'hash' => $tag['hash'],
+				'name' => $tag['name']
+			];
+		}
+		return $tags;
 	}
 	//专题
 	function fetch_subjects(string $tagid):array
@@ -92,7 +100,8 @@ class base extends webapp
 
 
 
-			$subjects[$subject['hash']] = [
+			$subjects[] = [
+				'hash' => $subject['hash'],
 				'name' => $subject['name'],
 				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
 			];

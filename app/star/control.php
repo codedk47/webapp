@@ -179,7 +179,11 @@ class webapp_router_control extends webapp_echo_html
 		$form->field('name', 'text', ['required' => NULL]);
 
 		$form->fieldset('专题影片');
-		$form->field('videos', 'text', ['required' => NULL]);
+		$form->field('videos', 'textarea', [
+			'cols' => 30,
+			'rows' => 10,
+			'placeholder' => '请输入视频HASH，最多10个回车'],
+			fn($v, $i)=>$i?strtr($v, ["\n" => '', "\r\n" => '']):($v?join("\n", str_split($v, 12)):''));
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
