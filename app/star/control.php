@@ -173,6 +173,14 @@ class webapp_router_control extends webapp_echo_html
 
 
 	//========专题========
+	function subject_style():array
+	{
+		return [
+			1 => '全大图',
+			2 => '全小图',
+			5 => '5宫格'
+		];
+	}
 	function subject_tags():array
 	{
 		return $this->webapp->mysql->tags('WHERE level=1')->column('name', 'hash');
@@ -186,8 +194,9 @@ class webapp_router_control extends webapp_echo_html
 		$form->field('tagid', 'select', ['options' => $this->subject_tags(), 'required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 
-		$form->fieldset('专题名称');
+		$form->fieldset('专题名称 / 展示样式');
 		$form->field('name', 'text', ['required' => NULL]);
+		$form->field('style', 'select', ['options' => $this->subject_style(), 'required' => NULL]);
 
 		$form->fieldset('专题影片');
 		$form->field('videos', 'textarea', [
@@ -212,7 +221,7 @@ class webapp_router_control extends webapp_echo_html
 		}
 
 		$conds[0] = sprintf('%sORDER BY tagid ASC,sort DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $tag)
+		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $tag, $style)
 		{
 			$table->row();
 
@@ -222,11 +231,12 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell($value['sort']);
 			$table->cell($tag[$value['tagid']]);
 			$table->cell()->append('a', [$value['name'], 'href' => "?control/subject,hash:{$value['hash']}"]);
+			$table->cell($style[$value['style']] ?? $value['style']);
 
-		}, $this->subject_tags());
+		}, $this->subject_tags(), $this->subject_style());
 		$table->paging($this->webapp->at(['page' => '']));
 
-		$table->fieldset('创建时间', '修改时间', 'HASH', '排序', '标签', '名称');
+		$table->fieldset('创建时间', '修改时间', 'HASH', '排序', '标签', '名称', '展示样式');
 		$table->header('专题 %d 项', $table->count());
 		$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
 

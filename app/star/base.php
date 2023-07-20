@@ -105,13 +105,9 @@ class base extends webapp
 		$subjects = [];
 		foreach ($this->mysql->subjects('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
 		{
-
-
-
 			$subjects[$subject['hash']] = [
-
 				'name' => $subject['name'],
-				'style' => 1,
+				'style' => $subject['style'],
 				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
 			];
 		}
