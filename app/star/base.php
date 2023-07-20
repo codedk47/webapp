@@ -76,7 +76,7 @@ class base extends webapp
 	function fetch_tags():array
 	{
 		$tags = [];
-		foreach ($this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level) as $tag)
+		foreach ($this->mysql->tags('ORDER BY sort DESC') as $tag)
 		{
 			$tags[] = [
 				'hash' => $tag['hash'],
