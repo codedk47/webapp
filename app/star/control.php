@@ -12,11 +12,12 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$this->admin = $signinfo['is_admin'];
 			$this->script(['src' => '/webapp/res/js/loader.js']);
-			$this->script(['src' => '/webapp/app/star/control.js']);
+			$this->script(['src' => '/webapp/app/star/control.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
 			$this->nav([
 				['标签管理', '?control/tags'],
 				['专题管理', '?control/subjects'],
 				['视频管理', '?control/videos'],
+				['产品管理', '?control/prods'],
 				['用户管理', '?control/users'],
 				['广告管理', '?control/ads'],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
@@ -60,9 +61,9 @@ class webapp_router_control extends webapp_echo_html
 		}
 		return 401;
 	}
-	function goto(string $url):void
+	function goto(string $url = NULL):void
 	{
-		$this->json['goto'] = "?control{$url}";
+		$this->json['goto'] = $url === NULL ? NULL : "?control{$url}";
 	}
 	function dialog(string $msg):void
 	{
@@ -261,6 +262,130 @@ class webapp_router_control extends webapp_echo_html
 	}
 
 
+	//========产品========
+	function prod_vtids():array
+	{
+		return [
+			'' => '实体产品',
+			'prod_vtid_vip100' => '会员卡100元'
+		];
+	}
+	function form_prod(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+
+		$form->fieldset('产品图片 / 虚拟ID');
+		$form->field('prod', 'file', ['accept' => 'image/*']);
+		$form->field('vtid', 'select', ['options' => $this->prod_vtids()]);
+
+		$form->fieldset('产品名称 / 单价（元） / 数量');
+		$form->field('name', 'text', ['placeholder' => '名称', 'required' => NULL]);
+		$form->field('price', 'number', ['style' => 'width:8rem', 'min' => 0, 'placeholder' => '单价（元）', 'required' => NULL]);
+		$form->field('count', 'number', ['style' => 'width:8rem', 'min' => 0, 'placeholder' => '数量', 'value' => 99999999, 'required' => NULL]);
+
+		$form->fieldset('产品描述');
+		$form->field('desc', 'text', ['style' => 'width:32rem', 'placeholder' => '描述']);
+
+		$form->fieldset();
+		$form->button('提交', 'submit');
+
+		return $form;
+	}
+	function get_prods(int $page = 1)
+	{
+		$conds = [[]];
+
+
+		$conds[0] = sprintf('%sORDER BY ctime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$table = $this->main->table($this->webapp->mysql->prods(...$conds)->paging($page), function($table, $value, $prod)
+		{
+			$table->row();
+
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
+			$table->cell($value['hash']);
+			$table->cell($prod[$value['vtid']] ?? '未知');
+			$table->cell([number_format($value['sales']), 'style' => 'text-align:right']);
+			$table->cell()->append('a', [$value['name'], 'href' => "?control/prod-update,hash:{$value['hash']}"]);
+			$table->cell([number_format($value['count']), 'style' => 'text-align:right']);
+			$table->cell([number_format($value['price']), 'style' => 'text-align:right']);
+
+			$table->cell()->append('a', ['删除',
+				'href' => "?control/prod,hash:{$value['hash']}",
+				'data-method' => 'delete',
+				'data-bind' => 'click',
+				'data-dialog' => "删除 {$value['hash']} 确定？"
+			]);
+
+		}, $this->prod_vtids());
+		$table->paging($this->webapp->at(['page' => '']));
+
+		$table->fieldset('创建时间', '修改时间', 'HASH', 'VTID', '累计销量', '名称', '剩余数量', '单价（元）', '删除');
+		$table->header('产品 %d 项', $table->count());
+		$table->bar->append('button', ['添加产品', 'onclick' => 'location.href="?control/prod-insert"']);
+
+	}
+	function delete_prod(string $hash)
+	{
+		if ($this->admin === FALSE)
+		{
+			$this->dialog('请联系管理员进行删除！');
+			return;
+		}
+		if ($this->webapp->mysql->prods->delete('WHERE hash=?s LIMIT 1', $hash) === 1)
+		{
+			$this->goto();
+			return;
+		}
+		$this->dialog('异常操作！');
+	}
+	function get_prod_insert()
+	{
+		$this->form_prod($this->main);
+	}
+	function post_prod_insert()
+	{
+		$hash = $this->webapp->random_hash(FALSE);
+		if (count($uploadedfile = $this->webapp->request_uploadedfile('prod')) === 0
+			&& $this->form_prod()->fetch($prod) && $this->webapp->mysql->prods->insert([
+				'hash' => $hash,
+				'mtime' => $this->webapp->time,
+				'ctime' => $this->webapp->time,
+				'sales' => 0,
+				'vtid' => $prod['vtid'] ? $prod['vtid'] : NULL] + $prod)
+			) {
+			$this->webapp->response_location('?control/prods');
+		}
+		else
+		{
+			$this->main->append('h4', '产品插入失败！');
+		}
+	}
+	function get_prod_update(string $hash)
+	{
+		if ($this->webapp->mysql->prods('WHERE hash=?s LIMIT 1', $hash)->fetch($prod))
+		{
+			$form = $this->form_prod($this->main);
+			// $form->xml->fieldset->append('div', [
+			// 	'style' => 'width:32rem;height:18rem;border:black 1px solid',
+			// 	'data-cover' => "/news/{$ad['hash']}"
+			// ]);
+			$form->echo($prod);
+		}
+	}
+	function post_prod_update(string $hash)
+	{
+		if ($this->form_prod()->fetch($prod) && $this->webapp->mysql->prods('WHERE hash=?s LIMIT 1', $hash)->update($prod))
+		{
+			$this->webapp->response_location('?control/prods');
+		}
+		else
+		{
+			$this->main->append('h4', '产品更新失败！');
+		}
+	}
+
+
 
 	//========视频========
 	function get_videos(string $search = NULL, int $page = 1)
@@ -448,20 +573,6 @@ class webapp_router_control extends webapp_echo_html
 		$conds[0] = sprintf('%sORDER BY seat ASC,weight DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seat)
 		{
-			// $table->row();
-
-			
-			// $table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
-			// $table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
-			// $table->cell()->append('a', [$value['hash'], 'href' => "?control/tag,hash:{$value['hash']}"]);
-			// $table->cell($seat[$value['seat']]);
-			// $table->cell($value['weight']);
-			
-			// $table->cell($value['display']);
-
-
-			$ym = date('ym', $value['mtime']);
-
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
 			$table->cell('封面');
 			$table->cell('字段');

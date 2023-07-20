@@ -49,23 +49,17 @@ class base extends webapp
 			$ym = date('ym', $video['mtime']);
 			$video['cover'] = "/{$ym}/cover";
 			$video['playm3u8'] = "/{$ym}/play";
-			$video['timediff'] = $this->howago($video['mtime']);
 			yield $video;
 		}
 	}
 	//获取指定广告（位置）
-	function fetch_ads(int $seat):array
+	function fetch_ads(int $seat):iterable
 	{
-		$ads = [];
-		foreach ($this->mysql->ads('WHERE seat=?i AND display="show"', $seat) as $ad)
+		foreach ($this->mysql->ads('WHERE seat=?i ORDER BY mtime DESC', $seat) as $ad)
 		{
-			$ads[] = [
-				'weight' => $ad['weight'],
-				'imgurl' => "/news/{$ad['hash']}?{$ad['ctime']}",
-				'acturl' => $ad['acturl']
-			];
+			$ad['imgurl'] = "/news/{$ad['hash']}?{$ad['ctime']}";
+			yield $ad;
 		}
-		return $ads;
 	}
 	//获取开屏广告
 	function fetch_adsplashscreen():array
@@ -78,8 +72,8 @@ class base extends webapp
 			'autoskip' => TRUE
 		];
 	}
-	//获取标签（级别）
-	function fetch_tags(int $level):array
+	//获取标签
+	function fetch_tags():array
 	{
 		$tags = [];
 		foreach ($this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level) as $tag)
@@ -91,6 +85,17 @@ class base extends webapp
 		}
 		return $tags;
 	}
+	//获取产品
+	function fetch_prods():array
+	{
+		$prods = [];
+		foreach ($this->webapp->mysql->prods as $prod)
+		{
+
+		}
+	}
+
+
 	//专题
 	function fetch_subjects(string $tagid):array
 	{

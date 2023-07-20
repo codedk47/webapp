@@ -1,3 +1,5 @@
+const resorigin = document.currentScript.dataset.origin;
+
 function g(p,a)
 {
 	location.assign(((o,q)=>Object.keys(o).reduce((p,k)=>o[k]===null?p:`${p},${k}:${o[k]}`,q))
@@ -196,12 +198,10 @@ document.addEventListener('DOMContentLoaded', event =>
 
 	document.querySelectorAll('div[data-cover]').forEach(element =>
 	{
-		loader(`https://keniubila.com${element.dataset.cover}`, {mask: true}).then(blob => {
-
-		element.style.background = `center / cover no-repeat url(${blob})`;
-		})
-		
-		
+		loader(`${resorigin}${element.dataset.cover}`, {mask: true}).then(blob =>
+		{
+			element.style.background = `center / cover no-repeat url(${blob})`;
+		});
 	});
 
 });
