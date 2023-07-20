@@ -80,7 +80,7 @@ class base extends webapp
 	//获取标签
 	function fetch_tags():iterable
 	{
-		foreach ($this->mysql->tags('ORDER BY mtine DESC') as $tag)
+		foreach ($this->mysql->tags('ORDER BY mtime DESC') as $tag)
 		{
 			yield $tag;
 		}
