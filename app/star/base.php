@@ -41,6 +41,11 @@ class base extends webapp
 			$this->authorize($this->request_authorization($type),
 				fn($id) => $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array()));
 	}
+	//获取源
+	function fetch_origins():array
+	{
+		return [];
+	}
 	//获取所有视频
 	function fetch_videos():iterable
 	{
@@ -77,14 +82,18 @@ class base extends webapp
 			'autoskip' => TRUE
 		];
 	}
-	//获取标签
-	function fetch_tags():iterable
+	//获取标签（级别）
+	function fetch_tags(int $level):array
 	{
-		foreach ($this->mysql->tags('ORDER BY mtime DESC') as $tag)
+		$tags = [];
+		foreach ($this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level) as $tag)
 		{
-			yield $tag;
+			$tags[] = [
+				'hash' => $tag['hash'],
+				'name' => $tag['name']
+			];
 		}
-		//return $this->mysql->tags('ORDER BY mtine DESC');
+		return $tags;
 	}
 	//获取产品
 	function fetch_prods():array
@@ -94,7 +103,6 @@ class base extends webapp
 		{
 
 		}
-		return [];
 	}
 
 
