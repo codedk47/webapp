@@ -63,7 +63,7 @@ class base extends webapp
 		$ads = [];
 		foreach ($this->mysql->ads('WHERE seat=?i AND display="show"', $seat) as $ad)
 		{
-			$ads[] = [
+			$ads[$ad['hash']] = [
 				'weight' => $ad['weight'],
 				'imgurl' => "/news/{$ad['hash']}?{$ad['ctime']}",
 				'acturl' => $ad['acturl']
@@ -108,9 +108,10 @@ class base extends webapp
 
 
 
-			$subjects[] = [
-				'hash' => $subject['hash'],
+			$subjects[$subject['hash']] = [
+
 				'name' => $subject['name'],
+				'style' => 1,
 				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
 			];
 		}

@@ -81,7 +81,8 @@ class webapp_router_control extends webapp_echo_html
 	function tag_level():array
 	{
 		return [
-			1 => '首页标签'
+			1 => '首页标签',
+			2 => '自定义标签'
 		];
 	}
 	function form_tag(webapp_html $html = NULL):webapp_form
@@ -103,6 +104,11 @@ class webapp_router_control extends webapp_echo_html
 	function get_tags(int $page = 1)
 	{
 		$conds = [[]];
+		if ($level = $this->webapp->query['level'] ?? '')
+		{
+			$conds[0][] = 'level=?s';
+			$conds[] = $level;
+		}
 
 		$conds[0] = sprintf('%sORDER BY level ASC,sort DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->tags(...$conds)->paging($page), function($table, $value, $level)
@@ -125,6 +131,10 @@ class webapp_router_control extends webapp_echo_html
 		$table->fieldset('创建时间', '修改时间', 'HASH', '级别', '排序', '名称');
 		$table->header('标签 %d 项', $table->count());
 		$table->bar->append('button', ['添加标签', 'onclick' => 'location.href="?control/tag"']);
+
+		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
+			->select(['' => '全部级别'] + $this->tag_level())
+			->setattr(['onchange' => 'g({level:this.value||null})', 'style' => 'padding:.1rem'])->selected($level);
 	}
 	function get_tag(string $hash = NULL)
 	{
