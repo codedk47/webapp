@@ -80,7 +80,11 @@ class base extends webapp
 	//获取标签
 	function fetch_tags():iterable
 	{
-		return $this->mysql->tags('ORDER BY mtine DESC');
+		foreach ($this->mysql->tags('ORDER BY mtine DESC') as $tag)
+		{
+			yield $tag;
+		}
+		//return $this->mysql->tags('ORDER BY mtine DESC');
 	}
 	//获取产品
 	function fetch_prods():array
