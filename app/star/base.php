@@ -53,13 +53,18 @@ class base extends webapp
 		}
 	}
 	//获取指定广告（位置）
-	function fetch_ads(int $seat):iterable
+	function fetch_ads(int $seat):array
 	{
-		foreach ($this->mysql->ads('WHERE seat=?i ORDER BY mtime DESC', $seat) as $ad)
+		$ads = [];
+		foreach ($this->mysql->ads('WHERE seat=?i AND display="show"', $seat) as $ad)
 		{
-			$ad['imgurl'] = "/news/{$ad['hash']}?{$ad['ctime']}";
-			yield $ad;
+			$ads[] = [
+				'weight' => $ad['weight'],
+				'imgurl' => "/news/{$ad['hash']}?{$ad['ctime']}",
+				'acturl' => $ad['acturl']
+			];
 		}
+		return $ads;
 	}
 	//获取开屏广告
 	function fetch_adsplashscreen():array
@@ -73,17 +78,9 @@ class base extends webapp
 		];
 	}
 	//获取标签
-	function fetch_tags():array
+	function fetch_tags():iterable
 	{
-		$tags = [];
-		foreach ($this->mysql->tags('ORDER BY sort DESC') as $tag)
-		{
-			$tags[] = [
-				'hash' => $tag['hash'],
-				'name' => $tag['name']
-			];
-		}
-		return $tags;
+		return $this->mysql->tags('ORDER BY mtine DESC');
 	}
 	//获取产品
 	function fetch_prods():array
@@ -93,6 +90,7 @@ class base extends webapp
 		{
 
 		}
+		return [];
 	}
 
 
