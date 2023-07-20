@@ -85,15 +85,7 @@ class base extends webapp
 	//获取标签（级别）
 	function fetch_tags(int $level):array
 	{
-		$tags = [];
-		foreach ($this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level) as $tag)
-		{
-			$tags[] = [
-				'hash' => $tag['hash'],
-				'name' => $tag['name']
-			];
-		}
-		return $tags;
+		return $this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level)->column('name', 'hash');
 	}
 	//获取产品
 	function fetch_prods():array
@@ -103,6 +95,7 @@ class base extends webapp
 		{
 
 		}
+		return [];
 	}
 
 
