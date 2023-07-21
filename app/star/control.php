@@ -83,7 +83,7 @@ class webapp_router_control extends webapp_echo_html
 	function tag_level():array
 	{
 		return [
-			1 => '首页标签',
+			1 => '标签分类',
 			2 => '自定义标签'
 		];
 	}

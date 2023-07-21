@@ -131,7 +131,8 @@ class base extends webapp
 		$ads = [];
 		foreach ($this->mysql->ads('WHERE seat=?i AND display="show"', $seat) as $ad)
 		{
-			$ads[$ad['hash']] = [
+			$ads[] = [
+				'hash' => $ad['hash'],
 				'weight' => $ad['weight'],
 				'imgurl' => "/news/{$ad['hash']}?{$ad['ctime']}",
 				'acturl' => $ad['acturl']
@@ -153,7 +154,15 @@ class base extends webapp
 	//获取标签（级别）
 	function fetch_tags(int $level):array
 	{
-		return $this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level)->column('name', 'hash');
+		$tags = [];
+		foreach ($this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level) as $tag)
+		{
+			$tags[] = [
+				'hash' => $tag['hash'],
+				'name' => $tag['name']
+			];
+		}
+		return $tags;
 	}
 	//获取产品
 	function fetch_prods():array
@@ -173,7 +182,8 @@ class base extends webapp
 		$subjects = [];
 		foreach ($this->mysql->subjects('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
 		{
-			$subjects[$subject['hash']] = [
+			$subjects[] = [
+				'hash' => $subject['hash'],
 				'name' => $subject['name'],
 				'style' => $subject['style'],
 				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
