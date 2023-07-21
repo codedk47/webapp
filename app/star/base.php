@@ -151,18 +151,13 @@ class base extends webapp
 			'autoskip' => TRUE
 		];
 	}
-	//获取标签（级别）
-	function fetch_tags(int $level):array
+	//获取标签
+	function fetch_tags():iterable
 	{
-		$tags = [];
-		foreach ($this->mysql->tags('WHERE level=?i ORDER BY sort DESC', $level) as $tag)
+		foreach ($this->mysql->tags('ORDER BY mtime DESC') as $tag)
 		{
-			$tags[] = [
-				'hash' => $tag['hash'],
-				'name' => $tag['name']
-			];
+			yield $tag;
 		}
-		return $tags;
 	}
 	//获取产品
 	function fetch_prods():array

@@ -80,8 +80,9 @@ class webapp_router_control extends webapp_echo_html
 	}
 
 	//========标签========
-	function tag_level():array
+	function tag_types():array
 	{
+		//$this->webapp->mysql->tags('WHERE phash IS NULL ORDER BY ')
 		return [
 			1 => '标签分类',
 			2 => '自定义标签'
