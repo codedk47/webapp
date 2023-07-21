@@ -1,0 +1,30 @@
+ul.video_tags{
+	padding: 0;
+	width: 90rem;
+	display: flex;
+	align-content: flex-start;
+	flex-flow: wrap;
+	list-style-type: none;
+	gap: .6rem;
+}
+ul.video_tags>li>label.checked{
+	background-color: dodgerblue !important;
+	border: .1rem solid darkblue !important;
+	color: white !important;
+}
+ul.video_tags>li>label{
+	padding: .2rem .4rem;
+	border-radius: .3rem;
+	white-space: nowrap;
+	display: block;
+	border: .1rem solid transparent;
+	color: deeppink;
+	border: .1rem solid deeppink;
+}
+ul.video_tags>li>label:hover:not(.checked){
+	background: lightyellow;
+	border: .1rem solid goldenrod;
+}
+ul.video_tags>li>label:active{
+	background: gainsboro;
+}

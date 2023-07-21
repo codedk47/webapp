@@ -148,7 +148,7 @@ function slideshow(element, duration = 4)
 	function addition(picture, support)
 	{
 		const span = document.createElement('span');
-		span.style.cssText = 'width:1rem;height:1rem;display:inline-block;background-color:black;border:.1rem solid white;border-radius:50%;opacity:0.8';
+		span.style.cssText = 'width:.5rem;height:.5rem;display:inline-block;background-color:black;border:.1rem solid white;border-radius:50%;opacity:0.8';
 		indexbox.appendChild(span);
 		if (contents.length < 3)
 		{

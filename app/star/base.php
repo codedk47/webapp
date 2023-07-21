@@ -45,8 +45,32 @@ class base extends webapp
 	{
 		$form = new webapp_form($html ?? $this);
 
+		$form->fieldset('影片名称');
+		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
+
+		$form->fieldset('预览时段');
+		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1]);
+		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1]);
+
+		$form->field('require', 'number', [
+			'value' => 0,
+			'min' => -2,
+			'style' => 'width:22rem',
+			'placeholder' => '下架：-2、会员：-1、免费：0、金币',
+			'required' => NULL
+		]);
+
+		$form->fieldset('专题');
+
+
+		$form->fieldset('标签');
+
+		$tags = $this->mysql->tags->column('name', 'hash');
+
+		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'video_tags';
+
 		$form->fieldset();
-		$form->button('提交', 'submit');
+		$form->button('更新视频', 'submit');
 
 
 
@@ -54,9 +78,23 @@ class base extends webapp
 		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
+	function rootdir_video(array $video):string
+	{
+		return sprintf('%s/%s/%s', $this['rootdir_video'], date('ym', $video['mtime']), $video['hash']);
+	}
 	function get_sync()
 	{
-		var_dump(123);
+		//if (PHP_SAPI !== 'cli') return 404;
+		foreach ($this->mysql->videos('WHERE sync="allow"') as $video)
+		{
+
+			$rootdir_video = $this->rootdir_video($video);
+			echo $rootdir_video,"\n";
+
+		}
+
+
+		//var_dump(123);
 	}
 	//获取源
 	function fetch_origins():array

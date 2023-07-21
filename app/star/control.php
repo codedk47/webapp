@@ -11,6 +11,8 @@ class webapp_router_control extends webapp_echo_html
 		if ($signinfo = $webapp->authorize($webapp->request_cookie($webapp['admin_cookie']), $this->sign_in_auth(...)))
 		{
 			$this->admin = $signinfo['is_admin'];
+
+			$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
 			$this->script(['src' => '/webapp/res/js/loader.js']);
 			$this->script(['src' => '/webapp/app/star/control.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
 			$this->nav([
@@ -487,6 +489,15 @@ class webapp_router_control extends webapp_echo_html
 		]);
 		//$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
 	}
+	function get_video(string $hash)
+	{
+		if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
+		{
+			$form = $this->webapp->form_video($this->main);
+			$form->echo($video);
+		}
+	}
+
 
 	//========用户========
 	function form_user(webapp_html $html = NULL):webapp_form
