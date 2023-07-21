@@ -43,7 +43,7 @@ class base extends webapp
 	}
 	function form_video(webapp_html $html = NULL):webapp_form
 	{
-		$form = new webapp_form($html ?? $this);
+		$form = new webapp_form($html ?? $this, '?updatevideo');
 
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
@@ -55,27 +55,30 @@ class base extends webapp
 		$form->field('require', 'number', [
 			'value' => 0,
 			'min' => -2,
-			'style' => 'width:22rem',
+			'style' => 'width:21rem',
 			'placeholder' => '下架：-2、会员：-1、免费：0、金币',
 			'required' => NULL
 		]);
+		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'style' => 'width:4rem', 'required' => NULL]);
+
+
 
 		$form->fieldset('专题');
-
+		$subjects = $this->mysql->subjects->column('name', 'hash');
+		$form->field('subjects', 'checkbox', ['options' => $subjects], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'video_tags';
 
 		$form->fieldset('标签');
-
 		$tags = $this->mysql->tags->column('name', 'hash');
-
 		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'video_tags';
 
 		$form->fieldset();
 		$form->button('更新视频', 'submit');
 
 
-
+		
 
 		$form->xml['data-bind'] = 'submit';
+		$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		return $form;
 	}
 	function rootdir_video(array $video):string
@@ -107,8 +110,8 @@ class base extends webapp
 		foreach ($this->mysql->videos('ORDER BY mtime DESC') as $video)
 		{
 			$ym = date('ym', $video['mtime']);
-			$video['cover'] = "/{$ym}/cover";
-			$video['playm3u8'] = "/{$ym}/play";
+			$video['cover'] = "/{$ym}/{$video['hash']}/cover";
+			$video['playm3u8'] = "/{$ym}/{$video['hash']}/play";
 			yield $video;
 		}
 	}
