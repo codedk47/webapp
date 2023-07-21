@@ -41,6 +41,23 @@ class base extends webapp
 			$this->authorize($this->request_authorization($type),
 				fn($id) => $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array()));
 	}
+	function form_video(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this);
+
+		$form->fieldset();
+		$form->button('提交', 'submit');
+
+
+
+
+		$form->xml['data-bind'] = 'submit';
+		return $form;
+	}
+	function get_sync()
+	{
+		var_dump(123);
+	}
 	//获取源
 	function fetch_origins():array
 	{
