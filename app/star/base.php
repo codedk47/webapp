@@ -238,7 +238,8 @@ class base extends webapp
 
 	function get_test(){
 
-		print_r($this->fetch_subjects('ayiE'));
+		var_dump(get_debug_type(NULL));
+		//print_r($this->fetch_subjects('ayiE'));
 		//print_r($this->fetch_indexdata());
 		// foreach($this->videos() as $v){
 		// 	print_r($v);
