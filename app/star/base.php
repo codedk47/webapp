@@ -43,7 +43,13 @@ class base extends webapp
 	}
 	function form_video(webapp_html $html = NULL):webapp_form
 	{
-		$form = new webapp_form($html ?? $this, '?updatevideo');
+		$form = new webapp_form($html ?? $this, '?video-value');
+
+		if ($form->echo)
+		{
+			//$this->signature()
+		}
+
 
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
@@ -80,6 +86,10 @@ class base extends webapp
 		$form->xml['data-bind'] = 'submit';
 		$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		return $form;
+	}
+	function post_video_value(string $signature)
+	{
+		
 	}
 	function rootdir_video(array $video):string
 	{
