@@ -234,6 +234,24 @@ class base extends webapp
 
 		return $subjects;
 	}
+	
+	function fetch_subject_videos(string $hash):iterable
+	{
+		// $subjects = [];
+		// foreach ($this->mysql->videos('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
+		// {
+		// 	$subjects[] = [
+		// 		'hash' => $subject['hash'],
+		// 		'name' => $subject['name'],
+		// 		'style' => $subject['style'],
+		// 		'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
+		// 	];
+		// }
+		
+
+
+		// return $subjects;
+	}
 
 
 	//话题
