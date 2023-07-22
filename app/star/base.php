@@ -237,12 +237,13 @@ class base extends webapp
 	//专题HASH拉取视频
 	function fetch_subject_videos(string $hash):iterable
 	{
-		foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY mtime DESC,sort DESC', $hash) as $video)
+		foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY ctime DESC,sort DESC', $hash) as $video)
 		{
 			yield [
 				'hash' => $video['hash'],
 				'mtime' => $video['mtime'],
-				'ctime' => $video['ctime']
+				'ctime' => $video['ctime'],
+				'sort' => $video['sort']
 			];
 		}
 	}
