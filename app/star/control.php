@@ -262,7 +262,7 @@ class webapp_router_control extends webapp_echo_html
 		$form = $this->form_subject($this->main);
 		if (is_string($hash) && $this->webapp->mysql->subjects('WHERE hash=?s LIMIT 1', $hash)->fetch($subject))
 		{
-			$form->xml['method'] = 'patch';
+			$form->xml['method'] = 'PATCH';
 			$form->echo($subject);
 		}
 	}
