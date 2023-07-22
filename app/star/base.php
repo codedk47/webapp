@@ -97,7 +97,7 @@ class base extends webapp
 	}
 	function get_subject_fetch()
 	{
-		//if (PHP_SAPI !== 'cli') return 404;
+		if (PHP_SAPI !== 'cli') return 404;
 		function words(string $haystack, array $needles):bool
 		{
 			foreach ($needles as $needle)
