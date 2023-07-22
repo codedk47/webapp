@@ -237,20 +237,14 @@ class base extends webapp
 	
 	function fetch_subject_videos(string $hash):iterable
 	{
-		// $subjects = [];
-		// foreach ($this->mysql->videos('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
-		// {
-		// 	$subjects[] = [
-		// 		'hash' => $subject['hash'],
-		// 		'name' => $subject['name'],
-		// 		'style' => $subject['style'],
-		// 		'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
-		// 	];
-		// }
-		
-
-
-		// return $subjects;
+		foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC', $hash) as $video)
+		{
+			yield [
+				'hash' => $video['hash'],
+				'mtime' => $video['mtime'],
+				'ctime' => $video['ctime']
+			];
+		}
 	}
 
 
@@ -302,7 +296,7 @@ class base extends webapp
 	function get_test(){
 
 
-		var_dump(get_debug_type(NULL));
+		var_dump( iterator_to_array( $this->fetch_subject_videos('nJuL') ) );
 		//print_r($this->fetch_subjects('ayiE'));
 		//print_r($this->fetch_indexdata());
 		// foreach($this->videos() as $v){
