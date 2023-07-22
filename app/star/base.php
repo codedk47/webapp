@@ -234,7 +234,7 @@ class base extends webapp
 
 		return $subjects;
 	}
-	
+	//专题HASH拉取视频
 	function fetch_subject_videos(string $hash):iterable
 	{
 		foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC', $hash) as $video)
