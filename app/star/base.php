@@ -225,6 +225,8 @@ class base extends webapp
 			$subjects[] = [
 				'hash' => $subject['hash'],
 				'name' => $subject['name'],
+				'view' => 0,
+				'num' => 0,
 				'style' => $subject['style'],
 				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
 			];
