@@ -177,6 +177,14 @@ class webapp_router_control extends webapp_echo_html
 			5 => '5宫格'
 		];
 	}
+	function subject_fetch_methods():array
+	{
+		return [
+			'tags' => '分类（标签HASH交集）',
+			'words' => '关键词（标题包含关键词）',
+			'uploader' => 'UP主（用户ID并集）'
+		];
+	}
 	function form_subject(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
@@ -190,6 +198,10 @@ class webapp_router_control extends webapp_echo_html
 		$form->field('name', 'text', ['required' => NULL]);
 		$form->field('style', 'select', ['options' => $this->subject_styles(), 'required' => NULL]);
 
+		$form->fieldset('数据来源');
+		$form->field('fetch_method', 'select', ['options' => $this->subject_fetch_methods()]);
+		$form->field('fetch_values', 'text', ['placeholder' => '多个值请用 "," 间隔', 'required' => NULL]);
+
 		$form->fieldset('专题影片');
 		$form->field('videos', 'textarea', [
 			'cols' => 30,
@@ -199,6 +211,9 @@ class webapp_router_control extends webapp_echo_html
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
+
+		
+
 
 		$form->xml['data-bind'] = 'submit';
 		return $form;
@@ -227,10 +242,12 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell()->append('a', [$value['name'], 'href' => "?control/subject,hash:{$value['hash']}"]);
 			$table->cell($styles[$value['style']] ?? $value['style']);
 
+			$table->cell("{$value['fetch_method']}({$value['fetch_values']})");
+
 		}, $tag_types, $subject_styles);
 		$table->paging($this->webapp->at(['page' => '']));
 
-		$table->fieldset('创建时间', '修改时间', 'HASH', '排序', '标签', '名称', '展示样式');
+		$table->fieldset('创建时间', '修改时间', 'HASH', '排序', '标签', '名称', '展示样式', '数据来源');
 		$table->header('专题 %d 项', $table->count());
 		$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
 

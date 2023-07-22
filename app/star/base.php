@@ -95,6 +95,49 @@ class base extends webapp
 	{
 		return sprintf('%s/%s/%s', $this['rootdir_video'], date('ym', $video['mtime']), $video['hash']);
 	}
+	function get_subject_fetch()
+	{
+		//if (PHP_SAPI !== 'cli') return 404;
+		function words(string $haystack, array $needles):bool
+		{
+			foreach ($needles as $needle)
+			{
+				if (str_contains($haystack, $needle)) return TRUE;
+			}
+			return FALSE;
+		}
+		$subjects = [];
+		foreach ($this->mysql->subjects as $subject)
+		{
+			$subjects[$subject['hash']] = [
+				'fetch_method' => $subject['fetch_method'],
+				'fetch_values' => $subject['fetch_values'] ? explode(',', $subject['fetch_values']) : []
+			];
+		}
+		foreach ($this->mysql->videos('WHERE sync="allow"') as $video)
+		{
+			$vsubjects = [];
+			foreach ($subjects as $hash => $data)
+			{
+				match ($data['fetch_method'])
+				{
+					'tags' => $video['tags'] && count(array_intersect(
+						explode(',', $video['tags']), $data['fetch_values'])
+					) === count($data['fetch_values']),
+					'words' => words($video['name'], $data['fetch_values']),
+					'uploader' => in_array($video['userid'], $data['fetch_values'], TRUE),
+					default => FALSE
+				} && $vsubjects[] = $hash;
+			}
+			$vsubject = join(',', $vsubjects);
+			if ($video['subjects'] !== $vsubject)
+			{
+				$success = $this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])
+					->update('subjects=?s', $vsubject) === 1 ? 'OK' : 'NO';
+				echo "{$video['hash']} -> [{$video['subjects']}] >> [{$vsubject}] {$success}\n";
+			}
+		}
+	}
 	function get_sync()
 	{
 		//if (PHP_SAPI !== 'cli') return 404;
@@ -237,6 +280,7 @@ class base extends webapp
 
 
 	function get_test(){
+
 
 		var_dump(get_debug_type(NULL));
 		//print_r($this->fetch_subjects('ayiE'));
