@@ -242,7 +242,8 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell()->append('a', [$value['name'], 'href' => "?control/subject,hash:{$value['hash']}"]);
 			$table->cell($styles[$value['style']] ?? $value['style']);
 
-			$table->cell("{$value['fetch_method']}({$value['fetch_values']})");
+			$table->cell()->append('a', ["{$value['fetch_method']}({$value['fetch_values']})",
+				'href' => "?control/videos,subject:{$value['hash']}"]);
 
 		}, $tag_types, $subject_styles);
 		$table->paging($this->webapp->at(['page' => '']));
@@ -291,6 +292,101 @@ class webapp_router_control extends webapp_echo_html
 			$this->dialog('专题修改失败！');
 		}
 	}
+
+	//========视频========
+	function get_videos(string $search = NULL, int $page = 1)
+	{
+		$conds = [[]];
+		if (is_string($search))
+		{
+			$search = urldecode($search);
+			if (trim($search, webapp::key) === '' && in_array($len = strlen($search), [10, 12], TRUE))
+			{
+				$conds[0][] = $len === 10 ? 'userid=?s' : 'hash=?s';
+				$conds[] = $search;
+			}
+			else
+			{
+				$conds[0][] = 'name LIKE ?s';
+				$conds[] = "%{$search}%";
+			}
+		}
+		if ($subject = $this->webapp->query['subject'] ?? '')
+		{
+			$conds[0][] = 'FIND_IN_SET(?s,subjects)';
+			$conds[] = $subject;
+		}
+
+		
+		$conds[0] = sprintf('%sORDER BY mtime DESC,ctime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value)
+		{
+			$ym = date('ym', $value['mtime']);
+
+			$table->row()['style'] = 'background-color:var(--webapp-hint)';
+			$table->cell('封面');
+			$table->cell('信息');
+			$table->cell('操作');
+
+			$table->row();
+			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144'])->append('div', [
+				'style' => 'height:100%;border:black 1px solid;box-shadow: 0 0 .4rem black;',
+				'data-cover' => "/{$ym}/{$value['hash']}/cover"
+			]);
+
+
+
+
+			$table->row();
+			$table->cell(sprintf('HASH：%s， 创建时间：%s， 修改时间：%s',
+				$value['hash'],
+				date('Y-m-d\\TH:i:s', $value['mtime']),
+				date('Y-m-d\\TH:i:s', $value['ctime'])));
+			$table->cell()->append('button', ['扩展按钮']);
+
+			$table->row();
+			$table->cell(sprintf('上传用户：%s， 大小：%s',
+				$value['userid'],
+				date('Y-m-d\\TH:i:s', $value['ctime'])));
+			$table->cell()->append('button', ['扩展按钮']);
+
+			$table->row();
+			$table->cell('asd');
+			$table->cell()->append('button', ['扩展按钮']);
+
+
+			$table->row();
+			$table->cell()->append('a', [htmlentities($value['name']), 'href' => "#"]);
+			$table->cell()->append('button', ['扩展按钮']);
+
+
+
+
+		});
+		$table->paging($this->webapp->at(['page' => '']));
+
+		$table->fieldset('封面', '信息', '操作');
+		$table->header('视频 %d 项', $table->count());
+		unset($table->xml->tbody->tr[0]);
+
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $search,
+			'style' => 'width:24rem',
+			'placeholder' => '请输入视频HASH、用户ID、键字按【Enter】进行搜索。',
+			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
+		]);
+		//$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
+	}
+	function get_video(string $hash)
+	{
+		if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
+		{
+			$form = $this->webapp->form_video($this->main);
+			$form->echo($video);
+		}
+	}
+
 
 
 	//========产品========
@@ -413,97 +509,6 @@ class webapp_router_control extends webapp_echo_html
 		else
 		{
 			$this->main->append('h4', '产品更新失败！');
-		}
-	}
-
-
-
-	//========视频========
-	function get_videos(string $search = NULL, int $page = 1)
-	{
-		$conds = [[]];
-		if (is_string($search))
-		{
-			$search = urldecode($search);
-			if (trim($search, webapp::key) === '' && in_array($len = strlen($search), [10, 12], TRUE))
-			{
-				$conds[0][] = $len === 10 ? 'userid=?s' : 'hash=?s';
-				$conds[] = $search;
-			}
-			else
-			{
-				$conds[0][] = 'name LIKE ?s';
-				$conds[] = "%{$search}%";
-			}
-		}
-
-		
-		$conds[0] = sprintf('%sORDER BY mtime DESC,ctime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value)
-		{
-			$ym = date('ym', $value['mtime']);
-
-			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell('封面');
-			$table->cell('信息');
-			$table->cell('操作');
-
-			$table->row();
-			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144'])->append('div', [
-				'style' => 'height:100%;border:black 1px solid;box-shadow: 0 0 .4rem black;',
-				'data-cover' => "/{$ym}/{$value['hash']}/cover"
-			]);
-
-
-
-
-			$table->row();
-			$table->cell(sprintf('HASH：%s， 创建时间：%s， 修改时间：%s',
-				$value['hash'],
-				date('Y-m-d\\TH:i:s', $value['mtime']),
-				date('Y-m-d\\TH:i:s', $value['ctime'])));
-			$table->cell()->append('button', ['扩展按钮']);
-
-			$table->row();
-			$table->cell(sprintf('上传用户：%s， 大小：%s',
-				$value['userid'],
-				date('Y-m-d\\TH:i:s', $value['ctime'])));
-			$table->cell()->append('button', ['扩展按钮']);
-
-			$table->row();
-			$table->cell('asd');
-			$table->cell()->append('button', ['扩展按钮']);
-
-
-			$table->row();
-			$table->cell()->append('a', [htmlentities($value['name']), 'href' => "#"]);
-			$table->cell()->append('button', ['扩展按钮']);
-
-
-
-
-		});
-		$table->paging($this->webapp->at(['page' => '']));
-
-		$table->fieldset('封面', '信息', '操作');
-		$table->header('视频 %d 项', $table->count());
-		unset($table->xml->tbody->tr[0]);
-
-		$table->bar->append('input', [
-			'type' => 'search',
-			'value' => $search,
-			'style' => 'width:24rem',
-			'placeholder' => '请输入视频HASH、用户ID、键字按【Enter】进行搜索。',
-			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
-		]);
-		//$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
-	}
-	function get_video(string $hash)
-	{
-		if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
-		{
-			$form = $this->webapp->form_video($this->main);
-			$form->echo($video);
 		}
 	}
 

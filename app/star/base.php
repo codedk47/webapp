@@ -95,6 +95,7 @@ class base extends webapp
 	{
 		return sprintf('%s/%s/%s', $this['rootdir_video'], date('ym', $video['mtime']), $video['hash']);
 	}
+	//本地命令行运行专题获取更新
 	function get_subject_fetch()
 	{
 		if (PHP_SAPI !== 'cli') return 404;
@@ -138,6 +139,7 @@ class base extends webapp
 			}
 		}
 	}
+	//本地命令行运行视频同步处理
 	function get_sync()
 	{
 		//if (PHP_SAPI !== 'cli') return 404;
