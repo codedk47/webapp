@@ -216,7 +216,7 @@ class base extends webapp
 	}
 
 
-	//专题
+	//根据分类标签ID拉取专题
 	function fetch_subjects(string $tagid):array
 	{
 		$subjects = [];
@@ -237,7 +237,7 @@ class base extends webapp
 	//专题HASH拉取视频
 	function fetch_subject_videos(string $hash):iterable
 	{
-		foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC', $hash) as $video)
+		foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY mtime DESC,sort DESC', $hash) as $video)
 		{
 			yield [
 				'hash' => $video['hash'],
@@ -296,7 +296,7 @@ class base extends webapp
 	function get_test(){
 
 
-		var_dump( iterator_to_array( $this->fetch_subject_videos('nJuL') ) );
+		print_r( iterator_to_array( $this->fetch_subject_videos('nJuL') ) );
 		//print_r($this->fetch_subjects('ayiE'));
 		//print_r($this->fetch_indexdata());
 		// foreach($this->videos() as $v){
