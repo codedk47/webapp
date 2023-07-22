@@ -121,8 +121,8 @@ document.addEventListener('DOMContentLoaded', event =>
 
 		const
 		response = element.tagName === 'FORM'
-			? await fetch(element.action, {method: element.getAttribute('method'), body: new URLSearchParams(new FormData(element))})
-			: await fetch(element.href || element.dataset.src, {method: element.dataset.method || 'get'}),
+			? await fetch(element.action, {method: element.getAttribute('method').toUpperCase(), body: new URLSearchParams(new FormData(element))})
+			: await fetch(element.href || element.dataset.src, {method: element.dataset.method.toUpperCase() || 'GET'}),
 		data = await response.text();
 
 		//alert(response.redirect());

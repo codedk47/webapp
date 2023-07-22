@@ -135,7 +135,7 @@ class webapp_router_control extends webapp_echo_html
 		$form = $this->form_tag($this->main);
 		if (is_string($hash) && $this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->fetch($tag))
 		{
-			$form->xml['method'] = 'PATCH';
+			$form->xml['method'] = 'patch';
 			$form->echo($tag);
 		}
 	}
