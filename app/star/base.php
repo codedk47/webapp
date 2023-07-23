@@ -167,7 +167,8 @@ class base extends webapp
 	//获取所有UP主
 	function fetch_uploaders():iterable
 	{
-		foreach ($this->mysql->users('WHERE uid!=0 ORDER BY mtime DESC') as $user)
+		foreach ($this->mysql->users('ORDER BY mtime DESC') as $user)
+		//foreach ($this->mysql->users('WHERE uid!=0 ORDER BY mtime DESC') as $user)
 		{
 			yield [
 				'id' => $user['id'],
@@ -176,8 +177,7 @@ class base extends webapp
 				'fid' => $user['fid'],
 				'nickname' => $user['nickname'],
 				'followed_ids' => 0,
-				'follower_num' => 0,
-
+				'follower_num' => 0
 			];
 		}
 	}
