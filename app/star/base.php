@@ -154,6 +154,10 @@ class base extends webapp
 
 		//var_dump(123);
 	}
+	function create_user(array $user):user
+	{
+		return user::create($this, $user);
+	}
 	//获取源
 	function fetch_origins():array
 	{
@@ -232,8 +236,6 @@ class base extends webapp
 			];
 		}
 		
-
-
 		return $subjects;
 	}
 	//专题HASH拉取视频
@@ -293,18 +295,6 @@ class base extends webapp
 			return 200;
 		}
 		return 404;
-	}
-
-
-	function get_test(){
-
-
-		print_r( iterator_to_array( $this->fetch_subject_videos('nJuL') ) );
-		//print_r($this->fetch_subjects('ayiE'));
-		//print_r($this->fetch_indexdata());
-		// foreach($this->videos() as $v){
-		// 	print_r($v);
-		// };
 	}
 
 }

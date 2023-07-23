@@ -177,10 +177,10 @@ class user extends ArrayObject
 			'name' => $this->webapp->generatetext($this->webapp->random_int(12, 26))
 		]);
 	}
-	static function create(webapp $webapp):static
+	static function create(webapp $webapp, array $user = []):static
 	{
 		$id = $webapp->random_time33();
-		$user = [
+		return new static($webapp, $user + [
 			'id' => $webapp->time33hash($id, TRUE),
 			'time' => $webapp->time,
 			'lasttime' => $webapp->time,
@@ -198,8 +198,27 @@ class user extends ArrayObject
 			'nickname' => $webapp->time33hash($id),
 			'historys' => '',
 			'favorites' => ''
-		];
-		return new static($webapp, $webapp->mysql->users->insert($user) ? $user : []);
+		]);
+		// $user = [
+		// 	'id' => $webapp->time33hash($id, TRUE),
+		// 	'time' => $webapp->time,
+		// 	'lasttime' => $webapp->time,
+		// 	'lastip' => $webapp->iphex($webapp->ip),
+		// 	'device' => 'pc',
+		// 	'balance' => 0,
+		// 	'expire' => $webapp->time,
+		// 	'coin' => 0,
+		// 	'ticket' => 0,
+		// 	'viewtry' => 0,
+		// 	'fid' => ord(random_bytes(1)),
+		// 	'cid' => $webapp->cid,
+		// 	'did' => $webapp->did,
+		// 	'tid' => NULL,
+		// 	'nickname' => $webapp->time33hash($id),
+		// 	'historys' => '',
+		// 	'favorites' => ''
+		// ];
+		// return new static($webapp, $webapp->mysql->users->insert($user) ? $user : []);
 	}
 	static function from_id(webapp $webapp, string $id):static
 	{

@@ -14,15 +14,23 @@ class webapp_echo_xml extends webapp_implementation
 		$webapp->response_content_type('application/xml');
 		parent::__construct($type, ...$params);
 	}
-	static function mobileconfig(array $values, webapp $webapp = NULL, bool $config = FALSE):webapp_implementation
+	static function mobileconfig(array $values, webapp $webapp = NULL, ?string $basename = NULL):webapp_implementation
 	{
 		#https://developer.apple.com/documentation/devicemanagement/webclip?changes=latest_beta&language=objc
 		$mobileconfig = new webapp_implementation('plist', '-//Apple//DTD PLIST 1.0//EN', 'http://www.apple.com/DTDs/PropertyList-1.0.dtd');
 		$mobileconfig->xml['version'] = '1.0';
 		if ($webapp)
 		{
-			$webapp->response_content_type($config ? 'application/x-apple-aspen-config' : 'application/xml');
 			$mobileconfig->document->encoding = $webapp['app_charset'];
+			if ($basename === NULL)
+			{
+				$webapp->response_content_type('application/xml');
+			}
+			else
+			{
+				$webapp->response_content_type('application/x-apple-aspen-config');
+				$webapp->response_content_disposition("{$basename}.mobileconfig");
+			}
 		}
 		else
 		{
@@ -91,7 +99,7 @@ class webapp_echo_xml extends webapp_implementation
 				'IgnoreManifestScope' => FALSE,
 				//'PayloadDisplayName' => 'WebApp',
 				//以下四个必要固定字段
-				'PayloadUUID' => '00801462-0000-0000-0000-000000000000',
+				'PayloadUUID' => '00142857-0000-0000-0000-000000801462',
 				'PayloadType' => 'com.apple.webClip.managed',
 				'PayloadIdentifier' => 'Ignored',
 				'PayloadVersion' => 1
@@ -215,6 +223,52 @@ class webapp_echo_html extends webapp_implementation
 		$form->captcha('Captcha');
 		$form->fieldset();
 		$form->button('Sign In', 'submit');
+		return $form;
+	}
+	static function form_mobileconfig(array|webapp|webapp_html $context, ?string $authurl = NULL):webapp_form
+	{
+		$form = new webapp_form($context, $authurl);
+		$form->fieldset('Icon / Label');
+		$form->field('Icon', 'file', ['accept' => 'image/*', 'required' => NULL]);
+		$form->field('Label', 'text', ['placeholder' => 'App Name', 'required' => NULL]);
+		
+		$form->fieldset('URL');
+		$form->field('URL', 'url', ['style' => 'width:24rem', 'placeholder' => 'Startup URL', 'required' => NULL]);
+
+		$boolean = ['No', 'Yes'];
+		$format = fn($v, $i) => $i ? boolval($v) : intval($v);
+ 
+		$form->fieldset('Payload Display Name / Full Screen');
+		$form->field('PayloadDisplayName', 'text', ['placeholder' => 'Payload Display Name', 'required' => NULL]);
+		$form->field('FullScreen', 'select', ['options' => $boolean, 'required' => NULL], $format);
+
+		$form->fieldset('Payload Description / Is Removable');
+		$form->field('PayloadDescription', 'text', ['placeholder' => 'Payload Description', 'required' => NULL]);
+		$form->field('IsRemovable', 'select', ['options' => $boolean, 'required' => NULL], $format);
+
+		$form->fieldset('Payload Organization / Ignore ManifestScope');
+		$form->field('PayloadOrganization', 'text', ['placeholder' => 'Payload Organization', 'required' => NULL]);
+		$form->field('IgnoreManifestScope', 'select', ['options' => $boolean, 'required' => NULL], $format);
+
+		$form->fieldset('Payload UUID');
+		$form->field('PayloadUUID', 'text', ['style' => 'width:24rem', 'placeholder' => 'AppID', 'pattern' => '[0-f]{8}(-[0-f]{4}){4}[0-f]{8}', 'required' => NULL]);
+		if ($form->echo && $form->webapp)
+		{
+			$uuid = str_split(bin2hex($form->webapp->random(12)), 4);
+			$form->echo([
+				'PayloadDisplayName' => $form->webapp::class,
+				'PayloadDescription' => $form->webapp['copy_webapp'],
+				'PayloadOrganization' => $form->webapp['copy_webapp'],
+				'FullScreen' => 1,
+				'IsRemovable' => 1,
+				'IgnoreManifestScope' => 1,
+				'PayloadUUID' => sprintf('00142857-%s-%s', join('-', array_slice($uuid, 0, 3)), join(array_slice($uuid, 3)))
+			]);
+		}
+
+		$form->fieldset();
+		$form->button('Build Mobile Config', 'submit');
+
 		return $form;
 	}
 }

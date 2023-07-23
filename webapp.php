@@ -828,6 +828,27 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	// {
 	// 	$this->query['cid'] ?? $this->request_header('webapp-cid')
 	// }
+	function request_apple_mobile_config(array $websockets = [], bool $forcedownload = FALSE):?webapp_implementation
+	{
+		if (webapp_echo_html::form_mobileconfig($this)->fetch($data)
+			&& count($icon = $this->request_uploadedfile('Icon'))) {
+			$data['Icon'] = $icon->filename();
+			if ($websockets && count($action = explode(',', $data['URL'], 2)) === 2)
+			{
+				$urls = [$action[0]];
+				foreach ($websockets as $websocket)
+				{
+					$urls[] = "{$websocket}/{$action[1]}";
+				}
+				$data['URL'] = static::build_test_router(TRUE, ...$urls);
+			}
+			return webapp_echo_xml::mobileconfig([
+				'PayloadContent' => [$data],
+				'PayloadUUID' => $data['PayloadUUID']
+			], $this, $forcedownload ? $data['Label'] : NULL);
+		}
+		return NULL;
+	}
 	function request_apple_device_enrollment():array
 	{
 		//Apple device enrollment must use HTTPS protocol request method POST and response status 301
@@ -881,10 +902,14 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		$this->response_header('Content-Type', $mime);
 	}
+	function response_content_disposition(string $basename):void
+	{
+		$this->response_header('Content-Disposition', 'attachment; filename=' . urlencode($basename));
+	}
 	function response_content_download(string $basename):void
 	{
 		$this->response_content_type('application/force-download');
-		$this->response_header('Content-Disposition', 'attachment; filename=' . urlencode($basename));
+		$this->response_content_disposition($basename);
 	}
 	function response_sendfile(string $filename):bool
 	{
@@ -1113,6 +1138,10 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 	function count():int
 	{
 		return count($this->uploadedfiles);
+	}
+	function filename(int $index = 0):string
+	{
+		return $this->uploadedfiles[$index]['file'];
 	}
 	function column(string $key):array
 	{
