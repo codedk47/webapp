@@ -190,6 +190,7 @@ class base extends webapp
 			$ym = date('ym', $video['mtime']);
 			$video['cover'] = "/{$ym}/{$video['hash']}/cover";
 			$video['playm3u8'] = "/{$ym}/{$video['hash']}/play";
+			$video['comment'] = 0;
 			yield $video;
 		}
 	}
