@@ -177,7 +177,8 @@ class base extends webapp
 				'fid' => $user['fid'],
 				'nickname' => $user['nickname'],
 				'followed_ids' => '',
-				'follower_num' => 0
+				'follower_num' => 0,
+				'like' => 0
 			];
 		}
 	}
@@ -218,7 +219,7 @@ class base extends webapp
 			'autoskip' => TRUE
 		];
 	}
-	//获取标签
+	//获取所有标签
 	function fetch_tags():iterable
 	{
 		foreach ($this->mysql->tags('ORDER BY mtime DESC') as $tag)
