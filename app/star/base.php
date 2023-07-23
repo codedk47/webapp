@@ -154,6 +154,7 @@ class base extends webapp
 
 		//var_dump(123);
 	}
+	//创建用户
 	function create_user(array $user):user
 	{
 		return user::create($this, $user);
@@ -162,6 +163,23 @@ class base extends webapp
 	function fetch_origins():array
 	{
 		return [];
+	}
+	//获取所有UP主
+	function fetch_uploaders():iterable
+	{
+		foreach ($this->mysql->users('WHERE uid!=0 ORDER BY mtime DESC') as $user)
+		{
+			yield [
+				'id' => $user['id'],
+				'ctime' => $user['ctime'],
+				'mtime' => $user['mtime'],
+				'fid' => $user['fid'],
+				'nickname' => $user['nickname'],
+				'followed_ids' => 0,
+				'follower_num' => 0,
+
+			];
+		}
 	}
 	//获取所有视频
 	function fetch_videos():iterable

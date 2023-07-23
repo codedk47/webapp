@@ -63,14 +63,18 @@ class user extends ArrayObject
 	{
 		return $this->webapp->mysql->videos('WHERE userid=?s ORDER BY mtime DESC', $this->id)->paging($page, $size);
 	}
-
+	//用户关注UP主
+	function follow_uploader_user(string $id):bool
+	{
+		return FALSE;
+	}
 
 
 	//点赞视频
 	function like_video(string $hash):bool
 	{
 
-		
+		return FALSE;
 	}
 	//购买商品
 	function buy_prod(string $hash):bool
