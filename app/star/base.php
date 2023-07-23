@@ -176,7 +176,7 @@ class base extends webapp
 				'mtime' => $user['mtime'],
 				'fid' => $user['fid'],
 				'nickname' => $user['nickname'],
-				'followed_ids' => 0,
+				'followed_ids' => '2lg7yhjGn_',
 				'follower_num' => 0
 			];
 		}
