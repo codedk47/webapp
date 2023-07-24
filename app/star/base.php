@@ -67,11 +67,9 @@ class base extends webapp
 		]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'style' => 'width:4rem', 'required' => NULL]);
 
-
-
-		$form->fieldset('专题');
-		$subjects = $this->mysql->subjects->column('name', 'hash');
-		$form->field('subjects', 'checkbox', ['options' => $subjects], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'video_tags';
+		// $form->fieldset('专题');
+		// $subjects = $this->mysql->subjects->column('name', 'hash');
+		// $form->field('subjects', 'checkbox', ['options' => $subjects], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'video_tags';
 
 		$form->fieldset('标签');
 		$tags = $this->mysql->tags->column('name', 'hash');
@@ -83,13 +81,16 @@ class base extends webapp
 
 		
 
+		$form->xml['method'] = 'patch';
 		$form->xml['data-bind'] = 'submit';
 		$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		return $form;
 	}
-	function post_video_value(string $signature)
+	function patch_video_value(string $signature = NULL)
 	{
-		$this->form_video()->;
+		$this->form_video()->fetch($video);
+
+		print_r($video);
 
 
 	}
@@ -195,6 +196,7 @@ class base extends webapp
 			$video['cover'] = "/{$ym}/{$video['hash']}/cover";
 			$video['playm3u8'] = "/{$ym}/{$video['hash']}/play";
 			$video['comment'] = 0;
+			$video['share'] = 0;
 			yield $video;
 		}
 	}
