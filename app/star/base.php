@@ -178,6 +178,7 @@ class base extends webapp
 				'nickname' => $user['nickname'],
 				'followed_ids' => '',
 				'follower_num' => 0,
+				'video_num' => 0,
 				'like' => 0
 			];
 		}
