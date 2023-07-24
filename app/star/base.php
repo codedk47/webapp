@@ -89,7 +89,9 @@ class base extends webapp
 	}
 	function post_video_value(string $signature)
 	{
-		
+		$this->form_video()->;
+
+
 	}
 	function rootdir_video(array $video):string
 	{
@@ -176,6 +178,7 @@ class base extends webapp
 				'mtime' => $user['mtime'],
 				'fid' => $user['fid'],
 				'nickname' => $user['nickname'],
+				'descinfo' => 'webcome my zone',
 				'followed_ids' => '',
 				'follower_num' => 0,
 				'video_num' => 0,
