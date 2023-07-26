@@ -514,9 +514,14 @@ class webapp_router_control extends webapp_echo_html
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
-		$form->fieldset();
-		$form->button('提交', 'submit');
+		$form->fieldset('会员到期 / 金币余额 / 绑定UP主后台上传ID（0非UP主）');
+		$form->field('expire', 'date', [], fn($v, $i)=>$i?strtotime($v):date('Y-m-d', $v));
+		$form->field('coin', 'number', ['min' => 0]);
+		$form->field('uid', 'number', ['min' => 0, 'max' => 65535]);
 
+		$form->button('更新', 'submit');
+
+		$form->xml['method'] = 'patch';
 		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
@@ -525,18 +530,26 @@ class webapp_router_control extends webapp_echo_html
 	function get_users(int $page = 1)
 	{
 		$conds = [[]];
+		if ($search = $this->webapp->query['search'] ?? '')
+		{
+			if (strlen($search) === 10 && trim($search, webapp::key) === '')
+			{
+				$conds[0][] = 'id=?s';
+				$conds[] = $search;
+			}
+		}
 
 
-		$conds[0] = sprintf('%sORDER BY time DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY mtime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->users(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
 
 			
-			$table->cell(date('Y-m-d', $value['time']));
+			$table->cell($value['date']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['lasttime']));
 			$table->cell($this->webapp->hexip($value['lastip']));
-			$table->cell()->append('a', [$value['id'], 'href' => '#']);
+			$table->cell()->append('a', [$value['id'], 'href' => "?control/user,id:{$value['id']}"]);
 			$table->cell($value['cid']);
 
 
@@ -567,6 +580,36 @@ class webapp_router_control extends webapp_echo_html
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称', '余额', '会员到期', '金币');
 		$table->header('用户 %d 项', $table->count());
+
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $search,
+			'placeholder' => '用户信息按【Enter】搜索',
+			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
+		]);
+
+	}
+	function get_user(string $id)
+	{
+		if ($this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->fetch($user))
+		{
+			$form = $this->form_user($this->main);
+			$form->xml->fieldset[0] = $this->webapp->signature($user['id'], $user['cid']);
+			$form->echo($user);
+		}
+	}
+
+	function patch_user(string $id)
+	{
+		if ($this->form_user()->fetch($user) && $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update([
+			'mtime' => $this->webapp->time
+		] + $user)) {
+			$this->goto("/users,search:{$id}");
+		}
+		else
+		{
+			$this->dialog('用户信息更新失败');
+		}
 	}
 
 	//========广告========

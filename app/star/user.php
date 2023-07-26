@@ -12,6 +12,10 @@ class user extends ArrayObject
 	{
 		return $this->id ? $this->webapp->signature($this->id, $this['cid']) : '';
 	}
+	function save()
+	{
+
+	}
 	//用户（可选条件）表操作
 	function cond(string ...$conds):webapp_mysql_table
 	{
@@ -151,78 +155,60 @@ class user extends ArrayObject
 	}
 
 
-
-
-
-
-
-	//测试创建上传视频
-	function test_up_video(string $type = 'h'):bool
+	static function create(webapp $webapp, array $user = []):?static
 	{
-		$duration = $this->webapp->random_int(300, 1800);
-		return $this->webapp->mysql->videos->insert([
-			'hash' => $this->webapp->random_hash(FALSE),
-			'userid' => $this->id,
-			'mtime' => $this->webapp->time,
-			'ctime' => $this->webapp->time,
-			'size' => 0,
-			'sync' => 'allow',
-			'type' => $type,
-			'duration' => $duration,
-			'preview' => intval($duration * 0.3) << 16 | 20,
-			'require' => $this->webapp->random_weights([
-				['weight' => 3, 'coin' => -1],
-				['weight' => 1, 'coin' => 0],
-				['weight' => 6, 'coin' => [3, 5, 6, 8, 12][$this->webapp->random_int(0, 4)]]
-			])['coin'],
-			'sales' => 0,
-			'view' => 0,
-			'like' => 0,
-			'name' => $this->webapp->generatetext($this->webapp->random_int(12, 26))
-		]);
-	}
-	static function create(webapp $webapp, array $user = []):static
-	{
-		$id = $webapp->random_time33();
-		return new static($webapp, $user + [
-			'id' => $webapp->time33hash($id, TRUE),
-			'time' => $webapp->time,
-			'lasttime' => $webapp->time,
-			'lastip' => $webapp->iphex($webapp->ip),
-			'device' => 'pc',
-			'balance' => 0,
-			'expire' => $webapp->time,
-			'coin' => 0,
-			'ticket' => 0,
-			'viewtry' => 0,
-			'fid' => ord(random_bytes(1)),
-			'cid' => $webapp->cid,
-			'did' => $webapp->did,
-			'tid' => NULL,
-			'nickname' => $webapp->time33hash($id),
-			'historys' => '',
-			'favorites' => ''
-		]);
-		// $user = [
-		// 	'id' => $webapp->time33hash($id, TRUE),
-		// 	'time' => $webapp->time,
-		// 	'lasttime' => $webapp->time,
-		// 	'lastip' => $webapp->iphex($webapp->ip),
-		// 	'device' => 'pc',
-		// 	'balance' => 0,
-		// 	'expire' => $webapp->time,
-		// 	'coin' => 0,
-		// 	'ticket' => 0,
-		// 	'viewtry' => 0,
-		// 	'fid' => ord(random_bytes(1)),
-		// 	'cid' => $webapp->cid,
-		// 	'did' => $webapp->did,
-		// 	'tid' => NULL,
-		// 	'nickname' => $webapp->time33hash($id),
-		// 	'historys' => '',
-		// 	'favorites' => ''
-		// ];
-		// return new static($webapp, $webapp->mysql->users->insert($user) ? $user : []);
+		$userdata = [];
+		do
+		{
+			if (isset($user['did']) && $webapp->mysql->users('WHERE did=?s LIMIT 1', $user['did'])->fetch($userdata))
+			{
+				break;
+			}
+			if (isset($user['tid']) && $webapp->mysql->users('WHERE tid=?s LIMIT 1', $user['tid'])->fetch($userdata))
+			{
+				break;
+			}
+			$device = $user['device'] ?? $webapp->request_device();
+			$user = [
+				'date' => date('Y-m-d', $webapp->time),
+				'ctime' => $webapp->time,
+				'mtime' => $webapp->time,
+				'lasttime' => $webapp->time,
+				'lastip' => $webapp->iphex($webapp->ip),
+				'device' => match (1) {
+					preg_match('/pad/i', $device) => 'pad',
+					preg_match('/iphone/i', $device) => 'ios',
+					preg_match('/android/i', $device) => 'android',
+					default => 'pc'},
+				'balance' => 0,
+				'expire' => $webapp->time,
+				'coin' => 0,
+				'ticket' => 0,
+				'fid' => ord(random_bytes(1)),
+				'uid' => 0,
+				'cid' => $user['cid'] ?? $webapp->cid,
+				'did' => $user['did'] ?? $webapp->did,
+				'tid' => $user['tid'] ?? NULL,
+				'historys' => '',
+				'favorites' => '',
+				'followed_ids' => '',
+				'follower_num' => 0,
+				'video_num' => 0
+			];
+			do
+			{
+				$id = $webapp->random_time33();
+				$user['id'] = $webapp->time33hash($id, TRUE);
+				$user['nickname'] = $webapp->time33hash($id);
+				if ($webapp->mysql->users->insert($user))
+				{
+					$userdata = $user;
+					break;
+				}
+			} while ($webapp->mysql->errno === 1062);
+
+		} while (FALSE);
+		return new static($webapp, $userdata);
 	}
 	static function from_id(webapp $webapp, string $id):static
 	{

@@ -197,9 +197,9 @@ class base extends webapp
 				'fid' => $user['fid'],
 				'nickname' => $user['nickname'],
 				'descinfo' => 'webcome my zone',
-				'followed_ids' => '',
-				'follower_num' => 0,
-				'video_num' => 0,
+				'followed_ids' => $user['followed_ids'],
+				'follower_num' => $user['follower_num'],
+				'video_num' => $user['video_num'],
 				'like' => 0
 			];
 		}
