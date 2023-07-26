@@ -342,7 +342,7 @@ class webapp_router_control extends webapp_echo_html
 				$value['hash'],
 				date('Y-m-d\\TH:i:s', $value['mtime']),
 				date('Y-m-d\\TH:i:s', $value['ctime'])));
-			$table->cell()->append('button', ['扩展按钮']);
+			$table->cell()->append('button', ['修改信息', 'onclick' => "location.href='?control/video,hash:{$value['hash']}'"]);
 
 			$table->row();
 			$table->cell(sprintf('上传用户：%s， 大小：%s',
@@ -380,11 +380,7 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function get_video(string $hash)
 	{
-		if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
-		{
-			$form = $this->webapp->form_video($this->main);
-			$form->echo($video);
-		}
+		$this->webapp->form_video($this->main, $hash)->xml['action'] .= ',goto:' . $this->webapp->url64_encode('?control/videos');
 	}
 
 

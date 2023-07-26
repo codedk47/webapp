@@ -41,22 +41,25 @@ class base extends webapp
 			$this->authorize($this->request_authorization($type),
 				fn($id) => $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array()));
 	}
-	function form_video(webapp_html $html = NULL):webapp_form
+	function form_video(webapp_html $html = NULL, string $hash = NULL):webapp_form
 	{
-		$form = new webapp_form($html ?? $this, '?video-value');
-
-		if ($form->echo)
-		{
-			//$this->signature()
-		}
-
-
+		$form = new webapp_form($html ?? $this, '?video-value/');
+		
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 
-		$form->fieldset('预览时段');
-		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1]);
-		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1]);
+		$form->fieldset('预览时段 / 下架：-2、会员：-1、免费：0、金币 / 排序');
+		function preview_format($v, $i)
+		{
+			if ($i)
+			{
+				$t = explode(':', $v);
+				return $t[0] * 60 * 60 + $t[1] * 60 + $t[2];
+			}
+			return sprintf('%02d:%02d:%02d', intval($v / 3600), intval(($v % 3600) / 60), $v % 60);
+		}
+		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1], preview_format(...));
+		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1], preview_format(...));
 
 		$form->field('require', 'number', [
 			'value' => 0,
@@ -84,15 +87,29 @@ class base extends webapp
 		$form->xml['method'] = 'patch';
 		$form->xml['data-bind'] = 'submit';
 		$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
+		if ($form->echo && $hash && $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
+		{
+			
+			$form->xml['action'] .= $this->encrypt($video['hash']);
+			$video['preview_start'] = $video['preview'] >> 16 & 0xffff;
+			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
+			$form->echo($video);
+		}
 		return $form;
 	}
-	function patch_video_value(string $signature = NULL)
+	function patch_video_value(string $encrypt, string $goto = NULL)
 	{
-		$this->form_video()->fetch($video);
-
-		print_r($video);
-
-
+		$json = $this->app('webapp_echo_json');
+		if (is_string($hash = $this->decrypt($encrypt))
+			&& $this->form_video()->fetch($video)) {
+			$video['preview'] = $video['preview_end'] > $video['preview_start']
+				? ($video['preview_start'] & 0xffff) << 16 | ($video['preview_end'] - $video['preview_start']) & 0xffff : 10;
+			unset($video['preview_start'], $video['preview_end']);
+			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['ctime' => $this->time] + $video) === 1)
+			{
+				$json->goto($goto ? $this->url64_decode($goto) : NULL);
+			}
+		}
 	}
 	function rootdir_video(array $video):string
 	{
