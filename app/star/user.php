@@ -198,7 +198,8 @@ class user extends ArrayObject
 				'favorites' => '',
 				'followed_ids' => '',
 				'follower_num' => 0,
-				'video_num' => 0
+				'video_num' => 0,
+				'like_num' => 0
 			];
 			do
 			{
