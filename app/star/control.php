@@ -309,11 +309,12 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell(date('Y-m-d\\TH:i:s', $value['lasttime']));
 			$table->cell($this->webapp->hexip($value['lastip']));
 			$table->cell($value['uid']);
+			$table->cell($value['name']);
 			$table->cell()->append('a', ['详细', 'href' => "?control/uploader,uid:{$value['uid']}"]);
 		});
 		$table->paging($this->webapp->at(['page' => '']));
 
-		$table->fieldset('创建时间', '最后登录时间', '最后登录IP', 'UID', '详细');
+		$table->fieldset('创建时间', '最后登录时间', '最后登录IP', 'UID', '名称', '详细');
 		$table->header('上传账号 %d 项', $table->count());
 		$table->bar->append('button', ['添加账号', 'onclick' => 'location.href="?control/uploader"']);
 
@@ -321,10 +322,10 @@ class webapp_router_control extends webapp_echo_html
 	function form_uploader(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
-
-		$form->fieldset('UID / 密码');
+		$form->fieldset('UID / 密码 / 名称');
 		$form->field('uid', 'number', ['min' => 1, 'max' => 65535, 'placeholder' => '账号ID', 'required' => NULL]);
 		$form->field('pwd', 'text', ['placeholder' => '密码最多16位', 'required' => NULL]);
+		$form->field('name', 'text', ['placeholder' => '名称', 'required' => NULL]);
 		$form->button('提交', 'submit');
 		$form->xml['data-bind'] = 'submit';
 		return $form;
@@ -335,6 +336,7 @@ class webapp_router_control extends webapp_echo_html
 		if ($uid && $this->webapp->mysql->uploaders('WHERE uid=?i LIMIT 1', $uid)->fetch($uploader))
 		{
 			$form->xml['method'] = 'patch';
+			$form['uid']['disabled'] = NULL;
 			$form->echo($uploader);
 		}
 	}
@@ -350,6 +352,17 @@ class webapp_router_control extends webapp_echo_html
 			return;
 		}
 		$this->dialog('上传账号添加失败！');
+	}
+	function patch_uploader(int $uid)
+	{
+		$form = $this->form_uploader();
+		unset($form['uid']);
+		if ($form->fetch($uploader)
+			&& $this->webapp->mysql->uploaders('WHERE uid=?i LIMIT 1', $uid)->update($uploader)) {
+			$this->goto("/uploaders,search:{$uid}");
+			return;
+		}
+		$this->dialog('上传账号更新失败！');
 	}
 
 	//========用户========

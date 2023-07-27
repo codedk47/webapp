@@ -51,9 +51,10 @@ class user extends ArrayObject
 	{
 		return $this->id && $this['favorites'] ? str_split($this['favorites'], 12) : [];
 	}
-	//用户收藏视频
-	function favorite_video(string $hash):bool
+	//用户收藏视频 -1取消 0无操作 +1收藏
+	function favorite_video(string $hash):int
 	{
+		return random_int(-1, 1);
 		if (strlen($hash) === 12)
 		{
 			$favorites = $this->favorites();
@@ -73,13 +74,6 @@ class user extends ArrayObject
 		return FALSE;
 	}
 
-
-	//点赞视频
-	function like_video(string $hash):bool
-	{
-
-		return FALSE;
-	}
 	//购买商品
 	function buy_prod(string $hash):bool
 	{
