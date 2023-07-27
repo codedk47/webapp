@@ -53,6 +53,41 @@ function url64_encode(data)
 	return buffer;
 }
 
+function view_video(data, preview)
+{
+	let dialog = document.querySelector('dialog.play');
+	if (!dialog)
+	{
+		dialog = document.createElement('dialog');
+		dialog.className = 'play';
+		const video = document.createElement('webapp-video');
+		video.setAttributeNode(document.createAttribute('autoplay'));
+		video.setAttributeNode(document.createAttribute('controls'));
+		video.mask = true;
+		video.loaded(() => {
+			play.style.width = `${parseInt(video.width * 0.7)}px`;
+			play.style.height = `${parseInt(video.height * 0.7)}px`;
+		});
+		dialog.onclick = event => event.target === dialog && dialog.close();
+		dialog.onclose = () => {try {video.suspend();} catch {}};
+		dialog.appendChild(video);
+		document.body.appendChild(dialog);
+	}
+	const play = dialog.querySelector('webapp-video');
+	play.style.width = '1px';
+	play.style.height = '1px';
+	play.poster(`${resorigin}${data.cover}`).then(blob => {
+		const cover = new Image;
+		cover.src = blob;
+		cover.onload = () => {
+			play.style.width = `${parseInt(cover.width * 0.7)}px`;
+			play.style.height = `${parseInt(cover.height * 0.7)}px`;
+			play.m3u8(`${resorigin}${data.playm3u8}`, preview);
+		};
+	});
+	dialog.showModal();
+}
+
 
 document.addEventListener('DOMContentLoaded', event =>
 {

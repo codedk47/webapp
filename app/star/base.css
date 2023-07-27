@@ -28,3 +28,9 @@ ul.video_tags>li>label:hover:not(.checked){
 ul.video_tags>li>label:active{
 	background: gainsboro;
 }
+dialog.play{
+	padding: 0;
+}
+dialog.play>webapp-video{
+	transition: width .4s, height .4s;
+}

@@ -105,7 +105,7 @@ class base extends webapp
 			$video['preview'] = $video['preview_end'] > $video['preview_start']
 				? ($video['preview_start'] & 0xffff) << 16 | ($video['preview_end'] - $video['preview_start']) & 0xffff : 10;
 			unset($video['preview_start'], $video['preview_end']);
-			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['ctime' => $this->time] + $video) === 1)
+			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['mtime' => $this->time] + $video) === 1)
 			{
 				$json->goto($goto ? $this->url64_decode($goto) : NULL);
 			}

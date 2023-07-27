@@ -472,6 +472,8 @@ class webapp_router_control extends webapp_echo_html
 	//========视频========
 	function get_videos(string $search = NULL, int $page = 1)
 	{
+		$this->script(['src' => '/webapp/res/js/hls.min.js']);
+		$this->script(['src' => '/webapp/res/js/player.js']);
 		$conds = [[]];
 		if (is_string($search))
 		{
@@ -500,14 +502,17 @@ class webapp_router_control extends webapp_echo_html
 			$ym = date('ym', $value['mtime']);
 
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell('封面');
+			$table->cell('封面（预览视频）');
 			$table->cell('信息');
 			$table->cell('操作');
 
 			$table->row();
 			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144'])->append('div', [
-				'style' => 'height:100%;border:black 1px solid;box-shadow: 0 0 .4rem black;',
-				'data-cover' => "/{$ym}/{$value['hash']}/cover"
+				'id' => $value['hash'],
+				'style' => 'height:100%;border:black 1px solid;box-shadow: 0 0 .4rem black;cursor: pointer',
+				'data-cover' => "/{$ym}/{$value['hash']}/cover",
+				'data-playm3u8' => "/{$ym}/{$value['hash']}/play",
+				'onclick' => "view_video(this.dataset, {$value['preview']})"
 			]);
 
 
@@ -518,7 +523,7 @@ class webapp_router_control extends webapp_echo_html
 				$value['hash'],
 				date('Y-m-d\\TH:i:s', $value['mtime']),
 				date('Y-m-d\\TH:i:s', $value['ctime'])));
-			$table->cell()->append('button', ['修改信息', 'onclick' => "location.href='?control/video,hash:{$value['hash']}'"]);
+			$table->cell()->append('button', ['扩展按钮']);
 
 			$table->row();
 			$table->cell(sprintf('上传用户：%s， 大小：%s',
@@ -532,8 +537,12 @@ class webapp_router_control extends webapp_echo_html
 
 
 			$table->row();
-			$table->cell()->append('a', [htmlentities($value['name']), 'href' => "#"]);
-			$table->cell()->append('button', ['扩展按钮']);
+			$table->cell()->append('a', [htmlentities($value['name']),
+				'href' => "javascript:;",
+				'onclick' => "view_video(document.querySelector('div#{$value['hash']}').dataset)"
+			]);
+			$table->cell()->append('button', ['修改信息', 'onclick' => "location.href='?control/video,hash:{$value['hash']}'"]);
+			
 
 
 
@@ -541,7 +550,7 @@ class webapp_router_control extends webapp_echo_html
 		});
 		$table->paging($this->webapp->at(['page' => '']));
 
-		$table->fieldset('封面', '信息', '操作');
+		$table->fieldset('封面（预览视频）', '信息', '操作');
 		$table->header('视频 %d 项', $table->count());
 		unset($table->xml->tbody->tr[0]);
 
