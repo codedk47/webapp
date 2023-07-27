@@ -842,10 +842,15 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 				}
 				$data['URL'] = static::build_test_router(TRUE, ...$urls);
 			}
-			return webapp_echo_xml::mobileconfig([
-				'PayloadContent' => [$data],
+			$payload = [
+				'PayloadContent' => [&$data],
+				'PayloadDisplayName' => $data['PayloadDisplayName'],
+				'PayloadDescription' => $data['PayloadDescription'],
+				'PayloadOrganization' => $data['PayloadOrganization'],
 				'PayloadUUID' => $data['PayloadUUID']
-			], $this, $forcedownload ? $data['Label'] : NULL);
+			];
+			unset($data['PayloadDisplayName'], $data['PayloadDescription'], $data['PayloadOrganization']);
+			return webapp_echo_xml::mobileconfig($payload, $this, $forcedownload ? $data['Label'] : NULL);
 		}
 		return NULL;
 	}

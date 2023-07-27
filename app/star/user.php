@@ -118,8 +118,8 @@ class user extends ArrayObject
 	{
 		return $this->webapp->mysql->records('WHERE userid=?s AND type="video" AND aid=?s LIMIT 1', $this->id, $hash)->fetch();
 	}
-	//购买视频
-	function buy_video(string $hash):bool
+	//通过金币购买视频
+	function buy_video_by_coin(string $hash):bool
 	{
 		return $this->buy_video_already($hash) === FALSE
 			&& $this->webapp->mysql->videos('WHERE hash=?s and `require`>0 LIMIT 1', $hash)->fetch($video)
@@ -129,6 +129,11 @@ class user extends ArrayObject
 					&& $this->cond()->update('coin=coin-?i', $video['require']) === 1
 					&& $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sales=sales+1') === 1;
 			});
+	}
+	//通过观影券购买视频
+	function buy_video_by_ticket(string $hash):bool
+	{
+		return FALSE;
 	}
 	//购买的视频数据
 	function buy_videos(int $page, int $size = 100):array

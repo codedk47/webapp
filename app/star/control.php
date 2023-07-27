@@ -16,12 +16,14 @@ class webapp_router_control extends webapp_echo_html
 			$this->script(['src' => '/webapp/res/js/loader.js']);
 			$this->script(['src' => '/webapp/app/star/control.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
 			$this->nav([
-				['标签管理', '?control/tags'],
-				['专题管理', '?control/subjects'],
-				['视频管理', '?control/videos'],
-				['产品管理', '?control/prods'],
-				['用户管理', '?control/users'],
-				['广告管理', '?control/ads'],
+				['标签 & 分类', '?control/tags'],
+				['专题', '?control/subjects'],
+				['上传账号', '?control/uploaders'],
+
+				['视频', '?control/videos'],
+				['产品', '?control/prods'],
+				['用户', '?control/users'],
+				['广告', '?control/ads'],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -124,7 +126,7 @@ class webapp_router_control extends webapp_echo_html
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->fieldset('创建时间', '修改时间', 'HASH', '级别', '排序', '名称');
 		$table->header('标签 %d 项', $table->count());
-		$table->bar->append('button', ['添加标签', 'onclick' => 'location.href="?control/tag"']);
+		$table->bar->append('button', ['添加标签或分类', 'onclick' => 'location.href="?control/tag"']);
 
 		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
 			->select(['' => '全部标签'] + $tag_types)
@@ -291,6 +293,62 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$this->dialog('专题修改失败！');
 		}
+	}
+
+	//========上传========
+	function get_uploaders(string $search = NULL, int $page = 1)
+	{
+		$conds = [[]];
+
+		$conds[0] = sprintf('%sORDER BY lasttime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$table = $this->main->table($this->webapp->mysql->uploaders(...$conds)->paging($page), function($table, $value)
+		{
+			$table->row();
+			$table->cell($value['date']);
+			$table->cell(date('Y-m-d\\TH:i:s', $value['lasttime']));
+			$table->cell($this->webapp->hexip($value['lastip']));
+			$table->cell($value['uid']);
+			$table->cell()->append('a', ['详细', 'href' => "?control/uploader,uid:{$value['uid']}"]);
+		});
+		$table->paging($this->webapp->at(['page' => '']));
+
+		$table->fieldset('创建时间', '最后登录时间', '最后登录IP', 'UID', '详细');
+		$table->header('上传账号 %d 项', $table->count());
+		$table->bar->append('button', ['添加账号', 'onclick' => 'location.href="?control/uploader"']);
+
+	}
+	function form_uploader(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+
+		$form->fieldset('UID / 密码');
+		$form->field('uid', 'number', ['min' => 1, 'max' => 65535, 'placeholder' => '账号ID', 'required' => NULL]);
+		$form->field('pwd', 'text', ['placeholder' => '密码最多16位', 'required' => NULL]);
+		$form->button('提交', 'submit');
+		$form->xml['data-bind'] = 'submit';
+		return $form;
+	}
+	function get_uploader(int $uid = 0)
+	{
+		$form = $this->form_uploader($this->main);
+		if ($uid && $this->webapp->mysql->uploaders('WHERE uid=?i LIMIT 1', $uid)->fetch($uploader))
+		{
+			$form->xml['method'] = 'patch';
+			$form->echo($uploader);
+		}
+	}
+	function post_uploader()
+	{
+		if ($this->form_uploader()->fetch($uploader)
+			&& $this->webapp->mysql->uploaders->insert([
+				'date' => date('Y-m-d', $this->webapp->time),
+				'lasttime' => $this->webapp->time,
+				'lastip' => $this->webapp->iphex('0.0.0.0')
+			] + $uploader)) {
+			$this->goto("/uploaders,search:{$uploader['uid']}");
+			return;
+		}
+		$this->dialog('上传账号添加失败！');
 	}
 
 	//========视频========
