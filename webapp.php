@@ -801,18 +801,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function request_uploaddata(string $filename):int
 	{
-		$length = -1;
-		if (is_string($data = $this->request_maskdata()) && is_resource($stream = fopen($filename, 'a')))
-		{
-			if (flock($stream, LOCK_EX))
-			{
-				
-				fwrite($stream, $data);
-				$length = ftell($stream);
-			}
-			fclose($stream);
-		}
-		return $length;
+		return is_string($data = $this->request_maskdata())
+			&& is_resource($stream = fopen($filename, 'a'))
+			&& flock($stream, LOCK_EX)
+			&& fwrite($stream, $data) === strlen($data)
+			// && flock($stream, LOCK_UN)
+			&& fclose($stream) ? strlen($data) : -1;
 	}
 	function response_uploading(string $uploadurl, int $offset = 0):void
 	{

@@ -59,7 +59,7 @@ addEventListener('DOMContentLoaded', async event =>
 		async draw(resource)
 		{
 			this.#observes.clear(Array.from(this.#observes.keys()).forEach(element => this.#viewport.unobserve(element)));
-			return loader(resource, {headers}).then(blob => this.load(blob)).then(frame =>
+			return loader(this.#frame.dataset.load = resource, {headers}).then(blob => this.load(blob)).then(frame =>
 			{
 				const document = frame.contentDocument;
 				document.onclick = event =>

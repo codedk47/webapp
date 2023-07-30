@@ -14,7 +14,7 @@ class webapp_router_control extends webapp_echo_html
 
 			$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
 			$this->script(['src' => '/webapp/res/js/loader.js']);
-			$this->script(['src' => '/webapp/app/star/control.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
+			$this->script(['src' => '/webapp/app/star/base.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
 			$this->nav([
 				['标签 & 分类', '?control/tags'],
 				['专题', '?control/subjects'],
@@ -214,8 +214,6 @@ class webapp_router_control extends webapp_echo_html
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
-
-		
 
 
 		$form->xml['data-bind'] = 'submit';
@@ -478,90 +476,140 @@ class webapp_router_control extends webapp_echo_html
 		if (is_string($search))
 		{
 			$search = urldecode($search);
-			if (trim($search, webapp::key) === '' && in_array($len = strlen($search), [10, 12], TRUE))
-			{
-				$conds[0][] = $len === 10 ? 'userid=?s' : 'hash=?s';
-				$conds[] = $search;
-			}
-			else
+			if (trim($search, webapp::key))
 			{
 				$conds[0][] = 'name LIKE ?s';
 				$conds[] = "%{$search}%";
 			}
+			else
+			{
+				$conds[0][] = strlen($search) === 4 ? 'FIND_IN_SET(?s,tags)' : 'hash=?s';
+				$conds[] = $search;
+			}
 		}
-		if ($subject = $this->webapp->query['subject'] ?? '')
+		if ($userid = $this->webapp->query['userid'] ?? '')
 		{
-			$conds[0][] = 'FIND_IN_SET(?s,subjects)';
-			$conds[] = $subject;
+			$conds[0][] = 'userid=?s';
+			$conds[] = $userid;
 		}
-
-		
-		$conds[0] = sprintf('%sORDER BY mtime DESC,ctime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value)
+		if ($sync = $this->webapp->query['sync'] ?? '')
+		{
+			$conds[0][] = 'sync=?s';
+			$conds[] = $sync;
+		}
+		if ($type = $this->webapp->query['type'] ?? '')
+		{
+			$conds[0][] = 'type=?s';
+			$conds[] = $type;
+		}
+		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ' . match ($sort = $this->webapp->query['sort'] ?? '')
+		{
+			'view-desc' => '`view` DESC',
+			'like-desc' => '`like` DESC',
+			'sales-desc' => '`sales` DESC',
+			default => '`mtime` DESC'
+		};
+		$tags = $this->webapp->mysql->tags->column('name', 'hash');
+		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
 		{
 			$ym = date('ym', $value['mtime']);
 
-			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell('封面（预览视频）');
-			$table->cell('信息');
-			$table->cell('操作');
+			$table->row()['class'] = 'info';
+			$table->cell()->append('a', ["用户ID：{$value['userid']}", 'href' => "?control/videos,userid:{$value['userid']}"]);
+			$table->cell(['colspan' => 8])->append('a', [sprintf('上传时间：%s，最后修改时间：%s',
+				date('Y-m-d\\TH:i:s', $value['ctime']),
+				date('Y-m-d\\TH:i:s', $value['mtime'])
+			), 'href' => "?control/video,hash:{$value['hash']}"]);
 
 			$table->row();
-			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144'])->append('div', [
-				'id' => $value['hash'],
-				'style' => 'height:100%;border:black 1px solid;box-shadow: 0 0 .4rem black;cursor: pointer',
-				'data-cover' => "/{$ym}/{$value['hash']}/cover",
-				'data-playm3u8' => "/{$ym}/{$value['hash']}/play",
-				'onclick' => "view_video(this.dataset, {$value['preview']})"
-			]);
-
-
-
+			$cover = $table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover']);
 
 			$table->row();
-			$table->cell(sprintf('HASH：%s， 创建时间：%s， 修改时间：%s',
-				$value['hash'],
-				date('Y-m-d\\TH:i:s', $value['mtime']),
-				date('Y-m-d\\TH:i:s', $value['ctime'])));
-			$table->cell()->append('button', ['扩展按钮']);
+			$table->cell('HASH');
+			$table->cell($value['hash']);
+			$table->cell('类型');
+			$table->cell(base::video_type[$value['type']]);
+			$table->cell('时长');
+			$table->cell(base::format_duration($value['duration']));
+			$table->cell('要求');
+			$table->cell(match (intval($value['require']))
+			{
+				-1 => '会员', 0 => '免费',
+				default => "{$value['require']} 金币"
+			});
 
 			$table->row();
-			$table->cell(sprintf('上传用户：%s， 大小：%s',
-				$value['userid'],
-				date('Y-m-d\\TH:i:s', $value['ctime'])));
-			$table->cell()->append('button', ['扩展按钮']);
+			$table->cell('状态');
+			$table->cell(base::video_sync[$value['sync']]);
+			$table->cell('观看');
+			$table->cell(number_format($value['view']));
+			$table->cell('点赞');
+			$table->cell(number_format($value['like']));
+			$table->cell('销量');
+			$table->cell(number_format($value['sales']));
 
 			$table->row();
-			$table->cell('asd');
-			$table->cell()->append('button', ['扩展按钮']);
-
+			$table->cell('标签');
+			$tagnode = $table->cell(['colspan' => 7, 'class' => 'tags'])->append('div');
+			foreach ($value['tags'] ? explode(',', $value['tags']) : [] as $tag)
+			{
+				if (isset($tags[$tag]))
+				{
+					$tagnode->append('a', [$tags[$tag], 'href' => "?control/videos,search:{$tag}"]);
+				}
+			}
 
 			$table->row();
-			$table->cell()->append('a', [htmlentities($value['name']),
-				'href' => "javascript:;",
-				'onclick' => "view_video(document.querySelector('div#{$value['hash']}').dataset)"
-			]);
-			$table->cell()->append('button', ['修改信息', 'onclick' => "location.href='?control/video,hash:{$value['hash']}'"]);
-			
+			$table->cell('名称');
+			$title = $table->cell(['colspan' => 7, 'class' => 'name'])->append('a', [htmlentities($value['name']), 'href' => "javascript:;"]);
 
+			if (in_array($value['sync'], ['finished', 'allow','deny'] ,TRUE))
+			{
+				$cover->append('div', [
+					'id' => "v{$value['hash']}",
+					'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['mtime']}",
+					'data-playm3u8' => "/{$ym}/{$value['hash']}/play",
+					'onclick' => "view_video(this.dataset, {$value['preview']})"
+				]);
+				$title['onclick'] = "view_video(document.querySelector('div#v{$value['hash']}').dataset)";
+			}
+			else
+			{
+				$cover[0] = '等待处理...';
+			}
 
-
-
-		});
+		}, $tags);
 		$table->paging($this->webapp->at(['page' => '']));
-
-		$table->fieldset('封面（预览视频）', '信息', '操作');
+		$table->fieldset('封面（预览视频）', '信息');
 		$table->header('视频 %d 项', $table->count());
 		unset($table->xml->tbody->tr[0]);
 
 		$table->bar->append('input', [
 			'type' => 'search',
+			'value' => $userid,
+			'style' => 'padding:2px;width:8rem',
+			'placeholder' => '用户ID',
+			'onkeydown' => 'event.keyCode==13&&g({userid:this.value||null,page:null})'
+		]);
+		$table->bar->append('input', [
+			'type' => 'search',
 			'value' => $search,
-			'style' => 'width:24rem',
-			'placeholder' => '请输入视频HASH、用户ID、键字按【Enter】进行搜索。',
+			'style' => 'margin-left:.6rem;padding:2px;width:26rem',
+			'placeholder' => '请输入视频HASH、标签HASH、关键字按【Enter】进行搜索。',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
-		//$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
+		$table->bar->select(['' => '全部状态'] + base::video_sync)
+			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($sync);
+		$table->bar->select(['' => '全部类型'] + base::video_type)
+			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($type);
+		$table->bar->select(['' => '默认排序（最后修改）',
+			'view-desc' => '观看（降序）',
+			'like-desc' => '点赞（降序）',
+			'sales-desc' => '销量（降序）'])
+			->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($sort);
 	}
 	function get_video(string $hash)
 	{

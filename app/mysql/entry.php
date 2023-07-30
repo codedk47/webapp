@@ -428,11 +428,26 @@ CSS);
 			$cell->append('span', ' | ');
 			$cell->append('a', ['Ed', 'href' => "?field/{$name},field:{$fieldname}", 'title' => 'Editor']);
 			$cell->append('span', ' | ');
-			$cell->append('a', ['In', 'href' => '#', 'title' => 'Index']);
+			$cell->append('a', ['In',
+				'href' => "?alter/{$name},field:{$fieldname},type:index",
+				'title' => 'Index',
+				'data-bind' => 'click',
+				'data-method' => 'post'
+			]);
 			$cell->append('span', ' | ');
-			$cell->append('a', ['Un', 'href' => '#', 'title' => 'Unique']);
+			$cell->append('a', ['Un',
+				'href' => "?alter/{$name},field:{$fieldname},type:unique",
+				'title' => 'Unique',
+				'data-bind' => 'click',
+				'data-method' => 'post'
+			]);
 			$cell->append('span', ' | ');
-			$cell->append('a', ['Pr', 'href' => '#', 'title' => 'Primary']);
+			$cell->append('a', ['Pr',
+				'href' => "?alter/{$name},field:{$fieldname},type:primary",
+				'title' => 'Primary',
+				'data-bind' => 'click',
+				'data-method' => 'post'
+			]);
 
 			$table->cell($field['Comment']);
 
@@ -496,23 +511,20 @@ CSS);
 
 		$table->xml['style'] = 'margin-bottom:1rem';
 		
-		$table = $this->app->main->table($this->mysql->show('INDEX FROM ?a', $tablename)->result($fields), function(webapp_table $table, array $field)
+		$table = $this->app->main->table($this->mysql->show('INDEX FROM ?a', $tablename)->result($fields), function(webapp_table $table, array $field, string $name)
 		{
 			$table->row();
-
-
-
-
-
-			$table->cell()->append('a', ['Delete', 'href' => '#', 'data-method' => 'delete']);
+			$table->cell()->append('a', ['Delete',
+				'href' => sprintf('?alter/%s,field:%s', $name, $this->url64_encode($field['Column_name'])),
+				'data-bind' => 'click',
+				'data-method' => 'delete',
+				'data-dialog' => 'Drop table cannot undo'
+			]);
 
 			$table->cells(array_values($field));
-		});
-
-
+		}, $name);
 
 		$table->fieldset('Delete', ...$fields);
-		
 	}
 
 
@@ -665,6 +677,27 @@ CSS);
 	}
 	
 
+	function post_alter(string $table, string $field, string $type)
+	{
+		$this->json;
+		if ($this->mysql->real_query(...['ALTER TABLE ?a ADD ' . match ($type)
+		{
+			'index' => 'INDEX(?a)',
+			'unique' => 'UNIQUE(?a)',
+			default => 'PRIMARY KEY(?a)'
+		}, $this->url64_decode($table), $this->url64_decode($field)])) {
+
+			$this->json->goto("?table/{$table}");
+		}
+	}
+	function delete_alter(string $table, string $field)
+	{
+		$this->json;
+		if ($this->mysql->real_query('ALTER TABLE ?a DROP INDEX ?a',
+			$this->url64_decode($table), $this->url64_decode($field))) {
+			$this->json->goto("?table/{$table}");
+		}
+	}
 
 
 

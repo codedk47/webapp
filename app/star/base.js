@@ -7,6 +7,14 @@ function g(p,a)
 			Object.assign(Object.fromEntries(Array.from(location.search.matchAll(/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/g)).map(v=>v.slice(1))),p),
 			a||location.search.replace(/\,.+/,"")]));
 }
+function r(p,a)
+{
+	const url = top.document.querySelector('iframe[importance="high"]').dataset.load;
+	top.framer(((o,q)=>Object.keys(o).reduce((p,k)=>o[k]===null?p:`${p},${k}:${o[k]}`,q))
+		(...typeof(p)==="string"?[{},p]:[
+			Object.assign(Object.fromEntries(Array.from(url.matchAll(/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/g)).map(v=>v.slice(1))),p),
+			a||url.replace(/\,.+/,"")]));
+}
 function urlencode(data)
 {
 	return encodeURIComponent(data).replace(/%20|[\!'\(\)\*\+\/@~]/g, (escape)=> ({
@@ -233,7 +241,7 @@ document.addEventListener('DOMContentLoaded', event =>
 
 	document.querySelectorAll('div[data-cover]').forEach(element =>
 	{
-		loader(`${resorigin}${element.dataset.cover}`, {mask: true}).then(blob =>
+		top.loader(`${resorigin}${element.dataset.cover}`, {mask: true}).then(blob =>
 		{
 			element.style.background = `center / cover no-repeat url(${blob})`;
 		});

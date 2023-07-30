@@ -1,3 +1,27 @@
+tr.info{
+	background-color: var(--webapp-hint);
+}
+td.cover{
+	text-align: center;
+}
+td.cover>div:first-child{
+	height: 100%;
+	border: black 1px solid;
+	box-shadow: 0 0 .4rem black;
+	cursor: pointer;
+}
+td.tags>div:first-child{
+	display: flex;
+	gap: .6rem;
+	width: 50rem;
+	overflow: hidden;
+}
+td.name>a{
+	width: 50rem;
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 ul.video_tags{
 	padding: 0;
 	width: 90rem;

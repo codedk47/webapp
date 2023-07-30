@@ -41,6 +41,14 @@ class base extends webapp
 			$this->authorize($this->request_authorization($type),
 				fn($id) => $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array()));
 	}
+
+	
+	const video_sync = ['waiting' => '等待处理', 'exception' => '处理异常', 'finished' => '审核中', 'allow' => '正常（上架视频）', 'deny' => '拒绝（下架视频）'];
+	const video_type = ['h' => '横版视频', 'v' => '竖版视频'];
+	static function format_duration(int $second):string
+	{
+		return sprintf('%02d:%02d:%02d', intval($second / 3600), intval(($second % 3600) / 60), $second % 60);
+	}
 	function form_video(webapp_html $html = NULL, string $hash = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this, '?video-value/');
@@ -56,7 +64,7 @@ class base extends webapp
 				$t = explode(':', $v);
 				return $t[0] * 60 * 60 + $t[1] * 60 + $t[2];
 			}
-			return sprintf('%02d:%02d:%02d', intval($v / 3600), intval(($v % 3600) / 60), $v % 60);
+			return base::format_duration($v);
 		}
 		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1], preview_format(...));
 		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1], preview_format(...));
@@ -210,7 +218,7 @@ class base extends webapp
 		foreach ($this->mysql->videos('ORDER BY mtime DESC') as $video)
 		{
 			$ym = date('ym', $video['mtime']);
-			$video['cover'] = "/{$ym}/{$video['hash']}/cover";
+			$video['cover'] = "/{$ym}/{$video['hash']}/cover?{$video['mtime']}";
 			$video['playm3u8'] = "/{$ym}/{$video['hash']}/play";
 			$video['comment'] = 0;
 			$video['share'] = 0;
@@ -325,19 +333,45 @@ class base extends webapp
 	//用户上传接口
 	function post_uploading(string $token)
 	{
-		if ($acc = $this->authorize($token, fn($uid, $cid) => [$uid]))
+		do
 		{
-
-			$uploading = $this->request_uploading();
-
-
-
-			$this->response_content_type('@application/json');
-			$this->echo(json_encode(['a' => 1, 'b' => 2], JSON_UNESCAPED_UNICODE));
-
+			if (empty($acc = $this->authorize($token, fn($uid, $cid) => [$uid]))
+				|| empty($uploading = $this->request_uploading())) break;
+			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->fetch($video) === FALSE)
+			{
+				if ($this->mysql->videos->insert($video = [
+					'hash' => $uploading['hash'],
+					'userid' => $acc[0],
+					'ctime' => $this->time,
+					'mtime' => $this->time,
+					'sort' => 0,
+					'size' => $uploading['size'],
+					'tell' => 0,
+					'sync' => 'waiting',
+					'type' => 'h',
+					'duration' => 0,
+					'preview' => 0,
+					'require' => 0,
+					'sales' => 0,
+					'view' => 0,
+					'like' => 0,
+					'tags' => '',
+					'subjects' => '',
+					'name' => $uploading['name']
+				]) === FALSE) break;
+			}
+			$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
 			return 200;
-		}
+		} while (FALSE);
 		return 404;
 	}
-
+	function post_uploaddata(string $hash)
+	{
+		return $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
+			&& $video['tell'] < $video['size']
+			&& (is_dir($vdir = sprintf('%s/%s/%s', $this['rootdir_video'], date('ym', $video['ctime']), $video['hash']))
+				|| mkdir($vdir, recursive: TRUE))
+			&& ($size = $this->request_uploaddata("{$vdir}/data")) !== -1
+			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('tell=tell+?i', $size) === 1 ? 200 : 404;
+	}
 }

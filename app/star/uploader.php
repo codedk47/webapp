@@ -8,8 +8,8 @@ class webapp_router_uploader
 	{
 		$this->userids = $webapp->authorization(function($uid, $pwd)
 		{
-			return $this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->fetch($uploader)
-				&& $uploader['userids'] ? str_split($uploader['userids'], 10) : [];
+			return $this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->fetch()
+				&& count($ids = $this->webapp->mysql->users('WHERE uid=?i', $uid)->column('id')) ? $ids : [];
 		});
 		$this->user = $this->userids
 			? user::from_id($this->webapp, in_array($userid = $webapp->request_cookie('userid'), $this->userids, TRUE)
@@ -17,8 +17,16 @@ class webapp_router_uploader
 	}
 	function __toString():string
 	{
-		return $this->echo instanceof webapp_echo_htmlmask
-			? (string)$this->echo : $this->webapp->maskdata((string)$this->echo);
+		if ($this->echo instanceof webapp_echo_htmlmask)
+		{
+			if ($this->echo->entry === FALSE && $this->user->id === NULL && $this->webapp->method !== 'get_auth')
+			{
+				unset($this->echo->xml->body->div);
+				$this->echo->xml->body->append('h4', ['至少需要绑定一个操作用户，联系客服进行绑定认证。', 'style' => 'margin:1rem']);
+			}
+			return (string)$this->echo;
+		}
+		return $this->webapp->maskdata((string)$this->echo);
 	}
 	function html(string $title = 'Uploader'):webapp_echo_htmlmask
 	{
@@ -28,23 +36,24 @@ class webapp_router_uploader
 			$this->echo->script(['src' => '/webapp/res/js/uploader.js']);
 			$this->echo->script(['src' => '/webapp/app/star/uploader.js']);
 		}
+		else
+		{
+			$this->echo->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
+			$this->echo->script(['src' => '/webapp/app/star/base.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
+		}
 		$this->echo->title($title);
 		if (in_array($this->webapp->method, ['get_home', 'get_auth', 'get_play']) === FALSE)
 		{
-			if ($this->user->id && count($users = $this->webapp->mysql->users('WHERE id IN(?S)', $this->userids)->column('nickname', 'id')))
+			$nav = $this->echo->nav([
+				['用户信息', '?uploader/info'],
+				['视频列表', '?uploader/videos'],
+				//['测试', '?uploader/watch,hash:123', 'target' => 'sandbox'],
+				['注销登录', 'javascript:top.location.reload(localStorage.removeItem("token"));', 'style' => 'color:maroon']
+			]);
+			if ($this->userids && count($users = $this->webapp->mysql->users('WHERE id IN(?S)', $this->userids)->column('nickname', 'id')))
 			{
-				$this->echo->nav([
-					['用户信息', '?uploader/info'],
-					['视频列表', '?uploader/videos'],
-					['上传视频', '?uploader/uploading'],
-					['测试', '?uploader/watch,hash:123', 'target' => 'sandbox'],
-					['注销登录', 'javascript:top.location.reload(localStorage.removeItem("token"));', 'style' => 'color:maroon']
-				])->ul->insert('li', 'first')->setattr(['style' => 'margin-left:1rem'])->select($users)->selected($this->user->id)
+				$nav->ul->insert('li', 'first')->setattr(['style' => 'margin-left:1rem'])->select($users)->selected($this->user->id)
 					->setattr(['onchange' => 'top.location.reload(top.document.cookie=`userid=${this.value}`)']);
-			}
-			else
-			{
-				$this->echo->main->append('h4', '至少需要绑定一个操作用户，联系客服进行绑定认证。');
 			}
 		}
 		return $this->echo;
@@ -59,7 +68,7 @@ class webapp_router_uploader
 	{
 		$frame = $this->html()->xml->body->iframe;
 		$frame['data-authorization'] = '?uploader/auth';
-		$frame['data-load'] = '?uploader/uploading';
+		$frame['data-load'] = '?uploader/videos';
 
 	}
 	function get_auth(string $token = NULL)
@@ -127,20 +136,140 @@ class webapp_router_uploader
 		}
 	}
 
-	function get_videos(int $page = 1)
+	function get_videos(string $search = NULL, int $page = 1)
 	{
 		$html = $this->html();
+		$html->script(['src' => '/webapp/res/js/hls.min.js']);
+		$html->script(['src' => '/webapp/res/js/player.js']);
 		if ($this->user->id === NULL) return 401;
+		$conds = [['userid=?s'], $this->user->id];
+		if (is_string($search))
+		{
+			$search = urldecode($search);
+			if (trim($search, webapp::key))
+			{
+				$conds[0][] = 'name LIKE ?s';
+				$conds[] = "%{$search}%";
+			}
+			else
+			{
+				$conds[0][] = strlen($search) === 4 ? 'FIND_IN_SET(?s,tags)' : 'hash=?s';
+				$conds[] = $search;
+			}
+		}
+		if ($sync = $this->webapp->query['sync'] ?? '')
+		{
+			$conds[0][] = 'sync=?s';
+			$conds[] = $sync;
+		}
+		if ($type = $this->webapp->query['type'] ?? '')
+		{
+			$conds[0][] = 'type=?s';
+			$conds[] = $type;
+		}
+		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ' . match ($sort = $this->webapp->query['sort'] ?? '')
+		{
+			'view-desc' => '`view` DESC',
+			'like-desc' => '`like` DESC',
+			'sales-desc' => '`sales` DESC',
+			default => '`mtime` DESC'
+		};
+		$tags = $this->webapp->mysql->tags->column('name', 'hash');
+		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
+		{
+			$ym = date('ym', $value['mtime']);
 
-		$this->user->videos($page);
+			$table->row()['class'] = 'info';
+			$table->cell('封面（预览视频）');
+			$table->cell(['colspan' => 8])->append('a', ['信息（点击修改下面信息）', 'href' => "?uploader/video,hash:{$value['hash']}"]);
 
+			$table->row();
+			$cover = $table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover']);
 
-		$table = $html->main->table();
-		$table->fieldset('封面', '信息');
-		$table->header('视频列表');
-		//$table->bar->append('button', '上传视频')[''];
+			$table->row();
+			$table->cell('HASH');
+			$table->cell($value['hash']);
+			$table->cell('类型');
+			$table->cell(base::video_type[$value['type']]);
+			$table->cell('时长');
+			$table->cell(base::format_duration($value['duration']));
+			$table->cell('要求');
+			$table->cell(match (intval($value['require']))
+			{
+				-1 => '会员', 0 => '免费',
+				default => "{$value['require']} 金币"
+			});
 
+			$table->row();
+			$table->cell('状态');
+			$table->cell(base::video_sync[$value['sync']]);
+			$table->cell('观看');
+			$table->cell(number_format($value['view']));
+			$table->cell('点赞');
+			$table->cell(number_format($value['like']));
+			$table->cell('销量');
+			$table->cell(number_format($value['sales']));
 
+			$table->row();
+			$table->cell('标签');
+			$tagnode = $table->cell(['colspan' => 7, 'class' => 'tags'])->append('div');
+			foreach ($value['tags'] ? explode(',', $value['tags']) : [] as $tag)
+			{
+				if (isset($tags[$tag]))
+				{
+					$tagnode->append('a', [$tags[$tag], 'href' => "?uploader/videos,search:{$tag}"]);
+				}
+			}
+
+			$table->row();
+			$table->cell('名称');
+			$title = $table->cell(['colspan' => 7, 'class' => 'name'])->append('a', [htmlentities($value['name']), 'href' => "javascript:;"]);
+
+			if (in_array($value['sync'], ['finished', 'allow','deny'] ,TRUE))
+			{
+				$cover->append('div', [
+					'id' => "v{$value['hash']}",
+					'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['mtime']}",
+					'data-playm3u8' => "/{$ym}/{$value['hash']}/play",
+					'onclick' => "view_video(this.dataset, {$value['preview']})"
+				]);
+				$title['onclick'] = "view_video(document.querySelector('div#v{$value['hash']}').dataset)";
+			}
+			else
+			{
+				$cover[0] = '等待处理...';
+			}
+
+		}, $tags);
+		$table->paging($this->webapp->at(['page' => '']));
+		$table->fieldset('封面（预览视频）', '信息');
+		$table->header('视频 %d 项', $table->count());
+		unset($table->xml->tbody->tr[0]);
+		$table->bar->append('button', ['上传视频', 'onclick' => 'top.framer("?uploader/uploading")']);
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $search,
+			'style' => 'margin-left:.6rem;padding:2px;width:26rem',
+			'placeholder' => '请输入视频HASH、标签HASH、关键字按【Enter】进行搜索。',
+			'onkeydown' => 'event.keyCode==13&&r({search:this.value?urlencode(this.value):null,page:null})'
+		]);
+		$table->bar->select(['' => '全部状态'] + base::video_sync)
+			->setattr(['onchange' => 'r({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($sync);
+		$table->bar->select(['' => '全部类型'] + base::video_type)
+			->setattr(['onchange' => 'r({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($type);
+		$table->bar->select(['' => '默认排序（最后修改）',
+			'view-desc' => '观看（降序）',
+			'like-desc' => '点赞（降序）',
+			'sales-desc' => '销量（降序）'])
+			->setattr(['onchange' => 'r({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($sort);
+	}
+	function get_video(string $hash)
+	{
+		$form = $this->webapp->form_video($this->html()->main, $hash);
+		unset($form['sort']);
 
 	}
 	
