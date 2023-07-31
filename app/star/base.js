@@ -96,6 +96,72 @@ function view_video(data, preview)
 	dialog.showModal();
 }
 
+function video_value(form)
+{
+	const formdata = new FormData(form), data = Object.fromEntries(formdata);
+	data.tags = formdata.getAll('tags[]');
+	delete data['tags[]'];
+	const raw = JSON.stringify(data), buffer = [];
+	let hash = 5381n;
+	for (let unicode of raw)
+	{
+		const value = unicode.codePointAt(0);
+		value < 128
+			? buffer[buffer.length] = value
+			: buffer.push(...(value < 2048
+				? [value >> 6 | 192, value & 63 | 128]
+				: [value >> 12 | 224, value >> 6 & 63 | 128, value & 63 | 128]));
+
+		hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value);
+	}
+	const key = hash.toString(16).padStart(16, 0);
+	hash = key.match(/.{2}/g).map(value => parseInt(value, 16));
+	fetch (form.action, {
+		method: 'PATCH',
+		headers: {'Mask-Key': key},
+		body: Uint8Array.from(buffer.map((byte, i) => byte ^ hash[i % 8])).buffer
+	}).then(r => r.json()).then(json => {
+		if (json.errors.length)
+		{
+			return alert(json.errors.join('\n'));
+		}
+		if (json.hasOwnProperty('goto'))
+		{
+			if (top.window === self.window)
+			{
+				typeof json.goto === 'string' ? location.assign(json.goto) : location.reload();
+			}
+			else
+			{
+				typeof json.goto === 'string' ? top.framer(json.goto) : top.location.reload();
+			}
+		}
+	});
+	return false;
+}
+function video_cover(input)
+{
+	if (input.files.length < 1) return alert('请选择一个封面图片！');
+	if (input.disabled) return;
+	input.disabled = true;
+	const reader = new FileReader;
+	reader.onload = event =>
+	{
+		const
+		buffer = new Uint8Array(event.target.result),
+		key = input.dataset.key.match(/.{2}/g).map(value => parseInt(value, 16));
+		top.fetch(input.dataset.uploadurl, {
+			method: 'PATCH',
+			headers: {'Mask-Key': input.dataset.key},
+			body: buffer.map((byte, i) => byte ^ key[i % 8])
+		}).then(r => r.json()).then(json =>
+		{
+			alert(json.dialog);
+			input.disabled = false;
+		})
+	};
+	reader.readAsArrayBuffer(input.files[0]);
+}
 
 document.addEventListener('DOMContentLoaded', event =>
 {

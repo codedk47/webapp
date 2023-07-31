@@ -269,6 +269,7 @@ class webapp_router_uploader
 	function get_video(string $hash)
 	{
 		$form = $this->webapp->form_video($this->html()->main, $hash);
+		$form->xml['action'] .= ',goto:' . $this->webapp->url64_encode('?uploader/videos');
 		unset($form['sort']);
 
 	}

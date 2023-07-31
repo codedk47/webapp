@@ -49,10 +49,15 @@ class base extends webapp
 	{
 		return sprintf('%02d:%02d:%02d', intval($second / 3600), intval(($second % 3600) / 60), $second % 60);
 	}
-	function form_video(webapp_html $html = NULL, string $hash = NULL):webapp_form
+	function form_video(webapp_html|array $html = NULL, string $hash = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this, '?video-value/');
 		
+		$form->fieldset->append('div', ['class' => 'cover']);
+
+		$cover = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
+		$form->button('更新封面', 'button', ['onclick' => 'video_cover(this.previousElementSibling)']);
+
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 
@@ -93,14 +98,15 @@ class base extends webapp
 		
 
 		$form->xml['method'] = 'patch';
-		$form->xml['data-bind'] = 'submit';
+		$form->xml['onsubmit'] = 'return video_value(this)';
 		$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		if ($form->echo && $hash && $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
 		{
-			
 			$form->xml['action'] .= $this->encrypt($video['hash']);
 			$video['preview_start'] = $video['preview'] >> 16 & 0xffff;
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
+			$cover['data-uploadurl'] = "?video-cover/{$hash}";
+			$cover['data-key'] = bin2hex($this->random(8));
 			$form->echo($video);
 		}
 		return $form;
@@ -109,7 +115,7 @@ class base extends webapp
 	{
 		$json = $this->app('webapp_echo_json');
 		if (is_string($hash = $this->decrypt($encrypt))
-			&& $this->form_video()->fetch($video)) {
+			&& $this->form_video(json_decode($this->request_maskdata() ?? '[]', TRUE))->fetch($video)) {
 			$video['preview'] = $video['preview_end'] > $video['preview_start']
 				? ($video['preview_start'] & 0xffff) << 16 | ($video['preview_end'] - $video['preview_start']) & 0xffff : 10;
 			unset($video['preview_start'], $video['preview_end']);
@@ -118,6 +124,19 @@ class base extends webapp
 				$json->goto($goto ? $this->url64_decode($goto) : NULL);
 			}
 		}
+	}
+	function patch_video_cover(string $hash)
+	{
+		$json = $this->app('webapp_echo_json');
+		if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
+			&& is_dir(sprintf("{$this['rootdir_video']}/%s/{$hash}", $ym = date('ym', $video['ctime'])))
+			&& is_string($binary = $this->request_maskdata())
+			&& file_put_contents("{$this['rootdir_video']}/{$ym}/{$hash}/cover.sb", $binary) !== FALSE
+			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['cover' => $this->time]) === 1) {
+			$json['dialog'] = '修改完成，后台将在10分钟左右同步缓存数据！';
+			return 200;
+		}
+		$json['dialog'] = '修改失败！';
 	}
 	function rootdir_video(array $video):string
 	{
@@ -344,6 +363,7 @@ class base extends webapp
 					'userid' => $acc[0],
 					'ctime' => $this->time,
 					'mtime' => $this->time,
+					'cover' => 0,
 					'sort' => 0,
 					'size' => $uploading['size'],
 					'tell' => 0,
@@ -371,7 +391,7 @@ class base extends webapp
 			&& $video['tell'] < $video['size']
 			&& (is_dir($vdir = sprintf('%s/%s/%s', $this['rootdir_video'], date('ym', $video['ctime']), $video['hash']))
 				|| mkdir($vdir, recursive: TRUE))
-			&& ($size = $this->request_uploaddata("{$vdir}/data")) !== -1
+			&& ($size = $this->request_uploaddata("{$vdir}/video.sb")) !== -1
 			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('tell=tell+?i', $size) === 1 ? 200 : 404;
 	}
 }
