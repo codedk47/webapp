@@ -563,11 +563,11 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell('名称');
 			$title = $table->cell(['colspan' => 7, 'class' => 'name'])->append('a', [htmlentities($value['name']), 'href' => "javascript:;"]);
 
-			if (in_array($value['sync'], ['finished', 'allow','deny'] ,TRUE))
+			if (in_array($value['sync'], ['finished', 'allow', 'deny'] ,TRUE))
 			{
 				$cover->append('div', [
 					'id' => "v{$value['hash']}",
-					'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['mtime']}",
+					'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['ctime']}",
 					'data-playm3u8' => "/{$ym}/{$value['hash']}/play",
 					'onclick' => "view_video(this.dataset, {$value['preview']})"
 				]);
