@@ -77,7 +77,6 @@ customElements.define('webapp-video', class extends HTMLElement
 				const pp = this.querySelector('div.pp');
 				if (pp)
 				{
-					this.#video.loop = true;
 					pp.style.visibility = this.#video.paused ? 'visible' : 'hidden';
 				}
 			}
