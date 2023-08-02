@@ -60,10 +60,10 @@ class base extends webapp
 		if ($form->echo && $hash && $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
 		{
 			$form->xml['action'] .= $this->encrypt($video['hash']);
-			$ym = date('ym', $video['ctime']);
+			$ym = date('ym', $video['mtime']);
 			if ($video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE))
 			{
-				$cover['data-cover'] = "/{$ym}/{$video['hash']}/cover?{$video['mtime']}";
+				$cover['data-cover'] = "/{$ym}/{$video['hash']}/cover?{$video['ctime']}";
 			}
 			else
 			{
@@ -81,7 +81,7 @@ class base extends webapp
 	{
 		return sprintf('%s/%s/%s%s',
 			$this[$syncdir ? 'video_syncdir' : 'video_savedir'],
-			date('ym', $video['ctime']),
+			date('ym', $video['mtime']),
 			$video['hash'], $filename);
 	}
 	function copy_file(string $src, string $dst, ):bool
@@ -112,15 +112,28 @@ class base extends webapp
 	{
 		do
 		{
-			if (empty($acc = $this->authorize($token, fn($uid, $cid) => [$uid]))
-				|| empty($uploading = $this->request_uploading())) break;
+			if (empty($acc = $this->authorize($token, fn($uid, $cid) => [$uid])) || empty($uploading = $this->request_uploading())) break;
 			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->fetch($video) === FALSE)
 			{
+				$tags = [];
+				$names = array_map(trim(...), explode('#', $this->simplified_chinese($uploading['name'])));
+				if (count($names) > 1)
+				{
+					$tagdata = $this->mysql->tags->column('name', 'hash');
+					foreach ($names as $index => $name)
+					{
+						if (is_string($taghash = array_search($name, $tagdata, TRUE)))
+						{
+							$index && array_splice($names, $index, 1);
+							$tags[] = $taghash;
+						}
+					}
+				}
 				if ($this->mysql->videos->insert($video = [
 					'hash' => $uploading['hash'],
 					'userid' => $acc[0],
-					'ctime' => $this->time,
 					'mtime' => $this->time,
+					'ctime' => $this->time,
 					'size' => $uploading['size'],
 					'tell' => 0,
 					'cover' => 'finish',
@@ -133,9 +146,9 @@ class base extends webapp
 					'sales' => 0,
 					'view' => 0,
 					'like' => 0,
-					'tags' => '',
+					'tags' => join(',', $tags),
 					'subjects' => '',
-					'name' => $uploading['name']
+					'name' => join('#', $names)
 				]) === FALSE) break;
 			}
 			if (is_dir($savedir = $this->path_video(FALSE, $video)) || mkdir($savedir, recursive: TRUE))
@@ -162,7 +175,7 @@ class base extends webapp
 			$video['preview'] = $video['preview_end'] > $video['preview_start']
 				? ($video['preview_start'] & 0xffff) << 16 | ($video['preview_end'] - $video['preview_start']) & 0xffff : 10;
 			unset($video['preview_start'], $video['preview_end']);
-			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['mtime' => $this->time] + $video) === 1)
+			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['ctime' => $this->time] + $video) === 1)
 			{
 				$json->goto($goto ? $this->url64_decode($goto) : NULL);
 			}
@@ -174,17 +187,17 @@ class base extends webapp
 		if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
 			&& is_string($binary = $this->request_maskdata())
 			&& file_put_contents($this->path_video(FALSE, $video, 'cover.sb'), $binary) !== FALSE
-			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['mtime' => $this->time, 'cover' => 'change']) === 1) {
+			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['cover' => 'change']) === 1) {
 			$json['dialog'] = '修改完成，后台将在10分钟左右同步缓存数据！';
 			return 200;
 		}
 		$json['dialog'] = '修改失败！';
 	}
-	//本地命令行运行封面同步处理
+	//本地命令行运行封面同步处理和广告
 	function get_sync_cover()
 	{
 		if (PHP_SAPI !== 'cli') return 404;
-		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change" ORDER BY mtime ASC') as $cover)
+		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change" ORDER BY sort DESC') as $cover)
 		{
 			echo "{$cover['hash']} - ";
 			if (is_dir($syncdir = $this->path_video(TRUE, $cover)))
@@ -194,10 +207,19 @@ class base extends webapp
 					&& copy("{$savedir}/cover.sb", "{$syncdir}/cover.sb")
 					&& copy("{$savedir}/cover", "{$syncdir}/cover")
 					&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $cover['hash'])->update([
-						'mtime' => $this->time, 'cover' => 'finish']) === 1 ? "OK\n" : "NO\n";
+						'ctime' => $this->time(), 'cover' => 'finish']) === 1 ? "OK\n" : "NO\n";
 				continue;
 			}
 			echo "WAITING\n";
+		}
+		foreach ($this->mysql->ads('WHERE change="sync" ORDER BY weight DESC') as $ad)
+		{
+			echo "{$ad['hash']} - ",
+				is_file($image = "{$this['ad_savedir']}/{$ad['hash']}")
+				&& copy($image, "{$this['ad_syncdir']}/{$ad['hash']}")
+				&& $this->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])->update([
+					'ctime' => $this->time(),
+					'change' => 'none']) === 1 ? "OK\n" : "NO\n";
 		}
 	}
 	//本地命令行运行视频同步处理
@@ -340,13 +362,12 @@ class base extends webapp
 	//获取所有UP主
 	function fetch_uploaders():iterable
 	{
-		foreach ($this->mysql->users('ORDER BY mtime DESC') as $user)
-		//foreach ($this->mysql->users('WHERE uid!=0 ORDER BY mtime DESC') as $user)
+		foreach ($this->mysql->users('WHERE uid!=0 ORDER BY ctime DESC') as $user)
 		{
 			yield [
 				'id' => $user['id'],
-				'ctime' => $user['ctime'],
 				'mtime' => $user['mtime'],
+				'ctime' => $user['ctime'],
 				'fid' => $user['fid'],
 				'nickname' => $user['nickname'],
 				'descinfo' => 'webcome my zone',
@@ -360,10 +381,10 @@ class base extends webapp
 	//获取所有视频
 	function fetch_videos():iterable
 	{
-		foreach ($this->mysql->videos('WHERE sync="allow" ORDER BY mtime DESC') as $video)
+		foreach ($this->mysql->videos('WHERE sync="allow" ORDER BY ctime DESC') as $video)
 		{
 			$ym = date('ym', $video['mtime']);
-			$video['cover'] = "/{$ym}/{$video['hash']}/cover?{$video['mtime']}";
+			$video['cover'] = "/{$ym}/{$video['hash']}/cover?{$video['ctime']}";
 			$video['playm3u8'] = "/{$ym}/{$video['hash']}/play";
 			$video['comment'] = 0;
 			$video['share'] = 0;
@@ -399,7 +420,7 @@ class base extends webapp
 	//获取所有标签
 	function fetch_tags():iterable
 	{
-		foreach ($this->mysql->tags('ORDER BY mtime DESC') as $tag)
+		foreach ($this->mysql->tags('ORDER BY ctime DESC') as $tag)
 		{
 			yield $tag;
 		}

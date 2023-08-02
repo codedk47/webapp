@@ -841,7 +841,8 @@ class webapp_router_control extends webapp_echo_html
 			&& $this->form_ad()->fetch($ad) && $this->webapp->mysql->ads->insert([
 				'hash' => $hash,
 				'mtime' => $this->webapp->time,
-				'ctime' => $this->webapp->time] + $ad)
+				'ctime' => $this->webapp->time,
+				'change' => 'sync'] + $ad)
 			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
 			$this->webapp->response_location('?control/ads');
 		}
@@ -858,7 +859,7 @@ class webapp_router_control extends webapp_echo_html
 			$form->xml->fieldset->append('div', [
 				'class' => 'cover',
 				'style' => 'width:32rem;height:18rem',
-				'data-cover' => "/news/{$ad['hash']}"
+				'data-cover' => "/news/{$ad['hash']}?{$ad['mtime']}"
 			]);
 			$form->echo($ad);
 		}
