@@ -794,8 +794,7 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell('操作');
 
 			$table->row();
-			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144'])->append('div', [
-				'style' => 'height:100%;border:black 1px solid;box-shadow: 0 0 .4rem black;',
+			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])->append('div', [
 				'data-cover' => "/news/{$value['hash']}"
 			]);
 
@@ -843,7 +842,7 @@ class webapp_router_control extends webapp_echo_html
 				'hash' => $hash,
 				'mtime' => $this->webapp->time,
 				'ctime' => $this->webapp->time] + $ad)
-			&& $uploadedfile->maskfile("{$this->webapp['rootdir_ad']}/{$hash}")) {
+			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
 			$this->webapp->response_location('?control/ads');
 		}
 		else
@@ -857,7 +856,8 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$form = $this->form_ad($this->main);
 			$form->xml->fieldset->append('div', [
-				'style' => 'width:32rem;height:18rem;border:black 1px solid',
+				'class' => 'cover',
+				'style' => 'width:32rem;height:18rem',
 				'data-cover' => "/news/{$ad['hash']}"
 			]);
 			$form->echo($ad);

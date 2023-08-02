@@ -174,17 +174,17 @@ class base extends webapp
 		if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
 			&& is_string($binary = $this->request_maskdata())
 			&& file_put_contents($this->path_video(FALSE, $video, 'cover.sb'), $binary) !== FALSE
-			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['cover' => 'change']) === 1) {
+			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['mtime' => $this->time, 'cover' => 'change']) === 1) {
 			$json['dialog'] = '修改完成，后台将在10分钟左右同步缓存数据！';
 			return 200;
 		}
 		$json['dialog'] = '修改失败！';
 	}
-
+	//本地命令行运行封面同步处理
 	function get_sync_cover()
 	{
 		if (PHP_SAPI !== 'cli') return 404;
-		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change" ORDER BY ctime ASC') as $cover)
+		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change" ORDER BY mtime ASC') as $cover)
 		{
 			echo "{$cover['hash']} - ";
 			if (is_dir($syncdir = $this->path_video(TRUE, $cover)))
@@ -203,34 +203,54 @@ class base extends webapp
 	//本地命令行运行视频同步处理
 	function get_sync_video()
 	{
-		//if (PHP_SAPI !== 'cli') return 404;
+		if (PHP_SAPI !== 'cli') return 404;
 		$ffmpeg = static::lib('ffmpeg/interface.php');
 		foreach ($this->mysql->videos('WHERE sync="waiting" AND size<=tell') as $video)
 		{
-			echo "{$video['hash']} - ";
-			$savedir = $this->path_video(FALSE, $video);
-			if (is_file($sourcevideo = "{$savedir}/video.sb") === FALSE)
+			$error = 'UNKNOWN';
+			do
 			{
-				echo "NOT FOUND\n";
-				continue;
-			}
-			$cut = $ffmpeg($sourcevideo);
-			if ($cut->m3u8($savedir) === FALSE)
-			{
-				echo "EXCEPTION ",
-					$this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sync="exception"') === 1 ? "OK\n" : "NO\n";
-				continue;
-			}
-			// $update = [
-			// 	'sync' => 'finished',
-			// 	'duration' => $cut->duration
-			// ];
-
-			// print_r($cut);
-
-	
+				$savedir = $this->path_video(FALSE, $video);
+				if (is_file($sourcevideo = "{$savedir}/video.sb") === FALSE)
+				{
+					$error = 'NOT FOUND';
+					break;
+				}
+				$slice = $ffmpeg($sourcevideo);
+				if (($slice->m3u8($savedir) && $this->maskfile("{$savedir}/play.m3u8", "{$savedir}/play")) === FALSE)
+				{
+					$error = 'SLICE ENCRYPT';
+					break;
+				}
+				if ((is_file("{$savedir}/cover.sb") || $slice->jpeg("{$savedir}/cover.sb")) === FALSE)
+				{
+					$error = 'MAKE COVER';
+					break;
+				}
+				if ($this->maskfile("{$savedir}/cover.sb", "{$savedir}/cover") === FALSE)
+				{
+					$error = 'COVER ENCRYPT';
+					break;
+				}
+				$syncdir = $this->path_video(TRUE, $video);
+				if ((is_string($success = exec("xcopy \"{$savedir}/*\" \"{$syncdir}/\" /E /C /I /F /Y", $output, $code)) && $code === 0) === FALSE)
+				{
+					$error = 'SYNC COPY';
+					break;
+				}
+				if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update([
+					'cover' => 'finish',
+					'sync' => 'finished',
+					'duration' => $duration = (int)$slice->duration,
+					'preview' => $video['preview'] ? $video['preview'] : (intval($duration * 0.6) << 16 | 10)
+				]) === 1) {
+					printf("%s -> FINISHED -> %s\n", $video['hash'], strtoupper($success));
+					continue 2;
+				}
+			} while (FALSE);
+			echo "{$video['hash']} -> EXCEPTION -> {$error} ->",
+				$this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sync="exception"') === 1 ? "OK\n" : "NO\n";
 		}
-		//var_dump(123);
 	}
 	//本地命令行运行专题获取更新
 	function get_subject_fetch()
