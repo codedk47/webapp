@@ -4,9 +4,17 @@ tr.info{
 td.cover{
 	text-align: center;
 }
-td.cover>div:first-child{
-	height: 100%;
+td.cover>div[data-cover],div.cover{
 	border: black 1px solid;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: cover;
+	display: flex;
+	justify-content: center;
+	align-items: center;  
+}
+td.cover>div[data-cover]{
+	height: 100%;
 	box-shadow: 0 0 .4rem black;
 	cursor: pointer;
 }
@@ -21,9 +29,6 @@ td.name>a{
 	display: block;
 	overflow: hidden;
 	text-overflow: ellipsis;
-}
-div.cover{
-	
 }
 ul.video_tags{
 	padding: 0;

@@ -162,7 +162,14 @@ function video_cover(input)
 	};
 	reader.readAsArrayBuffer(input.files[0]);
 }
-
+function cover_preview(cover, preview)
+{
+	if (cover.files.length)
+	{
+		preview.style.backgroundImage = `url(${URL.createObjectURL(cover.files[0])})`;
+		preview.textContent = '';
+	}
+}
 document.addEventListener('DOMContentLoaded', event =>
 {
 	async function dialog(context, resolve, reject)
@@ -309,7 +316,7 @@ document.addEventListener('DOMContentLoaded', event =>
 	{
 		top.loader(`${resorigin}${element.dataset.cover}`, {mask: true}).then(blob =>
 		{
-			element.style.background = `center / cover no-repeat url(${blob})`;
+			element.style.backgroundImage = `url(${blob})`;
 		});
 	});
 

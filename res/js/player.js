@@ -372,7 +372,8 @@ customElements.define('webapp-videos', class extends HTMLElement
 			if (this.#index === index) return;
 
 			this.#slide.childNodes[index].close();
-			this.#slide.childNodes[this.#index].m3u8(this.#slide.childNodes[this.#index].dataset.playm3u8);
+			this.#slide.childNodes[this.#index].m3u8(this.#slide.childNodes[this.#index].dataset.playm3u8,
+				this.#slide.childNodes[this.#index].dataset.preview);
 
 			this.#slide.childNodes[this.#index].querySelector('div.pp').style.visibility =
 				this.#slide.childNodes[this.#index].querySelector('video').paused ? 'visible' : 'hidden';
@@ -437,7 +438,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 			if (this.#slide.childNodes.length)
 			{
 				this.#shift = false;
-				this.#slide.firstChild.m3u8(this.#slide.firstChild.dataset.playm3u8);
+				this.#slide.firstChild.m3u8(this.#slide.firstChild.dataset.playm3u8, this.#slide.firstChild.dataset.preview);
 
 				this.#slide.firstChild.querySelector('div.pp').style.visibility =
 					this.#slide.firstChild.querySelector('video').paused ? 'visible' : 'hidden';

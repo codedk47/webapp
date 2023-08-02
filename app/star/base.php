@@ -2,60 +2,19 @@
 require 'user.php';
 class base extends webapp
 {
-	function ua():string
-	{
-		return $this->request_device();
-	}
-	function ip():string
-	{
-		return $this->request_ip();
-	}
-	function cid():string
-	{
-		return is_string($cid = $this->request_cookie('cid') ?? $this->query['cid'] ?? NULL)
-			&& preg_match('/^\w{4,}/', $cid) ? substr($cid, 0, 4)
-			: (preg_match('/CID\:(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000');
-	}
-	function did():?string
-	{
-		return preg_match('/DID\:(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
-	}
-	function howago(int $mtime):string
-	{
-		$timediff = $this->time - $mtime;
-		return match (TRUE)
-		{
-			$timediff < 60 => '刚刚',
-			$timediff < 600 => '10分钟前',
-			$timediff < 3600 => '1小时前',
-			$timediff < 10800 => '3小时前',
-			$timediff < 21600 => '6小时前',
-			$timediff < 43200 => '12小时前',
-			$timediff < 86400 => '1天前',
-			default => date('Y-m-d', $mtime)
-		};
-	}
-	function user(string $id = '2lg7yhjGn_'):user
-	{
-		return $id ? user::from_id($this, $id) : new user($this,
-			$this->authorize($this->request_authorization($type),
-				fn($id) => $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array()));
-	}
-
-	
 	const video_sync = ['waiting' => '等待处理', 'exception' => '处理异常', 'finished' => '审核中', 'allow' => '正常（上架视频）', 'deny' => '拒绝（下架视频）'];
 	const video_type = ['h' => '横版视频', 'v' => '竖版视频'];
 	static function format_duration(int $second):string
 	{
 		return sprintf('%02d:%02d:%02d', intval($second / 3600), intval(($second % 3600) / 60), $second % 60);
 	}
-	function form_video(webapp_html|array $html = NULL, string $hash = NULL):webapp_form
+	function form_video(webapp_html|array $ctx = NULL, string $hash = NULL):webapp_form
 	{
-		$form = new webapp_form($html ?? $this, '?video-value/');
+		$form = new webapp_form($ctx ?? $this, '?video-value/');
 		
-		$form->fieldset->append('div', ['class' => 'cover']);
+		$cover = $form->fieldset->append('div', ['class' => 'cover', 'style' => 'width:512px;height:288px']);
 
-		$cover = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
+		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*', 'onchange' => 'cover_preview(this, document.querySelector("div.cover"))']);
 		$form->button('更新封面', 'button', ['onclick' => 'video_cover(this.previousElementSibling)']);
 
 		$form->fieldset('影片名称');
@@ -95,21 +54,105 @@ class base extends webapp
 		$form->button('更新视频', 'submit');
 
 
-		
-
 		$form->xml['method'] = 'patch';
 		$form->xml['onsubmit'] = 'return video_value(this)';
 		$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		if ($form->echo && $hash && $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
 		{
 			$form->xml['action'] .= $this->encrypt($video['hash']);
+			$ym = date('ym', $video['ctime']);
+			if ($video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE))
+			{
+				$cover['data-cover'] = "/{$ym}/{$video['hash']}/cover?{$video['mtime']}";
+			}
+			else
+			{
+				$cover->append('div', '等待处理...');
+			}
 			$video['preview_start'] = $video['preview'] >> 16 & 0xffff;
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
-			$cover['data-uploadurl'] = "?video-cover/{$hash}";
-			$cover['data-key'] = bin2hex($this->random(8));
+			$change['data-uploadurl'] = "?video-cover/{$hash}";
+			$change['data-key'] = bin2hex($this->random(8));
 			$form->echo($video);
 		}
 		return $form;
+	}
+	function path_video(bool $syncdir, array $video, string $filename = ''):string
+	{
+		return sprintf('%s/%s/%s%s',
+			$this[$syncdir ? 'video_syncdir' : 'video_savedir'],
+			date('ym', $video['ctime']),
+			$video['hash'], $filename);
+	}
+	function copy_file(string $src, string $dst, ):bool
+	{
+		//copy("{$outdir}/cover.jpg", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover.jpg")
+
+		//这个函数只能在 Windows 平台使用
+		//exec("xcopy \"{$outdir}/*\" \"{$this['app_resdstdir']}/{$day}/{$resource['hash']}/\" /E /C /I /F /Y", $output, $code), ":{$code}\n";
+		return FALSE;
+	}
+	// function howago(int $mtime):string
+	// {
+	// 	$timediff = $this->time - $mtime;
+	// 	return match (TRUE)
+	// 	{
+	// 		$timediff < 60 => '刚刚',
+	// 		$timediff < 600 => '10分钟前',
+	// 		$timediff < 3600 => '1小时前',
+	// 		$timediff < 10800 => '3小时前',
+	// 		$timediff < 21600 => '6小时前',
+	// 		$timediff < 43200 => '12小时前',
+	// 		$timediff < 86400 => '1天前',
+	// 		default => date('Y-m-d', $mtime)
+	// 	};
+	// }
+	//用户上传接口
+	function post_uploading(string $token)
+	{
+		do
+		{
+			if (empty($acc = $this->authorize($token, fn($uid, $cid) => [$uid]))
+				|| empty($uploading = $this->request_uploading())) break;
+			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->fetch($video) === FALSE)
+			{
+				if ($this->mysql->videos->insert($video = [
+					'hash' => $uploading['hash'],
+					'userid' => $acc[0],
+					'ctime' => $this->time,
+					'mtime' => $this->time,
+					'size' => $uploading['size'],
+					'tell' => 0,
+					'cover' => 'finish',
+					'sync' => 'waiting',
+					'type' => 'h',
+					'sort' => 0,
+					'duration' => 0,
+					'preview' => 0,
+					'require' => 0,
+					'sales' => 0,
+					'view' => 0,
+					'like' => 0,
+					'tags' => '',
+					'subjects' => '',
+					'name' => $uploading['name']
+				]) === FALSE) break;
+			}
+			if (is_dir($savedir = $this->path_video(FALSE, $video)) || mkdir($savedir, recursive: TRUE))
+			{
+				$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
+				return 200;
+			}
+			$this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->delete();
+		} while (FALSE);
+		return 404;
+	}
+	function post_uploaddata(string $hash)
+	{
+		return $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
+			&& $video['tell'] < $video['size']
+			&& ($size = $this->request_uploaddata($this->path_video(FALSE, $video, 'video.sb'))) !== -1
+			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('tell=tell+?i', $size) === 1 ? 200 : 404;
 	}
 	function patch_video_value(string $encrypt, string $goto = NULL)
 	{
@@ -129,18 +172,65 @@ class base extends webapp
 	{
 		$json = $this->app('webapp_echo_json');
 		if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
-			&& is_dir(sprintf("{$this['rootdir_video']}/%s/{$hash}", $ym = date('ym', $video['ctime'])))
 			&& is_string($binary = $this->request_maskdata())
-			&& file_put_contents("{$this['rootdir_video']}/{$ym}/{$hash}/cover.sb", $binary) !== FALSE
-			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['cover' => $this->time]) === 1) {
+			&& file_put_contents($this->path_video(FALSE, $video, 'cover.sb'), $binary) !== FALSE
+			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['cover' => 'change']) === 1) {
 			$json['dialog'] = '修改完成，后台将在10分钟左右同步缓存数据！';
 			return 200;
 		}
 		$json['dialog'] = '修改失败！';
 	}
-	function rootdir_video(array $video):string
+
+	function get_sync_cover()
 	{
-		return sprintf('%s/%s/%s', $this['rootdir_video'], date('ym', $video['mtime']), $video['hash']);
+		if (PHP_SAPI !== 'cli') return 404;
+		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change" ORDER BY ctime ASC') as $cover)
+		{
+			echo "{$cover['hash']} - ";
+			if (is_dir($syncdir = $this->path_video(TRUE, $cover)))
+			{
+				$savedir = $this->path_video(FALSE, $cover);
+				echo $this->maskfile("{$savedir}/cover.sb", "{$savedir}/cover")
+					&& copy("{$savedir}/cover.sb", "{$syncdir}/cover.sb")
+					&& copy("{$savedir}/cover", "{$syncdir}/cover")
+					&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $cover['hash'])->update([
+						'mtime' => $this->time, 'cover' => 'finish']) === 1 ? "OK\n" : "NO\n";
+				continue;
+			}
+			echo "WAITING\n";
+		}
+	}
+	//本地命令行运行视频同步处理
+	function get_sync_video()
+	{
+		//if (PHP_SAPI !== 'cli') return 404;
+		$ffmpeg = static::lib('ffmpeg/interface.php');
+		foreach ($this->mysql->videos('WHERE sync="waiting" AND size<=tell') as $video)
+		{
+			echo "{$video['hash']} - ";
+			$savedir = $this->path_video(FALSE, $video);
+			if (is_file($sourcevideo = "{$savedir}/video.sb") === FALSE)
+			{
+				echo "NOT FOUND\n";
+				continue;
+			}
+			$cut = $ffmpeg($sourcevideo);
+			if ($cut->m3u8($savedir) === FALSE)
+			{
+				echo "EXCEPTION ",
+					$this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sync="exception"') === 1 ? "OK\n" : "NO\n";
+				continue;
+			}
+			// $update = [
+			// 	'sync' => 'finished',
+			// 	'duration' => $cut->duration
+			// ];
+
+			// print_r($cut);
+
+	
+		}
+		//var_dump(123);
 	}
 	//本地命令行运行专题获取更新
 	function get_subject_fetch()
@@ -186,25 +276,41 @@ class base extends webapp
 			}
 		}
 	}
-	//本地命令行运行视频同步处理
-	function get_sync()
+	//======================以上为内部功能======================
+	//======================以下为扩展功能======================
+	function ua():string
 	{
-		//if (PHP_SAPI !== 'cli') return 404;
-		foreach ($this->mysql->videos('WHERE sync="allow"') as $video)
-		{
-
-			$rootdir_video = $this->rootdir_video($video);
-			echo $rootdir_video,"\n";
-
-		}
-
-
-		//var_dump(123);
+		return $this->request_device();
+	}
+	function ip():string
+	{
+		return $this->request_ip();
+	}
+	function cid():string
+	{
+		return is_string($cid = $this->request_cookie('cid') ?? $this->query['cid'] ?? NULL)
+			&& preg_match('/^\w{4,}/', $cid) ? substr($cid, 0, 4)
+			: (preg_match('/CID\:(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000');
+	}
+	function did():?string
+	{
+		return preg_match('/DID\:(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
 	}
 	//创建用户
-	function create_user(array $user):user
+	function user_create(array $user):user
 	{
 		return user::create($this, $user);
+	}
+	//Reids 覆盖此方法获取用户并且缓存
+	function user_fetch(string $id):array
+	{
+		return $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array();
+	}
+	//用户模型
+	function user(string $id = '2lg7yhjGn_'):user
+	{
+		return $id ? user::from_id($this, $id) : new user($this,
+			$this->authorize($this->request_authorization($type), $this->user_fetch(...)));
 	}
 	//获取源
 	function fetch_origins():array
@@ -234,7 +340,7 @@ class base extends webapp
 	//获取所有视频
 	function fetch_videos():iterable
 	{
-		foreach ($this->mysql->videos('ORDER BY mtime DESC') as $video)
+		foreach ($this->mysql->videos('WHERE sync="allow" ORDER BY mtime DESC') as $video)
 		{
 			$ym = date('ym', $video['mtime']);
 			$video['cover'] = "/{$ym}/{$video['hash']}/cover?{$video['mtime']}";
@@ -248,7 +354,7 @@ class base extends webapp
 	function fetch_ads(int $seat):array
 	{
 		$ads = [];
-		foreach ($this->mysql->ads('WHERE seat=?i AND display="show"', $seat) as $ad)
+		foreach ($this->mysql->ads('WHERE display="show" AND seat=?i', $seat) as $ad)
 		{
 			$ads[] = [
 				'hash' => $ad['hash'],
@@ -349,49 +455,5 @@ class base extends webapp
 	// }
 
 
-	//用户上传接口
-	function post_uploading(string $token)
-	{
-		do
-		{
-			if (empty($acc = $this->authorize($token, fn($uid, $cid) => [$uid]))
-				|| empty($uploading = $this->request_uploading())) break;
-			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->fetch($video) === FALSE)
-			{
-				if ($this->mysql->videos->insert($video = [
-					'hash' => $uploading['hash'],
-					'userid' => $acc[0],
-					'ctime' => $this->time,
-					'mtime' => $this->time,
-					'cover' => 0,
-					'sort' => 0,
-					'size' => $uploading['size'],
-					'tell' => 0,
-					'sync' => 'waiting',
-					'type' => 'h',
-					'duration' => 0,
-					'preview' => 0,
-					'require' => 0,
-					'sales' => 0,
-					'view' => 0,
-					'like' => 0,
-					'tags' => '',
-					'subjects' => '',
-					'name' => $uploading['name']
-				]) === FALSE) break;
-			}
-			$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
-			return 200;
-		} while (FALSE);
-		return 404;
-	}
-	function post_uploaddata(string $hash)
-	{
-		return $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
-			&& $video['tell'] < $video['size']
-			&& (is_dir($vdir = sprintf('%s/%s/%s', $this['rootdir_video'], date('ym', $video['ctime']), $video['hash']))
-				|| mkdir($vdir, recursive: TRUE))
-			&& ($size = $this->request_uploaddata("{$vdir}/video.sb")) !== -1
-			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('tell=tell+?i', $size) === 1 ? 200 : 404;
-	}
+
 }
