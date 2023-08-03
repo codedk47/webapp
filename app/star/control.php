@@ -345,12 +345,9 @@ class webapp_router_control extends webapp_echo_html
 
 			});
 			$table->fieldset('创建日期', '最后登录时间', '最后登录IP', 'ID', '昵称', '余额');
-			$table->header("{$uploader['name']}的绑定用户");
+			$table->header("上传账号 %s 绑定了 %s 个用户", $uploader['name'], $table->count());
 			$table->paging($this->webapp->at(['page' => '']));
 			
-
-
-
 			$form = $this->form_uploader($table->bar);
 			unset($form->xml->fieldset[1]->legend);
 			$form->xml['method'] = 'patch';
@@ -360,9 +357,12 @@ class webapp_router_control extends webapp_echo_html
 				'data-method' => 'post',
 				'data-src' => "?control/uploader-bind-create-user,uid:{$uploader['uid']}",
 				'data-dialog' => '{"nickname":"text"}',
-				'data-bind' => 'click'
-
-			]);
+				'data-bind' => 'click']);
+			$form->button('删除该账号', 'button', [
+				'data-method' => 'delete',
+				'data-src' => "?control/uploader,uid:{$uploader['uid']}",
+				'data-dialog' => '删除无法撤销',
+				'data-bind' => 'click']);
 		}
 		else
 		{
@@ -377,7 +377,7 @@ class webapp_router_control extends webapp_echo_html
 				'lasttime' => $this->webapp->time,
 				'lastip' => $this->webapp->iphex('0.0.0.0')
 			] + $uploader)) {
-			$this->goto("/uploader,uid:{$uploader['uid']}");
+			$this->goto("/uploaders,search:{$uploader['uid']}");
 			return;
 		}
 		$this->dialog('上传账号添加失败！');
@@ -388,7 +388,7 @@ class webapp_router_control extends webapp_echo_html
 		unset($form['uid']);
 		if ($form->fetch($uploader)
 			&& $this->webapp->mysql->uploaders('WHERE uid=?i LIMIT 1', $uid)->update($uploader)) {
-			$this->goto("/uploaders,search:{$uid}");
+			$this->goto("/uploader,uid:{$uid}");
 			return;
 		}
 		$this->dialog('上传账号更新失败！');
@@ -399,6 +399,12 @@ class webapp_router_control extends webapp_echo_html
 		$user['uid'] = $uid;
 		user::create($this->webapp, $user);
 		$this->goto();
+	}
+	function delete_uploader(int $uid)
+	{
+		$this->admin
+			&& $this->webapp->mysql->uploaders('WHERE uid=?s LIMIT 1', $uid)->delete()
+			? $this->goto('/uploaders') : $this->dialog('上传账号删除失败或需要超级管理员权限！');
 	}
 
 	//========用户========
