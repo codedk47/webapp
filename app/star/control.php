@@ -328,14 +328,45 @@ class webapp_router_control extends webapp_echo_html
 		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
-	function get_uploader(int $uid = 0)
+	function get_uploader(int $uid = 0, int $page = 1)
 	{
-		$form = $this->form_uploader($this->main);
 		if ($uid && $this->webapp->mysql->uploaders('WHERE uid=?i LIMIT 1', $uid)->fetch($uploader))
 		{
+			$table = $this->main->table($this->webapp->mysql->users('WHERE uid=?i', $uid)->paging($page), function($table, $value)
+			{
+				$table->row();
+				$table->cell($value['date']);
+				$table->cell(date('Y-m-d\\TH:i:s', $value['lasttime']));
+				$table->cell($this->webapp->hexip($value['lastip']));
+				$table->cell($value['id']);
+
+				$table->cell($value['nickname']);
+				$table->cell(number_format($value['balance']));
+
+			});
+			$table->fieldset('创建日期', '最后登录时间', '最后登录IP', 'ID', '昵称', '余额');
+			$table->header("{$uploader['name']}的绑定用户");
+			$table->paging($this->webapp->at(['page' => '']));
+			
+
+
+
+			$form = $this->form_uploader($table->bar);
+			unset($form->xml->fieldset[1]->legend);
 			$form->xml['method'] = 'patch';
 			$form['uid']['disabled'] = NULL;
 			$form->echo($uploader);
+			$form->button('添加用户', 'button', [
+				'data-method' => 'post',
+				'data-src' => "?control/uploader-bind-create-user,uid:{$uploader['uid']}",
+				'data-dialog' => '{"nickname":"text"}',
+				'data-bind' => 'click'
+
+			]);
+		}
+		else
+		{
+			$this->form_uploader($this->main);
 		}
 	}
 	function post_uploader()
@@ -346,7 +377,7 @@ class webapp_router_control extends webapp_echo_html
 				'lasttime' => $this->webapp->time,
 				'lastip' => $this->webapp->iphex('0.0.0.0')
 			] + $uploader)) {
-			$this->goto("/uploaders,search:{$uploader['uid']}");
+			$this->goto("/uploader,uid:{$uploader['uid']}");
 			return;
 		}
 		$this->dialog('上传账号添加失败！');
@@ -361,6 +392,13 @@ class webapp_router_control extends webapp_echo_html
 			return;
 		}
 		$this->dialog('上传账号更新失败！');
+	}
+	function post_uploader_bind_create_user(int $uid)
+	{
+		$user = $this->webapp->request_content();
+		$user['uid'] = $uid;
+		user::create($this->webapp, $user);
+		$this->goto();
 	}
 
 	//========用户========
@@ -456,7 +494,7 @@ class webapp_router_control extends webapp_echo_html
 	function patch_user(string $id)
 	{
 		if ($this->form_user()->fetch($user) && $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update([
-			'mtime' => $this->webapp->time
+			'ctime' => $this->webapp->time
 		] + $user)) {
 			$this->goto("/users,search:{$id}");
 		}
@@ -512,13 +550,13 @@ class webapp_router_control extends webapp_echo_html
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
 		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
 		{
-			$ym = date('ym', $value['mtime']);
+			$ym = date('ym', $value['ctime']);
 
 			$table->row()['class'] = 'info';
 			$table->cell()->append('a', ["用户ID：{$value['userid']}", 'href' => "?control/videos,userid:{$value['userid']}"]);
 			$table->cell(['colspan' => 8])->append('a', [sprintf('上传时间：%s，最后修改时间：%s',
-				date('Y-m-d\\TH:i:s', $value['ctime']),
-				date('Y-m-d\\TH:i:s', $value['mtime'])
+				date('Y-m-d\\TH:i:s', $value['mtime']),
+				date('Y-m-d\\TH:i:s', $value['ctime'])
 			), 'href' => "?control/video,hash:{$value['hash']}"]);
 
 			$table->row();
@@ -859,7 +897,7 @@ class webapp_router_control extends webapp_echo_html
 			$form->xml->fieldset->append('div', [
 				'class' => 'cover',
 				'style' => 'width:32rem;height:18rem',
-				'data-cover' => "/news/{$ad['hash']}?{$ad['mtime']}"
+				'data-cover' => "/news/{$ad['hash']}?{$ad['ctime']}"
 			]);
 			$form->echo($ad);
 		}

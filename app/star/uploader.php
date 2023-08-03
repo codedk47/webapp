@@ -229,7 +229,7 @@ class webapp_router_uploader
 			{
 				$cover->append('div', [
 					'id' => "v{$value['hash']}",
-					'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['mtime']}",
+					'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['ctime']}",
 					'data-playm3u8' => "/{$ym}/{$value['hash']}/play",
 					'onclick' => "view_video(this.dataset, {$value['preview']})"
 				]);

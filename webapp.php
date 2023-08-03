@@ -841,9 +841,9 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 				'PayloadDisplayName' => $data['PayloadDisplayName'],
 				'PayloadDescription' => $data['PayloadDescription'],
 				'PayloadOrganization' => $data['PayloadOrganization'],
-				'PayloadUUID' => $data['PayloadUUID']
+				'PayloadIdentifier' => $data['PayloadIdentifier']
 			];
-			unset($data['PayloadDisplayName'], $data['PayloadDescription'], $data['PayloadOrganization']);
+			unset($data['PayloadDisplayName'], $data['PayloadDescription'], $data['PayloadOrganization'], $data['PayloadIdentifier']);
 			return webapp_echo_xml::mobileconfig($payload, $this, $forcedownload ? $data['Label'] : NULL);
 		}
 		return NULL;

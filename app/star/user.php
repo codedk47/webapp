@@ -168,6 +168,7 @@ class user extends ArrayObject
 				break;
 			}
 			$device = $user['device'] ?? $webapp->request_device();
+			$nickname = $user['nickname'] ?? NULL;
 			$user = [
 				'date' => date('Y-m-d', $webapp->time),
 				'ctime' => $webapp->time,
@@ -184,7 +185,7 @@ class user extends ArrayObject
 				'coin' => 0,
 				'ticket' => 0,
 				'fid' => ord(random_bytes(1)),
-				'uid' => 0,
+				'uid' => $user['uid'] ?? 0,
 				'cid' => $user['cid'] ?? $webapp->cid,
 				'did' => $user['did'] ?? $webapp->did,
 				'tid' => $user['tid'] ?? NULL,
@@ -199,7 +200,7 @@ class user extends ArrayObject
 			{
 				$id = $webapp->random_time33();
 				$user['id'] = $webapp->time33hash($id, TRUE);
-				$user['nickname'] = $webapp->time33hash($id);
+				$user['nickname'] = $nickname ?? $webapp->time33hash($id);
 				if ($webapp->mysql->users->insert($user))
 				{
 					$userdata = $user;

@@ -73,7 +73,7 @@ class webapp_echo_xml extends webapp_implementation
 			//以下四个必要固定字段
 			'PayloadUUID' => '00142857-0000-0000-0000-000000801462',
 			'PayloadType' => 'Configuration',
-			'PayloadIdentifier' => 'WEBAPP.ID',
+			'PayloadIdentifier' => 'WEBAPP.ID',	//唯一相同覆盖
 			'PayloadVersion' => 1
 		];
 		if ($values['PayloadType'] === 'Profile Service')
@@ -250,11 +250,10 @@ class webapp_echo_html extends webapp_implementation
 		$form->field('PayloadOrganization', 'text', ['placeholder' => 'Payload Organization', 'required' => NULL]);
 		$form->field('IgnoreManifestScope', 'select', ['options' => $boolean, 'required' => NULL], $format);
 
-		$form->fieldset('Payload UUID');
-		$form->field('PayloadUUID', 'text', ['style' => 'width:24rem', 'placeholder' => 'AppID', 'pattern' => '[0-f]{8}(-[0-f]{4}){4}[0-f]{8}', 'required' => NULL]);
+		$form->fieldset('Payload Identifier');
+		$form->field('PayloadIdentifier', 'text', ['style' => 'width:24rem', 'placeholder' => 'com.webapp.example', 'pattern' => '\w+(.\w+)+', 'required' => NULL]);
 		if ($form->echo && $form->webapp)
 		{
-			$uuid = str_split(bin2hex($form->webapp->random(12)), 4);
 			$form->echo([
 				'PayloadDisplayName' => $form->webapp::class,
 				'PayloadDescription' => $form->webapp['copy_webapp'],
@@ -262,7 +261,7 @@ class webapp_echo_html extends webapp_implementation
 				'FullScreen' => 1,
 				'IsRemovable' => 1,
 				'IgnoreManifestScope' => 1,
-				'PayloadUUID' => sprintf('00142857-%s-%s', join('-', array_slice($uuid, 0, 3)), join(array_slice($uuid, 3)))
+				'PayloadIdentifier' => sprintf('com.webapp.id%s', bin2hex($form->webapp->random(8)))
 			]);
 		}
 
