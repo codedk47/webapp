@@ -307,6 +307,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 	
 
 	#position;
+	#change;
 	constructor()
 	{
 		super();
@@ -373,6 +374,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 			this.#slide.childNodes[index].close();
 			this.#slide.childNodes[this.#index].m3u8(this.#slide.childNodes[this.#index].dataset.playm3u8,
 				this.#slide.childNodes[this.#index].dataset.preview);
+			this.#change && this.#change(this.#slide.childNodes[this.#index]);
 
 			this.#slide.childNodes[this.#index].querySelector('div.pp').style.visibility =
 				this.#slide.childNodes[this.#index].querySelector('video').paused ? 'visible' : 'hidden';
@@ -407,6 +409,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 					if (index === 0 && this.#index === 0)
 					{
 						video.setAttribute('autoplay', true);
+						this.#change && this.#change(video);
 					}
 					
 					
@@ -421,6 +424,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 					if (this.#callback)
 					{
 						this.#callback.call(video, data);
+						
 					}
 				});
 				
@@ -466,5 +470,9 @@ customElements.define('webapp-videos', class extends HTMLElement
 			this.#slide.appendChild(video);
 			this.#each.call(video, data);
 		}));
+	}
+	change(then)
+	{
+		this.#change = then;
 	}
 });
