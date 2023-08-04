@@ -845,8 +845,8 @@ class webapp_form implements ArrayAccess
 			{
 				$this->fields['captcha_encrypt']['value'] = $this->webapp->captcha_random($this->webapp['captcha_length'], $this->webapp['captcha_expire']);
 				$this->fieldset()->setattr([
-					'style' => "height:{$this->webapp['captcha_params'][1]}px;cursor:pointer;background:url(?captcha/{$this->fields['captcha_encrypt']['value']}) no-repeat center",
-					'onclick' => 'fetch("?captcha").then(r=>r.text()).then(r=>this.style.backgroundImage=`url(?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value=r})`)'
+					'style' => "height:{$this->webapp['captcha_params'][1]}px;cursor:pointer;background:url({$this->webapp->request_origin}/?captcha/{$this->fields['captcha_encrypt']['value']}) no-repeat center",
+					'onclick' => 'fetch(`${top.location.origin}/?captcha`).then(r=>r.text()).then(r=>this.style.backgroundImage=`url(${top.location.origin}/?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value=r})`)'
 				]); 
 				$this->fieldset = $this->captcha;
 			}
