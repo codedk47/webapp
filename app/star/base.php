@@ -174,7 +174,7 @@ class base extends webapp
 	{
 		return $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
 			&& $video['tell'] < $video['size']
-			&& ($size = $this->request_uploaddata($this->path_video(FALSE, $video, 'video.sb'))) !== -1
+			&& ($size = $this->request_uploaddata($this->path_video(FALSE, $video, '/video.sb'))) !== -1
 			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('tell=tell+?i', $size) === 1 ? 200 : 404;
 	}
 	function patch_video_value(string $encrypt, string $goto = NULL)
