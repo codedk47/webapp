@@ -20,7 +20,8 @@ class base extends webapp
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 
-		$form->fieldset('预览时段 / 下架：-2、会员：-1、免费：0、金币 / 排序');
+		$form->fieldset('视频类型 / 预览时段 / 下架：-2、会员：-1、免费：0、金币 / 排序');
+		$form->field('type', 'select', ['options' => base::video_type]);
 		function preview_format($v, $i)
 		{
 			if ($i)
@@ -36,8 +37,8 @@ class base extends webapp
 		$form->field('require', 'number', [
 			'value' => 0,
 			'min' => -2,
-			'style' => 'width:21rem',
-			'placeholder' => '下架：-2、会员：-1、免费：0、金币',
+			'style' => 'width:13rem',
+			'placeholder' => '要求',
 			'required' => NULL
 		]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'style' => 'width:4rem', 'required' => NULL]);

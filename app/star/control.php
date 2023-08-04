@@ -556,7 +556,7 @@ class webapp_router_control extends webapp_echo_html
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
 		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
 		{
-			$ym = date('ym', $value['ctime']);
+			$ym = date('ym', $value['mtime']);
 
 			$table->row()['class'] = 'info';
 			$table->cell()->append('a', ["用户ID：{$value['userid']}", 'href' => "?control/videos,userid:{$value['userid']}"]);
