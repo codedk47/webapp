@@ -222,15 +222,15 @@ class base extends webapp
 			}
 			echo "WAITING\n";
 		}
-		foreach ($this->mysql->ads('WHERE change="sync" ORDER BY weight DESC') as $ad)
-		{
-			echo "{$ad['hash']} - ",
-				is_file($image = "{$this['ad_savedir']}/{$ad['hash']}")
-				&& copy($image, "{$this['ad_syncdir']}/{$ad['hash']}")
-				&& $this->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])->update([
-					'ctime' => $this->time(),
-					'change' => 'none']) === 1 ? "OK\n" : "NO\n";
-		}
+		// foreach ($this->mysql->ads('WHERE change="sync" ORDER BY weight DESC') as $ad)
+		// {
+		// 	echo "{$ad['hash']} - ",
+		// 		is_file($image = "{$this['ad_savedir']}/{$ad['hash']}")
+		// 		&& copy($image, "{$this['ad_syncdir']}/{$ad['hash']}")
+		// 		&& $this->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])->update([
+		// 			'ctime' => $this->time(),
+		// 			'change' => 'none']) === 1 ? "OK\n" : "NO\n";
+		// }
 	}
 	//本地命令行运行视频同步处理
 	function get_sync_video()
