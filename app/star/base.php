@@ -113,7 +113,14 @@ class base extends webapp
 		do
 		{
 			if (empty($acc = $this->authorize($token, fn($uid, $cid) => [$uid])) || empty($uploading = $this->request_uploading())) break;
-			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->fetch($video) === FALSE)
+			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->fetch($video))
+			{
+				if ($video['size'] <= $video['tell'])
+				{
+					break;
+				}
+			}
+			else
 			{
 				$tags = [];
 				$names = array_map(trim(...), explode('#', $this->simplified_chinese($uploading['name'])));
@@ -156,10 +163,6 @@ class base extends webapp
 					}
 					break;
 				}
-			}
-			if ($video['size'] <= $video['tell'])
-			{
-				break;
 			}
 			$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
 			// $this->response_uploading("?test");
