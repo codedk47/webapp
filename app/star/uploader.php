@@ -42,7 +42,7 @@ class webapp_router_uploader
 			$this->echo->script(['src' => '/webapp/app/star/base.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
 		}
 		$this->echo->title($title);
-		if (in_array($this->webapp->method, ['get_home', 'get_auth', 'get_play']) === FALSE)
+		if (in_array($this->webapp->method, ['get_home', 'get_auth', 'get_test']) === FALSE)
 		{
 			$nav = $this->echo->nav([
 				['用户信息', '?uploader/info'],
@@ -112,10 +112,6 @@ class webapp_router_uploader
 			}
 			$this->echo['token'] = $this->webapp->signature($data['username'], $data['password']);
 		} while (FALSE);
-	}
-	function get_watch(string $hash)
-	{
-		$html = $this->html();
 	}
 	function get_info()
 	{
@@ -273,35 +269,23 @@ class webapp_router_uploader
 		unset($form['sort']);
 
 	}
-	
-
 	function get_uploading()
 	{
 		$table = $this->html()->main->table();
-		$table->fieldset('哈希', '大小（字节）', '类型', '名称', '上传进度');
+		$table->fieldset('HASH', '大小（字节）', '类型', '名称', '进度');
 		$table->header('上传视频（上传中请不要切换页面，直到上传完成。）');
+		$table->bar->append('button', ['开始上传',
+			'style' => 'margin-right:.6rem;color:maroon',
+			'onclick' => 'top.uploader.uploading(document.querySelector("main>table.webapp:first-child"))'
+		]);
 		$table->bar->append('input', [
 			'type' => 'file',
-			//'accept' => 'video/mp4',
+			'accept' => 'video/mp4',
 			'data-uploadurl' => "?uploading/{$this->user}",
 			'onchange' => 'top.uploader.uploadlist(this.files,document.querySelector("main>table.webapp:first-child>tbody"))',
 			'multiple' => NULL
 		]);
-		$table->bar->append('button', ['开始上传',
-			'onclick' => 'top.uploader.uploading(document.querySelector("main>table.webapp:first-child"))'
-		]);
-
-		
-
-		// $ctrl = $html->main->append('div')->append('span', ['style' => 'padding:.1rem;border:.1rem solid black;display:inline-block']);
-		// $ctrl->append('input', ['type' => 'file', 'data-uploadurl' => '?uploader/test', 'multiple' => NULL]);
-		// $ctrl->append('button', ['开始上传', 'onclick' => 'top.uploader.uploading(this.previousElementSibling,this)']);
-
-
-
-		//$html->main->append('h4', '单次选择上传尽量保持6个以内文件');
-
-		//$this->
+		$table->footer('建议单次上传保持在1~5个视频，单个视频不得大于2G');
 	}
 
 

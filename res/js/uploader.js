@@ -75,6 +75,7 @@ async function uploader(resource, files, pending = file => null)
 					});
 					resource.offset += i.length;
 				}
+				progress(resource.offset / file.size);
 				//sent += value.length;
 				//progress(file.size, value.length);
 			} while (true);

@@ -129,7 +129,7 @@ class base extends webapp
 						}
 					}
 				}
-				if ($this->mysql->videos->insert($video = [
+				if (($this->mysql->videos->insert($video = [
 					'hash' => $uploading['hash'],
 					'userid' => $acc[0],
 					'mtime' => $this->time,
@@ -149,14 +149,21 @@ class base extends webapp
 					'tags' => join(',', $tags),
 					'subjects' => '',
 					'name' => join('#', $names)
-				]) === FALSE) break;
+				]) && (is_dir($savedir = $this->path_video(FALSE, $video)) || mkdir($savedir, recursive: TRUE))) === FALSE) {
+					if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->delete())
+					{
+						is_dir($savedir) && @rmdir($savedir);
+					}
+					break;
+				}
 			}
-			if (is_dir($savedir = $this->path_video(FALSE, $video)) || mkdir($savedir, recursive: TRUE))
+			if ($video['size'] <= $video['tell'])
 			{
-				$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
-				return 200;
+				break;
 			}
-			$this->mysql->videos('WHERE hash=?s LIMIT 1', $uploading['hash'])->delete();
+			$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
+			// $this->response_uploading("?test");
+			return 200;
 		} while (FALSE);
 		return 404;
 	}
