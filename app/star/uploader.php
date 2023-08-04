@@ -192,7 +192,7 @@ class webapp_router_uploader
 			$table->cell('要求');
 			$table->cell(match (intval($value['require']))
 			{
-				-1 => '会员', 0 => '免费',
+				-2 => '下架', -1 => '会员', 0 => '免费',
 				default => "{$value['require']} 金币"
 			});
 
