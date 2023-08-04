@@ -234,7 +234,7 @@ addEventListener('DOMContentLoaded', async event =>
 			}, clear);
 		});
 	}
-
+	const homepage = render.dataset.load;
 	if ('authorization' in render.dataset)
 	{
 		const url = render.dataset.authorization.split(','), auth = url[0];
@@ -258,5 +258,5 @@ addEventListener('DOMContentLoaded', async event =>
 	// 	console.log(render.dataset.load)
 	// };
 
-	render.load().then(frame => framer(frame.dataset.load));
+	render.load().then(frame => framer(homepage));
 });
