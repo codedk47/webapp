@@ -196,7 +196,7 @@ class base extends webapp
 		$json = $this->app('webapp_echo_json');
 		if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
 			&& is_string($binary = $this->request_maskdata())
-			&& file_put_contents($this->path_video(FALSE, $video, 'cover.sb'), $binary) !== FALSE
+			&& file_put_contents($this->path_video(FALSE, $video, '/cover.sb'), $binary) !== FALSE
 			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['cover' => 'change']) === 1) {
 			$json['dialog'] = '修改完成，后台将在10分钟左右同步缓存数据！';
 			return 200;
