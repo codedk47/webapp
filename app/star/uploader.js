@@ -79,8 +79,10 @@ uploader.uploading = table =>
 		return value => progress.textContent = `${(value * 100).toFixed(2)} %`;
 	}).then(results =>
 	{
+		const success = results.filter(file => file.status === 'fulfilled');
 		setTimeout(() => {
-			alert('所有上传处理完毕，请检查最后状态！');
+			results.length === success.length ? alert('所有上传处理完毕！')
+				: alert(success.length ? '部分上传完毕，请检查最后状态！' : '所有上传处理失败！');
 			submit.disabled = input.disabled = false;
 			submit.onclick = () => uploader.uploading(table);
 			submit.textContent = text;

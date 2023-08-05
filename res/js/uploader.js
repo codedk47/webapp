@@ -67,13 +67,26 @@ async function uploader(resource, files, pending = file => null)
 				offset += value.length;
 				if (offset > resource.offset)
 				{
-					i = value.slice(resource.offset + value.length - offset);
-					await fetch(resource.uploadurl, {
-						method: 'POST',
-						headers: {'Mask-Key': key},
-						body: mask(key.match(/.{2}/g).map(value => parseInt(value, 16)), i)
-					});
-					resource.offset += i.length;
+					const buffer = value.slice(resource.offset + value.length - offset);
+					for (i = 0; i < 3; ++i)
+					{
+						try
+						{
+							await fetch(resource.uploadurl, {
+								method: 'POST',
+								headers: {'Mask-Key': key},
+								body: mask(key.match(/.{2}/g).map(value => parseInt(value, 16)), buffer)
+							});
+							resource.offset += buffer.length;
+							i = 0;
+							break;
+						}
+						catch (error)
+						{
+							//console.warn(error);
+						}
+					}
+					if (i === 3) break;
 				}
 				progress(resource.offset / file.size);
 				//sent += value.length;
