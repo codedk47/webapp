@@ -101,9 +101,23 @@ class webapp_router_control extends webapp_echo_html
 		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
-	function get_tags(int $page = 1)
+	function get_tags(string $search = NULL, int $page = 1)
 	{
 		$conds = [[]];
+		if (is_string($search))
+		{
+			$search = urldecode($search);
+			if (strlen($search) === 4 && trim($search, webapp::key) === '')
+			{
+				$conds[0][] = 'hash=?s';
+				$conds[] = $search;
+			}
+			else
+			{
+				$conds[0][] = 'name LIKE ?s';
+				$conds[] = "%{$search}%";
+			}
+		}
 		if ($phash = $this->webapp->query['phash'] ?? '')
 		{
 			$conds[0][] = 'phash=?s';
@@ -129,6 +143,13 @@ class webapp_router_control extends webapp_echo_html
 		$table->header('标签 %d 项', $table->count());
 		$table->bar->append('button', ['添加标签或分类', 'onclick' => 'location.href="?control/tag"']);
 
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $search,
+			'style' => 'margin-left:.6rem;padding:2px',
+			'placeholder' => '关键字【Enter】搜索',
+			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
+		]);
 		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
 			->select(['' => '全部标签'] + $tag_types)
 			->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
