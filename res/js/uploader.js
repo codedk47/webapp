@@ -38,7 +38,7 @@ async function uploader(resource, files, pending = file => null)
 				? {name: file.name.substring(0, i), type: file.name.substring(i + 1)}
 				: {name: file.name, type: ''}
 		};
-		const progress = pending({...i}) || Boolean, response = await fetch(resource, {
+		let progress = pending({...i}) || Boolean, response = await fetch(resource, {
 			method: 'POST',
 			headers: {'Mask-Key': key},
 			body: mask(key.match(/.{2}/g).map(value => parseInt(value, 16)), Uint8Array.from(Array.from(JSON.stringify(i)).reduce((result, value) =>
@@ -54,7 +54,7 @@ async function uploader(resource, files, pending = file => null)
 		});
 		if (response.ok)
 		{
-			resource = await response.json();
+			response = await response.json();
 			offset = 0;
 			reader = file.stream().getReader();
 			do
@@ -65,19 +65,19 @@ async function uploader(resource, files, pending = file => null)
 					return resolve(file);
 				}
 				offset += value.length;
-				if (offset > resource.offset)
+				if (offset > response.offset)
 				{
-					const buffer = value.slice(resource.offset + value.length - offset);
+					const buffer = value.slice(response.offset + value.length - offset);
 					for (i = 0; i < 3; ++i)
 					{
 						try
 						{
-							await fetch(resource.uploadurl, {
+							await fetch(response.uploadurl, {
 								method: 'POST',
 								headers: {'Mask-Key': key},
 								body: mask(key.match(/.{2}/g).map(value => parseInt(value, 16)), buffer)
 							});
-							resource.offset += buffer.length;
+							response.offset += buffer.length;
 							i = 0;
 							break;
 						}
@@ -88,7 +88,7 @@ async function uploader(resource, files, pending = file => null)
 					}
 					if (i === 3) break;
 				}
-				progress(resource.offset / file.size);
+				progress(response.offset / file.size);
 				//sent += value.length;
 				//progress(file.size, value.length);
 			} while (true);
