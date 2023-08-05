@@ -165,16 +165,16 @@ class base extends webapp
 					break;
 				}
 			}
-			//$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
-			$this->response_uploading("?test");
+			$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
+			//$this->response_uploading("?test");
 			return 200;
 		} while (FALSE);
 		return 404;
 	}
-	function post_test()
-	{
-		return 202;
-	}
+	// function post_test()
+	// {
+	// 	return 202;
+	// }
 	function post_uploaddata(string $hash)
 	{
 		return $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
