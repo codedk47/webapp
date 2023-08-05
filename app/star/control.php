@@ -115,7 +115,7 @@ class webapp_router_control extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->tags(...$conds)->paging($page), function($table, $value, $types)
 		{
 			$table->row();
-
+			$table->cell()->append('a', ['删除', 'href' => "?control/tag,hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
 			$table->cell($value['hash']);
@@ -125,7 +125,7 @@ class webapp_router_control extends webapp_echo_html
 			
 		}, $tag_types);
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('创建时间', '修改时间', 'HASH', '级别', '排序', '名称');
+		$table->fieldset('删除', '创建时间', '修改时间', 'HASH', '级别', '排序', '名称');
 		$table->header('标签 %d 项', $table->count());
 		$table->bar->append('button', ['添加标签或分类', 'onclick' => 'location.href="?control/tag"']);
 
@@ -155,6 +155,12 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$this->dialog('标签添加失败！');
 		}
+	}
+	function delete_tag(string $hash)
+	{
+		$this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->delete() === 1
+			? $this->goto('/tags')
+			: $this->dialog('标签删除失败！');
 	}
 	function patch_tag(string $hash)
 	{
