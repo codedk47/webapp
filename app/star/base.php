@@ -281,6 +281,7 @@ class base extends webapp
 					'duration' => $duration = (int)$slice->duration,
 					'preview' => $video['preview'] ? $video['preview'] : (intval($duration * 0.6) << 16 | 10)
 				]) === 1) {
+					$this->mysql->users('WHERE id=?s LIMIT 1', $video['userid'])->update('ctime=?i,video_num=video_num+1', $this->time());
 					printf("%s -> FINISHED -> %s\n", $video['hash'], strtoupper($success));
 					continue 2;
 				}
