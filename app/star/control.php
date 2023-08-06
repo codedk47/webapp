@@ -939,10 +939,13 @@ class webapp_router_control extends webapp_echo_html
 	{
 		if ($this->form_ad()->fetch($ad))
 		{
-			$ad['ctime'] = $this->webapp->time;
 			if (count($uploadedfile = $this->webapp->request_uploadedfile('ad'))
 				&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
 				$ad['change'] = 'sync';
+			}
+			else
+			{
+				$ad['ctime'] = $this->webapp->time;
 			}
 			if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
 			{
