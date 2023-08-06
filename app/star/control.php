@@ -366,12 +366,12 @@ class webapp_router_control extends webapp_echo_html
 				$table->cell(date('Y-m-d\\TH:i:s', $value['lasttime']));
 				$table->cell($this->webapp->hexip($value['lastip']));
 				$table->cell($value['id']);
-
 				$table->cell($value['nickname']);
+				$table->cell(number_format($value['video_num']));
 				$table->cell(number_format($value['balance']));
 
 			});
-			$table->fieldset('创建日期', '最后登录时间', '最后登录IP', 'ID', '昵称', '余额');
+			$table->fieldset('创建日期', '最后登录时间', '最后登录IP', 'ID', '昵称', '视频数', '余额');
 			$table->header("上传账号 %s 绑定了 %s 个用户", $uploader['name'], $table->count());
 			$table->paging($this->webapp->at(['page' => '']));
 			
