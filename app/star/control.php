@@ -866,7 +866,7 @@ class webapp_router_control extends webapp_echo_html
 
 			$table->row();
 			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])->append('div', [
-				'data-cover' => "/news/{$value['hash']}"
+				'data-cover' => "/news/{$value['hash']}?{$value['ctime']}"
 			]);
 
 
