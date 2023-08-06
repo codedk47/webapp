@@ -572,6 +572,12 @@ class webapp_router_control extends webapp_echo_html
 			$conds[0][] = 'type=?s';
 			$conds[] = $type;
 		}
+
+		if ($subject = $this->webapp->query['subject'] ?? '')
+		{
+			$conds[0][] = 'FIND_IN_SET(?s,subjects)';
+			$conds[] = $subject;
+		}
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ' . match ($sort = $this->webapp->query['sort'] ?? '')
 		{
 			'view-desc' => '`view` DESC',
