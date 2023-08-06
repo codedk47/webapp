@@ -227,7 +227,7 @@ class base extends webapp
 			}
 			echo "WAITING\n";
 		}
-		foreach ($this->mysql->ads('WHERE change="sync" ORDER BY weight DESC') as $ad)
+		foreach ($this->mysql->ads('WHERE `change`="sync" ORDER BY `weight` DESC') as $ad)
 		{
 			echo "{$ad['hash']} - ",
 				is_file($image = "{$this['ad_savedir']}/{$ad['hash']}")
