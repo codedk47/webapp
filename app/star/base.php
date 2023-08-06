@@ -364,7 +364,7 @@ class base extends webapp
 		return $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array();
 	}
 	//用户模型
-	function user(string $id = '2lg7yhjGn_'):user
+	function user(string $id = 'FABqsZrf0g'):user
 	{
 		return $id ? user::from_id($this, $id) : new user($this,
 			$this->authorize($this->request_authorization($type), $this->user_fetch(...)));

@@ -937,13 +937,19 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function post_ad_update(string $hash)
 	{
-		if ($this->form_ad()->fetch($ad) && $this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
+		if ($this->form_ad()->fetch($ad))
 		{
-			$this->webapp->response_location('?control/ads');
+			$ad['ctime'] = $this->webapp->time;
+			if (count($uploadedfile = $this->webapp->request_uploadedfile('ad'))
+				&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
+				$ad['change'] = 'sync';
+			}
+			if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
+			{
+				$this->webapp->response_location('?control/ads');
+			}
+			return 200;
 		}
-		else
-		{
-			$this->main->append('h4', '广告更新失败！');
-		}
+		$this->main->append('h4', '广告更新失败！');
 	}
 }
