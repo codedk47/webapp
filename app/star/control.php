@@ -865,13 +865,15 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell('操作');
 
 			$table->row();
-			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])->append('div', [
-				'data-cover' => "/news/{$value['hash']}?{$value['ctime']}"
-			]);
-
-
-
-
+			$cover = $table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])->append('div');
+			if ($value['change'] === 'sync')
+			{
+				$cover[0] = '等待同步...';
+			}
+			else
+			{
+				$cover['data-cover'] = "/news/{$value['hash']}?{$value['ctime']}";
+			}
 			$table->row();
 			$table->cell('展示位置');
 			$table->cell([$seat[$value['seat']], 'style' => 'min-width:20rem']);
