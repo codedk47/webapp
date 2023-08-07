@@ -827,13 +827,24 @@ class webapp_router_control extends webapp_echo_html
 			255 => '待定分类'
 		];
 	}
+	function ad_displays():array
+	{
+		return [
+			'hide' => '隐藏（不展示）',
+			'show' => '显示（展示中）'
+		];
+	}
 	function form_ad(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
+		$form->fieldset->append('div', [
+			'class' => 'cover',
+			'style' => 'width:32rem;height:18rem;background-size:contain'
+		]);
 
 		$form->fieldset('广告图片');
-
-		$form->field('ad', 'file', ['accept' => 'image/*']);
+		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
+		$form->field('display', 'select', ['options' => $this->ad_displays()]);
 
 		$form->fieldset('展示位置 / 权重（越大越几率越大）');
 
@@ -858,16 +869,22 @@ class webapp_router_control extends webapp_echo_html
 	function get_ads(int $page = 1)
 	{
 		$conds = [[]];
-
-
+		if (strlen($seat = $this->webapp->query['seat'] ?? ''))
+		{
+			$conds[0][] = 'seat=?i';
+			$conds[] = $seat;
+		}
+		if ($display = $this->webapp->query['display'] ?? '')
+		{
+			$conds[0][] = 'display=?s';
+			$conds[] = $display;
+		}
 		$conds[0] = sprintf('%sORDER BY seat ASC,weight DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seat)
+		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats, $displays)
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
 			$table->cell('封面');
-			$table->cell('字段');
-			$table->cell('信息');
-			$table->cell('操作');
+			$table->cell(['信息', 'colspan' => 6]);
 
 			$table->row();
 			$cover = $table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])->append('div');
@@ -877,36 +894,50 @@ class webapp_router_control extends webapp_echo_html
 			}
 			else
 			{
+				$cover['style'] = 'background-size:contain';
 				$cover['data-cover'] = "/news/{$value['hash']}?{$value['ctime']}";
 			}
-			$table->row();
-			$table->cell('展示位置');
-			$table->cell([$seat[$value['seat']], 'style' => 'min-width:20rem']);
-			$table->cell()->append('button', ['修改信息', 'onclick' => "location.href='?control/ad-update,hash:{$value['hash']}'"]);
 
 			$table->row();
-			$table->cell('权重');
+			$table->cell('HASH');
+			$table->cell($value['hash']);
+			$table->cell('创建时间');
+			$table->cell(date('Y-m-d\\H:i:s', $value['mtime']));
+			$table->cell('修改时间');
+			$table->cell(date('Y-m-d\\H:i:s', $value['ctime']));
+
+			$table->row();
+			$table->cell('位置');
+			$table->cell($seats[$value['seat']]);
+			$table->cell('展示权重');
 			$table->cell($value['weight']);
-			$table->cell()->append('button', ['扩展按钮']);
-
-			$table->row();
-			$table->cell('展示');
-			$table->cell($value['display']);
-			$table->cell()->append('button', ['扩展按钮']);
-
+			$table->cell('是否展示');
+			$table->cell($displays[$value['display']]);
 
 			$table->row();
 			$table->cell('行为URL');
-			$table->cell(['colspan' => 2])->append('a', [$value['acturl'], 'href' => $value['acturl']]);
+			$table->cell(['colspan' => 6])->append('a', [$value['acturl'], 'href' => $value['acturl']]);
 
+			$table->row();
+			$table->cell('功能');
+			$td = $table->cell(['colspan' => 5]);
+			// $td->append('button', ['新窗口打开改行为URL', 'onclick' => "location.href='?control/ad-update,hash:{$value['hash']}'"]);
+			// $td->append('span', ' | ');
+			$td->append('button', ['修改信息', 'onclick' => "location.href='?control/ad-update,hash:{$value['hash']}'"]);
 
-		}, $this->ad_seats());
+		},  $seats = $this->ad_seats(), $displays = $this->ad_displays());
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('封面', '字段', '信息', '操作');
+		$table->fieldset('封面', '字段', '信息');
 		$table->header('广告 %d 项', $table->count());
 		unset($table->xml->tbody->tr[0]);
 
 		$table->bar->append('button', ['添加广告', 'onclick' => 'location.href="?control/ad-insert"']);
+		$table->bar->select(['' => '所有位置'] + $seats)
+			->setattr(['onchange' => 'g({seat:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($seat);
+		$table->bar->select(['' => '所有展示'] + $displays)
+			->setattr(['onchange' => 'g({display:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($display);
 	}
 	function get_ad_insert()
 	{
@@ -934,11 +965,7 @@ class webapp_router_control extends webapp_echo_html
 		if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->fetch($ad))
 		{
 			$form = $this->form_ad($this->main);
-			$form->xml->fieldset->append('div', [
-				'class' => 'cover',
-				'style' => 'width:32rem;height:18rem',
-				'data-cover' => "/news/{$ad['hash']}?{$ad['ctime']}"
-			]);
+			$form->xml->fieldset->div['data-cover'] = "/news/{$ad['hash']}?{$ad['ctime']}";
 			$form->echo($ad);
 		}
 	}

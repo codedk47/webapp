@@ -14,7 +14,7 @@ class base extends webapp
 		
 		$cover = $form->fieldset->append('div', ['class' => 'cover', 'style' => 'width:512px;height:288px']);
 
-		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*', 'onchange' => 'cover_preview(this, document.querySelector("div.cover"))']);
+		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
 		$form->button('更新封面', 'button', ['onclick' => 'video_cover(this.previousElementSibling)']);
 
 		$form->fieldset('影片名称');
