@@ -583,7 +583,7 @@ class webapp_router_control extends webapp_echo_html
 			'view-desc' => '`view` DESC',
 			'like-desc' => '`like` DESC',
 			'sales-desc' => '`sales` DESC',
-			default => '`mtime` DESC'
+			default => '`ctime` DESC'
 		};
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
 		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
