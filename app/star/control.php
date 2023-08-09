@@ -16,6 +16,7 @@ class webapp_router_control extends webapp_echo_html
 			$this->script(['src' => '/webapp/res/js/loader.js']);
 			$this->script(['src' => '/webapp/app/star/base.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
 			$this->nav([
+				['数据', '?control/home'],
 				['标签 & 分类', '?control/tags'],
 				['专题', '?control/subjects'],
 				['上传账号', '?control/uploaders'],

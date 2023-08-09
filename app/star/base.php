@@ -348,6 +348,61 @@ class base extends webapp
 	{
 		return preg_match('/DID\:(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
 	}
+	function recordlog(string $field, int $value = 1, int $nowtime = NULL)
+	{
+		$values = match (TRUE)
+		{
+			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
+			in_array($field, ['dpc_ios', 'dpc_android'], TRUE) => ['dpc' => $value, $field => $value],
+			default => []
+		};
+
+
+		$nowtime ??= $this->time();
+		$insert = [
+			'ciddate'			=> $this->cid() . date('Ymd', $nowtime),
+			'date'				=> date('Y-m-d', $nowtime),
+			'dpv'				=> 0,
+			'dpv_ios'			=> 0,
+			'dpv_android'		=> 0,
+			'dpc'				=> 0,
+			'dpc_ios'			=> 0,
+			'dpc_android'		=> 0,
+			'signin'			=> 0,
+			'signin_ios'		=> 0,
+			'signin_android'	=> 0,
+			'signup'			=> 0,
+			'signup_ios'		=> 0,
+			'signup_android'	=> 0,
+			'recharge'			=> 0,
+			'recharge_new'		=> 0,
+			'recharge_old'		=> 0,
+			'recharge_coin'		=> 0,
+			'recharge_vip'		=> 0,
+			'recharge_vip_new'	=> 0,
+			'order'				=> 0,
+			'order_ok'			=> 0,
+			'order_ios'			=> 0,
+			'order_ios_ok'		=> 0,
+			'order_android'		=> 0,
+			'order_android_ok'	=> 0,
+			...$values
+		];
+		$update = [];
+		foreach ($values as $field => $value)
+		{
+			$update[] = $this->mysql->format('?a=?a+?i', $field, $field, $value);
+		}
+		echo $this->mysql->format('INSERT INTO recordlog SET ?v ON DUPLICATE KEY UPDATE ??', $insert, join(',', $update));
+
+		
+		
+
+
+
+
+		//'insert into table (player_id,award_type,num) values(20001,0,1) on DUPLICATE key update num=num+values(num)'
+	}
 	//创建用户
 	function user_create(array $user):user
 	{
