@@ -66,3 +66,54 @@ dialog.play{
 dialog.play>webapp-video{
 	transition: width .4s, height .4s;
 }
+ul.choosetags{
+	display: flex;
+	position: relative;
+	padding: 0;
+	margin: 0;
+}
+ul.choosetags>ul,
+ul.choosetags>input
+{
+	display: none;
+}
+ul.choosetags>label{
+	padding: .4rem 1rem;
+	border: .1rem outset black;
+	border-bottom: none;
+	background-color: whitesmoke;
+}
+ul.choosetags>ul>li
+{
+	white-space: nowrap;
+}
+ul.choosetags>ul>li
+{
+	white-space: nowrap;
+}
+ul.choosetags>ul>li>label
+{
+	padding: .4rem;
+	border-radius: .2rem;
+	border: .1rem solid silver;
+	display: block;
+}
+ul.choosetags>input:checked+label{
+	margin-top: -2px;
+	padding: .5rem 1rem;
+	background-color: white;
+	z-index: 1;
+}
+ul.choosetags>input:checked+label+ul
+{
+	display: flex;
+	gap: .6rem;
+	flex-flow: wrap;
+	position: absolute;
+	top: 2.2rem;
+	list-style: none;
+	border: .1rem outset black;
+	padding: .6rem;
+	margin: 0;
+	width: 60rem;
+}

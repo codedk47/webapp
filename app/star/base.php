@@ -43,13 +43,21 @@ class base extends webapp
 		]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'style' => 'width:4rem', 'required' => NULL]);
 
-		// $form->fieldset('专题');
-		// $subjects = $this->mysql->subjects->column('name', 'hash');
-		// $form->field('subjects', 'checkbox', ['options' => $subjects], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'video_tags';
 
-		$form->fieldset('标签');
-		$tags = $this->mysql->tags->column('name', 'hash');
-		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'video_tags';
+		$tagnode = $form->fieldset()->append('ul');
+		$form->field('tags');
+		$tagnode['class'] = 'choosetags';
+		foreach ($this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC')->column('name', 'hash') as $taghash => $tagname)
+		{
+			$tagnode->append('input', ['type' => 'radio', 'name' => 'tag', 'value' => $taghash, 'id' => "tag{$taghash}"]);
+			$tagnode->append('label', [$tagname, 'for' => "tag{$taghash}"]);
+			$ul = $tagnode->append('ul');
+			foreach ($this->mysql->tags('WHERE phash=?s ORDER BY sort DESC', $taghash) as $tag)
+			{
+				$ul->append('li')->labelinput("t{$taghash}[]", 'checkbox', $tag['hash'], $tag['name']);
+			}
+		}
+		$form->fieldset['style'] = 'height:28rem';
 
 		$form->fieldset();
 		$form->button('更新视频', 'submit');
@@ -57,7 +65,7 @@ class base extends webapp
 
 		$form->xml['method'] = 'patch';
 		$form->xml['onsubmit'] = 'return video_value(this)';
-		$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
+		//$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		if ($form->echo && $hash && $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
 		{
 			$form->xml['action'] .= $this->encrypt($video['hash']);
@@ -74,6 +82,13 @@ class base extends webapp
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
 			$change['data-uploadurl'] = "?video-cover/{$hash}";
 			$change['data-key'] = bin2hex($this->random(8));
+			foreach ($video['tags'] ? explode(',', $video['tags']) : [] as $tag)
+			{
+				if ($checked = $tagnode->xpath("//input[@value='{$tag}']"))
+				{
+					$checked[0]->setattr(['checked' => NULL]);
+				}
+			}
 			$form->echo($video);
 		}
 		return $form;
@@ -85,29 +100,6 @@ class base extends webapp
 			date('ym', $video['mtime']),
 			$video['hash'], $filename);
 	}
-	function copy_file(string $src, string $dst, ):bool
-	{
-		//copy("{$outdir}/cover.jpg", "{$this['app_resdstdir']}/{$day}/{$resource['hash']}/cover.jpg")
-
-		//这个函数只能在 Windows 平台使用
-		//exec("xcopy \"{$outdir}/*\" \"{$this['app_resdstdir']}/{$day}/{$resource['hash']}/\" /E /C /I /F /Y", $output, $code), ":{$code}\n";
-		return FALSE;
-	}
-	// function howago(int $mtime):string
-	// {
-	// 	$timediff = $this->time - $mtime;
-	// 	return match (TRUE)
-	// 	{
-	// 		$timediff < 60 => '刚刚',
-	// 		$timediff < 600 => '10分钟前',
-	// 		$timediff < 3600 => '1小时前',
-	// 		$timediff < 10800 => '3小时前',
-	// 		$timediff < 21600 => '6小时前',
-	// 		$timediff < 43200 => '12小时前',
-	// 		$timediff < 86400 => '1天前',
-	// 		default => date('Y-m-d', $mtime)
-	// 	};
-	// }
 	//用户上传接口
 	function post_uploading(string $token)
 	{
@@ -333,6 +325,10 @@ class base extends webapp
 				echo "{$video['hash']} -> [{$video['subjects']}] >> [{$vsubject}] {$success}\n";
 			}
 		}
+	}
+	function prod_vtid_vip100(string $userid):bool
+	{
+		return FALSE;
 	}
 	//======================以上为内部功能======================
 	//======================以下为扩展功能======================

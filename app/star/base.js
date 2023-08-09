@@ -98,9 +98,18 @@ function view_video(data, preview)
 
 function video_value(form)
 {
-	const formdata = new FormData(form), data = Object.fromEntries(formdata);
-	data.tags = formdata.getAll('tags[]');
-	delete data['tags[]'];
+	const formdata = new FormData(form), data = Object.fromEntries(formdata), tags = [];
+	if (formdata.get('tag'))
+	{
+		tags[tags.length] = formdata.get('tag');
+		tags.push(...formdata.getAll(`t${formdata.get('tag')}[]`));
+		if (tags.length > 10)
+		{
+			alert('标签数量不得超过10个！');
+			return false;
+		}
+	}
+	data.tags = tags.join(',');
 	const raw = JSON.stringify(data), buffer = [];
 	let hash = 5381n;
 	for (let unicode of raw)
