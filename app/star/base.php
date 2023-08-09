@@ -43,25 +43,13 @@ class base extends webapp
 		]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'style' => 'width:4rem', 'required' => NULL]);
 
-
 		$tagnode = $form->fieldset()->append('ul');
-		$form->field('tags');
 		$tagnode['class'] = 'choosetags';
-		foreach ($this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC')->column('name', 'hash') as $taghash => $tagname)
-		{
-			$tagnode->append('input', ['type' => 'radio', 'name' => 'tag', 'value' => $taghash, 'id' => "tag{$taghash}"]);
-			$tagnode->append('label', [$tagname, 'for' => "tag{$taghash}"]);
-			$ul = $tagnode->append('ul');
-			foreach ($this->mysql->tags('WHERE phash=?s ORDER BY sort DESC', $taghash) as $tag)
-			{
-				$ul->append('li')->labelinput("t{$taghash}[]", 'checkbox', $tag['hash'], $tag['name']);
-			}
-		}
+		$form->field('tags');
 		$form->fieldset['style'] = 'height:28rem';
 
 		$form->fieldset();
 		$form->button('更新视频', 'submit');
-
 
 		$form->xml['method'] = 'patch';
 		$form->xml['onsubmit'] = 'return video_value(this)';
@@ -82,6 +70,16 @@ class base extends webapp
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
 			$change['data-uploadurl'] = "?video-cover/{$hash}";
 			$change['data-key'] = bin2hex($this->random(8));
+			foreach ($this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC')->column('name', 'hash') as $taghash => $tagname)
+			{
+				$tagnode->append('input', ['type' => 'radio', 'name' => 'tag', 'value' => $taghash, 'id' => "tag{$taghash}"]);
+				$tagnode->append('label', [$tagname, 'for' => "tag{$taghash}"]);
+				$ul = $tagnode->append('ul');
+				foreach ($this->mysql->tags('WHERE phash=?s ORDER BY sort DESC', $taghash) as $tag)
+				{
+					$ul->append('li')->labelinput("t{$taghash}[]", 'checkbox', $tag['hash'], $tag['name']);
+				}
+			}
 			foreach ($video['tags'] ? explode(',', $video['tags']) : [] as $tag)
 			{
 				if ($checked = $tagnode->xpath("//input[@value='{$tag}']"))
