@@ -360,8 +360,6 @@ class base extends webapp
 
 		$nowtime ??= $this->time();
 		$insert = [
-			'ciddate'			=> $this->cid() . date('Ymd', $nowtime),
-			'date'				=> date('Y-m-d', $nowtime),
 			'dpv'				=> 0,
 			'dpv_ios'			=> 0,
 			'dpv_android'		=> 0,
@@ -386,8 +384,22 @@ class base extends webapp
 			'order_ios_ok'		=> 0,
 			'order_android'		=> 0,
 			'order_android_ok'	=> 0,
-			...$values
+			
 		];
+
+
+		//...$values
+
+
+
+		$insert['data'] = array_fill(0, 23, $insert);
+		
+
+		print_r($insert);
+
+		return;
+		// 'ciddate'			=> $this->cid() . date('Ymd', $nowtime),
+		// 'date'				=> date('Y-m-d', $nowtime),
 		$update = [];
 		foreach ($values as $field => $value)
 		{

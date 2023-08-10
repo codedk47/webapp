@@ -103,9 +103,9 @@ function video_value(form)
 	{
 		tags[tags.length] = formdata.get('tag');
 		tags.push(...formdata.getAll(`t${formdata.get('tag')}[]`));
-		if (tags.length > 10)
+		if (tags.length > 5)
 		{
-			alert('标签数量不得超过10个！');
+			alert('标签数量不得超过5个！');
 			return false;
 		}
 	}

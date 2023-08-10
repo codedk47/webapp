@@ -47,7 +47,7 @@ class webapp_router_uploader
 			$nav = $this->echo->nav([
 				['用户信息', '?uploader/info'],
 				['视频列表', '?uploader/videos'],
-				//['测试', '?uploader/watch,hash:123', 'target' => 'sandbox'],
+				['话题', '?uploader/topics'],
 				['注销登录', 'javascript:top.location.reload(localStorage.removeItem("token"));', 'style' => 'color:maroon']
 			]);
 			if ($this->userids && count($users = $this->webapp->mysql->users('WHERE id IN(?S)', $this->userids)->column('nickname', 'id')))
@@ -287,7 +287,10 @@ class webapp_router_uploader
 		]);
 		$table->footer('建议单次上传保持在1~5个视频，单个视频不得大于2G');
 	}
-
+	function get_topics()
+	{
+		$this->html()->main->append('h1', '即将完工');
+	}
 
 
 
