@@ -357,7 +357,7 @@ class base extends webapp
 			in_array($field, ['dpc_ios', 'dpc_android'], TRUE) => ['dpc' => $value, $field => $value],
 			default => []
 		};
-		//if (empty($values)) return FALSE;
+		if (empty($values)) return FALSE;
 		$incrdata = [];
 		$hourdata = [];
 		$hour = date('G', $nowtime);
