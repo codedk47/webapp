@@ -48,7 +48,7 @@ uploader.uploading = table =>
 	tbody = table.querySelector('tbody'),
 	text = submit.textContent;
 
-	if (input.files.length < 1 || input.files.length > 5)
+	if (input.files.length < 1)
 	{
 		return alert('至少需要选择 1 个文件');
 	}
