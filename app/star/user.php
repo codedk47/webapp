@@ -71,7 +71,10 @@ class user extends ArrayObject
 	//用户关注UP主
 	function follow_uploader_user(string $id):bool
 	{
-		return TRUE;
+		return strlen($id) === 10
+			&& trim($id, webapp::key) === ''
+			&& ($this['followed_ids'] ? in_array($id, str_split($this['followed_ids'], 10), TRUE) : FALSE) === FALSE
+			&& $this->cond()->update('followed_ids=?s', $this['followed_ids'] = $id . substr($this['followed_ids'], 10, 10 * 50)) === 1;
 	}
 
 	//购买商品
