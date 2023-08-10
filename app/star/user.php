@@ -68,13 +68,32 @@ class user extends ArrayObject
 	{
 		return $this->webapp->mysql->videos('WHERE userid=?s ORDER BY mtime DESC', $this->id)->paging($page, $size);
 	}
-	//用户关注UP主
+	//用户关注UP主（再次关注即可取消）
 	function follow_uploader_user(string $id):bool
 	{
-		return strlen($id) === 10
-			&& trim($id, webapp::key) === ''
-			&& ($this['followed_ids'] ? in_array($id, str_split($this['followed_ids'], 10), TRUE) : FALSE) === FALSE
-			&& $this->cond()->update('followed_ids=?s', $this['followed_ids'] = $id . substr($this['followed_ids'], 10, 10 * 50)) === 1;
+		return TRUE;
+		// if (strlen($id) === 10 && trim($id, webapp::key) === '')
+		// {
+		// 	$followed_ids = $this['followed_ids'] ? str_split($this['followed_ids'], 10) : [];
+		// 	if (is_int($index = array_search($id, $followed_ids, TRUE)))
+		// 	{
+		// 		array_splice($followed_ids, $index, 1);
+		// 	}
+		// 	else
+		// 	{
+		// 		$followed_ids[] = $id;
+		// 	}
+
+
+		// }
+
+
+
+
+		// return strlen($id) === 10
+		// 	&& trim($id, webapp::key) === ''
+		// 	&& ($this['followed_ids'] ? in_array($id, str_split($this['followed_ids'], 10), TRUE) : FALSE) === FALSE
+		// 	&& $this->cond()->update('followed_ids=?s', $this['followed_ids'] = $id . substr($this['followed_ids'], 10, 10 * 50)) === 1;
 	}
 
 	//购买商品

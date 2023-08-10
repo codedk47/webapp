@@ -87,6 +87,7 @@ class base extends webapp
 					$checked[0]->setattr(['checked' => NULL]);
 				}
 			}
+			$video['name'] = htmlentities($video['name']);
 			$form->echo($video);
 		}
 		return $form;
