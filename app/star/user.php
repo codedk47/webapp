@@ -71,7 +71,7 @@ class user extends ArrayObject
 	//用户关注UP主
 	function follow_uploader_user(string $id):bool
 	{
-		return FALSE;
+		return TRUE;
 	}
 
 	//购买商品
