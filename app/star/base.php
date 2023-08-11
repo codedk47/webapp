@@ -16,11 +16,22 @@ class base extends webapp
 
 		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
 		$form->button('更新封面', 'button', ['onclick' => 'video_cover(this.previousElementSibling)']);
+		
 
 		$form->fieldset('影片名称');
-		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
+		$form->field('name', 'text', ['style' => 'width:60rem', 'required' => NULL]);
 
-		$form->fieldset('视频类型 / 预览时段 / 下架：-2、会员：-1、免费：0、金币 / 排序');
+		$form->fieldset('下架：-2、会员：-1、免费：0、金币 / 定时发布日期');
+		$form->field('require', 'number', [
+			'value' => 0,
+			'min' => -2,
+			'style' => 'width:13rem',
+			'placeholder' => '要求',
+			'required' => NULL
+		]);
+		//$form->field('ptime', 'datetime-local', format:fn($v, $i) => $i ? strtotime($v) : date('Y-m-d\\TH:i', $v));
+
+		$form->fieldset('视频类型 / 预览时段');
 		$form->field('type', 'select', ['options' => base::video_type]);
 		function preview_format($v, $i)
 		{
@@ -33,14 +44,6 @@ class base extends webapp
 		}
 		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1], preview_format(...));
 		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1], preview_format(...));
-
-		$form->field('require', 'number', [
-			'value' => 0,
-			'min' => -2,
-			'style' => 'width:13rem',
-			'placeholder' => '要求',
-			'required' => NULL
-		]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'style' => 'width:4rem', 'required' => NULL]);
 
 		$tagnode = $form->fieldset()->append('ul');
@@ -108,7 +111,7 @@ class base extends webapp
 			{
 				if ($video['size'] <= $video['tell'])
 				{
-					//break;
+					break;
 				}
 			}
 			else
@@ -132,6 +135,7 @@ class base extends webapp
 					'userid' => $acc[0],
 					'mtime' => $this->time,
 					'ctime' => $this->time,
+					//'ptime' => $this->time,
 					'size' => $uploading['size'],
 					'tell' => 0,
 					'cover' => 'finish',

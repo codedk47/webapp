@@ -126,7 +126,7 @@ class webapp_router_uploader
 				'height:18rem',
 				'border:.1rem solid black',
 				'display:block',
-				"background:url({$this->webapp->request_entry}?qrcode/{$signature}) center center / 90% no-repeat white;"
+				"background:url({$this->webapp->request_entry}?qrcode/{$signature}) center center / 90% no-repeat white"
 			]);
 
 			$form->fieldset();
@@ -270,6 +270,11 @@ class webapp_router_uploader
 
 		}, $tags);
 		$table->paging($this->webapp->at(['page' => '']));
+		if ($goto = $table->xml->xpath('tfoot/tr/td/input|tfoot/tr/td/a[@onclick]'))
+		{
+			$goto[0]['onkeypress'] = 'event.keyCode===13&&top.framer(this.nextElementSibling.href+this.value)';
+			$goto[1]['onclick'] = 'top.framer(this.href+this.previousElementSibling.value);return false';
+		}
 		$table->fieldset('封面（预览视频）', '信息');
 		$table->header('视频 %d 项', $table->count());
 		unset($table->xml->tbody->tr[0]);
