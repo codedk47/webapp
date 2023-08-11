@@ -617,7 +617,23 @@ class webapp_router_control extends webapp_echo_html
 
 			$table->row();
 			$table->cell('状态');
-			$table->cell(base::video_sync[$value['sync']]);
+			$syncnode = $table->cell();
+			$syncnode->append('span', base::video_sync[$value['sync']]);
+			if ($value['sync'] === 'finished')
+			{
+				$syncnode->append('a', ['通过',
+					'href' => "?control/video,hash:{$value['hash']},sync:allow",
+					'style' => 'margin:0 1rem',
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				]);
+				$syncnode->append('a', ['拒绝',
+					'href' => "?control/video,hash:{$value['hash']},sync:deny",
+					'style' => 'color:maroon',
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				]);
+			}
 			$table->cell('观看');
 			$table->cell(number_format($value['view']));
 			$table->cell('点赞');
@@ -691,6 +707,13 @@ class webapp_router_control extends webapp_echo_html
 	function get_video(string $hash)
 	{
 		$this->webapp->form_video($this->main, $hash)->xml['action'] .= ',goto:' . $this->webapp->url64_encode('?control/videos');
+	}
+	function patch_video(string $hash, string $sync)
+	{
+		in_array($sync, ['exception', 'allow', 'deny', TRUE])
+			&& $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('sync=?s,ctime=?i', $sync, $this->webapp->time) === 1
+				? $this->goto()
+				: $this->dialog('状态更新失败！');
 	}
 
 
