@@ -120,20 +120,32 @@ class webapp_router_uploader
 		if ($this->user->id)
 		{
 			$form = $html->main->form();
+			$signature = $this->webapp->encrypt((string)$this->user);
+			$form->fieldset['style'] = join(';', [
+				'width:18rem',
+				'height:18rem',
+				'border:.1rem solid black',
+				'display:block',
+				"background:url({$this->webapp->request_entry}?qrcode/{$signature}) center center / 90% no-repeat white;"
+			]);
+
+			$form->fieldset();
+			$form->button('下载该账号凭证（从手机上传登录）', 'button', [
+				'onclick' => 'alert("上线开放")'
+			]);
 			$form->fieldset('用户昵称：');
 			$form->field('nickname', 'text');
 			$form->button('修改', 'button', [
 				'data-action' => '?uploader/change_nickname',
 				'onclick' => 'top.uploader.change_nickname(this)'
 			]);
+			
 
 			$form->fieldset('提现余额：');
 			$form->field('balance', 'number', ['disabled' => NULL]);
-			$form->fieldset->append('button', ['提现',
-				'type' => 'button',
+			$form->button('提现', 'button', [
 				'onclick' => 'top.framer("?uploader/exchange")'
 			]);
-			//print_r((array)$this->user);
 			$form->echo($this->user->getArrayCopy());
 		}
 	}
