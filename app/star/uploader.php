@@ -197,7 +197,7 @@ class webapp_router_uploader
 			default => '`mtime` DESC'
 		};
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
-		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 1), function($table, $value, $tags)
+		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
 		{
 			$ym = date('ym', $value['mtime']);
 
