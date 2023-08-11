@@ -197,7 +197,7 @@ class webapp_router_uploader
 			default => '`mtime` DESC'
 		};
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
-		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
+		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 1), function($table, $value, $tags)
 		{
 			$ym = date('ym', $value['mtime']);
 
@@ -272,8 +272,10 @@ class webapp_router_uploader
 		$table->paging($this->webapp->at(['page' => '']));
 		if ($goto = $table->xml->xpath('tfoot/tr/td/input|tfoot/tr/td/a[@onclick]'))
 		{
-			$goto[0]['onkeypress'] = 'event.keyCode===13&&top.framer(this.nextElementSibling.href+this.value)';
-			$goto[1]['onclick'] = 'top.framer(this.href+this.previousElementSibling.value);return false';
+			$goto[0]['onkeypress'] = 'event.keyCode===13&&top.framer(this.nextElementSibling.dataset.action+this.value)';
+			$goto[1]['data-action'] = (string)$goto[1]['href'];
+			$goto[1]['href'] = 'javascript:;';
+			$goto[1]['onclick'] = 'top.framer(this.dataset.action+this.previousElementSibling.value);return false';
 		}
 		$table->fieldset('封面（预览视频）', '信息');
 		$table->header('视频 %d 项', $table->count());
