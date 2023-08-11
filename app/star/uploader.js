@@ -21,6 +21,13 @@ uploader.auth = element =>
 	}).then(auth => auth.token ? top.framer.authorization(auth.token) : alert(auth.errors ? auth.errors.join('\n') : '未知错误'));
 	return false;
 };
+uploader.change_nickname = (button) =>
+{
+	top.framer.loader(button.dataset.action, {
+		method: 'PATCH',
+		body: button.previousElementSibling.value
+	}).then(data => data.result ? top.framer(top.document.querySelector('iframe[data-load]').dataset.load) : alert('用户昵称修改失败！'));
+};
 uploader.uploadlist = (files, tbody) =>
 {
 	while (tbody.childNodes[1])
@@ -39,7 +46,7 @@ uploader.uploadlist = (files, tbody) =>
 		}));
 		tbody.appendChild(tr);
 	});
-}
+};
 uploader.uploading = table =>
 {
 	const
@@ -88,4 +95,11 @@ uploader.uploading = table =>
 			submit.textContent = text;
 		}, 1000);
 	});
+};
+uploader.change_video_user = select =>
+{
+	top.framer.loader(select.dataset.action, {
+		method: 'PATCH',
+		body: select.value
+	}).then(data => data.result ? top.framer(top.document.querySelector('iframe[data-load]').dataset.load) : alert('分配用户失败！'));
 };

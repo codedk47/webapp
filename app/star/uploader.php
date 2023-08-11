@@ -4,6 +4,7 @@ class webapp_router_uploader
 	private readonly array $userids;
 	private readonly user $user;
 	private readonly webapp_echo_html|webapp_echo_json $echo;
+	private readonly array $users;
 	function __construct(private readonly webapp $webapp)
 	{
 		$this->userids = $webapp->authorization(function($uid, $pwd)
@@ -50,9 +51,9 @@ class webapp_router_uploader
 				['话题', '?uploader/topics'],
 				['注销登录', 'javascript:top.location.reload(localStorage.removeItem("token"));', 'style' => 'color:maroon']
 			]);
-			if ($this->userids && count($users = $this->webapp->mysql->users('WHERE id IN(?S)', $this->userids)->column('nickname', 'id')))
+			if ($this->userids && count($this->users = $this->webapp->mysql->users('WHERE id IN(?S)', $this->userids)->column('nickname', 'id')))
 			{
-				$nav->ul->insert('li', 'first')->setattr(['style' => 'margin-left:1rem'])->select($users)->selected($this->user->id)
+				$nav->ul->insert('li', 'first')->setattr(['style' => 'margin-left:1rem'])->select($this->users)->selected($this->user->id)
 					->setattr(['onchange' => 'top.location.reload(top.document.cookie=`userid=${this.value}`)']);
 			}
 		}
@@ -68,7 +69,7 @@ class webapp_router_uploader
 	{
 		$frame = $this->html()->xml->body->iframe;
 		$frame['data-authorization'] = '?uploader/auth';
-		$frame['data-load'] = '?uploader/videos';
+		$frame['data-load'] = '?uploader/info';
 
 	}
 	function get_auth(string $token = NULL)
@@ -121,6 +122,11 @@ class webapp_router_uploader
 			$form = $html->main->form();
 			$form->fieldset('用户昵称：');
 			$form->field('nickname', 'text');
+			$form->button('修改', 'button', [
+				'data-action' => '?uploader/change_nickname',
+				'onclick' => 'top.uploader.change_nickname(this)'
+			]);
+
 			$form->fieldset('提现余额：');
 			$form->field('balance', 'number', ['disabled' => NULL]);
 			$form->fieldset->append('button', ['提现',
@@ -130,6 +136,14 @@ class webapp_router_uploader
 			//print_r((array)$this->user);
 			$form->echo($this->user->getArrayCopy());
 		}
+	}
+	function patch_change_nickname()
+	{
+		$this->json(['result' => $this->user->change_nickname($this->webapp->request_content())]);
+	}
+	function get_exchange()
+	{
+		$this->html()->main->append('h1', '等待正式上线');
 	}
 
 	function get_videos(string $search = NULL, int $page = 1)
@@ -176,7 +190,13 @@ class webapp_router_uploader
 			$ym = date('ym', $value['mtime']);
 
 			$table->row()['class'] = 'info';
-			$table->cell('封面（预览视频）');
+			$usernode = $table->cell();
+			$usernode->append('span', '用户：');
+			$usernode->select($this->users)->setattr([
+				'style' => 'padding:2px',
+				'data-action' => "?uploader/change_video_user,hash:{$value['hash']}",
+				'onchange' => 'top.uploader.change_video_user(this)'
+			])->selected($this->user->id);
 			$table->cell(['colspan' => 8])->append('a', ['信息（点击修改下面信息）', 'href' => "?uploader/video,hash:{$value['hash']}"]);
 
 			$table->row();
@@ -287,16 +307,18 @@ class webapp_router_uploader
 		]);
 		$table->footer('建议单次上传保持在1~5个视频，单个视频不得大于2G');
 	}
-	function get_topics()
+	function patch_change_video_user(string $hash)
 	{
-		$this->html()->main->append('h1', '即将完工');
+		$this->json(['result' => $this->user->id
+			&& strlen($userid = $this->webapp->request_content()) === 10
+			&& trim($userid, webapp::key) === ''
+			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid=?s LIMIT 1', $hash, $this->user->id)
+				->update('userid=?s', $userid) === 1]);
 	}
 
 
-
-
-	function get_exchange()
+	function get_topics()
 	{
-		$html = $this->html();
+		$this->html()->main->append('h1', '即将完工');
 	}
 }

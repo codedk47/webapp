@@ -87,7 +87,6 @@ class base extends webapp
 					$checked[0]->setattr(['checked' => NULL]);
 				}
 			}
-			$video['name'] = htmlentities($video['name']);
 			$form->echo($video);
 		}
 		return $form;
@@ -277,7 +276,7 @@ class base extends webapp
 					continue 2;
 				}
 			} while (FALSE);
-			echo "{$video['hash']} -> EXCEPTION -> {$error} ->",
+			echo "{$video['hash']} -> EXCEPTION -> {$error} -> ",
 				$this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sync="exception"') === 1 ? "OK\n" : "NO\n";
 		}
 	}
