@@ -458,7 +458,7 @@ class base extends webapp
 	//获取所有视频
 	function fetch_videos():iterable
 	{
-		foreach ($this->mysql->videos('WHERE sync="allow" ORDER BY ctime DESC') as $video)
+		foreach ($this->mysql->videos('WHERE sync="allow" AND ptime<?i ORDER BY ctime DESC', $this->time()) as $video)
 		{
 			$ym = date('ym', $video['mtime']);
 			$video['cover'] = "/{$ym}/{$video['hash']}/cover?{$video['ctime']}";
