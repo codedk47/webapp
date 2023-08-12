@@ -276,12 +276,13 @@ class base extends webapp
 				]) === 1) {
 					$this->mysql->users('WHERE id=?s LIMIT 1', $video['userid'])->update('ctime=?i,video_num=video_num+1', $this->time());
 					printf("%s -> FINISHED -> %s\n", $video['hash'], strtoupper($success));
-					continue 2;
+					break;
+					//continue 2;
+					
 				}
 			} while (FALSE);
 			echo "{$video['hash']} -> EXCEPTION -> {$error} -> ",
 				$this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sync="exception"') === 1 ? "OK\n" : "NO\n";
-			break;
 		}
 	}
 	//本地命令行运行专题获取更新
