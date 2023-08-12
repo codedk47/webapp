@@ -719,12 +719,37 @@ class webapp_router_control extends webapp_echo_html
 
 
 	//========产品========
-	function prod_vtids():array
+	function prod_vtids(bool $listed = FALSE):array
 	{
-		return [
+		$vtids = [
 			'' => '实体产品',
-			'prod_vtid_vip100' => '会员卡100元'
+			'会员' => [
+				'prod_vtid_vip50' => '会员卡 50元',
+				'prod_vtid_vip100' => '会员卡 100元',
+				'prod_vtid_vip200' => '会员卡 200元',
+				'prod_vtid_vip300' => '会员卡 300元',
+				'prod_vtid_vip500' => '会员卡 500元'
+			],
+			'金币' => [
+				'prod_vtid_coin50' => '金币 50个',
+				'prod_vtid_coin100' => '金币 100个',
+				'prod_vtid_coin200' => '金币 200个',
+				'prod_vtid_coin300' => '金币 300个',
+				'prod_vtid_coin500' => '金币 500个'
+			],
+			'游戏' => [
+				'prod_vtid_game100' => '游戏 100元',
+				'prod_vtid_game300' => '游戏 300元',
+				'prod_vtid_game500' => '游戏 500元',
+				'prod_vtid_game800' => '游戏 800元',
+				'prod_vtid_game1000' => '游戏 1000元',
+				'prod_vtid_game2000' => '游戏 2000元',
+				'prod_vtid_game3000' => '游戏 3000元',
+				'prod_vtid_game5000' => '游戏 5000元',
+				'prod_vtid_game10000' => '游戏 10000元'
+			]
 		];
+		return $listed ? array_merge(['' => array_shift($vtids)], ...array_values($vtids)) : $vtids;
 	}
 	function form_prod(webapp_html $html = NULL):webapp_form
 	{
@@ -750,6 +775,8 @@ class webapp_router_control extends webapp_echo_html
 	function get_prods(int $page = 1)
 	{
 		$conds = [[]];
+
+
 
 
 		$conds[0] = sprintf('%sORDER BY ctime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
@@ -949,7 +976,7 @@ class webapp_router_control extends webapp_echo_html
 			// $td->append('span', ' | ');
 			$td->append('button', ['修改信息', 'onclick' => "location.href='?control/ad-update,hash:{$value['hash']}'"]);
 
-		},  $seats = $this->ad_seats(), $displays = $this->ad_displays());
+		}, $seats = $this->ad_seats(), $displays = $this->ad_displays());
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->fieldset('封面', '字段', '信息');
 		$table->header('广告 %d 项', $table->count());

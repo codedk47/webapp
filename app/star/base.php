@@ -502,10 +502,10 @@ class base extends webapp
 			yield $tag;
 		}
 	}
-	//获取产品
+	//获取所有产品
 	function fetch_prods():iterable
 	{
-		foreach ($this->mysql->prods('ORDER BY ctime DESC') as $prod)
+		foreach ($this->mysql->prods('WHERE count>0 ORDER BY ctime DESC') as $prod)
 		{
 			yield $prod;
 		}
