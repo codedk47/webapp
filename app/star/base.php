@@ -283,6 +283,7 @@ class base extends webapp
 			} while (FALSE);
 			echo "{$video['hash']} -> EXCEPTION -> {$error} -> ",
 				$this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sync="exception"') === 1 ? "OK\n" : "NO\n";
+			break;
 		}
 	}
 	//本地命令行运行专题获取更新
