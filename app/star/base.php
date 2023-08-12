@@ -246,7 +246,7 @@ class base extends webapp
 					$error = 'NOT FOUND';
 					break;
 				}
-				$slice = $ffmpeg($sourcevideo, '-hide_banner -loglevel error -stats -y -hwaccel dxva2 -threads 32');
+				$slice = $ffmpeg($sourcevideo, '-hide_banner -loglevel error -stats -y -threads 32');
 				if (($slice->m3u8($savedir) && $this->maskfile("{$savedir}/play.m3u8", "{$savedir}/play")) === FALSE)
 				{
 					$error = 'SLICE ENCRYPT';
