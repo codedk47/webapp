@@ -241,8 +241,8 @@ class base extends webapp
 	{
 		if (PHP_SAPI !== 'cli') return 404;
 		$ffmpeg = static::lib('ffmpeg/interface.php');
-		foreach ($this->mysql->videos('WHERE sync="waiting" AND size<=tell') as $video)
-		{
+		if ($this->mysql->videos('WHERE sync="waiting" AND size<=tell LIMIT 1')->fetch($video)
+			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sync="slicing"') === 1) {
 			$error = 'UNKNOWN';
 			do
 			{
@@ -282,12 +282,9 @@ class base extends webapp
 				]) === 1) {
 					$this->mysql->users('WHERE id=?s LIMIT 1', $video['userid'])->update('ctime=?i,video_num=video_num+1', $this->time());
 					printf("%s -> FINISHED -> %s\n", $video['hash'], strtoupper($success));
-					//break;
-					continue 2;
-					
+					return 200;
 				}
 			} while (FALSE);
-			//break;
 			echo "{$video['hash']} -> EXCEPTION -> {$error} -> ",
 				$this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sync="exception"') === 1 ? "OK\n" : "NO\n";
 		}
