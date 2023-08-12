@@ -503,14 +503,12 @@ class base extends webapp
 		}
 	}
 	//获取产品
-	function fetch_prods():array
+	function fetch_prods():iterable
 	{
-		$prods = [];
-		foreach ($this->webapp->mysql->prods as $prod)
+		foreach ($this->mysql->tags('ORDER BY ctime DESC') as $prod)
 		{
-
+			yield $prod;
 		}
-		return [];
 	}
 
 
