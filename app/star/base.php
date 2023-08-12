@@ -31,7 +31,7 @@ class base extends webapp
 		]);
 		$form->field('ptime', 'datetime-local', format:fn($v, $i) => $i ? strtotime($v) : date('Y-m-d\\TH:i', $v));
 
-		$form->fieldset('视频类型 / 预览时段');
+		$form->fieldset('视频类型 / 预览时段 / 排序');
 		$form->field('type', 'select', ['options' => base::video_type]);
 		function preview_format($v, $i)
 		{
