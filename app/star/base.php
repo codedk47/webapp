@@ -2,7 +2,13 @@
 require 'user.php';
 class base extends webapp
 {
-	const video_sync = ['waiting' => '等待处理', 'exception' => '处理异常', 'finished' => '审核中', 'allow' => '正常（上架视频）', 'deny' => '拒绝（下架视频）'];
+	const video_sync = [
+		'waiting' => '等待处理',
+		'slicing' => '正在处理',
+		'exception' => '处理异常',
+		'finished' => '审核中',
+		'allow' => '正常（上架视频）',
+		'deny' => '拒绝（下架视频）'];
 	const video_type = ['h' => '横版视频', 'v' => '竖版视频'];
 	static function format_duration(int $second):string
 	{
