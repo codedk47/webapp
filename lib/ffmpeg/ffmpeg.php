@@ -35,7 +35,7 @@ class ffmpeg
 		]
 	];
 	private $format = [], $audio = [], $video = [], $fixed = 1, $options, $filename, $output;
-	function __construct(string $filename, string $option = '-hide_banner -loglevel error -stats -y')
+	function __construct(string $filename, string $option = '-hide_banner -loglevel error -stats -y -hwaccel dxva2 -threads 8')
 	{
 		$this->options = [$option];
 		$this->filename = realpath($filename);
