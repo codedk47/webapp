@@ -800,7 +800,7 @@ class webapp_router_control extends webapp_echo_html
 				'data-dialog' => "删除 {$value['hash']} 确定？"
 			]);
 
-		}, $this->prod_vtids());
+		}, $this->prod_vtids(TRUE));
 		$table->paging($this->webapp->at(['page' => '']));
 
 		$table->fieldset('创建时间', '修改时间', 'HASH', 'VTID', '累计销量', '名称', '剩余数量', '单价（元）', '删除');

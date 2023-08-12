@@ -82,10 +82,6 @@ class webapp_router_uploader
 		$this->json();
 		if ($uploader = $this->webapp->authorize($token, fn($uid, $pwd) =>
 			$this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->array())) {
-			// $this->webapp->mysql->uploaders('WHERE uid=?s LIMIT 1', $uploader['uid'])->update([
-			// 	'lasttime' => $this->webapp->time,
-			// 	'lastip' => $this->webapp->ip
-			// ]);
 			$this->echo['token'] = $token;
 		}
 	}
@@ -111,7 +107,11 @@ class webapp_router_uploader
 					break;
 				}
 			}
-			$this->echo['token'] = $this->webapp->signature($data['username'], $data['password']);
+			if ($this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $data['username'], $data['password'])->update([
+				'lasttime' => $this->webapp->time,
+				'lastip' => $this->webapp->iphex($this->webapp->ip)]) === 1) {
+				$this->echo['token'] = $this->webapp->signature($data['username'], $data['password']);
+			}
 		} while (FALSE);
 	}
 	function get_info()
