@@ -29,7 +29,7 @@ class base extends webapp
 			'placeholder' => '要求',
 			'required' => NULL
 		]);
-		//$form->field('ptime', 'datetime-local', format:fn($v, $i) => $i ? strtotime($v) : date('Y-m-d\\TH:i', $v));
+		$form->field('ptime', 'datetime-local', format:fn($v, $i) => $i ? strtotime($v) : date('Y-m-d\\TH:i', $v));
 
 		$form->fieldset('视频类型 / 预览时段');
 		$form->field('type', 'select', ['options' => base::video_type]);
@@ -56,7 +56,6 @@ class base extends webapp
 
 		$form->xml['method'] = 'patch';
 		$form->xml['onsubmit'] = 'return video_value(this)';
-		//$form->xml->append('script', 'document.querySelectorAll("ul.video_tags>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		if ($form->echo && $hash && $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
 		{
 			$form->xml['action'] .= $this->encrypt($video['hash']);
@@ -135,7 +134,7 @@ class base extends webapp
 					'userid' => $acc[0],
 					'mtime' => $this->time,
 					'ctime' => $this->time,
-					//'ptime' => $this->time,
+					'ptime' => $this->time,
 					'size' => $uploading['size'],
 					'tell' => 0,
 					'cover' => 'finish',
