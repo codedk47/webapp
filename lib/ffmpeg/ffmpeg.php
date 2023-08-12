@@ -67,7 +67,7 @@ class ffmpeg
 	}
 	function __invoke(string ...$options):int
 	{
-		return static::exec(sprintf('%s -i -threads 32 "%s" %s', join(' ', $this->options), $this->filename, join(' ', $options)), $this->output);
+		return static::exec(sprintf('%s -i "%s" -threads 32 %s', join(' ', $this->options), $this->filename, join(' ', $options)), $this->output);
 	}
 	function __toString():string
 	{
