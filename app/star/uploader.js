@@ -96,6 +96,13 @@ uploader.uploading = table =>
 		}, 1000);
 	});
 };
+uploader.video_patch = (action, data = null) =>
+{
+	top.framer.loader(action, {
+		method: 'PATCH',
+		body: data || null
+	}).then(data => data.result ? top.framer(top.document.querySelector('iframe[data-load]').dataset.load) : alert('修改失败！'));
+}
 uploader.change_video_user = select =>
 {
 	top.framer.loader(select.dataset.action, {

@@ -571,8 +571,18 @@ class webapp_router_control extends webapp_echo_html
 		}
 		if ($sync = $this->webapp->query['sync'] ?? '')
 		{
-			$conds[0][] = 'sync=?s';
-			$conds[] = $sync;
+			switch ($sync)
+			{
+				case 'uploading':
+					$conds[0][] = 'sync="waiting" AND tell<size';
+					break;
+				case 'waiting':
+					$conds[0][] = 'sync="waiting" AND tell>=size';
+					break;
+				default:
+					$conds[0][] = 'sync=?s';
+					$conds[] = $sync;
+			}
 		}
 		if ($type = $this->webapp->query['type'] ?? '')
 		{
@@ -624,22 +634,42 @@ class webapp_router_control extends webapp_echo_html
 			$table->row();
 			$table->cell('状态');
 			$syncnode = $table->cell();
-			$syncnode->append('span', base::video_sync[$value['sync']]);
-			if ($value['sync'] === 'finished')
+			$syncnode->append('span', $value['sync'] === 'waiting' && $value['tell'] < $value['size']
+				? '正在上传' : base::video_sync[$value['sync']]);
+			$anchors = [];
+			if ($value['sync'] !== 'exception')
 			{
-				$syncnode->append('a', ['通过',
+				$anchors[] = ['异常',
+					'href' => "?control/video,hash:{$value['hash']},sync:exception",
+					'style' => 'margin:0 1rem;color:maroon',
+					'data-method' => 'patch',
+					'data-dialog' => '标记异常后不可恢复',
+					'data-bind' => 'click'
+				];
+			}
+			if (in_array($value['sync'], ['finished', 'allow'], TRUE))
+			{
+				$anchors[] = ['拒绝',
+					'href' => "?control/video,hash:{$value['hash']},sync:deny",
+					'style' => 'margin:0 1rem;color:maroon',
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				];
+			}
+			if (in_array($value['sync'], ['finished', 'deny'], TRUE))
+			{
+				$anchors[] = ['通过',
 					'href' => "?control/video,hash:{$value['hash']},sync:allow",
 					'style' => 'margin:0 1rem',
 					'data-method' => 'patch',
 					'data-bind' => 'click'
-				]);
-				$syncnode->append('a', ['拒绝',
-					'href' => "?control/video,hash:{$value['hash']},sync:deny",
-					'style' => 'color:maroon',
-					'data-method' => 'patch',
-					'data-bind' => 'click'
-				]);
+				];
 			}
+			foreach ($anchors as $anchor)
+			{
+				$syncnode->append('a', $anchor);
+			}
+
 			$table->cell('观看');
 			$table->cell(number_format($value['view']));
 			$table->cell('点赞');
@@ -697,7 +727,7 @@ class webapp_router_control extends webapp_echo_html
 			'placeholder' => '请输入视频HASH、标签HASH、关键字按【Enter】进行搜索。',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
-		$table->bar->select(['' => '全部状态'] + base::video_sync)
+		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
 			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
 		$table->bar->select(['' => '全部类型'] + base::video_type)
@@ -717,9 +747,8 @@ class webapp_router_control extends webapp_echo_html
 	function patch_video(string $hash, string $sync)
 	{
 		in_array($sync, ['exception', 'allow', 'deny', TRUE])
-			&& $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('sync=?s,ctime=?i', $sync, $this->webapp->time) === 1
-				? $this->goto()
-				: $this->dialog('状态更新失败！');
+			&& $this->webapp->mysql->videos('WHERE hash=?s AND sync!="exception" LIMIT 1', $hash)
+				->update('sync=?s,ctime=?i', $sync, $this->webapp->time) === 1 ? $this->goto() : $this->dialog('状态更新失败！');
 	}
 
 

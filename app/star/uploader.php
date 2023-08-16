@@ -181,8 +181,18 @@ class webapp_router_uploader
 		}
 		if ($sync = $this->webapp->query['sync'] ?? '')
 		{
-			$conds[0][] = 'sync=?s';
-			$conds[] = $sync;
+			switch ($sync)
+			{
+				case 'uploading':
+					$conds[0][] = 'sync="waiting" AND tell<size';
+					break;
+				case 'waiting':
+					$conds[0][] = 'sync="waiting" AND tell>=size';
+					break;
+				default:
+					$conds[0][] = 'sync=?s';
+					$conds[] = $sync;
+			}
 		}
 		if ($type = $this->webapp->query['type'] ?? '')
 		{
@@ -230,7 +240,19 @@ class webapp_router_uploader
 
 			$table->row();
 			$table->cell('状态');
-			$table->cell(base::video_sync[$value['sync']]);
+			$syncnode = $table->cell();
+			$syncnode->append('span', $value['sync'] === 'waiting' && $value['tell'] < $value['size']
+				? '正在上传' : base::video_sync[$value['sync']]);
+			if ($value['sync'] !== 'exception')
+			{
+				$syncnode->append('a', ['异常',
+					'href' => 'javascript:;',
+					'style' => 'margin:0 1rem;color:maroon',
+					'data-action' => "?uploader/video-exception,hash:{$value['hash']}",
+					'onclick' => 'confirm("异常后不可撤销！")&&top.uploader.video_patch(this.dataset.action)'
+				]);
+			}
+
 			$table->cell('观看');
 			$table->cell(number_format($value['view']));
 			$table->cell('点赞');
@@ -288,7 +310,7 @@ class webapp_router_uploader
 			'placeholder' => '请输入视频HASH、标签HASH、关键字按【Enter】进行搜索。',
 			'onkeydown' => 'event.keyCode==13&&r({search:this.value?urlencode(this.value):null,page:null})'
 		]);
-		$table->bar->select(['' => '全部状态'] + base::video_sync)
+		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
 			->setattr(['onchange' => 'r({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
 		$table->bar->select(['' => '全部类型'] + base::video_type)
@@ -326,6 +348,12 @@ class webapp_router_uploader
 			'multiple' => NULL
 		]);
 		$table->footer('建议单次上传保持在1~5个视频，单个视频不得大于2G');
+	}
+	function patch_video_exception(string $hash)
+	{
+		$this->json(['result' => $this->user->id
+			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid=?s LIMIT 1',
+				$hash, $this->user->id)->update('sync="exception"') === 1]);
 	}
 	function patch_change_video_user(string $hash)
 	{
