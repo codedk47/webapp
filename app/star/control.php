@@ -745,6 +745,7 @@ class webapp_router_control extends webapp_echo_html
 			'data-method' => 'patch',
 			'data-bind' => 'click'
 		]);
+		$table->bar['style'] = 'white-space:nowrap';
 	}
 	function get_video(string $hash)
 	{

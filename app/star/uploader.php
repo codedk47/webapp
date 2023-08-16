@@ -323,6 +323,7 @@ class webapp_router_uploader
 			'sales-desc' => '销量（降序）'])
 			->setattr(['onchange' => 'r({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sort);
+		$table->bar['style'] = 'white-space:nowrap';
 	}
 	function get_video(string $hash, string $goto = NULL)
 	{
