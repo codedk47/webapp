@@ -742,7 +742,6 @@ class webapp_router_control extends webapp_echo_html
 		$table->bar->append('button', ['所有完成视频通过审核',
 			'style' => 'margin-left:.6rem',
 			'data-src' => '?control/video-all-finished-to-allow',
-			'data-dialog' => '真的不需要认真看看？',
 			'data-method' => 'patch',
 			'data-bind' => 'click'
 		]);
