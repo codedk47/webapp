@@ -26,6 +26,12 @@ class webapp_router_control extends webapp_echo_html
 				['产品', '?control/prods'],
 				
 				['广告', '?control/ads'],
+				// ['记录', [
+				// 	['充值VIP', '?control'],
+				// 	['充值金币', '?control'],
+				// 	['购买影片', '?control'],
+				// 	['提现', '?control']
+				// ]],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -858,8 +864,9 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function post_prod_update(string $hash)
 	{
-		if ($this->form_prod()->fetch($prod) && $this->webapp->mysql->prods('WHERE hash=?s LIMIT 1', $hash)->update($prod))
-		{
+		if ($this->form_prod()->fetch($prod) && $this->webapp->mysql->prods('WHERE hash=?s LIMIT 1', $hash)->update([
+			'ctime' => $this->webapp->time
+		] + $prod)) {
 			$this->webapp->response_location('?control/prods');
 		}
 		else

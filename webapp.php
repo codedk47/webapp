@@ -98,9 +98,9 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	static function hashtime33(string $hash):int
 	{
-		for ($code = 0, [$i, $n] = strlen($hash) === 10 ? [10, 6] : [12, 5]; $i--;)
+		for ($code = 0, [$i, $n, $b] = strlen($hash) === 10 ? [10, 6, 54] : [12, 5, 55]; $i;)
 		{
-			$code |= strpos(self::key, $hash[$i]) << 54 - $i * $n;
+			$code |= strpos(self::key, $hash[--$i]) << $b - $i * $n;
 		}
 		return $code;
 	}

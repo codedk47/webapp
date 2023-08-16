@@ -148,7 +148,7 @@ function video_value(form)
 	});
 	return false;
 }
-function video_cover(input)
+function video_cover(input, preview)
 {
 	if (input.files.length < 1) return alert('请选择一个封面图片！');
 	if (input.disabled) return;
@@ -165,19 +165,13 @@ function video_cover(input)
 			body: buffer.map((byte, i) => byte ^ key[i % 8])
 		}).then(r => r.json()).then(json =>
 		{
-			alert(json.dialog);
+			//alert(json.dialog);
+			preview.style.backgroundImage = `url(${URL.createObjectURL(input.files[0])})`;
+			preview.textContent = '';
 			input.disabled = false;
 		})
 	};
 	reader.readAsArrayBuffer(input.files[0]);
-}
-function cover_preview(cover, preview)
-{
-	if (cover.files.length)
-	{
-		preview.style.backgroundImage = `url(${URL.createObjectURL(cover.files[0])})`;
-		preview.textContent = '';
-	}
 }
 document.addEventListener('DOMContentLoaded', event =>
 {

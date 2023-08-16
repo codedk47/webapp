@@ -12,16 +12,69 @@ class user extends ArrayObject
 	{
 		return $this->id ? $this->webapp->signature($this->id, $this['cid']) : '';
 	}
-	function save()
+	//操作记录
+	private function record(string $type, array $data, bool $result = FALSE):array
 	{
-
+		if ($this->id && $data)
+		{
+			[$time33, $fee, $ext] = match ($type)
+			{
+				'vip', 'coin', 'game', 'prod' => [$this->webapp->time, $data['price'], $data],
+				'video' => [$this->webapp->hashtime33($data['hash']), $data['require'], $data['hash']],
+				default => [$this->webapp->time, $data['fee'], $data]
+			};
+			if ($this->webapp->mysql->records->insert($record = [
+				'hash' => $this->id . $this->webapp->time33hash($time33, TRUE),
+				'userid' => $this->id,
+				'ctime' => $this->webapp->time,
+				'mtime' => $this->webapp->time,
+				'result' => $result ? 'success' : 'pending',
+				'type' => $type,
+				'log' => 'pending',
+				'cid' => $this['cid'],
+				'fee' => $fee,
+				'ext' => json_encode($ext, JSON_UNESCAPED_UNICODE)
+			])) return $record;
+		}
+		return [];
 	}
 	//用户（可选条件）表操作
-	function cond(string ...$conds):webapp_mysql_table
+	private function cond(string ...$conds):webapp_mysql_table
 	{
 		return $this->webapp->mysql->users(...[$conds
 			? sprintf('WHERE id=?s %s LIMIT 1', array_shift($conds))
 			: 'WHERE id=?s LIMIT 1', $this->id, ...$conds]);
+	}
+	function incr_balance(int $fee):bool
+	{
+		if ($this->id && $this->cond()->update('balance=balance+?i', $fee) === 1)
+		{
+			$this['balance'] += $fee;
+			return TRUE;
+		}
+		return FALSE;
+	}
+	function incr_vip(int $day):bool
+	{
+		if ($this->id && $this->cond()->update('expire=IF(expire>?i,expire,?i)+?i',
+			$this->webapp->time, $this->webapp->time, $sec = $day * 86400) === 1) {
+			$this['expire'] += $sec;
+			return TRUE;
+		}
+		return FALSE;
+	}
+	function incr_coin(int $num):bool
+	{
+		if ($this->id && $this->cond()->update('coin=coin+?i', $num) === 1)
+		{
+			$this['coin'] += $num;
+			return TRUE;
+		}
+		return FALSE;
+	}
+	function incr_game(int $coin):bool
+	{
+		return FALSE;
 	}
 	//刷新用户最后登录状态
 	function sign_in():bool
@@ -34,12 +87,22 @@ class user extends ArrayObject
 	//修改昵称
 	function change_nickname(string $nickname):bool
 	{
-		return $this->id && $this->cond()->update('nickname=?s', $nickname) === 1;
+		if ($this->id && $this->cond()->update('nickname=?s', $nickname) === 1)
+		{
+			$this['nickname'] = $nickname;
+			return TRUE;
+		}
+		return FALSE;
 	}
 	//绑定手机
 	function bind_tid(string $tid):bool
 	{
-		return $this->id && $this->cond('AND tid IS NULL')->update('tid=?s', $tid) === 1;
+		if ($this->id && $this->cond('AND tid IS NULL')->update('tid=?s', $tid) === 1)
+		{
+			$this['tid'] = $tid;
+			return TRUE;
+		}
+		return FALSE;
 	}
 	//用户观看历史记录最多50个
 	function historys():array
@@ -54,130 +117,159 @@ class user extends ArrayObject
 	//用户收藏视频 -1取消 0无操作 +1收藏
 	function favorite_video(string $hash):int
 	{
-		return random_int(-1, 1);
-		if (strlen($hash) === 12)
+		if ($this->id && strlen($hash) === 12 && trim($hash, webapp::key) === '')
 		{
-			$favorites = $this->favorites();
-			return in_array($hash, $favorites, TRUE)
-				|| $this->cond()->update('favorites=?s', $hash . join(array_slice($favorites, 0, 48))) === 1;
+			$result = 0;
+			$favorites = $this['favorites'] ? str_split($this['favorites'], 12) : [];
+			if (is_int($index = array_search($hash, $favorites, TRUE)))
+			{
+				--$result;
+				array_splice($favorites, $index, 1);
+			}
+			else
+			{
+				++$result;
+				$favorites[] = $hash;
+			}
+			if ($this->webapp->mysql->videos('WHERE hash=?s LIMTI 1', $hash)->update('like=like+?i', $result) === 1)
+			{
+				$favorites = join(array_slice($favorites, -50));
+				if ($this->cond()->update('favorites=?s', $favorites) === 1)
+				{
+					$this['favorites'] = $favorites;
+					return $result;
+				}
+			}
 		}
-		return FALSE;
+		return 0;
 	}
 	//用户上传的视频（只返回HASH）
-	function videos(int $page, int $size = 10):webapp_mysql_table
+	function videos(int $page, int $size = 10):array
 	{
-		return $this->webapp->mysql->videos('WHERE userid=?s ORDER BY mtime DESC', $this->id)->paging($page, $size);
+		return $this->webapp->mysql->videos('WHERE userid=?s ORDER BY sort DESC', $this->id)->paging($page, $size)->column('hash');
 	}
 	//用户关注UP主（再次关注即可取消）
 	function follow_uploader_user(string $id):bool
 	{
 		if (strlen($id) === 10 && trim($id, webapp::key) === '')
 		{
+			$result = 0;
 			$followed_ids = $this['followed_ids'] ? str_split($this['followed_ids'], 10) : [];
 			if (is_int($index = array_search($id, $followed_ids, TRUE)))
 			{
+				--$result;
 				array_splice($followed_ids, $index, 1);
 			}
 			else
 			{
+				++$result;
 				$followed_ids[] = $id;
 			}
-			$this['followed_ids'] = join(array_slice($followed_ids, -50));
-			return $this->cond()->update('followed_ids=?s', $this['followed_ids']) === 1;
-		}
-		return FALSE;
-	}
-
-	//购买商品
-	function buy_prod(string $hash):bool
-	{
-		while ($this->id)
-		{
-			if ($this->webapp->mysql->prods('WHERE hash=?s and count>0 LIMIT 1', $hash)->fetch($prod) === FALSE)
+			if ($this->webapp->mysql->users('WHERE id=?s LIMTI 1', $id)->update('followed_num=followed_num+?i', $result) === 1)
 			{
-				break;
+				$followed_ids = join(array_slice($followed_ids, -50));
+				if ($this->cond()->update('followed_ids=?s', $followed_ids) === 1)
+				{
+					$this['followed_ids'] = $followed_ids;
+					return TRUE;
+				}
 			}
-			// if ($prod['price'] < $this['balance'])
-			// {
-			// 	break;
-			// }
-			return $this->webapp->mysql->sync(function() use($prod)
-			{
-
-				print_r($prod);
-
-
-
-			});
 		}
 		return FALSE;
-		// do
-		// {
-			
-		// 	if ($prod['price'] > $this[])
-
-
-		// } while (FALSE);
-		// return FALSE;
 	}
-
+	//购买商品
+	function buy_prod(string $hash):array
+	{
+		return $this->id
+			&& $this->webapp->mysql->prods('WHERE hash=?s and count>0 LIMIT 1', $hash)->fetch($prod)
+			&& $this->webapp->mysql->sync(function(array $prod) use(&$record)
+			{
+				return $this->webapp->mysql->prods('WHERE hash=?s LIMIT 1', $prod['hash'])->update('count=count-1,sales=sales+1') === 1
+					&& ($record = $this->record(match (TRUE)
+					{
+						str_starts_with($prod['vtid'], 'prod_vtid_vip') => 'vip',
+						str_starts_with($prod['vtid'], 'prod_vtid_coin') => 'coin',
+						str_starts_with($prod['vtid'], 'prod_vtid_game') => 'game',
+						default => 'prod'
+					}, $prod));
+			}, $prod) ? $record : [];
+	}
 	//已购买视频
 	function buy_video_already(string $hash):bool
 	{
-		return $this->webapp->mysql->records('WHERE userid=?s AND type="video" AND aid=?s LIMIT 1', $this->id, $hash)->fetch();
+		return $this->id
+			&& $this->webapp->mysql->records('WHERE hash=?s LIMIT 1',
+				$this->id . $this->webapp->time33hash($this->webapp->hashtime33($hash), TRUE))->fetch();
 	}
 	//通过金币购买视频
 	function buy_video_by_coin(string $hash):bool
 	{
-		return $this->buy_video_already($hash) === FALSE
-			&& $this->webapp->mysql->videos('WHERE hash=?s and `require`>0 LIMIT 1', $hash)->fetch($video)
+		return $this->id
+			&& $this->buy_video_already($hash) === FALSE
+			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid!=?s AND sync="allow" AND `require`>0 LIMIT 1', $hash, $this->id)->fetch($video)
+			&& $this['coin'] >= $video['require']
 			&& $this->webapp->mysql->sync(function() use($video)
 			{
-				return is_string($this->record('video', $video['require'], $video['hash'], TRUE))
+				return $this->record('video', $video, TRUE)
 					&& $this->cond()->update('coin=coin-?i', $video['require']) === 1
-					&& $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sales=sales+1') === 1;
-			});
+					&& $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sales=sales+1') === 1
+					&& $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $video['userid'])
+						->update('balance=balance+?i', $video['require'] * 0.5) === 1;
+			}) && is_int($this['coin'] -= $video['require']);
 	}
 	//通过观影券购买视频
 	function buy_video_by_ticket(string $hash):bool
 	{
-		return FALSE;
+		return $this->id
+			&& $this->buy_video_already($hash) === FALSE
+			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid!=?s AND sync="allow" AND `require`>0 LIMIT 1', $hash, $this->id)->fetch($video)
+			&& $this->webapp->mysql->sync(function() use($video)
+			{
+				$video['require'] = 0;
+				return $this->record('video', $video, TRUE)
+					&& $this->cond()->update('ticket=ticket-1') === 1
+					&& $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sales=sales+1') === 1;
+			}) && is_int(--$this['ticket']);
 	}
 	//购买的视频数据
-	function buy_videos(int $page, int $size = 100):array
+	function buy_videos(int $page, int $size = 50):array
 	{
-		return $this->webapp->mysql->records('WHERE userid=?s', $this->id)->paging($page, $size)->all();
+		return array_column($this->webapp->mysql->records('WHERE userid=?s AND type="video"', $this->id)
+			->select('ext->>"$"')->paging($page, $size)->all(), 'ext->>"$"');
 	}
-	function record(string $type, $fee, string $aid, bool $result = FALSE):?string
+	//余额提现
+	function exchange(array $transfer):array
 	{
-		$hash = $this->webapp->random_hash(FALSE);
-		$data = [
-			'hash' => $hash,
-			'userid' => $this->id,
-			'result' => $result ? 'success' : 'pending',
-			'ctime' => $this->webapp->time,
-			'mtime' => $this->webapp->time,
-			'type' => $type,
-			'cid' => $this['cid'],
-			'fee' => $fee,
-			'aid' => $aid,
-			'ext' => NULL
-		];
-
-		return $this->webapp->mysql->records->insert($data) ? $hash : NULL;
+		return $this->id && $this->webapp->mysql->sync(function($transfer) use(&$record)
+		{
+			return $this->cond()->update('balance=balance-?i', $transfer['fee']) === 1
+				&& ($record = $this->record('exchange', ['vtid' => 'exchange'] + $transfer));
+		}, $transfer) ? $record : [];
 	}
-
+	//游戏提现
+	// function exchange_game(array $transfer):array
+	// {
+	// 	$record = [];
+	// 	$this->id && $this->webapp->mysql->sync(function($transfer) use(&$record)
+	// 	{
+	// 		$record = $this->record('exchange', ['vtid' => 'exchange'] + $transfer);
+	// 		return $record && $this->cond()->update('balance=balance-?i', $transfer['fee']) === 1;
+	// 	}, $transfer);
+	// 	return $record;
+	// }
 
 	static function create(webapp $webapp, array $user = []):?static
 	{
 		$userdata = [];
 		do
 		{
-			if (isset($user['did']) && $webapp->mysql->users('WHERE did=?s LIMIT 1', $user['did'])->fetch($userdata))
+			$did = isset($user['did']) ? substr(md5($user['did']), -16) : $webapp->did;
+			if ($did && $webapp->mysql->users('WHERE did=?s LIMIT 1', $did)->fetch($userdata))
 			{
 				break;
 			}
-			if (isset($user['tid']) && $webapp->mysql->users('WHERE tid=?s LIMIT 1', $user['tid'])->fetch($userdata))
+			$tid = $user['tid'] ?? NULL;
+			if ($tid && $webapp->mysql->users('WHERE tid=?s LIMIT 1', $tid)->fetch($userdata))
 			{
 				break;
 			}
@@ -201,8 +293,8 @@ class user extends ArrayObject
 				'fid' => ord(random_bytes(1)),
 				'uid' => $user['uid'] ?? 0,
 				'cid' => $user['cid'] ?? $webapp->cid,
-				'did' => $user['did'] ?? $webapp->did,
-				'tid' => $user['tid'] ?? NULL,
+				'did' => $did,
+				'tid' => $tid,
 				'historys' => '',
 				'favorites' => '',
 				'followed_ids' => '',
@@ -210,6 +302,7 @@ class user extends ArrayObject
 				'video_num' => 0,
 				'like_num' => 0
 			];
+			$i = 0;
 			do
 			{
 				$id = $webapp->random_time33();
@@ -220,8 +313,7 @@ class user extends ArrayObject
 					$userdata = $user;
 					break;
 				}
-			} while ($webapp->mysql->errno === 1062);
-
+			} while ($webapp->mysql->errno === 1062 && ++$i < 3);
 		} while (FALSE);
 		return new static($webapp, $userdata);
 	}

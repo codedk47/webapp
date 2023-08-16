@@ -197,7 +197,7 @@ class webapp_router_uploader
 			default => '`mtime` DESC'
 		};
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
-		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
+		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags, $goto)
 		{
 			$ym = date('ym', $value['mtime']);
 
@@ -209,7 +209,7 @@ class webapp_router_uploader
 				'data-action' => "?uploader/change_video_user,hash:{$value['hash']}",
 				'onchange' => 'top.uploader.change_video_user(this)'
 			])->selected($this->user->id);
-			$table->cell(['colspan' => 8])->append('a', ['信息（点击修改下面信息）', 'href' => "?uploader/video,hash:{$value['hash']}"]);
+			$table->cell(['colspan' => 8])->append('a', ['信息（点击修改下面信息）', 'href' => "?uploader/video,hash:{$value['hash']},goto:{$goto}"]);
 
 			$table->row();
 			$cover = $table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover']);
@@ -268,7 +268,7 @@ class webapp_router_uploader
 				$cover[0] = '等待处理...';
 			}
 
-		}, $tags);
+		}, $tags, $this->webapp->url64_encode($this->webapp->at([],'?uploader/videos')));
 		$table->paging($this->webapp->at(['page' => '']));
 		if ($goto = $table->xml->xpath('tfoot/tr/td/input|tfoot/tr/td/a[@onclick]'))
 		{
@@ -301,10 +301,11 @@ class webapp_router_uploader
 			->setattr(['onchange' => 'r({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sort);
 	}
-	function get_video(string $hash)
+	function get_video(string $hash, string $goto = NULL)
 	{
+		//$goto ??= $this->webapp->url64_encode('?uploader/videos');
 		$form = $this->webapp->form_video($this->html()->main, $hash);
-		$form->xml['action'] .= ',goto:' . $this->webapp->url64_encode('?uploader/videos');
+		$form->xml['action'] .= ",goto:{$goto}";
 		unset($form['sort']);
 
 	}

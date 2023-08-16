@@ -19,10 +19,8 @@ class base extends webapp
 		$form = new webapp_form($ctx ?? $this, '?video-value/');
 		
 		$cover = $form->fieldset->append('div', ['class' => 'cover', 'style' => 'width:512px;height:288px']);
-
-		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
-		$form->button('更新封面', 'button', ['onclick' => 'video_cover(this.previousElementSibling)']);
-		
+		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
+			'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
 
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:60rem', 'required' => NULL]);
@@ -164,7 +162,7 @@ class base extends webapp
 					break;
 				}
 			}
-			$this->response_uploading("?uploaddata/{$uploading['hash']}", $video['tell']);
+			$this->response_uploading("?uploaddata/{$uploading['hash']},userid:{$acc[0]}", $video['tell']);
 			//$this->response_uploading("?test");
 			return 200;
 		} while (FALSE);
@@ -174,9 +172,9 @@ class base extends webapp
 	// {
 	// 	return 202;
 	// }
-	function post_uploaddata(string $hash)
+	function post_uploaddata(string $hash, string $userid)
 	{
-		return $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video)
+		return $this->mysql->videos('WHERE hash=?s AND userid=?s LIMIT 1', $hash, $userid)->fetch($video)
 			&& $video['tell'] < $video['size']
 			&& ($size = $this->request_uploaddata($this->path_video(FALSE, $video, '/video.sb'))) !== -1
 			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('tell=tell+?i', $size) === 1 ? 200 : 404;
@@ -333,10 +331,6 @@ class base extends webapp
 			}
 		}
 	}
-	function prod_vtid_vip100(string $userid):bool
-	{
-		return FALSE;
-	}
 	//======================以上为内部功能======================
 	//======================以下为扩展功能======================
 	function ua():string
@@ -357,6 +351,7 @@ class base extends webapp
 	{
 		return preg_match('/DID\:(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
 	}
+	//记录日志
 	function recordlog(string $field, int $value = 1, int $nowtime = NULL)
 	{
 		$ciddate = $this->cid() . date('Ymd', $nowtime);
@@ -430,6 +425,76 @@ class base extends webapp
 	{
 		return $id ? user::from_id($this, $id) : new user($this,
 			$this->authorize($this->request_authorization($type), $this->user_fetch(...)));
+	}
+
+	private function prod_vtid_vip50(bool $result, array $record):bool
+	{
+		//VIP增加7天
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
+			->update('expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 7) === 1;
+	}
+	private function prod_vtid_vip100(bool $result, array $record):bool
+	{
+		//VIP增加30天（送10张观影卷）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
+			->update('expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+10', $this->time, $this->time, 86400 * 30) === 1;
+	}
+	private function prod_vtid_vip200(bool $result, array $record):bool
+	{
+		//VIP增加365天（送30张观影卷）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
+			->update('expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+30', $this->time, $this->time, 86400 * 365) === 1;
+	}
+	private function prod_vtid_vip300(bool $result, array $record):bool
+	{
+		//永久VIP（送100张观影卷）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
+			->update('expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+100', $this->time, $this->time, 86400 * 365 * 20) === 1;
+	}
+	private function prod_vtid_vip500(bool $result, array $record):bool
+	{
+		//超级VIP（所有VIP金币视频免费解锁）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('expire=0') === 1;
+	}
+	private function prod_vtid_coin50(bool $result, array $record)
+	{
+		//增加50个金币（赠3天VIP）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
+			->update('coin=coin+50,expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 3) === 1;
+	}
+	private function prod_vtid_coin100(bool $result, array $record)
+	{
+		//增加100个金币（赠5%金币）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+105') === 1;
+	}
+	private function prod_vtid_coin200(bool $result, array $record)
+	{
+		//增加200个金币（赠5%金币）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+210') === 1;
+	}
+	private function prod_vtid_coin300(bool $result, array $record)
+	{
+		//增加300个金币（赠5%金币）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+315') === 1;
+	}
+	private function prod_vtid_coin500(bool $result, array $record)
+	{
+		//增加500个金币（赠5%金币）
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+525') === 1;
+	}
+	private function exchange(bool $result, array $record):bool
+	{
+		return $result || $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
+			->update('balance=balance+?i', $record['fee']) === 1;
+	}
+	//记录（回调）
+	function record(string $hash, bool $result = FALSE):bool
+	{
+		return $this->mysql->records('WHERE hash=?s AND result="pending" AND type!="video" LIMIT 1', $hash)->fetch($record)
+			&& $this->mysql->sync(fn() => (($record['ext'] = json_decode($record['ext'], TRUE))['vtid']
+				? method_exists($this, $record['ext']['vtid']) && $this->{$record['ext']['vtid']}($result, $record)
+				: TRUE) && $this->mysql->records('WHERE hash=?s LIMIT 1', $hash)
+					->update('result=?s', $result ? 'success' : 'failure') === 1);
 	}
 	//获取源
 	function fetch_origins():array
