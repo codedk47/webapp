@@ -287,7 +287,7 @@ class webapp_router_uploader
 			}
 			else
 			{
-				$cover[0] = '等待处理...';
+				$cover[0] = 'Pending';
 			}
 
 		}, $tags, $this->webapp->url64_encode($this->webapp->at([],'?uploader/videos')));

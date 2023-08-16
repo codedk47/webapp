@@ -704,7 +704,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 			else
 			{
-				$cover[0] = '等待处理...';
+				$cover[0] = 'Pending';
 			}
 
 		}, $tags);
@@ -739,6 +739,13 @@ class webapp_router_control extends webapp_echo_html
 			'sales-desc' => '销量（降序）'])
 			->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sort);
+		$table->bar->append('button', ['所有完成视频通过审核',
+			'style' => 'margin-left:.6rem',
+			'data-src' => '?control/video-all-finished-to-allow',
+			'data-dialog' => '真的不需要认真看看？',
+			'data-method' => 'patch',
+			'data-bind' => 'click'
+		]);
 	}
 	function get_video(string $hash)
 	{
@@ -749,6 +756,12 @@ class webapp_router_control extends webapp_echo_html
 		in_array($sync, ['exception', 'allow', 'deny', TRUE])
 			&& $this->webapp->mysql->videos('WHERE hash=?s AND sync!="exception" LIMIT 1', $hash)
 				->update('sync=?s,ctime=?i', $sync, $this->webapp->time) === 1 ? $this->goto() : $this->dialog('状态更新失败！');
+	}
+	function patch_video_all_finished_to_allow()
+	{
+		$count = $this->webapp->mysql->videos('WHERE sync="finished"')->update('sync="allow"');
+		$this->dialog("总共 {$count} 个视频通过审核！");
+		$this->goto();
 	}
 
 
