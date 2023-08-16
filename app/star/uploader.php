@@ -245,11 +245,12 @@ class webapp_router_uploader
 				? '正在上传' : base::video_sync[$value['sync']]);
 			if ($value['sync'] !== 'exception')
 			{
-				$syncnode->append('a', ['异常',
+				$syncnode->append('span', ' | ');
+				$syncnode->append('a', ['设为异常',
 					'href' => 'javascript:;',
-					'style' => 'margin:0 1rem;color:maroon',
+					'style' => 'color:maroon',
 					'data-action' => "?uploader/video-exception,hash:{$value['hash']}",
-					'onclick' => 'confirm("异常后不可撤销！")&&top.uploader.video_patch(this.dataset.action)'
+					'onclick' => 'confirm("设为异常后不可撤销！")&&top.uploader.video_patch(this.dataset.action)'
 				]);
 			}
 

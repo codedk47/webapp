@@ -639,11 +639,11 @@ class webapp_router_control extends webapp_echo_html
 			$anchors = [];
 			if ($value['sync'] !== 'exception')
 			{
-				$anchors[] = ['异常',
+				$anchors[] = ['设为异常',
 					'href' => "?control/video,hash:{$value['hash']},sync:exception",
-					'style' => 'margin:0 1rem;color:maroon',
+					'style' => 'color:maroon',
 					'data-method' => 'patch',
-					'data-dialog' => '标记异常后不可恢复',
+					'data-dialog' => '设为异常后不可恢复',
 					'data-bind' => 'click'
 				];
 			}
@@ -651,7 +651,7 @@ class webapp_router_control extends webapp_echo_html
 			{
 				$anchors[] = ['拒绝',
 					'href' => "?control/video,hash:{$value['hash']},sync:deny",
-					'style' => 'margin:0 1rem;color:maroon',
+					'style' => 'color:maroon',
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				];
@@ -660,13 +660,13 @@ class webapp_router_control extends webapp_echo_html
 			{
 				$anchors[] = ['通过',
 					'href' => "?control/video,hash:{$value['hash']},sync:allow",
-					'style' => 'margin:0 1rem',
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				];
 			}
 			foreach ($anchors as $anchor)
 			{
+				$syncnode->append('span', ' | ');
 				$syncnode->append('a', $anchor);
 			}
 
@@ -759,9 +759,16 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function patch_video_all_finished_to_allow()
 	{
-		$count = $this->webapp->mysql->videos('WHERE sync="finished"')->update('sync="allow"');
-		$this->dialog("总共 {$count} 个视频通过审核！");
-		$this->goto();
+		if ($this->admin)
+		{
+			$count = $this->webapp->mysql->videos('WHERE sync="finished"')->update('sync="allow"');
+			$this->dialog("总共 {$count} 个视频通过审核！");
+			$this->goto();
+		}
+		else
+		{
+			$this->dialog('需要超级管理员权限！');
+		}
 	}
 
 
