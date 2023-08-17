@@ -177,8 +177,10 @@ class user extends ArrayObject
 	//用户上传的视频（只返回HASH）
 	function videos(string $type, string $sync, int $page, int $size = 10):array
 	{
-		return $this->webapp->mysql->videos('WHERE userid=?s AND type=?s AND sync=?s ORDER BY sort DESC',
-			$this->id, $type, $sync)->paging($page, $size)->column('hash');
+		return $this->webapp->mysql->videos(...$type === 'all'
+			? ['WHERE userid=?s AND type IN("finished","allow","deny") AND sync=?s ORDER BY sort DESC', $this->id, $sync]
+			: ['WHERE userid=?s AND type=?s AND sync=?s ORDER BY sort DESC', $this->id, $type, $sync])
+				->paging($page, $size)->column('hash');
 	}
 	//用户关注UP主（再次关注即可取消）
 	function follow_uploader_user(string $id):bool
