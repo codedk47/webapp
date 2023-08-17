@@ -177,8 +177,8 @@ class user extends ArrayObject
 	//用户上传的视频（只返回HASH）
 	function videos(string $type, string $sync, int $page, int $size = 10):array
 	{
-		return $this->webapp->mysql->videos(...$type === 'all'
-			? ['WHERE userid=?s AND type IN("finished","allow","deny") AND sync=?s ORDER BY sort DESC', $this->id, $sync]
+		return $this->webapp->mysql->videos(...$sync === 'all'
+			? ['WHERE userid=?s AND type=?s AND sync IN("finished","allow","deny") ORDER BY sort DESC', $this->id, $type]
 			: ['WHERE userid=?s AND type=?s AND sync=?s ORDER BY sort DESC', $this->id, $type, $sync])
 				->paging($page, $size)->column('hash');
 	}
