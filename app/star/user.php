@@ -175,9 +175,10 @@ class user extends ArrayObject
 		return 0;
 	}
 	//用户上传的视频（只返回HASH）
-	function videos(int $page, int $size = 10):array
+	function videos(string $type, string $sync, int $page, int $size = 10):array
 	{
-		return $this->webapp->mysql->videos('WHERE userid=?s ORDER BY sort DESC', $this->id)->paging($page, $size)->column('hash');
+		return $this->webapp->mysql->videos('WHERE userid=?s AND type=?s AND sync=?s ORDER BY sort DESC',
+			$this->id, $type, $sync)->paging($page, $size)->column('hash');
 	}
 	//用户关注UP主（再次关注即可取消）
 	function follow_uploader_user(string $id):bool
@@ -265,7 +266,7 @@ class user extends ArrayObject
 	//购买的视频数据（只返回HASH）
 	function buy_videos(string $type, int $page, int $size = 10):array
 	{
-		return array_column($this->webapp->mysql->records('WHERE userid=?s AND type="video" and ext->>"$.type"=?s', $this->id, $type)
+		return array_column($this->webapp->mysql->records('WHERE userid=?s AND type="video" and ext->>"$.type"=?s ORDER BY mtime DESC', $this->id, $type)
 			->select('ext->>"$.hash"')->paging($page, $size)->all(), 'ext->>"$.hash"');
 	}
 
