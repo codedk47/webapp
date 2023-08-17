@@ -45,37 +45,46 @@ class user extends ArrayObject
 			? sprintf('WHERE id=?s %s LIMIT 1', array_shift($conds))
 			: 'WHERE id=?s LIMIT 1', $this->id, ...$conds]);
 	}
-	function incr_balance(int $fee):bool
+	//余额提现
+	function exchange(array $transfer):array
 	{
-		if ($this->id && $this->cond()->update('balance=balance+?i', $fee) === 1)
+		return $this->id && $this->webapp->mysql->sync(function($transfer) use(&$record)
 		{
-			$this['balance'] += $fee;
-			return TRUE;
-		}
-		return FALSE;
+			return $this->cond()->update('balance=balance-?i', $transfer['fee']) === 1
+				&& ($record = $this->record('exchange', ['vtid' => 'user_exchange'] + $transfer));
+		}, $transfer) ? $record : [];
 	}
-	function incr_vip(int $day):bool
-	{
-		if ($this->id && $this->cond()->update('expire=IF(expire>?i,expire,?i)+?i',
-			$this->webapp->time, $this->webapp->time, $sec = $day * 86400) === 1) {
-			$this['expire'] += $sec;
-			return TRUE;
-		}
-		return FALSE;
-	}
-	function incr_coin(int $num):bool
-	{
-		if ($this->id && $this->cond()->update('coin=coin+?i', $num) === 1)
-		{
-			$this['coin'] += $num;
-			return TRUE;
-		}
-		return FALSE;
-	}
-	function incr_game(int $coin):bool
-	{
-		return FALSE;
-	}
+	// function incr_balance(int $fee):bool
+	// {
+	// 	if ($this->id && $this->cond()->update('balance=balance+?i', $fee) === 1)
+	// 	{
+	// 		$this['balance'] += $fee;
+	// 		return TRUE;
+	// 	}
+	// 	return FALSE;
+	// }
+	// function incr_vip(int $day):bool
+	// {
+	// 	if ($this->id && $this->cond()->update('expire=IF(expire>?i,expire,?i)+?i',
+	// 		$this->webapp->time, $this->webapp->time, $sec = $day * 86400) === 1) {
+	// 		$this['expire'] += $sec;
+	// 		return TRUE;
+	// 	}
+	// 	return FALSE;
+	// }
+	// function incr_coin(int $num):bool
+	// {
+	// 	if ($this->id && $this->cond()->update('coin=coin+?i', $num) === 1)
+	// 	{
+	// 		$this['coin'] += $num;
+	// 		return TRUE;
+	// 	}
+	// 	return FALSE;
+	// }
+	// function incr_game(int $coin):bool
+	// {
+	// 	return FALSE;
+	// }
 	//刷新用户最后登录状态
 	function sign_in():bool
 	{
@@ -109,6 +118,27 @@ class user extends ArrayObject
 	{
 		return $this->id && $this['historys'] ? str_split($this['historys'], 12) : [];
 	}
+	//用户增加历史记录
+	function history(string $hash):bool
+	{
+		if ($this->id && strlen($hash) === 12 && trim($hash, webapp::key) === '')
+		{
+			$historys = $this->historys();
+			if (is_int($index = array_search($hash, $historys, TRUE)))
+			{
+				array_splice($favorites, $index, 1);
+			}
+			$historys[] = $hash;
+			$historys = join(array_slice($historys, -50));
+			if ($this->cond()->update('historys=?s', $historys) === 1)
+			{
+				$this['historys'] = $historys;
+				return TRUE;
+			}
+		}
+		return FALSE;
+	}
+
 	//用户收藏的视频最多50个
 	function favorites():array
 	{
@@ -120,7 +150,7 @@ class user extends ArrayObject
 		if ($this->id && strlen($hash) === 12 && trim($hash, webapp::key) === '')
 		{
 			$result = 0;
-			$favorites = $this['favorites'] ? str_split($this['favorites'], 12) : [];
+			$favorites = $this->favorites();
 			if (is_int($index = array_search($hash, $favorites, TRUE)))
 			{
 				--$result;
@@ -231,21 +261,13 @@ class user extends ArrayObject
 					&& $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])->update('sales=sales+1') === 1;
 			}) && is_int(--$this['ticket']);
 	}
-	//购买的视频数据
+	//购买的视频数据（只返回HASH）
 	function buy_videos(int $page, int $size = 50):array
 	{
 		return array_column($this->webapp->mysql->records('WHERE userid=?s AND type="video"', $this->id)
 			->select('ext->>"$"')->paging($page, $size)->all(), 'ext->>"$"');
 	}
-	//余额提现
-	function exchange(array $transfer):array
-	{
-		return $this->id && $this->webapp->mysql->sync(function($transfer) use(&$record)
-		{
-			return $this->cond()->update('balance=balance-?i', $transfer['fee']) === 1
-				&& ($record = $this->record('exchange', ['vtid' => 'exchange'] + $transfer));
-		}, $transfer) ? $record : [];
-	}
+
 	//游戏提现
 	// function exchange_game(array $transfer):array
 	// {

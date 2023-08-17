@@ -426,7 +426,11 @@ class base extends webapp
 		return $id ? user::from_id($this, $id) : new user($this,
 			$this->authorize($this->request_authorization($type), $this->user_fetch(...)));
 	}
-
+	private function user_exchange(bool $result, array $record):bool
+	{
+		return $result || $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
+			->update('balance=balance+?i', $record['fee']) === 1;
+	}
 	private function prod_vtid_vip50(bool $result, array $record):bool
 	{
 		//VIP增加7天
@@ -482,11 +486,7 @@ class base extends webapp
 		//增加500个金币（赠5%金币）
 		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+525') === 1;
 	}
-	private function exchange(bool $result, array $record):bool
-	{
-		return $result || $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
-			->update('balance=balance+?i', $record['fee']) === 1;
-	}
+
 	//记录（回调）
 	function record(string $hash, bool $result = FALSE):bool
 	{

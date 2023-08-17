@@ -26,12 +26,12 @@ class webapp_router_control extends webapp_echo_html
 				['产品', '?control/prods'],
 				
 				['广告', '?control/ads'],
-				// ['记录', [
-				// 	['充值VIP', '?control'],
-				// 	['充值金币', '?control'],
-				// 	['购买影片', '?control'],
-				// 	['提现', '?control']
-				// ]],
+				['记录', [
+					// ['充值VIP', '?control'],
+					// ['充值金币', '?control'],
+					['购买影片', '?control/record-video'],
+					// ['提现', '?control']
+				]],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -1095,5 +1095,21 @@ class webapp_router_control extends webapp_echo_html
 			return 200;
 		}
 		$this->main->append('h4', '广告更新失败！');
+	}
+
+
+
+	function get_record_video(int $page = 1)
+	{
+		$conds = [['type="video"']];
+		$conds[0] = sprintf('%s', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$table = $this->main->table($this->webapp->mysql->records(...$conds)->paging($page), function($table, $value)
+		{
+			$table->row();
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell($value['userid']);
+		});
+		$table->fieldset('时间', '用户ID', '字段', '信息');
+		$table->header('用户购买视频 %d 项', $table->count());
 	}
 }
