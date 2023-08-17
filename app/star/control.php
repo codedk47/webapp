@@ -1109,7 +1109,7 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell($value['userid']);
 		});
-		$table->fieldset('时间', '用户ID', '字段', '信息');
+		$table->fieldset('时间', '用户ID', '用户渠道ID', '信息');
 		$table->header('用户购买视频 %d 项', $table->count());
 	}
 }

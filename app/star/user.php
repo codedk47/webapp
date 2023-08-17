@@ -126,7 +126,7 @@ class user extends ArrayObject
 			$historys = $this->historys();
 			if (is_int($index = array_search($hash, $historys, TRUE)))
 			{
-				array_splice($favorites, $index, 1);
+				array_splice($historys, $index, 1);
 			}
 			$historys[] = $hash;
 			$historys = join(array_slice($historys, -50));
