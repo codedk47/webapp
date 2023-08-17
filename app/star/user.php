@@ -20,7 +20,9 @@ class user extends ArrayObject
 			[$time33, $fee, $ext] = match ($type)
 			{
 				'vip', 'coin', 'game', 'prod' => [$this->webapp->time, $data['price'], $data],
-				'video' => [$this->webapp->hashtime33($data['hash']), $data['require'], $data['hash']],
+				'video' => [$this->webapp->hashtime33($data['hash']), $data['require'], [
+					'hash' => $data['hash'], 
+					'type' => $data['type']]],
 				default => [$this->webapp->time, $data['fee'], $data]
 			};
 			if ($this->webapp->mysql->records->insert($record = [
@@ -261,10 +263,10 @@ class user extends ArrayObject
 			}) && is_int(--$this['ticket']);
 	}
 	//购买的视频数据（只返回HASH）
-	function buy_videos(int $page, int $size = 50):array
+	function buy_videos(string $type, int $page, int $size = 10):array
 	{
-		return array_column($this->webapp->mysql->records('WHERE userid=?s AND type="video"', $this->id)
-			->select('ext->>"$"')->paging($page, $size)->all(), 'ext->>"$"');
+		return array_column($this->webapp->mysql->records('WHERE userid=?s AND type="video" and ext->>"$.type"=?s', $this->id, $type)
+			->select('ext->>"$.hash"')->paging($page, $size)->all(), 'ext->>"$.hash"');
 	}
 
 	//游戏提现
