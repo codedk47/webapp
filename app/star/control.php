@@ -761,7 +761,7 @@ class webapp_router_control extends webapp_echo_html
 	{
 		if ($this->admin)
 		{
-			$count = $this->webapp->mysql->videos('WHERE sync="finished"')->update('sync="allow"');
+			$count = $this->webapp->mysql->videos('WHERE sync="finished",ctime=?i', $this->webapp->time)->update('sync="allow"');
 			$this->dialog("总共 {$count} 个视频通过审核！");
 			$this->goto();
 		}
