@@ -138,14 +138,13 @@ class user extends ArrayObject
 		}
 		return FALSE;
 	}
-
 	//用户收藏的视频最多50个
 	function favorites():array
 	{
 		return $this->id && $this['favorites'] ? str_split($this['favorites'], 12) : [];
 	}
 	//用户收藏视频 -1取消 0无操作 +1收藏
-	function favorite_video(string $hash):int
+	function favorite(string $hash):int
 	{
 		if ($this->id && strlen($hash) === 12 && trim($hash, webapp::key) === '')
 		{
