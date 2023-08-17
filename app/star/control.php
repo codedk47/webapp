@@ -584,6 +584,16 @@ class webapp_router_control extends webapp_echo_html
 					$conds[] = $sync;
 			}
 		}
+		if ($require = $this->webapp->query['require'] ?? '')
+		{
+			$conds[0][] = sprintf('`require`%s', match ($require)
+			{
+				'vip' => '=-1',
+				'free' => '=0',
+				'coin' => '>0',
+				default => '=' . intval($require)
+			});
+		}
 		if ($type = $this->webapp->query['type'] ?? '')
 		{
 			$conds[0][] = 'type=?s';
@@ -730,6 +740,9 @@ class webapp_router_control extends webapp_echo_html
 		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
 			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
+		$table->bar->select(['' => '要求', 'vip' => '会员', 'free' => '免费', 'coin' => '金币'])
+			->setattr(['onchange' => 'g({require:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($require);
 		$table->bar->select(['' => '全部类型'] + base::video_type)
 			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($type);
