@@ -174,18 +174,11 @@ class user extends ArrayObject
 		}
 		return 0;
 	}
-	//用户上传的视频
-	function videos(string $type, string $sync, int $page, int $size = 10):iterable
+	//用户上传的视频（只返回HASH）
+	function videos(string $type, string $sync, int $page, int $size = 10):array
 	{
-		foreach ($this->webapp->mysql->videos('WHERE userid=?s AND type=?s AND sync=?s ORDER BY sort DESC',
-			$this->id, $type, $sync)->paging($page, $size) as $video) {
-			$ym = date('ym', $video['mtime']);
-			$video['cover'] = "/{$ym}/{$video['hash']}/cover?{$video['ctime']}";
-			$video['playm3u8'] = "/{$ym}/{$video['hash']}/play";
-			$video['comment'] = 0;
-			$video['share'] = 0;
-			yield $video;
-		}
+		return $this->webapp->mysql->videos('WHERE userid=?s AND type=?s AND sync=?s ORDER BY sort DESC',
+			$this->id, $type, $sync)->paging($page, $size)->column('hash');
 	}
 	//用户关注UP主（再次关注即可取消）
 	function follow_uploader_user(string $id):bool
