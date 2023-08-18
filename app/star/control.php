@@ -333,7 +333,7 @@ class webapp_router_control extends webapp_echo_html
 	{
 		$conds = [[]];
 
-		$conds[0] = sprintf('%sORDER BY hash ASC,lasttime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY uid ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->uploaders(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
@@ -471,7 +471,7 @@ class webapp_router_control extends webapp_echo_html
 		}
 
 
-		$conds[0] = sprintf('%sORDER BY hash ASC,mtime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY id,mtime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->users(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();

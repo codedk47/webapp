@@ -76,12 +76,12 @@ class base extends webapp
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
 			$change['data-uploadurl'] = "?video-cover/{$hash}";
 			$change['data-key'] = bin2hex($this->random(8));
-			foreach ($this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC')->column('name', 'hash') as $taghash => $tagname)
+			foreach ($this->mysql->tags('WHERE phash IS NULL ORDER BY hash ASC,sort DESC')->column('name', 'hash') as $taghash => $tagname)
 			{
 				$tagnode->append('input', ['type' => 'radio', 'name' => 'tag', 'value' => $taghash, 'id' => "tag{$taghash}"]);
 				$tagnode->append('label', [$tagname, 'for' => "tag{$taghash}"]);
 				$ul = $tagnode->append('ul');
-				foreach ($this->mysql->tags('WHERE phash=?s ORDER BY sort DESC', $taghash) as $tag)
+				foreach ($this->mysql->tags('WHERE phash=?s ORDER BY hash ASC,sort DESC', $taghash) as $tag)
 				{
 					$ul->append('li')->labelinput("t{$taghash}[]", 'checkbox', $tag['hash'], $tag['name']);
 				}
@@ -209,7 +209,7 @@ class base extends webapp
 	function get_sync_cover()
 	{
 		if (PHP_SAPI !== 'cli') return 404;
-		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change" ORDER BY sort DESC') as $cover)
+		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change"') as $cover)
 		{
 			echo "{$cover['hash']} - ";
 			if (is_dir($syncdir = $this->path_video(TRUE, $cover)))
@@ -224,7 +224,7 @@ class base extends webapp
 			}
 			echo "WAITING\n";
 		}
-		foreach ($this->mysql->ads('WHERE `change`="sync" ORDER BY `weight` DESC') as $ad)
+		foreach ($this->mysql->ads('WHERE `change`="sync"') as $ad)
 		{
 			echo "{$ad['hash']} - ",
 				is_file($image = "{$this['ad_savedir']}/{$ad['hash']}")
