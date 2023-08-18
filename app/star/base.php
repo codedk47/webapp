@@ -76,12 +76,12 @@ class base extends webapp
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
 			$change['data-uploadurl'] = "?video-cover/{$hash}";
 			$change['data-key'] = bin2hex($this->random(8));
-			foreach ($this->mysql->tags('WHERE phash IS NULL ORDER BY hash ASC,sort DESC')->column('name', 'hash') as $taghash => $tagname)
+			foreach ($this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC,hash ASC')->column('name', 'hash') as $taghash => $tagname)
 			{
 				$tagnode->append('input', ['type' => 'radio', 'name' => 'tag', 'value' => $taghash, 'id' => "tag{$taghash}"]);
 				$tagnode->append('label', [$tagname, 'for' => "tag{$taghash}"]);
 				$ul = $tagnode->append('ul');
-				foreach ($this->mysql->tags('WHERE phash=?s ORDER BY hash ASC,sort DESC', $taghash) as $tag)
+				foreach ($this->mysql->tags('WHERE phash=?s ORDER BY sort DESC,hash ASC', $taghash) as $tag)
 				{
 					$ul->append('li')->labelinput("t{$taghash}[]", 'checkbox', $tag['hash'], $tag['name']);
 				}

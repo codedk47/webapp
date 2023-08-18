@@ -218,13 +218,13 @@ class webapp_router_uploader
 			$conds[0][] = 'type=?s';
 			$conds[] = $type;
 		}
-		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY hash ASC,' . match ($sort = $this->webapp->query['sort'] ?? '')
+		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ' . match ($sort = $this->webapp->query['sort'] ?? '')
 		{
 			'view-desc' => '`view` DESC',
 			'like-desc' => '`like` DESC',
 			'sales-desc' => '`sales` DESC',
 			default => '`mtime` DESC'
-		};
+		} . ',hash ASC';
 
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
 		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags, $goto)

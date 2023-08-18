@@ -92,7 +92,7 @@ class webapp_router_control extends webapp_echo_html
 	//========标签========
 	function tag_types():array
 	{
-		return $this->webapp->mysql->tags('WHERE phash IS NULL ORDER BY hash ASC,sort DESC')->column('name', 'hash');
+		return $this->webapp->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC,hash ASC')->column('name', 'hash');
 	}
 	function form_tag(webapp_html $html = NULL):webapp_form
 	{
@@ -130,7 +130,7 @@ class webapp_router_control extends webapp_echo_html
 			$conds[0][] = 'phash=?s';
 			$conds[] = $phash;
 		}
-		$conds[0] = sprintf('%sORDER BY hash ASC,phash ASC,sort DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY phash ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 
 		$tag_types = $this->tag_types();
 		$table = $this->main->table($this->webapp->mysql->tags(...$conds)->paging($page), function($table, $value, $types)
@@ -262,7 +262,7 @@ class webapp_router_control extends webapp_echo_html
 			$conds[] = $tagid;
 		}
 
-		$conds[0] = sprintf('%sORDER BY hash ASC,tagid ASC,sort DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY tagid ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$tag_types = $this->tag_types();
 		$subject_styles = $this->subject_styles();
 		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $tags, $styles)
@@ -605,13 +605,13 @@ class webapp_router_control extends webapp_echo_html
 			$conds[0][] = 'FIND_IN_SET(?s,subjects)';
 			$conds[] = $subject;
 		}
-		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY hash ASC,' . match ($sort = $this->webapp->query['sort'] ?? '')
+		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ' . match ($sort = $this->webapp->query['sort'] ?? '')
 		{
 			'view-desc' => '`view` DESC',
 			'like-desc' => '`like` DESC',
 			'sales-desc' => '`sales` DESC',
 			default => '`ctime` DESC'
-		};
+		}. ',hash ASC';
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
 		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
 		{
@@ -890,7 +890,7 @@ class webapp_router_control extends webapp_echo_html
 
 
 
-		$conds[0] = sprintf('%sORDER BY hash ASC,ctime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY ctime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->prods(...$conds)->paging($page), function($table, $value, $prod)
 		{
 			$table->row();
@@ -1042,7 +1042,7 @@ class webapp_router_control extends webapp_echo_html
 			$conds[0][] = 'display=?s';
 			$conds[] = $display;
 		}
-		$conds[0] = sprintf('%sORDER BY hash ASC,seat ASC,weight DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY seat ASC,weight DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats, $displays)
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
