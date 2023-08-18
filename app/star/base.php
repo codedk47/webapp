@@ -512,11 +512,10 @@ class base extends webapp
 				'ctime' => $user['ctime'],
 				'fid' => $user['fid'],
 				'nickname' => $user['nickname'],
-				'descinfo' => 'webcome my zone',
 				'followed_ids' => $user['followed_ids'],
 				'follower_num' => $user['follower_num'],
 				'video_num' => $user['video_num'],
-				'like' => 0
+				'like_num' => $user['like_num']
 			];
 		}
 	}

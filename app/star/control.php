@@ -758,7 +758,10 @@ class webapp_router_control extends webapp_echo_html
 			'data-method' => 'patch',
 			'data-bind' => 'click'
 		]);
-		$table->bar->append('button', ['清理异常', 'onclick' => 'location.href="?control/clear_"']);
+		$table->bar->append('button', ['清理异常',
+			'style' => 'margin-left:.6rem',
+			'onclick' => 'location.href="?control/video-exception-clear"'
+		]);
 		$table->bar['style'] = 'white-space:nowrap';
 	}
 	function get_video(string $hash)
@@ -777,6 +780,45 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$count = $this->webapp->mysql->videos('WHERE sync="finished"')->update('sync="allow",ctime=?i', $this->webapp->time);
 			$this->dialog("总共 {$count} 个视频通过审核！");
+			$this->goto();
+		}
+		else
+		{
+			$this->dialog('需要超级管理员权限！');
+		}
+	}
+	function get_video_exception_clear()
+	{
+		$form = $this->main->form();
+		
+		$form->fieldset->text('请在服务端执行下列指令');
+		$form->fieldset();
+		$command = $form->field('command', 'textarea', [
+			'style' => 'font:.8rem var(--webapp-font-monospace)',
+			'rows' => 45,
+			'cols' => 90,
+			'readonly' => NULL]);
+		$form->fieldset();
+		$form->button('我已在服务端执行上述指令，确定执行删除数据！', 'submit');
+		$form->xml['data-bind'] = 'submit';
+
+		foreach ($this->webapp->mysql->videos('WHERE sync="exception"') as $video)
+		{
+			$command->text(sprintf("RD /S /Q %s\nRD /S /Q %s\n",
+				$this->webapp->path_video(FALSE, $video),
+				$this->webapp->path_video(TRUE, $video)));
+		}
+		$command->text('PAUSE');
+	}
+	function post_video_exception_clear()
+	{
+		if ($this->admin
+			&& is_array($data = $this->webapp->request_content())
+			&& isset($data['command'])
+			&& is_string($data['command'])
+			&& preg_match_all('/[\w\-]{12}/', $data['command'], $pattern)) {
+			$count = $this->webapp->mysql->videos('WHERE hash IN(?S)', array_unique($pattern[0]))->delete();
+			$this->dialog("删除 {$count} 个数据！");
 			$this->goto();
 		}
 		else
