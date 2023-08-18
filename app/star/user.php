@@ -134,6 +134,7 @@ class user extends ArrayObject
 			$historys = join(array_slice($historys, -50));
 			if ($this->cond()->update('historys=?s', $historys) === 1)
 			{
+				$this->webapp->mysql->videos('WHERE hash=?s LIMIT 1')->update('view=view+1');
 				$this['historys'] = $historys;
 				return TRUE;
 			}
