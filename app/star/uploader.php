@@ -223,7 +223,7 @@ class webapp_router_uploader
 			'view-desc' => '`view` DESC',
 			'like-desc' => '`like` DESC',
 			'sales-desc' => '`sales` DESC',
-			default => '`ctime` DESC'
+			default => '`mtime` DESC'
 		};
 
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
