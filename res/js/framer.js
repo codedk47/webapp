@@ -56,11 +56,19 @@ addEventListener('DOMContentLoaded', async event =>
 				});
 			});
 		}
+		html(data)
+		{
+			const document = this.#frame.contentDocument;
+			document.open();
+			document.write(data);
+			document.close();
+			return this.#frame;
+		}
 		async draw(resource)
 		{
 			this.#observes.clear(Array.from(this.#observes.keys()).forEach(element => this.#viewport.unobserve(element)));
-			return loader(this.#frame.dataset.load = resource, {headers}).then(blob => this.load(blob)).then(frame =>
-			{
+			return loader(this.#frame.dataset.load = resource, {headers}).then(blob => this.load(/^blob\:https?/.test(blob)
+				? blob : URL.createObjectURL(new Blob([blob], {type: 'text/plain'})))).then(frame => {
 				const document = frame.contentDocument;
 				document.onclick = event =>
 				{
