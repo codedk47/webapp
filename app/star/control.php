@@ -804,7 +804,7 @@ class webapp_router_control extends webapp_echo_html
 
 		foreach ($this->webapp->mysql->videos('WHERE sync="exception"') as $video)
 		{
-			$command->text(sprintf("RD /S /Q %s\nRD /S /Q %s\n",
+			$command->text(sprintf("RD /S /Q \"%s\"\nRD /S /Q \"%s\"\n",
 				$this->webapp->path_video(FALSE, $video),
 				$this->webapp->path_video(TRUE, $video)));
 		}
