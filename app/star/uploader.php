@@ -380,8 +380,8 @@ class webapp_router_uploader
 	function patch_video_exception(string $hash)
 	{
 		$this->json(['result' => $this->user->id
-			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid=?s LIMIT 1',
-				$hash, $this->user->id)->update('sync="exception"') === 1]);
+			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid IN(?S) LIMIT 1',
+				$hash, array_keys($this->users))->update('sync="exception"') === 1]);
 	}
 	function patch_change_video_user(string $hash)
 	{
