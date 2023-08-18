@@ -1,20 +1,19 @@
 <?php
 class webapp_router_uploader
 {
-	private readonly array $userids;
+	private readonly array $users;
 	private readonly user $user;
 	private readonly webapp_echo_html|webapp_echo_json $echo;
-	private readonly array $users;
 	function __construct(private readonly webapp $webapp)
 	{
-		$this->userids = $webapp->authorization(function($uid, $pwd)
+		$this->users = $webapp->authorization(function($uid, $pwd)
 		{
 			return $this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->fetch()
-				&& count($ids = $this->webapp->mysql->users('WHERE uid=?i', $uid)->column('id')) ? $ids : [];
+				&& count($ids = $this->webapp->mysql->users('WHERE uid=?i', $uid)->column('nickname', 'id')) ? $ids : [];
 		});
-		$this->user = $this->userids
-			? user::from_id($this->webapp, in_array($userid = $webapp->request_cookie('userid'), $this->userids, TRUE)
-				? $userid : $this->userids[0]) : new user($this->webapp, []);
+		$this->user = $this->users
+			? user::from_id($this->webapp, isset($this->users[$userid = $webapp->request_cookie('userid')])
+				? $userid : array_keys($this->users)[0]) : new user($this->webapp, []);
 	}
 	function __toString():string
 	{
@@ -51,7 +50,7 @@ class webapp_router_uploader
 				['话题', '?uploader/topics'],
 				['注销登录', 'javascript:top.location.reload(localStorage.removeItem("token"));', 'style' => 'color:maroon']
 			]);
-			if ($this->userids && count($this->users = $this->webapp->mysql->users('WHERE id IN(?S)', $this->userids)->column('nickname', 'id')))
+			if ($this->users)
 			{
 				$nav->ul->insert('li', 'first')->setattr(['style' => 'margin-left:1rem'])->select($this->users)->selected($this->user->id)
 					->setattr(['onchange' => 'top.location.reload(top.document.cookie=`userid=${this.value}`)']);
@@ -164,7 +163,17 @@ class webapp_router_uploader
 		$html->script(['src' => '/webapp/res/js/hls.min.js']);
 		$html->script(['src' => '/webapp/res/js/player.js']);
 		if ($this->user->id === NULL) return 401;
-		$conds = [['userid=?s'], $this->user->id];
+		$conds = [[]];
+		if (isset($this->users[$userid = $this->webapp->query['userid'] ?? '']))
+		{
+			$conds[0][] = 'userid=?s';
+			$conds[] = $userid;
+		}
+		else
+		{
+			$conds[0][] = 'userid IN(?S)';
+			$conds[] = array_keys($this->users);
+		}
 		if (is_string($search))
 		{
 			$search = urldecode($search);
@@ -227,9 +236,9 @@ class webapp_router_uploader
 			$usernode->append('span', '用户：');
 			$usernode->select($this->users)->setattr([
 				'style' => 'padding:2px',
-				'data-action' => "?uploader/change_video_user,hash:{$value['hash']}",
+				'data-action' => "?uploader/change-video-user,hash:{$value['hash']}",
 				'onchange' => 'top.uploader.change_video_user(this)'
-			])->selected($this->user->id);
+			])->selected($value['userid']);
 			$table->cell(['colspan' => 8])->append('a', ['信息（点击修改下面信息）', 'href' => "?uploader/video,hash:{$value['hash']},goto:{$goto}"]);
 
 			$table->row();
@@ -315,6 +324,9 @@ class webapp_router_uploader
 		$table->header('视频 %d 项', $table->count());
 		unset($table->xml->tbody->tr[0]);
 		$table->bar->append('button', ['上传视频', 'onclick' => 'top.framer("?uploader/uploading")']);
+		$table->bar->select(['' => '全部用户'] + $this->users)
+			->setattr(['onchange' => 'r({userid:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($userid);
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $search,
@@ -376,7 +388,7 @@ class webapp_router_uploader
 		$this->json(['result' => $this->user->id
 			&& strlen($userid = $this->webapp->request_content()) === 10
 			&& trim($userid, webapp::key) === ''
-			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid=?s LIMIT 1', $hash, $this->user->id)
+			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid IN(?S) LIMIT 1', $hash, array_keys($this->users))
 				->update('userid=?s', $userid) === 1]);
 	}
 

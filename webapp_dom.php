@@ -480,7 +480,7 @@ class webapp_html extends webapp_xml
 			{
 				'ul' => ['checked', 'li/label/input'],
 				'details' => ['checked', 'ul/li/label/input'],
-				default => ['selected', '//option']
+				default => ['selected', 'option']
 			};
 			//var_dump("{$selector}[{$value}]");
 			foreach ($this->xpath("{$selector}[{$value}]") as $node)
