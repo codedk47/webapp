@@ -47,6 +47,7 @@ class webapp_router_uploader
 			$nav = $this->echo->nav([
 				['用户信息', '?uploader/info'],
 				['视频列表', '?uploader/videos'],
+				['导出异常影片', '?uploader/exceptions'],
 				['话题', '?uploader/topics'],
 				['注销登录', 'javascript:top.location.reload(localStorage.removeItem("token"));', 'style' => 'color:maroon']
 			]);
@@ -390,6 +391,21 @@ class webapp_router_uploader
 			&& trim($userid, webapp::key) === ''
 			&& $this->webapp->mysql->videos('WHERE hash=?s AND userid IN(?S) LIMIT 1', $hash, array_keys($this->users))
 				->update('userid=?s', $userid) === 1]);
+	}
+	function get_exceptions()
+	{
+		$form = $this->html()->main->form();
+		$form->fieldset->text('复制保存下列异常影片，等待重新上传！（这个功能是暂时的，以后将被更好的操作取代）');
+		$form->fieldset();
+		$exception = $form->field('exception', 'textarea', [
+			'style' => 'background:whitesmoke;font:1rem var(--webapp-font-monospace)',
+			'onfocus' => 'this.select()',
+			'rows' => 40, 'cols' => 100, 'readonly' => NULL
+		]);
+		foreach ($this->webapp->mysql->videos('WHERE sync="exception" AND userid IN(?S) LIMIT 1', array_keys($this->users)) as $video)
+		{
+			$exception->text("{$video['hash']} - {$video['name']}\n");
+		}
 	}
 
 
