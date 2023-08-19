@@ -322,6 +322,8 @@ class user extends ArrayObject
 				'cid' => $user['cid'] ?? $webapp->cid,
 				'did' => $did,
 				'tid' => $tid,
+				'gender' => 'none',
+				'descinfo' => '',
 				'historys' => '',
 				'favorites' => '',
 				'followed_ids' => '',
