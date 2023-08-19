@@ -402,7 +402,7 @@ class webapp_router_uploader
 			'onfocus' => 'this.select()',
 			'rows' => 40, 'cols' => 100, 'readonly' => NULL
 		]);
-		foreach ($this->webapp->mysql->videos('WHERE sync="exception" AND userid IN(?S) LIMIT 1', array_keys($this->users)) as $video)
+		foreach ($this->webapp->mysql->videos('WHERE sync="exception" AND userid IN(?S)', array_keys($this->users)) as $video)
 		{
 			$exception->text("{$video['hash']} - {$video['name']}\n");
 		}
