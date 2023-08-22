@@ -327,7 +327,7 @@ class user extends ArrayObject
 				'expire' => $webapp->time,
 				'coin' => 0,
 				'ticket' => 0,
-				'fid' => random_int(1, 255),
+				'fid' => 1,
 				'uid' => $user['uid'] ?? 0,
 				'cid' => $user['cid'] ?? $webapp->cid,
 				'did' => $did,

@@ -135,11 +135,15 @@ class webapp_router_uploader
 				'onclick' => 'alert("上线开放")'
 			]);
 
+
+			
+
 			$hash = $this->webapp->time33hash($this->webapp->hashtime33($this->user->id));
 			$form->fieldset()->append('label', [
 				'style' => 'width:18rem;height:18rem',
 				'class' => 'uploaderface',
-				'data-cover' => "/face/{$hash}?{$this->user['ctime']}"
+				'data-cover' => $this->user['fid'] % 255 ? "/faces/{$this->user['fid']}" : sprintf('/face/%s?%s',
+					$this->webapp->time33hash($this->webapp->hashtime33($this->user['id'])), $this->user['ctime'])
 			])->append('input', [
 				'type' => 'file',
 				'accept' => 'image/*',
