@@ -129,10 +129,26 @@ class webapp_router_uploader
 				"background:url({$this->webapp->request_entry}?qrcode/{$signature}) center center / 90% no-repeat white"
 			]);
 
+
 			$form->fieldset();
 			$form->button('下载该账号凭证（从手机上传登录）', 'button', [
 				'onclick' => 'alert("上线开放")'
 			]);
+
+			$hash = $this->webapp->time33hash($this->webapp->hashtime33($this->user->id));
+			$form->fieldset()->append('label', [
+				'style' => 'width:18rem;height:18rem',
+				'class' => 'uploaderface',
+				'data-cover' => "/face/{$hash}?{$this->user['ctime']}"
+			])->append('input', [
+				'type' => 'file',
+				'accept' => 'image/*',
+				'data-key' => bin2hex($this->webapp->random(8)),
+				'data-uploadurl' => "?uploader/change-face",
+				'onchange' => 'top.uploader.upload_image(this,this.parentNode)'
+			]);
+
+
 			$form->fieldset('用户昵称：');
 			$form->field('nickname', 'text');
 			$form->button('修改', 'button', [
@@ -147,7 +163,19 @@ class webapp_router_uploader
 				'onclick' => 'top.framer("?uploader/exchange")'
 			]);
 			$form->echo($this->user->getArrayCopy());
+			$form->xml->append('script')->cdata(<<<'JS'
+const uploaderface = document.querySelector('label.uploaderface');
+top
+JS);
 		}
+	}
+	function patch_change_face()
+	{
+		$hash = $this->webapp->time33hash($this->webapp->hashtime33($this->user->id));
+		$this->json(['result' => is_string($key = $this->webapp->request_header('Mask-Key'))
+			&& file_put_contents("{$this->webapp['face_savedir']}/{$hash}",
+				hex2bin($key) . $this->webapp->request_content('binary')) !== FALSE
+			&& $this->user->change_fid(0)]);
 	}
 	function patch_change_nickname()
 	{

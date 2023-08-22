@@ -165,7 +165,7 @@ function video_cover(input, preview)
 			body: buffer.map((byte, i) => byte ^ key[i % 8])
 		}).then(r => r.json()).then(json =>
 		{
-			//alert(json.dialog);
+			// console.log(json);
 			preview.style.backgroundImage = `url(${URL.createObjectURL(input.files[0])})`;
 			preview.textContent = '';
 			input.disabled = false;
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', event =>
 
 
 
-	document.querySelectorAll('div[data-cover]').forEach(element =>
+	document.querySelectorAll('div[data-cover],label.uploaderface').forEach(element =>
 	{
 		top.loader(`${resorigin}${element.dataset.cover}`, {mask: true}).then(blob =>
 		{

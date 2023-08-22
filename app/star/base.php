@@ -1,5 +1,6 @@
 <?php
 require 'user.php';
+require 'game.php';
 class base extends webapp
 {
 	const video_sync = [
@@ -209,6 +210,7 @@ class base extends webapp
 	function get_sync_cover()
 	{
 		if (PHP_SAPI !== 'cli') return 404;
+		echo "----SYNC COVER----\n";
 		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change"') as $cover)
 		{
 			echo "{$cover['hash']} - ";
@@ -224,6 +226,7 @@ class base extends webapp
 			}
 			echo "WAITING\n";
 		}
+		echo "----SYNC AD----\n";
 		foreach ($this->mysql->ads('WHERE `change`="sync"') as $ad)
 		{
 			echo "{$ad['hash']} - ",
@@ -232,6 +235,17 @@ class base extends webapp
 				&& $this->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])->update([
 					'ctime' => $this->time(),
 					'change' => 'none']) === 1 ? "OK\n" : "NO\n";
+		}
+		echo "----SYNC FACE----\n";
+		foreach ($this->mysql->users('WHERE uid!=0 AND fid=0') as $user)
+		{
+			$hash = $this->webapp->time33hash($this->webapp->hashtime33($user['id']));
+			echo "{$hash} - ",
+				is_file($image = "{$this['face_savedir']}/{$hash}")
+				&& copy($image, "{$this['face_syncdir']}/{$hash}")
+				&& $this->mysql->users('WHERE id=?s LIMIT 1', $user['id'])->update([
+					'ctime' => $this->time(),
+					'fid' => 255]) === 1 ? "OK\n" : "NO\n";
 		}
 	}
 	//本地命令行运行视频同步处理
@@ -426,6 +440,43 @@ class base extends webapp
 		return $id ? user::from_id($this, $id) : new user($this,
 			$this->authorize($this->request_authorization($type), $this->user_fetch(...)));
 	}
+	//游戏
+	function game():game
+	{
+		return new game(...$this['game']);
+	}
+	function game_balance():int
+	{
+		return $this->game->balance();
+	}
+	function game_entry():array
+	{
+		return [
+			4 => '百人牛牛',
+			1 => '捕鱼',
+			8 => '德州扑克',
+			6 => '二人麻将',
+			46 => '二人牛牛',
+			19 => '飞禽走兽',
+			7 => '红黑大战',
+			12 => '龙虎大战',
+			22 => '连环夺宝',
+			5 => '抢庄牛牛',
+			49 => '疯狂抢庄牛牛',
+			28 => '抢庄牌九',
+			26 => '抢庄三公',
+			24 => '森林舞会',
+			50 => '四人牛牛',
+			88 => '视讯龙虎',
+			90 => '视讯轮盘',
+			87 => '视讯牛牛',
+			91 => '视讯⾊碟',
+			89 => '视讯骰宝',
+			17 => '骰宝',
+			30 => '通比牛牛',
+			37 => '五星宏辉'
+		];
+	}
 	private function user_exchange(bool $result, array $record):bool
 	{
 		return $result || $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
@@ -512,6 +563,8 @@ class base extends webapp
 				'ctime' => $user['ctime'],
 				'fid' => $user['fid'],
 				'nickname' => $user['nickname'],
+				'gender' => $user['gender'],
+				'descinfo' => $user['descinfo'],
 				'followed_ids' => $user['followed_ids'],
 				'follower_num' => $user['follower_num'],
 				'video_num' => $user['video_num'],

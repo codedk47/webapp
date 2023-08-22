@@ -30,7 +30,8 @@ class webapp_router_control extends webapp_echo_html
 					// ['充值VIP', '?control'],
 					// ['充值金币', '?control'],
 					['购买影片', '?control/record-video'],
-					// ['提现', '?control']
+					['余额提现', '?control/record-exchange-balance'],
+					['游戏提现', '?control/record-exchange-game']
 				]],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
@@ -890,7 +891,7 @@ class webapp_router_control extends webapp_echo_html
 
 
 
-		$conds[0] = sprintf('%sORDER BY ctime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY LEFT(vtid, 13) ASC,price ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->prods(...$conds)->paging($page), function($table, $value, $prod)
 		{
 			$table->row();
@@ -1158,14 +1159,28 @@ class webapp_router_control extends webapp_echo_html
 	function get_record_video(int $page = 1)
 	{
 		$conds = [['type="video"']];
-		$conds[0] = sprintf('%s', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY mtime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->records(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell($value['userid']);
+			$table->cell($value['cid']);
+			$table->cell($value['fee']);
+			$table->cell($value['result']);
 		});
-		$table->fieldset('时间', '用户ID', '用户渠道ID', '信息');
+		$table->fieldset('时间', '用户ID', '用户渠道ID', '费用', '结果');
 		$table->header('用户购买视频 %d 项', $table->count());
+		$table->bar->append('input', ['type' => 'date']);
+		$table->bar->append('span', ' - ');
+		$table->bar->append('input', ['type' => 'date']);
+	}
+	function get_record_exchange_balance(int $page = 1)
+	{
+
+	}
+	function get_record_exchange_game(int $page = 1)
+	{
+		
 	}
 }

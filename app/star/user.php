@@ -95,10 +95,20 @@ class user extends ArrayObject
 			'lastip' => $this->webapp->iphex($this->webapp->ip)
 		]) === 1;
 	}
+	//修改头像
+	function change_fid(int $faceid):bool
+	{
+		if ($this->id && $this->cond()->update('ctime=?i,fid=?i', $this->webapp->time, $faceid) === 1)
+		{
+			$this['fid'] = $faceid;
+			return TRUE;
+		}
+		return FALSE;
+	}
 	//修改昵称
 	function change_nickname(string $nickname):bool
 	{
-		if ($this->id && $this->cond()->update('nickname=?s', $nickname) === 1)
+		if ($this->id && $this->cond()->update('ctime=?i,nickname=?s', $this->webapp->time, $nickname) === 1)
 		{
 			$this['nickname'] = $nickname;
 			return TRUE;
@@ -132,7 +142,7 @@ class user extends ArrayObject
 			}
 			$historys[] = $hash;
 			$historys = join(array_slice($historys, -50));
-			if ($this->cond()->update('historys=?s', $historys) === 1)
+			if ($this->cond()->update('ctime=?i,historys=?s', $this->webapp->time, $historys) === 1)
 			{
 				$this->webapp->mysql->videos('WHERE hash=?s LIMIT 1')->update('view=view+1');
 				$this['historys'] = $historys;
@@ -166,7 +176,7 @@ class user extends ArrayObject
 			if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`like`=`like`+?i', $result) === 1)
 			{
 				$favorites = join(array_slice($favorites, -50));
-				if ($this->cond()->update('favorites=?s', $favorites) === 1)
+				if ($this->cond()->update('ctime=?i,favorites=?s', $this->webapp->time, $favorites) === 1)
 				{
 					$this['favorites'] = $favorites;
 					return $result;
@@ -203,7 +213,7 @@ class user extends ArrayObject
 			if ($this->webapp->mysql->users('WHERE id=?s LIMTI 1', $id)->update('followed_num=followed_num+?i', $result) === 1)
 			{
 				$followed_ids = join(array_slice($followed_ids, -50));
-				if ($this->cond()->update('followed_ids=?s', $followed_ids) === 1)
+				if ($this->cond()->update('ctime=?i,followed_ids=?s', $this->webapp->time, $followed_ids) === 1)
 				{
 					$this['followed_ids'] = $followed_ids;
 					return TRUE;
@@ -317,7 +327,7 @@ class user extends ArrayObject
 				'expire' => $webapp->time,
 				'coin' => 0,
 				'ticket' => 0,
-				'fid' => ord(random_bytes(1)),
+				'fid' => random_int(1, 255),
 				'uid' => $user['uid'] ?? 0,
 				'cid' => $user['cid'] ?? $webapp->cid,
 				'did' => $did,
@@ -354,4 +364,71 @@ class user extends ArrayObject
 	{
 		return new static($webapp, $webapp->mysql->users('WHERE did=?s LIMIT 1', $did)->array());
 	}
+	//游戏进入（游戏ID）
+	function game_enter(int $id = 0):?string
+	{
+		return $this->id ? $this->webapp->game->enter($this->id, $id) : NULL;
+	}
+	//游戏余额
+	function game_balance():int
+	{
+		return $this->id ? $this->webapp->game->balance($this->id) : 0;
+	}
+	//游戏提现
+	function game_exchange(array $exchange, &$error):array
+	{
+		$result = [];
+		$error = '用户信息错误！';
+		while ($this->id)
+		{
+			if (isset($exchange['fee'],
+				$exchange['account'],
+				$exchange['account_type'],
+				$exchange['account_name'],
+				$exchange['account_tel'],
+				$exchange['account_addr']) === FALSE) {
+				$error = '缺少关键字段！';
+				break;
+			}
+			foreach ($exchange as $datatype)
+			{
+				if (is_string($datatype) === FALSE)
+				{
+					$error = '字段类型错误！';
+					break 2;
+				}
+			}
+			$exchange['fee'] = intval($exchange['fee']);
+			if ($exchange['fee'] < 1)
+			{
+				$error = '金额错误！';
+				break;
+			}
+			if ($exchange['account_type'] === 'bank')
+			{
+				if (isset($exchange['account_bank']) === FALSE)
+				{
+					$error = '缺少银行名称！';
+					break;
+				}
+			}
+			$exchange['vtid'] = 'game_exchange';
+			if ($this->webapp->game->transfer($this->id, -$exchange['fee'], $exchange['orderid']) === FALSE)
+			{
+				$error = '提现失败，远程错误！';
+				break;
+			}
+			if (empty($result = $this->record('exchange', $exchange)))
+			{
+				$error = '提现失败，内部错误！';
+				$this->webapp->game->transfer($this->id, $exchange['fee'], $exchange['orderid']);
+			}
+			$error = '';
+			break;
+		}
+		return $result;
+	}
+
+
+
 }

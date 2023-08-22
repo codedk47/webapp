@@ -117,3 +117,16 @@ ul.choosetags>input:checked+label+ul
 	margin: 0;
 	width: 60rem;
 }
+label.uploaderface{
+	border: black 1px solid;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: cover;
+	border-radius: 50%;
+}
+label.uploaderface:hover{
+	box-shadow: 0 0 4rem black inset;
+}
+label.uploaderface>input{
+	display: none;
+}

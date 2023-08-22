@@ -110,3 +110,35 @@ uploader.change_video_user = select =>
 		body: select.value
 	}).then(data => data.result ? top.framer(top.document.querySelector('iframe[data-load]').dataset.load) : alert('分配用户失败！'));
 };
+uploader.upload_image = (input, preview) =>
+{
+	if (input.disabled || input.files.length < 1) return;
+	input.disabled = true;
+	const reader = new FileReader;
+	reader.onload = event =>
+	{
+		const
+		buffer = new Uint8Array(event.target.result),
+		key = input.dataset.key.match(/.{2}/g).map(value => parseInt(value, 16));
+		top.framer.loader(input.dataset.uploadurl, {
+			method: 'PATCH',
+			headers: {'Mask-Key': input.dataset.key},
+			body: buffer.map((byte, i) => byte ^ key[i % 8])
+		}).then(json =>
+		{
+			input.disabled = false;
+			if (json.result)
+			{
+				if (preview)
+				{
+					preview.style.backgroundImage = `url(${URL.createObjectURL(input.files[0])})`;
+				}
+			}
+			else
+			{
+				alert('上传失败！')
+			}
+		});
+	};
+	reader.readAsArrayBuffer(input.files[0]);
+}
