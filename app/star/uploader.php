@@ -129,21 +129,15 @@ class webapp_router_uploader
 				"background:url({$this->webapp->request_entry}?qrcode/{$signature}) center center / 90% no-repeat white"
 			]);
 
-
 			$form->fieldset();
 			$form->button('下载该账号凭证（从手机上传登录）', 'button', [
 				'onclick' => 'alert("上线开放")'
 			]);
 
-
-			
-
-			$hash = $this->webapp->time33hash($this->webapp->hashtime33($this->user->id));
 			$form->fieldset()->append('label', [
 				'style' => 'width:18rem;height:18rem',
 				'class' => 'uploaderface',
-				'data-cover' => $this->user['fid'] % 255 ? "/faces/{$this->user['fid']}" : sprintf('/face/%s?%s',
-					$this->webapp->time33hash($this->webapp->hashtime33($this->user['id'])), $this->user['ctime'])
+				'data-cover' => $this->user['fid']
 			])->append('input', [
 				'type' => 'file',
 				'accept' => 'image/*',
@@ -152,14 +146,12 @@ class webapp_router_uploader
 				'onchange' => 'top.uploader.upload_image(this,this.parentNode)'
 			]);
 
-
 			$form->fieldset('用户昵称：');
 			$form->field('nickname', 'text');
 			$form->button('修改', 'button', [
 				'data-action' => '?uploader/change_nickname',
 				'onclick' => 'top.uploader.change_nickname(this)'
 			]);
-			
 
 			$form->fieldset('提现余额：');
 			$form->field('balance', 'number', ['disabled' => NULL]);

@@ -5,7 +5,11 @@ class user extends ArrayObject
 	function __construct(private readonly webapp $webapp, array $user)
 	{
 		parent::__construct($user, ArrayObject::STD_PROP_LIST);
-		$this->id = $user['id'] ?? NULL;
+		if ($this->id = $user['id'] ?? NULL)
+		{
+			$this['fid'] = $this['fid'] % 255 ? "/faces/{$this['fid']}" : sprintf('/face/%s?%s',
+				$webapp->time33hash($webapp->hashtime33($this['id'])), $this['ctime']);
+		}
 	}
 	//获取token
 	function __toString():string
@@ -283,17 +287,18 @@ class user extends ArrayObject
 			->select('ext->>"$.hash"')->paging($page, $size)->all(), 'ext->>"$.hash"');
 	}
 
-	//游戏提现
-	// function exchange_game(array $transfer):array
-	// {
-	// 	$record = [];
-	// 	$this->id && $this->webapp->mysql->sync(function($transfer) use(&$record)
-	// 	{
-	// 		$record = $this->record('exchange', ['vtid' => 'exchange'] + $transfer);
-	// 		return $record && $this->cond()->update('balance=balance-?i', $transfer['fee']) === 1;
-	// 	}, $transfer);
-	// 	return $record;
-	// }
+	//发起话题（帖子）
+	function reply_topic(string $content, string $phash, string $title = NULL)
+	{
+		$topic = [
+			'hash' => $this->webapp->random_hash(FALSE),
+			'mtime' => $this->webapp->time,
+			'ctime' => $this->webapp->time,
+			'userid' => $this->id,
+			'phash' => $phash,
+			'content' => $content
+		];
+	}
 
 	static function create(webapp $webapp, array $user = []):?static
 	{
