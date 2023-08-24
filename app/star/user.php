@@ -7,6 +7,7 @@ class user extends ArrayObject
 		parent::__construct($user, ArrayObject::STD_PROP_LIST);
 		if ($this->id = $this['id'] ?? NULL)
 		{
+			print_r($user);
 			$this['fid'] = ($this['fid'] % 255) ? "/faces/{$this['fid']}" : sprintf('/face/%s?%s',
 				$webapp->time33hash($webapp->hashtime33($this['id'])), $this['ctime']);
 		}
