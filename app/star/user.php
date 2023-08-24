@@ -235,7 +235,7 @@ class user extends ArrayObject
 				++$result;
 				$followed_ids[] = $id;
 			}
-			if ($this->webapp->mysql->users('WHERE id=?s LIMTI 1', $id)->update('followed_num=followed_num+?i', $result) === 1)
+			if ($this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update('followed_num=followed_num+?i', $result) === 1)
 			{
 				$followed_ids = join(array_slice($followed_ids, -50));
 				if ($this->cond()->update('ctime=?i,followed_ids=?s', $this->webapp->time, $followed_ids) === 1)
