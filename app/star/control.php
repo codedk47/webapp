@@ -33,6 +33,8 @@ class webapp_router_control extends webapp_echo_html
 					['余额提现', '?control/record-exchange-balance'],
 					['游戏提现', '?control/record-exchange-game']
 				]],
+
+				['社区 & 话题', '?control/topics'],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -1153,6 +1155,122 @@ class webapp_router_control extends webapp_echo_html
 		}
 		$this->main->append('h4', '广告更新失败！');
 	}
+	//社区话题
+
+	function get_topics(string $search = NULL, string $phash = NULL, int $page = 1)
+	{
+		$conds = [[]];
+		// if (is_string($search))
+		// {
+		// 	$search = urldecode($search);
+		// 	if (trim($search, webapp::key))
+		// 	{
+		// 		$conds[0][] = 'name LIKE ?s';
+		// 		$conds[] = "%{$search}%";
+		// 	}
+		// 	else
+		// 	{
+		// 		$conds[0][] = strlen($search) === 4 ? 'FIND_IN_SET(?s,tags)' : 'hash=?s';
+		// 		$conds[] = $search;
+		// 	}
+		// }
+		// if ($userid = $this->webapp->query['userid'] ?? '')
+		// {
+		// 	$conds[0][] = 'userid=?s';
+		// 	$conds[] = $userid;
+		// }
+		// if ($sync = $this->webapp->query['sync'] ?? '')
+		// {
+		// 	switch ($sync)
+		// 	{
+		// 		case 'uploading':
+		// 			$conds[0][] = 'sync="waiting" AND tell<size';
+		// 			break;
+		// 		case 'waiting':
+		// 			$conds[0][] = 'sync="waiting" AND tell>=size';
+		// 			break;
+		// 		default:
+		// 			$conds[0][] = 'sync=?s';
+		// 			$conds[] = $sync;
+		// 	}
+		// }
+		// if ($require = $this->webapp->query['require'] ?? '')
+		// {
+		// 	$conds[0][] = sprintf('`require`%s', match ($require)
+		// 	{
+		// 		'vip' => '=-1',
+		// 		'free' => '=0',
+		// 		'coin' => '>0',
+		// 		default => '=' . intval($require)
+		// 	});
+		// }
+		// if ($type = $this->webapp->query['type'] ?? '')
+		// {
+		// 	$conds[0][] = 'type=?s';
+		// 	$conds[] = $type;
+		// }
+
+		// if ($subject = $this->webapp->query['subject'] ?? '')
+		// {
+		// 	$conds[0][] = 'FIND_IN_SET(?s,subjects)';
+		// 	$conds[] = $subject;
+		// }
+		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY `sort` DESC,`mtime` DESC';
+		$table = $this->main->table($this->webapp->mysql->topics(...$conds)->paging($page), function($table, $value)
+		{
+			$table->row();
+			$table->cell($value['hash']);
+			$table->cell($value['phash']);
+			$table->cell(date('Y-m-d\\TH:i:s', $value['phash']));
+			$table->cell(number_format($value['count']));
+			$table->cell($value['title']);
+			$table->cell($value['check']);
+		});
+		$table->fieldset('HASH', '父级', '发布时间', '数量', '标题', '审核');
+		$table->header('话题 %s 项', $table->count());
+
+
+		$table->bar->append('button', ['发布话题',
+			// 'data-src' => '?control/topic',
+			// 'data-method' => 'post',
+			// 'data-dialog' => '{"title":"text"}',
+			// 'data-bind' => 'click',
+			'onclick' => 'location.href="?control/topic"'
+		]);
+
+
+
+	}
+	function form_topic(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+		$form->fieldset('标题 / 排序（越大越靠前）');
+		$form->field('title', 'text', ['maxlength' => 128, 'required' => NULL]);
+		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
+		$form->button('提交', 'submit');
+		return $form;
+	}
+	function get_topic()
+	{
+		$this->form_topic($this->main);
+	}
+	function post_topic()
+	{
+		if ($this->form_topic()->fetch($data)
+			&& $this->webapp->mysql->topics->insert([
+				'hash' => $this->webapp->random_hash(FALSE),
+				'mtime' => $this->webapp->time,
+				'ctime' => $this->webapp->time,
+				'check' => 'allow',
+				'count' => 0,
+				'sort' => 0,
+				'content' => ''] + $data)) {
+			$this->webapp->response_location('?control/topics');
+			return;
+		}
+		$this->main->append('h4', '话题发布失败！');
+	}
+
 
 
 

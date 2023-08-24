@@ -5,7 +5,7 @@ class user extends ArrayObject
 	function __construct(private readonly webapp $webapp, array $user)
 	{
 		parent::__construct($user, ArrayObject::STD_PROP_LIST);
-		if ($this->id = $user['id'] ?? NULL)
+		if ($this->id = $this['id'] ?? NULL)
 		{
 			$this['fid'] = $this['fid'] % 255 ? "/faces/{$this['fid']}" : sprintf('/face/%s?%s',
 				$webapp->time33hash($webapp->hashtime33($this['id'])), $this['ctime']);
@@ -288,16 +288,20 @@ class user extends ArrayObject
 	}
 
 	//发起话题（帖子）
-	function reply_topic(string $content, string $phash, string $title = NULL)
+	function reply_topic(string $content, string $phash, string $title = NULL):bool
 	{
-		$topic = [
-			'hash' => $this->webapp->random_hash(FALSE),
-			'mtime' => $this->webapp->time,
-			'ctime' => $this->webapp->time,
-			'userid' => $this->id,
-			'phash' => $phash,
-			'content' => $content
-		];
+		return $this->webapp->mysql->topics('WHERE hash=?s LIMIT 1', $phash)->update('`count`=`count`+`') === 1
+			&& $this->webapp->mysql->topics->insert([
+				'hash' => $this->webapp->random_hash(FALSE),
+				'mtime' => $this->webapp->time,
+				'ctime' => $this->webapp->time,
+				'userid' => $this->id,
+				'phash' => $phash,
+				'title' => $title,
+				'check' => 'pending',
+				'count' => 0,
+				'sort' => 0,
+				'content' => $content]);
 	}
 
 	static function create(webapp $webapp, array $user = []):?static
