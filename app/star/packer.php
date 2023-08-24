@@ -26,6 +26,10 @@ class webapp_router_packer
 	}
 
 
+	function channels():array
+	{
+		return [];
+	}
 	function iphone_webcilp(string $cid = NULL)
 	{
 
@@ -39,6 +43,7 @@ class webapp_router_packer
 		];
 
 		$currentapk = file_get_contents($file = __DIR__ . '/packer.txt');
+		$currentdir = "{$android_apk['prepare_directory']}/{$currentapk}";
 		if ($this->webapp->time(-$android_apk['replace_interval']) > filemtime($file)
 			&& is_resource($index = fopen($file, 'r+'))
 			&& flock($index, LOCK_EX | LOCK_NB)) {
@@ -52,15 +57,29 @@ class webapp_router_packer
 			{
 				if ($nextapk === $names[$i])
 				{
-					if ($count > ++$i && rewind($index) && ftruncate($index, 0))
+					if ($count > ++$i)
 					{
-						fwrite($index, $apkname = $names[$i]);
+						$nextapk = $names[$i];
 					}
 					break;
 				}
 			}
-			flock($index,LOCK_UN);
+			(is_dir($currentdir = "{$android_apk['prepare_directory']}/{$nextapk}") || mkdir($currentdir))
+				&& rewind($index)
+				&& ftruncate($index, 0)
+				&& fwrite($index, $nextapk);
+			flock($index, LOCK_UN);
 			fclose($index);
 		}
+		if (in_array($cid, $this->channels(), TRUE))
+		{
+			
+		}
+
+
+
+
+
+		var_dump($currentapk, $currentdir);
 	}
 }

@@ -120,6 +120,26 @@ class user extends ArrayObject
 		}
 		return FALSE;
 	}
+	//修改性别（'male，female）
+	function change_gender(string $gender):bool
+	{
+		if ($this->id && $this->cond()->update('ctime=?i,gender=?s', $this->webapp->time, $gender) === 1)
+		{
+			$this['gender'] = $gender;
+			return TRUE;
+		}
+		return FALSE;
+	}
+	//修改简介
+	function change_descinfo(string $descinfo):bool
+	{
+		if ($this->id && $this->cond()->update('ctime=?i,descinfo=?s', $this->webapp->time, $descinfo) === 1)
+		{
+			$this['descinfo'] = $descinfo;
+			return TRUE;
+		}
+		return FALSE;
+	}
 	//绑定手机
 	function bind_tid(string $tid):bool
 	{
