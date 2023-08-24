@@ -38,7 +38,7 @@ class webapp_router_packer
 			'replace_suffix' => 'txt'
 		];
 
-		$apkname = file_get_contents($file = __DIR__ . '/packer.txt');
+		$currentapk = file_get_contents($file = __DIR__ . '/packer.txt');
 		if ($this->webapp->time(-$android_apk['replace_interval']) > filemtime($file)
 			&& is_resource($index = fopen($file, 'r+'))
 			&& flock($index, LOCK_EX | LOCK_NB)) {
@@ -47,10 +47,10 @@ class webapp_router_packer
 			asort($files);
 			$names = array_keys($files);
 			$count = count($names);
-			$apkname = stream_get_contents($index);
+			$nextapk = $currentapk;
 			for ($i = 0; $i < $count; ++$i)
 			{
-				if ($apkname === $names[$i])
+				if ($nextapk === $names[$i])
 				{
 					if ($count > ++$i && rewind($index) && ftruncate($index, 0))
 					{

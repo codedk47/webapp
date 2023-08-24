@@ -5,11 +5,7 @@ class user extends ArrayObject
 	function __construct(private readonly webapp $webapp, array $user)
 	{
 		parent::__construct($user, ArrayObject::STD_PROP_LIST);
-		if ($this->id = $this['id'] ?? NULL)
-		{
-			$this['fid'] = ($this['fid'] % 255) ? "/faces/{$this['fid']}" : sprintf('/face/%s?%s',
-				$webapp->time33hash($webapp->hashtime33($this['id'])), $this['ctime']);
-		}
+		$this->id = $user['id'] ?? NULL;
 	}
 	//获取token
 	function __toString():string
@@ -98,6 +94,11 @@ class user extends ArrayObject
 			'lasttime' => $this->webapp->time,
 			'lastip' => $this->webapp->iphex($this->webapp->ip)
 		]) === 1;
+	}
+	function fid():string
+	{
+		return ($this['fid'] % 255) ? "/faces/{$this['fid']}" : sprintf('/face/%s?%s',
+			$this->webapp->time33hash($this->webapp->hashtime33($this['id'])), $this['ctime']);
 	}
 	//修改头像
 	function change_fid(int $faceid):bool
