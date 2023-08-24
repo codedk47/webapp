@@ -137,7 +137,7 @@ class webapp_router_uploader
 			$form->fieldset()->append('label', [
 				'style' => 'width:18rem;height:18rem',
 				'class' => 'uploaderface',
-				'data-cover' => $this->user['fid']
+				'data-cover' => $this->user->fid()
 			])->append('input', [
 				'type' => 'file',
 				'accept' => 'image/*',
