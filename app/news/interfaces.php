@@ -261,7 +261,7 @@ class interfaces extends webapp
 	}
 	function get_units()
 	{
-		$this->xml->cdata(join($this->mysql->unitsets->column('unit')));
+		$this->xml->cdata(join($this->mysql->unitsets('WHERE site=?i', $this->site)->column('unit')));
 	}
 	function unitincr(string $uint, string $date, array $incr):bool
 	{

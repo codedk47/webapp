@@ -1,12 +1,11 @@
 <?php
 class webapp_router_packer
 {
-	const prepare_dir = '';
 	private readonly bool $mobile;
 	private readonly string $type;
 	function __construct(private readonly webapp $webapp)
 	{
-		if (preg_match('/android|iphone/i', $webapp->request_device(), $device))
+		if (preg_match('/android|iphone/i', $webapp->request_device, $device))
 		{
 			$this->mobile = TRUE;
 			$this->type = strtolower($device[0]);
@@ -14,37 +13,68 @@ class webapp_router_packer
 		else
 		{
 			$this->mobile = FALSE;
+			//$this->type = preg_match('/i?pad/i', $webapp->request_device) ? 'pad' : 'desktop';
 			$this->type = 'desktop';
 		}
-		
 	}
 	function get_home()
 	{
-
-
-		$this->android_apk('0000');
+		var_dump($this->mobile, $this->type);
 	}
-
-
-	function channels():array
+	function channel(?string $id):bool
 	{
-		return ['0000'];
+		return $id === '0000';
 	}
-	private function iphone_webcilp(string $cid = NULL)
+	function iphone_webcilp(?string $cid):int
 	{
-
+		// $iphone_webcilp = [
+		// 	'icon' => 'D:/logo512x512.png',
+		// 	'label' => 'app name',
+		// 	'displayname' => 'full app name',
+		// 	'description' => 'app description',
+		// 	'organization' => 'app organization',
+		// 	'identifier' => 'com.webapp.test',
+		// 	'pagefix' => 'https://github.com/',
+		// 	'routers' => [
+		// 		'wss://hostlocal'
+		// 	]
+		// ];
+		$iphone_webcilp = $this->webapp['iphone_webcilp'];
+		$random = $this->webapp->random_hash(FALSE);
+		if ($this->channel($cid))
+		{
+			//这里也许需要在 REDIS 保存渠道码
+			//$this->webapp->recordlog('dpc_ios');
+		}
+		$routers = array_map(fn($origin) => "{$origin}/CID/{$random}", $iphone_webcilp['routers']);
+		$this->webapp->echo(webapp_echo_xml::mobileconfig([
+			'PayloadContent' => [[
+				'Icon' => $iphone_webcilp['icon'],
+				'Label' => $iphone_webcilp['label'],
+				'URL' => $this->webapp->build_test_router(TRUE, $iphone_webcilp['pagefix'], ...$routers),
+				'FullScreen' => TRUE,
+				'IsRemovable' => TRUE,
+				'IgnoreManifestScope' => TRUE
+			]],
+			'PayloadDisplayName' => $iphone_webcilp['displayname'],
+			'PayloadDescription' => $iphone_webcilp['description'],
+			'PayloadOrganization' => $iphone_webcilp['organization'],
+			'PayloadIdentifier' => $iphone_webcilp['identifier']
+		], $this->webapp, $iphone_webcilp['label']));
+		return 200;
 	}
-	private function android_apk(string $cid = NULL)
+	function android_apk(?string $cid):int
 	{
-		$android_apk = [
-			'prepare_directory' => 'D:/sharefiles',
-			'replace_interval' => 0,
-			'packer_suffix' => 'txt',
-			'download_path' => 'http://hostlocal'
-		];
-
-		$currentapk = file_get_contents($file = __DIR__ . '/packer.txt');
-		$currentdir = "{$android_apk['prepare_directory']}/" . basename($currentapk, ".{$android_apk['packer_suffix']}");
+		// $android_apk = [
+		// 	'prepare_directory' => 'D:/apks',
+		// 	'replace_interval' => 0,
+		// 	'packer_suffix' => 'apk',
+		// 	'download_path' => 'http://hostlocal/pwa'
+		// ];
+		$android_apk = $this->webapp['android_apk'];
+		$currentapk = trim(file_get_contents($file = __DIR__ . '/packer.txt'));
+		$currentfix = basename($currentapk, ".{$android_apk['packer_suffix']}");
+		$currentdir = "{$android_apk['prepare_directory']}/{$currentfix}";
 		if ($this->webapp->time(-$android_apk['replace_interval']) > filemtime($file)
 			&& is_resource($index = fopen($file, 'r+'))
 			&& flock($index, LOCK_EX | LOCK_NB)) {
@@ -59,12 +89,18 @@ class webapp_router_packer
 				{
 					if ($count > ++$i)
 					{
-						$currentapk = $names[$i];
+						$currentfix = basename($currentapk = $names[$i], ".{$android_apk['packer_suffix']}");
 					}
 					break;
 				}
+				else
+				{
+					is_dir($removedir = "{$android_apk['prepare_directory']}/" . basename($names[$i], ".{$android_apk['packer_suffix']}"))
+						&& (array_filter(glob("{$removedir}/*"), fn($file) => unlink($file) === FALSE)
+							|| (rmdir($removedir) && unlink("{$android_apk['prepare_directory']}/{$names[$i]}")));
+				}
 			}
-			(is_dir($currentdir = "{$android_apk['prepare_directory']}/" . basename($currentapk, ".{$android_apk['packer_suffix']}")) 
+			(is_dir($currentdir = "{$android_apk['prepare_directory']}/{$currentfix}")
 				|| mkdir($currentdir))
 				&& rewind($index)
 				&& ftruncate($index, 0)
@@ -72,43 +108,50 @@ class webapp_router_packer
 			flock($index, LOCK_UN);
 			fclose($index);
 		}
-
-
-
-		if (in_array($cid, $this->channels(), TRUE))
-		{
-			is_file($packcid = "{$currentdir}/{$cid}.{$android_apk['packer_suffix']}");
-
-			var_dump($packcid);
-			// webapp::lib('apkpacker/apkpacker.php')("{$apkdir}/{$apkname}", $cid, $packcid);
-			//var_dump("{$currentdir}/{$cid}.{$android_apk['packer_suffix']}");
+		if ($this->channel($cid) && (is_file($packcid = "{$currentdir}/{$cid}.{$android_apk['packer_suffix']}")
+			|| webapp::lib('apkpacker/apkpacker.php')("{$android_apk['prepare_directory']}/{$currentapk}", $cid, $packcid))) {
+			//$this->webapp->recordlog('dpc_android');
+			$currentapk ="{$currentfix}/{$cid}.{$android_apk['packer_suffix']}";
 		}
-		else
+		$this->webapp->response_location("{$android_apk['download_path']}/{$currentapk}");
+		return 302;
+	}
+	function get_build_apk()
+	{
+		if (PHP_SAPI !== 'cli') return 404;
+		$android_apk = $this->webapp['android_apk'];
+		if (count(glob("{$android_apk['prepare_directory']}/*.{$android_apk['packer_suffix']}")) > 1)
 		{
-			$redirect = "{$android_apk['download_path']}/{$currentapk}";
+			return;
 		}
-
-		var_dump($redirect);
-		//$currentdir
-
-		
-
-
-		// is_file($apk = __DIR__."/../pwa/apk/{$unit}{$filetime}.apk") 
-		// || webapp::lib('apkpacker/apkpacker.php')("{$apkdir}/{$apkname}",$unit,$apk);
-
-
-
-		// if (in_array($cid, $this->channels(), TRUE))
+		// for ($i = 0; $i < 10; $i++)
 		// {
-		// 	is_file($apk = __DIR__."/../pwa/apk/{$unit}{$filetime}.apk") 
-        //             || webapp::lib('apkpacker/apkpacker.php')("{$apkdir}/{$apkname}",$unit,$apk);
+		// 	$build = file_get_contents('build.gradle');
+		// 	$random = 'aw' . bin2hex(random_bytes(7));
+		// 	$build = preg_replace('/group\s*=\s*\'[^\']+/', "group = 'org.chromium.{$random}", $build);
+		// 	if (file_put_contents('build.gradle', $build) ===  strlen($build))
+		// 	{
+		// 		exec('gradlew --no-build-cache assembleDebug', $output, $result_code);
+		// 		$result_code === 0
+		// 			&& rename('build/outputs/apk/debug/android_webview-debug.apk', "build/outputs/apk/debug/{$random}.apk");
+		// 	}
 		// }
-
-
-
-
-
-		var_dump($currentapk, $currentdir);
+	}
+	function get_dl(string $cid = NULL):int
+	{
+		switch ($this->type)
+		{
+			case 'iphone': return $this->iphone_webcilp($cid);
+			case 'android': return $this->android_apk($cid);
+		}
+		$redirect = $this->webapp->request_origin() . '/' . $this->webapp->at([]);
+		$svg = new webapp_echo_svg($this->webapp);
+		$svg->xml->qrcode(webapp::qrcode($redirect, $this->webapp['qrcode_ecc']), $this->webapp['qrcode_size']);
+		$this->webapp->echo($svg);
+		return 200;
+	}
+	static function dl(webapp $webapp, ?string $cid):int
+	{
+		return (new static($webapp))->get_dl($cid);
 	}
 }
