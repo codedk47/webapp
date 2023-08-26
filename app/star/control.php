@@ -464,6 +464,18 @@ class webapp_router_control extends webapp_echo_html
 	function get_users(int $page = 1)
 	{
 		$conds = [[]];
+		if (strlen($uid = $this->webapp->query['uid'] ?? ''))
+		{
+			if (intval($uid) === -1)
+			{
+				$conds[0][] = 'uid!=0';
+			}
+			else
+			{
+				$conds[0][] = 'uid=?i';
+				$conds[] = $uid;
+			}
+		}
 		if ($search = $this->webapp->query['search'] ?? '')
 		{
 			if (strlen($search) === 10 && trim($search, webapp::key) === '')
@@ -489,22 +501,31 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell($value['did']);
 
 			$table->cell($value['nickname']);
+			$table->cell(number_format($value['video_num']));
 			$table->cell(number_format($value['balance']));
 			$table->cell(date('Y-m-d', $value['expire']));
 			$table->cell(number_format($value['coin']));
-			$table->cell(number_format($value['video_num']));
 
 		});
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称', '余额', '会员到期', '金币', '影片数');
+		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称', '影片数', '余额', '会员到期', '金币');
 		$table->header('用户 %d 项', $table->count());
 
 		$table->bar->append('input', [
 			'type' => 'search',
+			'value' => $uid,
+			'style' => 'width:10rem',
+			'placeholder' => 'UP后台ID，-1 全部',
+			'onkeydown' => 'event.keyCode==13&&g({uid:this.value||null,page:null})'
+		]);
+		$table->bar->append('input', [
+			'type' => 'search',
 			'value' => $search,
+			'style' => 'margin-left:.6rem',
 			'placeholder' => '用户信息按【Enter】搜索',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
+
 
 	}
 	function get_user(string $id)

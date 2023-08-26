@@ -434,13 +434,13 @@ JS);
 
 
 
-	function get_topics()
+	function get_topics(int $page = 1)
 	{
 		$conds = [['userid=?s'], $this->user->id];
 
 
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ctime DESC,hash ASC';
-		$table = $this->html()->main->table($this->webapp->mysql->topics(...$conds), function($table, $topic)
+		$table = $this->html()->main->table($this->webapp->mysql->topics(...$conds)->paging($page), function($table, $topic)
 		{
 			$table->row();
 			$table->cell($topic['hash']);
@@ -449,7 +449,9 @@ JS);
 			$table->cell($topic['title']);
 		});
 		$table->fieldset('HASH', '发布时间', '回复数', '标题 & 内容');
+		$table->paging($this->webapp->at(['page' => '']));
 		$table->header('话题');
+		
 		$table->bar->append('button', ['发布话题',
 			'onclick' => 'top.framer("?uploader/topic")'
 		]);
