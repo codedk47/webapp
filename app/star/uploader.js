@@ -141,4 +141,40 @@ uploader.upload_image = (input, preview) =>
 		});
 	};
 	reader.readAsArrayBuffer(input.files[0]);
-}
+};
+uploader.form_value = form =>
+{
+	let data = JSON.stringify(Object.fromEntries(new FormData(form))), hash = 5381n, buffer = [];
+	for (let unicode of data)
+	{
+		const value = unicode.codePointAt(0);
+		value < 128
+			? buffer[buffer.length] = value
+			: buffer.push(...(value < 2048
+				? [value >> 6 | 192, value & 63 | 128]
+				: [value >> 12 | 224, value >> 6 & 63 | 128, value & 63 | 128]));
+		hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value);
+	}
+	data = hash.toString(16).padStart(16, 0);
+	hash = data.match(/.{2}/g).map(value => parseInt(value, 16));
+	framer.loader(top.document.querySelector('iframe[importance="high"]').dataset.load, {
+		method: form.method.toUpperCase(),
+		headers: {'Mask-Key': data},
+		body: Uint8Array.from(buffer.map((byte, i) => byte ^ hash[i % 8]))
+	}).then(json => {
+		if (Array.isArray(json.errors) && json.errors.length)
+		{
+			alert(json.errors.join('\n'));
+		}
+		if (json.hasOwnProperty('dialog'))
+		{
+			alert(json.dialog);
+		}
+		if (json.hasOwnProperty('goto'))
+		{
+			framer(json.goto);
+		}
+		console.log(json);
+	});
+	return false;
+};

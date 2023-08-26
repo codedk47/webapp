@@ -473,46 +473,30 @@ class webapp_router_control extends webapp_echo_html
 			}
 		}
 
-
 		$conds[0] = sprintf('%sORDER BY id,mtime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->users(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
 
-			
 			$table->cell($value['date']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['lasttime']));
 			$table->cell($this->webapp->hexip($value['lastip']));
 			$table->cell()->append('a', [$value['id'], 'href' => "?control/user,id:{$value['id']}"]);
 			$table->cell($value['cid']);
 
-
 			$table->cell($value['device']);
 			$table->cell($value['tid']);
 			$table->cell($value['did']);
-
 
 			$table->cell($value['nickname']);
 			$table->cell(number_format($value['balance']));
 			$table->cell(date('Y-m-d', $value['expire']));
 			$table->cell(number_format($value['coin']));
-			//$table->cell($value['nickname']);
-
-
-			
-
-
-
-
-			// $table->cell($value['sort']);
-			// $table->cell()->append('a', [$value['name'], 'href' => "?control/tag,hash:{$value['hash']}"]);
-			
-
-
+			$table->cell(number_format($value['video_num']));
 
 		});
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称', '余额', '会员到期', '金币');
+		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称', '余额', '会员到期', '金币', '影片数');
 		$table->header('用户 %d 项', $table->count());
 
 		$table->bar->append('input', [
@@ -1221,7 +1205,7 @@ class webapp_router_control extends webapp_echo_html
 			$table->row();
 			$table->cell($value['hash']);
 			$table->cell($value['phash']);
-			$table->cell(date('Y-m-d\\TH:i:s', $value['phash']));
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
 			$table->cell($value['title']);
 			$table->cell($value['check']);

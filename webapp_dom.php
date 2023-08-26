@@ -769,7 +769,9 @@ class webapp_form implements ArrayAccess
 			else
 			{
 				$errors = &($this->context)(new stdClass)->errors;
-				$input = $this->context->request_content((string)$this->xml['enctype']);
+				$input = is_string($content = $this->context->request_maskdata())
+					? json_decode($content, TRUE)
+					: $this->context->request_content((string)$this->xml['enctype']);
 				if (isset($this->captcha) && (isset($input['captcha_encrypt'], $input['captcha_decrypt'])
 					&& is_string($input['captcha_encrypt']) && is_string($input['captcha_decrypt'])
 					&& $this->context->captcha_verify($input['captcha_encrypt'], $input['captcha_decrypt'])) === FALSE) {

@@ -433,8 +433,61 @@ JS);
 	}
 
 
+
 	function get_topics()
 	{
-		$this->html()->main->append('h1', '即将完工');
+		$conds = [['userid=?s'], $this->user->id];
+
+
+		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ctime DESC,hash ASC';
+		$table = $this->html()->main->table($this->webapp->mysql->topics(...$conds), function($table, $topic)
+		{
+			$table->row();
+			$table->cell($topic['hash']);
+			$table->cell(date('Y-m-d\\TH:i:s', $topic['mtime']));
+			$table->cell(number_format($topic['count']));
+			$table->cell($topic['title']);
+		});
+		$table->fieldset('HASH', '发布时间', '回复数', '标题 & 内容');
+		$table->header('话题');
+		$table->bar->append('button', ['发布话题',
+			'onclick' => 'top.framer("?uploader/topic")'
+		]);
+
 	}
+	function form_topic(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+
+		$form->fieldset('话题 / 标题');
+		$form->field('phash', 'select', ['options' => $this->webapp->select_topics(), 'required' => NULL]);
+		$form->field('title', 'text', ['style' => 'width:30rem', 'required' => NULL]);
+
+		$form->fieldset('内容');
+		$form->field('content', 'textarea', [
+			'placeholder' => '名称',
+			'rows' => 20,
+			'cols' => 70,
+			'required' => NULL]);
+
+		$form->fieldset();
+		$form->button('提交', 'submit');
+		$form->xml['onsubmit'] = 'return top.uploader.form_value(this)';
+		return $form;
+	}
+	function get_topic()
+	{
+		$this->form_topic($this->html()->main);
+	}
+	function post_topic()
+	{
+		$json = $this->json();
+		if ($this->form_topic()->fetch($topic)
+			&& $this->user->reply_topic($topic['phash'], $topic['content'], $topic['title'])) {
+			$json['goto'] = '?uploader/topics';
+			return;
+		}
+		$json['dialog'] = '发布失败！';
+	}
+
 }

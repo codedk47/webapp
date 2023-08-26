@@ -660,33 +660,17 @@ class base extends webapp
 			];
 		}
 	}
-
-
-	//话题
-	function fetch_topics()
+	//根据父级拉取话题
+	function fetch_topics(string $phash = NULL):iterable
 	{
-
+		foreach ($this->mysql->topics($phash
+			? ['WHERE `check`="allow" AND phash=?s ORDER BY ctime DESC,hash ASC', $phash]
+			: ['WHERE `check`="allow" AND phash IS NULL ORDER BY ctime DESC,hash ASC']) as $topic) {
+			yield $topic;
+		}
 	}
-
-
-
-
-	//标获取签（参数级别）
-
-
-	//获取全部专题数据
-
-
-	//专题获取视频数据
-
-
-
-	// //获取首页展示数据结构
-	// function topdata()
-	// {
-		
-	// }
-
-
-
+	function select_topics():array
+	{
+		return $this->mysql->topics('WHERE `check`="allow" AND phash IS NULL')->column('title', 'hash');
+	}
 }

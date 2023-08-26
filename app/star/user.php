@@ -309,9 +309,9 @@ class user extends ArrayObject
 	}
 
 	//发起话题（帖子）
-	function reply_topic(string $content, string $phash, string $title = NULL):bool
+	function reply_topic(string $phash, string $content, string $title = NULL):bool
 	{
-		return $this->webapp->mysql->topics('WHERE hash=?s LIMIT 1', $phash)->update('`count`=`count`+`') === 1
+		return $this->webapp->mysql->topics('WHERE hash=?s LIMIT 1', $phash)->update('`count`=`count`+1') === 1
 			&& $this->webapp->mysql->topics->insert([
 				'hash' => $this->webapp->random_hash(FALSE),
 				'mtime' => $this->webapp->time,
