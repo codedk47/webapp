@@ -34,7 +34,7 @@ class webapp_router_control extends webapp_echo_html
 					['游戏提现', '?control/record-exchange-game']
 				]],
 
-				['社区 & 话题', '?control/topics'],
+				['话题', '?control/topics'],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -1160,80 +1160,59 @@ class webapp_router_control extends webapp_echo_html
 		}
 		$this->main->append('h4', '广告更新失败！');
 	}
-	//社区话题
 
+	//社区话题
 	function get_topics(string $search = NULL, string $phash = NULL, int $page = 1)
 	{
 		$conds = [[]];
-		// if (is_string($search))
-		// {
-		// 	$search = urldecode($search);
-		// 	if (trim($search, webapp::key))
-		// 	{
-		// 		$conds[0][] = 'name LIKE ?s';
-		// 		$conds[] = "%{$search}%";
-		// 	}
-		// 	else
-		// 	{
-		// 		$conds[0][] = strlen($search) === 4 ? 'FIND_IN_SET(?s,tags)' : 'hash=?s';
-		// 		$conds[] = $search;
-		// 	}
-		// }
-		// if ($userid = $this->webapp->query['userid'] ?? '')
-		// {
-		// 	$conds[0][] = 'userid=?s';
-		// 	$conds[] = $userid;
-		// }
-		// if ($sync = $this->webapp->query['sync'] ?? '')
-		// {
-		// 	switch ($sync)
-		// 	{
-		// 		case 'uploading':
-		// 			$conds[0][] = 'sync="waiting" AND tell<size';
-		// 			break;
-		// 		case 'waiting':
-		// 			$conds[0][] = 'sync="waiting" AND tell>=size';
-		// 			break;
-		// 		default:
-		// 			$conds[0][] = 'sync=?s';
-		// 			$conds[] = $sync;
-		// 	}
-		// }
-		// if ($require = $this->webapp->query['require'] ?? '')
-		// {
-		// 	$conds[0][] = sprintf('`require`%s', match ($require)
-		// 	{
-		// 		'vip' => '=-1',
-		// 		'free' => '=0',
-		// 		'coin' => '>0',
-		// 		default => '=' . intval($require)
-		// 	});
-		// }
-		// if ($type = $this->webapp->query['type'] ?? '')
-		// {
-		// 	$conds[0][] = 'type=?s';
-		// 	$conds[] = $type;
-		// }
+		if ($phash)
+		{
+			$conds[0][] = 'phash=?s';
+			$conds[] = $phash;
+		}
+		else
+		{
+			$conds[0][] = 'phash IS NOT NULL';
+		}
+		if ($check = $this->webapp->query['check'] ?? '')
+		{
+			$conds[0][] = '`check`=?s';
+			$conds[] = $check;
+		}
 
-		// if ($subject = $this->webapp->query['subject'] ?? '')
-		// {
-		// 	$conds[0][] = 'FIND_IN_SET(?s,subjects)';
-		// 	$conds[] = $subject;
-		// }
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY `sort` DESC,`mtime` DESC';
-		$table = $this->main->table($this->webapp->mysql->topics(...$conds)->paging($page), function($table, $value)
+		$table = $this->main->table($this->webapp->mysql->topics(...$conds)->paging($page, 10), function($table, $value)
 		{
 			$table->row();
 			$table->cell($value['hash']);
-			$table->cell($value['phash']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
-			$table->cell($value['title']);
-			$table->cell($value['check']);
-		});
-		$table->fieldset('HASH', '父级', '发布时间', '数量', '标题', '审核');
-		$table->header('话题 %s 项', $table->count());
+			$table->cell($value['title'] === NULL ? '评论' : '帖子');
 
+			$check = $table->cell();
+			if ($value['check'] === 'pending')
+			{
+				$check->append('a', ['允许', 'href' => '#']);
+				$check->append('span', ' | ');
+				$check->append('a', ['拒绝', 'href' => '#']);
+			}
+
+			$table->row();
+			$contents = $table->cell(['colspan' => 5])->append('pre', ['style' => 'margin:0;line-height:1.4rem;']);
+			if ($value['title'])
+			{
+				$contents->text($value['title']);
+				$contents->text("\n");
+			}
+			if ($value['content'])
+			{
+				$contents->text("\t{$value['content']}");
+			}
+
+
+		});
+		$table->fieldset('HASH', '发布时间', '数量', '类型', '审核');
+		$table->header('话题 %s 项', $table->count());
 
 		$table->bar->append('button', ['发布话题',
 			// 'data-src' => '?control/topic',
@@ -1242,9 +1221,16 @@ class webapp_router_control extends webapp_echo_html
 			// 'data-bind' => 'click',
 			'onclick' => 'location.href="?control/topic"'
 		]);
+		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
+			->select(['' => '全部话题'] + $this->webapp->select_topics())
+			->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
+		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
+			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
+			->setattr(['onchange' => 'g({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
 
-
-
+		$table->bar->append('button', ['删除',
+			'style' => 'margin-left:.6rem'
+		]);
 	}
 	function form_topic(webapp_html $html = NULL):webapp_form
 	{

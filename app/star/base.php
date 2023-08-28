@@ -671,6 +671,6 @@ class base extends webapp
 	}
 	function select_topics():array
 	{
-		return $this->mysql->topics('WHERE `check`="allow" AND phash IS NULL')->column('title', 'hash');
+		return $this->mysql->topics('WHERE `check`="allow" AND phash IS NULL ORDER BY sort DESC')->column('title', 'hash');
 	}
 }

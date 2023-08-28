@@ -437,7 +437,11 @@ JS);
 	function get_topics(int $page = 1)
 	{
 		$conds = [['userid=?s'], $this->user->id];
-
+		if ($check = $this->webapp->query['check'] ?? '')
+		{
+			$conds[0][] = '`check`=?s';
+			$conds[] = $check;
+		}
 
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ctime DESC,hash ASC';
 		$table = $this->html()->main->table($this->webapp->mysql->topics(...$conds)->paging($page), function($table, $topic)
@@ -452,9 +456,11 @@ JS);
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->header('话题');
 		
-		$table->bar->append('button', ['发布话题',
-			'onclick' => 'top.framer("?uploader/topic")'
-		]);
+		$table->bar->append('button', ['发布话题', 'onclick' => 'top.framer("?uploader/topic")']);
+		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
+			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
+			->setattr(['onchange' => 'r({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
+
 
 	}
 	function form_topic(webapp_html $html = NULL):webapp_form
