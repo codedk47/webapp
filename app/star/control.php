@@ -1179,12 +1179,18 @@ class webapp_router_control extends webapp_echo_html
 			$conds[0][] = '`check`=?s';
 			$conds[] = $check;
 		}
+		if ($userid = $this->webapp->query['userid'] ?? '')
+		{
+			$conds[0][] = 'userid=?s';
+			$conds[] = $userid;
+		}
 
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY `sort` DESC,`mtime` DESC';
 		$table = $this->main->table($this->webapp->mysql->topics(...$conds)->paging($page, 10), function($table, $value)
 		{
 			$table->row();
 			$table->cell($value['hash']);
+			$table->cell()->append('a', [$value['userid'], 'href' => "?control/topics,userid:{$value['userid']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
 			$table->cell($value['title'] === NULL ? '评论' : '帖子');
@@ -1192,13 +1198,25 @@ class webapp_router_control extends webapp_echo_html
 			$check = $table->cell();
 			if ($value['check'] === 'pending')
 			{
-				$check->append('a', ['允许', 'href' => '#']);
+				$check->append('a', ['允许',
+					'href' => "?control/topic,hash:{$value['hash']},check:allow",
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				]);
 				$check->append('span', ' | ');
-				$check->append('a', ['拒绝', 'href' => '#']);
+				$check->append('a', ['拒绝',
+					'href' => "?control/topic,hash:{$value['hash']},check:deny",
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				]);
+			}
+			else
+			{
+				$check->text($value['check']);
 			}
 
 			$table->row();
-			$contents = $table->cell(['colspan' => 5])->append('pre', ['style' => 'margin:0;line-height:1.4rem;']);
+			$contents = $table->cell(['colspan' => 6])->append('pre', ['style' => 'margin:0;line-height:1.4rem;']);
 			if ($value['title'])
 			{
 				$contents->text($value['title']);
@@ -1209,18 +1227,11 @@ class webapp_router_control extends webapp_echo_html
 				$contents->text("\t{$value['content']}");
 			}
 
-
 		});
-		$table->fieldset('HASH', '发布时间', '数量', '类型', '审核');
+		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '类型', '审核');
 		$table->header('话题 %s 项', $table->count());
 
-		$table->bar->append('button', ['发布话题',
-			// 'data-src' => '?control/topic',
-			// 'data-method' => 'post',
-			// 'data-dialog' => '{"title":"text"}',
-			// 'data-bind' => 'click',
-			'onclick' => 'location.href="?control/topic"'
-		]);
+		$table->bar->append('button', ['发布话题', 'onclick' => 'location.href="?control/topic"']);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 			->select(['' => '全部话题'] + $this->webapp->select_topics())
 			->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
@@ -1228,8 +1239,12 @@ class webapp_router_control extends webapp_echo_html
 			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
 			->setattr(['onchange' => 'g({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
 
-		$table->bar->append('button', ['删除',
-			'style' => 'margin-left:.6rem'
+		$table->bar->append('button', ['删除该话题以及所有帖子和评论',
+			'style' => 'margin-left:.6rem',
+			'data-src' => "?control/topic,hash:{$phash}",
+			'data-method' => 'delete',
+			'data-dialog' => '删除后不可恢复',
+			'data-bind' => 'click'
 		]);
 	}
 	function form_topic(webapp_html $html = NULL):webapp_form
@@ -1260,6 +1275,35 @@ class webapp_router_control extends webapp_echo_html
 			return;
 		}
 		$this->main->append('h4', '话题发布失败！');
+	}
+	function delete_topic(string $hash)
+	{
+		if ($this->admin && $this->webapp->mysql->topics('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
+		{
+			$count_topic = 0;
+			$count_reply = 0;
+			foreach ($this->webapp->mysql->topics('WHERE phash=?s', $hash)->column('hash') as $hash)
+			{
+				if ($this->webapp->mysql->topics('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
+				{
+					++$count_topic;
+					$count_reply += $this->webapp->mysql->topics('WHERE phash=?s', $hash)->delete();
+				}
+			}
+			$this->dialog("删除 {$count_topic} 个帖子，删除 {$count_reply} 个评论。");
+			$this->goto();
+			return;
+		}
+		$this->dialog('需要超级管理员权限或者删除失败！');
+	}
+	function patch_topic(string $hash, string $check)
+	{
+		if ($this->webapp->mysql->topics('WHERE hash=?s AND `check`="pending" LIMIT 1', $hash)->update('`check`=?s', $check) === 1)
+		{
+			$this->goto();
+			return;
+		}
+		$this->dialog('审核失败！');
 	}
 
 
