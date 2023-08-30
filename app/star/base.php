@@ -656,7 +656,8 @@ class base extends webapp
 				'hash' => $video['hash'],
 				'mtime' => $video['mtime'],
 				'ctime' => $video['ctime'],
-				'sort' => $video['sort']
+				'sort' => $video['sort'],
+				'view' => $video['view']
 			];
 		}
 	}

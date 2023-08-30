@@ -20,16 +20,20 @@ class webapp_router_packer
 	function get_home()
 	{
 		//var_dump($this->mobile, $this->type);
+		$dl = $this->webapp->request_entry() . '' . $this->webapp->at([], '?packer/dl');
 		$html = new webapp_echo_html($this->webapp);
 		$html->loadHTMLFile('D:/wmhp/work/pwa/rstar.html');
 		if ($this->mobile)
 		{
+			$html->xml->body['style'] = 'background-position: center 8rem;background-color: #1f1d1f;background-image: url(/pwa/mobile.png)';
 			$html->xml->body->div[0]['style'] = 'display:block';
 
 
+			
+
 			$html->xml->body->div->main->a->setattr($this->type === 'iphone'
-				? ['iOS 下载', 'href' => '#', 'class' => 'iphone', 'onclick' => 'return iphone(this)']
-				: ['Android 下载', 'href' => '#', 'class' => 'android']);
+				? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this)']
+				: ['Android 下载', 'href' => $dl, 'class' => 'android']);
 		
 		}
 		else
