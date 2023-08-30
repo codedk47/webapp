@@ -26,21 +26,22 @@ class webapp_router_packer
 		if ($this->mobile)
 		{
 			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
-
-			$html->xml->body['style'] = 'background-position: center 8rem;background-color: #1f1d1f;background-image: url(/pwa/mobile.png)';
+			$html->xml->body['style'] = "background-position: center 8rem;background-color: #1f1d1f;background-image: url(data:image/png;base64,{$base64bg})";
+			$html->xml->body->header['class'] = 'mobile';
+			$html->xml->body->a['style'] = 'position:fixed;top:1.3rem;right:1rem';
 			$html->xml->body->div[0]['style'] = 'display:block';
-
-
-			
-
-			$html->xml->body->div->main->a->setattr($this->type === 'iphone'
+			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
 				? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this)']
 				: ['Android 下载', 'href' => $dl, 'class' => 'android']);
-		
 		}
 		else
 		{
+			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../desktop.png"));
+			$html->xml->body['style'] = "background-image: url(data:image/png;base64,{$base64bg})";
+			$html->xml->body->header['class'] = 'desktop';
 			$html->xml->body->div[1]['style'] = 'display:block';
+			$html->xml->xpath('//div[@class="qrcode"]')[0]['style'] = "background-image:url({$dl})";
+			$html->xml->xpath('//div[@data-tg]')[0]->dom()->appendChild($html->xml->body->a->dom());
 		}
 
 
