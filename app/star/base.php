@@ -663,7 +663,7 @@ class base extends webapp
 	//根据父级拉取话题
 	function fetch_topics(string $phash = NULL):iterable
 	{
-		foreach ($this->mysql->topics($phash
+		foreach ($this->mysql->topics(...$phash
 			? ['WHERE `check`="allow" AND phash=?s ORDER BY ctime DESC,hash ASC', $phash]
 			: ['WHERE `check`="allow" AND phash IS NULL ORDER BY ctime DESC,hash ASC']) as $topic) {
 			yield $topic;

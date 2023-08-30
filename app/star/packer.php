@@ -19,7 +19,27 @@ class webapp_router_packer
 	}
 	function get_home()
 	{
-		var_dump($this->mobile, $this->type);
+		//var_dump($this->mobile, $this->type);
+		$html = new webapp_echo_html($this->webapp);
+		$html->loadHTMLFile('D:/wmhp/work/pwa/rstar.html');
+		if ($this->mobile)
+		{
+			$html->xml->body->div[0]['style'] = 'display:block';
+
+
+			$html->xml->body->div->main->a->setattr($this->type === 'iphone'
+				? ['iOS 下载', 'href' => '#', 'class' => 'iphone', 'onclick' => 'return iphone(this)']
+				: ['Android 下载', 'href' => '#', 'class' => 'android']);
+		
+		}
+		else
+		{
+			$html->xml->body->div[1]['style'] = 'display:block';
+		}
+
+
+
+		$this->webapp->echo($html);
 	}
 	function channel(?string $id):bool
 	{
