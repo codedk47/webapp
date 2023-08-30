@@ -22,7 +22,7 @@ class webapp_router_packer
 		//var_dump($this->mobile, $this->type);
 		$dl = $this->webapp->request_entry() . '' . $this->webapp->at([], '?packer/dl');
 		$html = new webapp_echo_html($this->webapp);
-		$html->loadHTMLFile('D:/wmhp/work/pwa/rstar.html');
+		$html->loadHTMLFile("{$this->webapp['android_apk']['prepare_directory']}/../rstar.html");
 		if ($this->mobile)
 		{
 			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
