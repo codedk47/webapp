@@ -25,6 +25,8 @@ class webapp_router_packer
 		$html->loadHTMLFile('D:/wmhp/work/pwa/rstar.html');
 		if ($this->mobile)
 		{
+			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
+
 			$html->xml->body['style'] = 'background-position: center 8rem;background-color: #1f1d1f;background-image: url(/pwa/mobile.png)';
 			$html->xml->body->div[0]['style'] = 'display:block';
 
@@ -153,7 +155,7 @@ class webapp_router_packer
 		// 	$build = file_get_contents('build.gradle');
 		// 	$random = 'aw' . bin2hex(random_bytes(7));
 		// 	$build = preg_replace('/group\s*=\s*\'[^\']+/', "group = 'org.chromium.{$random}", $build);
-		// 	if (file_put_contents('build.gradle', $build) ===  strlen($build))
+		// 	if (file_put_contents('build.gradle', $build) === strlen($build))
 		// 	{
 		// 		exec('gradlew --no-build-cache assembleDebug', $output, $result_code);
 		// 		$result_code === 0
@@ -168,7 +170,7 @@ class webapp_router_packer
 			case 'iphone': return $this->iphone_webcilp($cid);
 			case 'android': return $this->android_apk($cid);
 		}
-		$redirect = $this->webapp->request_origin() . '/' . $this->webapp->at([]);
+		$redirect = $this->webapp->request_entry() . '' . $this->webapp->at([]);
 		$svg = new webapp_echo_svg($this->webapp);
 		$svg->xml->qrcode(webapp::qrcode($redirect, $this->webapp['qrcode_ecc']), $this->webapp['qrcode_size']);
 		$this->webapp->echo($svg);

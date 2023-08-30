@@ -635,16 +635,16 @@ class base extends webapp
 		$subjects = [];
 		foreach ($this->mysql->subjects('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
 		{
+			$value = $this->mysql->videos('WHERE FIND_IN_SET(?s,subjects)', $subject['hash'])->select('COUNT(1) c,SUM(view) v')->array();
 			$subjects[] = [
 				'hash' => $subject['hash'],
 				'name' => $subject['name'],
-				'view' => 0,
-				'num' => 0,
+				'view' => $value['v'] ?? 0,
+				'num' => $value['c'] ?? 0,
 				'style' => $subject['style'],
 				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
 			];
 		}
-		
 		return $subjects;
 	}
 	//专题HASH拉取视频
