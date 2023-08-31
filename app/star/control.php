@@ -497,9 +497,27 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function get_uploader(int $uid = 0, int $page = 1)
 	{
+
 		if ($uid && $this->webapp->mysql->uploaders('WHERE uid=?i LIMIT 1', $uid)->fetch($uploader))
 		{
-			$table = $this->main->table($this->webapp->mysql->users('WHERE uid=?i', $uid)->paging($page), function($table, $value)
+			$references = [];
+			foreach ($this->webapp->mysql->videos('WHERE userid IN(?S) GROUP BY userid',
+				$this->webapp->mysql->users('WHERE uid=?i', $uid)->column('id'))
+				->select(join(',', [
+					'userid',
+					'COUNT(IF(`require`>-2,1,NULL)) `all`',
+					'COUNT(IF(`require`=-1,1,NULL)) vip',
+					'COUNT(IF(`require`=0,1,NULL)) free',
+					'COUNT(IF(`require`>0,1,NULL)) coin'
+				])) as $video) {
+				$references[$video['userid']] = [
+					'all' => $video['all'],
+					'vip' => $video['vip'],
+					'free' => $video['free'],
+					'coin' => $video['coin']
+				];
+			}
+			$table = $this->main->table($this->webapp->mysql->users('WHERE uid=?i', $uid)->paging($page), function($table, $value, $references)
 			{
 				$table->row();
 				$table->cell($value['date']);
@@ -507,10 +525,24 @@ class webapp_router_control extends webapp_echo_html
 				$table->cell($this->webapp->hexip($value['lastip']));
 				$table->cell($value['id']);
 				$table->cell($value['nickname']);
-				$table->cell(number_format($value['video_num']));
+				if (isset($references[$value['id']]))
+				{
+					$reference = $references[$value['id']];
+					$table->cell(number_format($reference['all']));
+					$table->cell(sprintf('%.01f%%', $reference['free'] ? $reference['free'] / $reference['all'] * 100 : 0));
+					$table->cell(sprintf('%.01f%%', $reference['vip'] ? $reference['vip'] / $reference['all'] * 100 : 0));
+					$table->cell(sprintf('%.01f%%', $reference['coin'] ? $reference['coin'] / $reference['all'] * 100 : 0));
+				}
+				else
+				{
+					$table->cell(number_format($value['video_num']));
+					$table->cell('0.0%');
+					$table->cell('0.0%');
+					$table->cell('0.0%');
+				}
 				$table->cell(number_format($value['balance']));
-			});
-			$table->fieldset('创建日期', '最后登录时间', '最后登录IP', 'ID', '昵称', '视频数', '余额');
+			}, $references);
+			$table->fieldset('创建日期', '最后登录时间', '最后登录IP', 'ID', '昵称', '视频数', '免费比', '会员比', '金币比', '余额');
 			$table->header("上传账号 %s 绑定了 %s 个用户", $uploader['name'], $table->count());
 			$table->paging($this->webapp->at(['page' => '']));
 			
