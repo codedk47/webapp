@@ -108,6 +108,7 @@ class interfaces extends webapp
 			return;
 		}
 		$units = array_combine($unit = $this->mysql->unitsets->column('unit'), $unit);
+		$units['0200'] = '0200';
 		foreach ($this['app_site'] as $site => $ip)
 		{
 			if (in_array($site, [0, 2]) === FALSE) continue;
