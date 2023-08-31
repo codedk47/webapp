@@ -88,8 +88,129 @@ class webapp_router_control extends webapp_echo_html
 
 
 
-	function get_home()
+	function get_home(string $datefrom = '')
 	{
+		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $datefrom))
+		{
+			$datefrom = date('Y-m-d');
+		}
+		$statistics = [
+			'dpv',
+			'dpv_ios',
+			'dpv_android',
+			'dpc',
+			'dpc_ios',
+			'dpc_android',
+			'signin',
+			'signin_ios',
+			'signin_android',
+			'signup',
+			'signup_ios',
+			'signup_android',
+			'recharge',
+			'recharge_new',
+			'recharge_old',
+			'recharge_coin',
+			'recharge_vip',
+			'recharge_vip_new',
+			'order',
+			'order_ok',
+			'order_ios',
+			'order_ios_ok',
+			'order_android',
+			'order_android_ok'
+		];
+		$sum = [];
+		$merge = [];
+		for ($i = 0; $i < 24; ++$i)
+		{
+			$fields = [];
+			foreach ($statistics as $field) {
+				if ($i === 0)
+				{
+					$sum[] = "SUM(`{$field}`) `{$field}`";
+				}
+				$fields[] = "'{$field}'";
+				$fields[] = sprintf('SUM(JSON_EXTRACT(hourdata,"$[%d].%s"))', $i, $field);
+			}
+			$merge[] = sprintf('JSON_OBJECT(%s)', join(',', $fields));
+		}
+
+		$logs = $this->webapp->mysql('SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date=?s GROUP BY cid',
+			join(',', $sum), join(',', $merge), $datefrom);
+		$table = $this->main->table($logs, function($table, $log, $statistics)
+		{
+			$node = [$table->row()];
+			$table->cell([$log['cid'], 'rowspan' => 24]);
+			$table->cell(['落地页访问', 'rowspan' => 3]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('苹果');
+			$node[] = $table->row();
+			$table->cell('安卓');
+			$node[] = $table->row();
+			$table->cell(['落地页点击', 'rowspan' => 3]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('苹果');
+			$node[] = $table->row();
+			$table->cell('安卓');
+			$node[] = $table->row();
+			$table->cell(['日活', 'rowspan' => 3]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('苹果');
+			$node[] = $table->row();
+			$table->cell('安卓');
+			$node[] = $table->row();
+			$table->cell(['新增', 'rowspan' => 3]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('苹果');
+			$node[] = $table->row();
+			$table->cell('安卓');
+			$node[] = $table->row();
+			$table->cell(['充值', 'rowspan' => 6]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('新充值');
+			$node[] = $table->row();
+			$table->cell('老充值');
+			$node[] = $table->row();
+			$table->cell('金币');
+			$node[] = $table->row();
+			$table->cell('VIP总');
+			$node[] = $table->row();
+			$table->cell('VIP新');
+			$node[] = $table->row();
+			$table->cell(['订单', 'rowspan' => 6]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('成功');
+			$node[] = $table->row();
+			$table->cell('苹果总计');
+			$node[] = $table->row();
+			$table->cell('苹果成功');
+			$node[] = $table->row();
+			$table->cell('安卓总计');
+			$node[] = $table->row();
+			$table->cell('安卓成功');
+			$hourdata = json_decode($log['hourdata'], TRUE);
+			foreach ($statistics as $i => $field)
+			{
+				$node[$i]->append('td', number_format($log[$field]));
+				foreach (range(0, 23) as $hour)
+				{
+					$node[$i]->append('td', number_format($hourdata[$hour][$field]));
+				}
+			}
+		}, $statistics);
+		$table->xml['class'] .= '-statistics';
+		$table->fieldset('渠道', '分类', '详细', '总计', ...range(0, 23));
+		$table->header('数据统计');
+		$table->bar->append('input', ['type' => 'date', 'value' => $datefrom, 'onchange' => 'g({datefrom:this.value||null})']);
+		//$table->bar->append('input', ['type' => 'date', 'value' => $datefrom]);
+
 	}
 
 	//========标签========
@@ -290,10 +411,8 @@ class webapp_router_control extends webapp_echo_html
 		$table->header('专题 %d 项', $table->count());
 		$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
 
-
-		
 		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
-			->select(['' => '全部', ...$this->webapp->mysql->tags->column('name', 'hash')])
+			->select(['' => '全部分类', ...$this->webapp->mysql->tags('WHERE phash IS NULL')->column('name', 'hash')])
 			->setattr(['onchange' => 'g({tagid:this.value||null})', 'style' => 'padding:.1rem'])->selected($tagid);
 	}
 	function get_subject(string $hash = NULL)

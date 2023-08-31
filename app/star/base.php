@@ -366,9 +366,13 @@ class base extends webapp
 		return preg_match('/DID\:(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
 	}
 	//记录日志
-	function recordlog(string $field, int $value = 1, int $nowtime = NULL)
+	function recordlog(string $cid, string $field, int $value = 1, int $nowtime = NULL)
 	{
-		$ciddate = $this->cid() . date('Ymd', $nowtime);
+		if (!preg_match('/\w{4}/', $cid))
+		{
+			$cid = '0000';
+		}
+		$ciddate = $cid . date('Ymd', $nowtime);
 		$values = match (TRUE)
 		{
 			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
@@ -387,7 +391,6 @@ class base extends webapp
 		$values = sprintf('%s,hourdata=JSON_SET(hourdata,%s)', join(',', $incrdata), join(',', $hourdata));
 		while ($this->mysql->recordlog('WHERE ciddate=?s LIMIT 1', $ciddate)->update($values) !== 1)
 		{
-
 			$insert = [
 				'dpv'				=> 0,
 				'dpv_ios'			=> 0,
@@ -414,9 +417,10 @@ class base extends webapp
 				'order_android'		=> 0,
 				'order_android_ok'	=> 0
 			];
-			$insert['hourdata'] = json_encode(array_fill(0, 23, $insert), JSON_NUMERIC_CHECK);
+			$insert['hourdata'] = json_encode(array_fill(0, 24, $insert), JSON_NUMERIC_CHECK);
 			if ($this->mysql->recordlog->insert([
 				'ciddate' => $ciddate,
+				'cid' => $cid,
 				'date' => date('Y-m-d', $nowtime),
 				...$insert]) === FALSE) {
 				return FALSE;
