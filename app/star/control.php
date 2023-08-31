@@ -142,14 +142,14 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$node = [$table->row()];
 			$table->cell([$log['cid'], 'rowspan' => 24]);
-			$table->cell(['落地页访问', 'rowspan' => 3]);
+			$table->cell(['访问', 'rowspan' => 3]);
 			$table->cell('总计');
 			$node[] = $table->row();
 			$table->cell('苹果');
 			$node[] = $table->row();
 			$table->cell('安卓');
 			$node[] = $table->row();
-			$table->cell(['落地页点击', 'rowspan' => 3]);
+			$table->cell(['点击', 'rowspan' => 3]);
 			$table->cell('总计');
 			$node[] = $table->row();
 			$table->cell('苹果');
