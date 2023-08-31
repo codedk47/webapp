@@ -377,6 +377,14 @@ class base extends webapp
 		{
 			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
 			in_array($field, ['dpc_ios', 'dpc_android'], TRUE) => ['dpc' => $value, $field => $value],
+			in_array($field, ['signin_ios', 'signin_android'], TRUE) => ['signin' => $value, $field => $value],
+			in_array($field, ['signup_ios', 'signup_android'], TRUE) => ['signup' => $value, $field => $value],
+
+			// in_array($field, ['recharge_new', 'recharge_old', 'recharge_coin', 'recharge_vip', 'recharge_vip_new'], TRUE)
+			// 	=> ['recharge' => $value, $field => $value],
+
+			// in_array($field, ['order_ok', 'order_ios', 'order_ios_ok', 'order_android', 'order_android_ok'], TRUE)
+			// 	=> ['order' => $value, $field => $value],
 			default => []
 		};
 		if (empty($values)) return FALSE;
