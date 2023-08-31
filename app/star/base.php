@@ -366,7 +366,7 @@ class base extends webapp
 		return preg_match('/DID\:(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
 	}
 	//记录日志
-	function recordlog(string $cid, string $field, int $value = 1, int $nowtime = NULL)
+	function recordlog(string $cid, string $field, int $value = 1, int $nowtime = NULL):bool
 	{
 		if (!preg_match('/\w{4}/', $cid))
 		{
@@ -377,7 +377,9 @@ class base extends webapp
 		{
 			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
 			in_array($field, ['dpc_ios', 'dpc_android'], TRUE) => ['dpc' => $value, $field => $value],
+			'signin' => ['signin' => $value],
 			in_array($field, ['signin_ios', 'signin_android'], TRUE) => ['signin' => $value, $field => $value],
+			'signup' => ['signup' => $value],
 			in_array($field, ['signup_ios', 'signup_android'], TRUE) => ['signup' => $value, $field => $value],
 
 			// in_array($field, ['recharge_new', 'recharge_old', 'recharge_coin', 'recharge_vip', 'recharge_vip_new'], TRUE)

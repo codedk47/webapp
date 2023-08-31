@@ -93,7 +93,12 @@ class user extends ArrayObject
 		return $this->id && $this->cond()->update([
 			'lasttime' => $this->webapp->time,
 			'lastip' => $this->webapp->iphex($this->webapp->ip)
-		]) === 1;
+		]) === 1 && $this->webapp->recordlog($this['cid'], match ($this['cid'])
+		{
+			'android' => 'signin_android',
+			'ios' => 'signin_ios',
+			default => 'signin'
+		});
 	}
 	function fid():string
 	{

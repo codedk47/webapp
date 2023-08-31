@@ -26,7 +26,7 @@ class webapp_router_packer
 		if ($this->mobile)
 		{
 			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
-			$html->xml->body['style'] = "background-position: center 8rem;background-color: #1f1d1f;background-image: url(data:image/png;base64,{$base64bg})";
+			$html->xml->body['style'] = "background-position: center 11rem;background-color: #1f1d1f;background-image: url(data:image/png;base64,{$base64bg})";
 			$html->xml->body->header['class'] = 'mobile';
 			$html->xml->body->a['style'] = 'position:fixed;top:1.3rem;right:1rem';
 			$html->xml->body->div[0]['style'] = 'display:block';
