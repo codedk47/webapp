@@ -375,10 +375,15 @@ class base extends webapp
 		$ciddate = $cid . date('Ymd', $nowtime);
 		$values = match (TRUE)
 		{
+			'dpv' => ['dpv' => $value],
 			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
+
+			'dpc' => ['dpc' => $value],
 			in_array($field, ['dpc_ios', 'dpc_android'], TRUE) => ['dpc' => $value, $field => $value],
+
 			'signin' => ['signin' => $value],
 			in_array($field, ['signin_ios', 'signin_android'], TRUE) => ['signin' => $value, $field => $value],
+
 			'signup' => ['signup' => $value],
 			in_array($field, ['signup_ios', 'signup_android'], TRUE) => ['signup' => $value, $field => $value],
 
