@@ -87,19 +87,6 @@ class user extends ArrayObject
 	// {
 	// 	return FALSE;
 	// }
-	//刷新用户最后登录状态
-	function sign_in():bool
-	{
-		return $this->id && $this->cond()->update([
-			'lasttime' => $this->webapp->time,
-			'lastip' => $this->webapp->iphex($this->webapp->ip)
-		]) === 1 && $this->webapp->recordlog($this['cid'], match ($this['cid'])
-		{
-			'android' => 'signin_android',
-			'ios' => 'signin_ios',
-			default => 'signin'
-		});
-	}
 	function fid():string
 	{
 		return ($this['fid'] % 255) ? "/faces/{$this['fid']}" : sprintf('/face/%s?%s',

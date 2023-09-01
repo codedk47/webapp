@@ -446,12 +446,33 @@ class base extends webapp
 	//创建用户
 	function user_create(array $user):user
 	{
-		return user::create($this, $user);
+		$user = user::create($this, $user);
+		$user->id && $this->recordlog($user->id, match ($user['device'])
+		{
+			'android' => 'signup_android',
+			'ios' => 'signup_ios',
+			default => 'signup'
+		});
+		return $user;
 	}
 	//Reids 覆盖此方法获取用户并且缓存
 	function user_fetch(string $id):array
 	{
-		return $this->mysql->users('WHERE id=?s LIMIT 1', $id)->array();
+		if ($this->mysql->users('WHERE id=?s LIMIT 1', $id)->fetch($user))
+		{
+			$this->recordlog($user['cid'], match ($user['device'])
+			{
+				'android' => 'signin_android',
+				'ios' => 'signin_ios',
+				default => 'signin'
+			});
+			$this->mysql->users('WHERE id=?s LIMIT 1', $user['id'])->update([
+				'lasttime' => $this->time,
+				'lastip' => $this->iphex($this->ip)
+			]);
+			return $user;
+		}
+		return [];
 	}
 	//用户模型
 	function user(string $id = 'FABqsZrf0g'):user
