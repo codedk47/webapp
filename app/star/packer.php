@@ -1,6 +1,7 @@
 <?php
 class webapp_router_packer
 {
+	const cid = '0000';
 	private readonly bool $mobile;
 	private readonly string $type, $cid;
 	function __construct(private readonly webapp $webapp)
@@ -19,7 +20,7 @@ class webapp_router_packer
 	}
 	function channel(?string $id):bool
 	{
-		return $id === '0000';
+		return $id === self::cid;
 	}
 	function iphone_webcilp(?string $cid):int
 	{
@@ -135,7 +136,7 @@ class webapp_router_packer
 	}
 	function get_home(string $cid = NULL)
 	{
-		$this->webapp->recordlog($this->channel($cid) ? $cid : '0000', match ($this->type)
+		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, match ($this->type)
 		{
 			'android' => 'dpv_android',
 			'iphone' => 'dpv_ios',
@@ -171,8 +172,9 @@ class webapp_router_packer
 	{
 		switch ($this->type)
 		{
-			case 'iphone': return $this->iphone_webcilp($cid);
 			case 'android': return $this->android_apk($cid);
+			case 'iphone': return $this->iphone_webcilp($cid);
+			default: $this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, 'dpc');
 		}
 		$redirect = $this->webapp->request_entry() . '' . $this->webapp->at([]);
 		$svg = new webapp_echo_svg($this->webapp);
