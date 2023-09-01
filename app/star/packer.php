@@ -2,7 +2,7 @@
 class webapp_router_packer
 {
 	private readonly bool $mobile;
-	private readonly string $type;
+	private readonly string $type, $cid;
 	function __construct(private readonly webapp $webapp)
 	{
 		if (preg_match('/android|iphone/i', $webapp->request_device, $device))
@@ -16,37 +16,6 @@ class webapp_router_packer
 			//$this->type = preg_match('/i?pad/i', $webapp->request_device) ? 'pad' : 'desktop';
 			$this->type = 'desktop';
 		}
-	}
-	function get_home()
-	{
-		//var_dump($this->mobile, $this->type);
-		$dl = $this->webapp->request_entry() . '' . $this->webapp->at([], '?packer/dl');
-		$html = new webapp_echo_html($this->webapp);
-		$html->loadHTMLFile("{$this->webapp['android_apk']['prepare_directory']}/../rstar.html");
-		if ($this->mobile)
-		{
-			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
-			$html->xml->body['style'] = "background-position: center 6rem;background-color: #1f1d1f;background-image: url(data:image/png;base64,{$base64bg})";
-			$html->xml->body->header['class'] = 'mobile';
-			$html->xml->body->a['style'] = 'position:fixed;top:1.3rem;right:1rem';
-			$html->xml->body->div[0]['style'] = 'display:block';
-			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
-				? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this)']
-				: ['Android 下载', 'href' => $dl, 'class' => 'android']);
-		}
-		else
-		{
-			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../desktop.png"));
-			$html->xml->body['style'] = "background-image: url(data:image/png;base64,{$base64bg})";
-			$html->xml->body->header['class'] = 'desktop';
-			$html->xml->body->div[1]['style'] = 'display:block';
-			$html->xml->xpath('//div[@class="qrcode"]')[0]['style'] = "background-image:url({$dl})";
-			$html->xml->xpath('//div[@data-tg]')[0]->dom()->appendChild($html->xml->body->a->dom());
-		}
-
-
-
-		$this->webapp->echo($html);
 	}
 	function channel(?string $id):bool
 	{
@@ -71,7 +40,7 @@ class webapp_router_packer
 		if ($this->channel($cid))
 		{
 			//这里也许需要在 REDIS 保存渠道码
-			//$this->webapp->recordlog('dpc_ios');
+			$this->webapp->recordlog($cid, 'dpc_ios');
 		}
 		$routers = array_map(fn($origin) => "{$origin}/CID/{$random}", $iphone_webcilp['routers']);
 		$this->webapp->echo(webapp_echo_xml::mobileconfig([
@@ -137,7 +106,7 @@ class webapp_router_packer
 		}
 		if ($this->channel($cid) && (is_file($packcid = "{$currentdir}/{$cid}.{$android_apk['packer_suffix']}")
 			|| webapp::lib('apkpacker/apkpacker.php')("{$android_apk['prepare_directory']}/{$currentapk}", $cid, $packcid))) {
-			//$this->webapp->recordlog('dpc_android');
+			$this->webapp->recordlog($cid, 'dpc_android');
 			$currentapk ="{$currentfix}/{$cid}.{$android_apk['packer_suffix']}";
 		}
 		$this->webapp->response_location("{$android_apk['download_path']}/{$currentapk}");
@@ -163,6 +132,40 @@ class webapp_router_packer
 		// 			&& rename('build/outputs/apk/debug/android_webview-debug.apk', "build/outputs/apk/debug/{$random}.apk");
 		// 	}
 		// }
+	}
+	function get_home(string $cid = NULL)
+	{
+		$this->webapp->recordlog($this->channel($cid) ? $cid : '0000', match ($this->type)
+		{
+			'android' => 'dpv_android',
+			'iphone' => 'dpv_ios',
+			default => 'dpv'
+		});
+		//var_dump($this->mobile, $this->type);
+		$dl = $this->webapp->request_entry() . '' . $this->webapp->at([], '?packer/dl');
+		$html = new webapp_echo_html($this->webapp);
+		$html->loadHTMLFile("{$this->webapp['android_apk']['prepare_directory']}/../rstar.html");
+		if ($this->mobile)
+		{
+			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
+			$html->xml->body['style'] = "background-position: center 6rem;background-color: #1f1d1f;background-image: url(data:image/png;base64,{$base64bg})";
+			$html->xml->body->header['class'] = 'mobile';
+			$html->xml->body->a['style'] = 'position:fixed;top:1.3rem;right:1rem';
+			$html->xml->body->div[0]['style'] = 'display:block';
+			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
+				? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this)']
+				: ['Android 下载', 'href' => $dl, 'class' => 'android']);
+		}
+		else
+		{
+			$base64bg = base64_encode(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../desktop.png"));
+			$html->xml->body['style'] = "background-image: url(data:image/png;base64,{$base64bg})";
+			$html->xml->body->header['class'] = 'desktop';
+			$html->xml->body->div[1]['style'] = 'display:block';
+			$html->xml->xpath('//div[@class="qrcode"]')[0]['style'] = "background-image:url({$dl})";
+			$html->xml->xpath('//div[@data-tg]')[0]->dom()->appendChild($html->xml->body->a->dom());
+		}
+		$this->webapp->echo($html);
 	}
 	function get_dl(string $cid = NULL):int
 	{
