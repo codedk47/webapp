@@ -1155,11 +1155,6 @@ JS);
 				}
 			}
 		}
-		else
-		{
-			$cond[0] .= ' and date=?s';
-			$date = $cond[] = preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $date) ? $date : date('Y-m-d');
-		}
 
 		$counts = [];
 		foreach ($this->webapp->mysql->accounts(sprintf('%s GROUP BY device ORDER BY c DESC', $cond[0]), ...array_slice($cond, 1))
