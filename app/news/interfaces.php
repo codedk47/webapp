@@ -111,7 +111,6 @@ class interfaces extends webapp
 		$units['0200'] = '0200';
 		foreach ($this['app_site'] as $site => $ip)
 		{
-			var_dump(in_array($site, [2]));
 			if (in_array($site, [2]) === FALSE) continue;
 			$this->site = $site;
 			echo "\n\nSTART PULL SITE:{$this->site}";
