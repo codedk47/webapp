@@ -149,6 +149,7 @@ addEventListener('DOMContentLoaded', async event =>
 	framer.worker = async (resource, options) => request(loader.worker, resource, options);
 	framer.loader = async (resource, options) => loader(resource, {...options, headers: options && 'headers' in options ? {...options.headers, ...headers} : headers});
 	framer.open = resource => sandbox.open(resource);
+	framer.draw = resource => sandbox.draw(resource);
 	framer.close = () => sandbox.close();
 
 	sandbox.hide(frame =>

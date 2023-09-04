@@ -177,9 +177,31 @@ JS);
 	{
 		$this->json(['result' => $this->user->change_nickname($this->webapp->request_content())]);
 	}
+	function form_exchange(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+		$form->fieldset('USDT / TRC');
+		$form->field('trc', 'text', [
+			'pattern' => '^[0-9a-zA-Z]{34}$',
+			'style' => 'width:30rem',
+			'required' => NULL]);
+		$form->fieldset('输入金额');
+		$form->field('fee', 'number', [
+			'value' => $this->user['balance'],
+			'max' => $this->user['balance'],
+			'min' => 500,
+			'style' => 'width:20rem',
+			'required' => NULL]);
+		$form->button('提交提现', 'submit');
+		$form->xml['onsubmit'] = 'return top.uploader.form_value(this)';
+		return $form;
+	}
 	function get_exchange()
 	{
-		$this->html()->main->append('h1', '等待正式上线');
+		$form = $this->form_exchange($this->html()->main);
+
+
+
 	}
 
 	function get_videos(string $search = NULL, int $page = 1)
