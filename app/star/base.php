@@ -321,7 +321,7 @@ class base extends webapp
 				'fetch_values' => $subject['fetch_values'] ? explode(',', $subject['fetch_values']) : []
 			];
 		}
-		foreach ($this->mysql->videos('WHERE sync="allow"') as $video)
+		foreach ($this->mysql->videos('WHERE sync="allow" AND type="h"') as $video)
 		{
 			$vsubjects = [];
 			foreach ($subjects as $hash => $data)
