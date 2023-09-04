@@ -49,6 +49,9 @@ class webapp_router_uploader
 				['视频列表', '?uploader/videos'],
 				['导出异常影片', '?uploader/exceptions'],
 				['话题', '?uploader/topics'],
+				['记录', [
+					['提现', '?uploader/record-exchanges']
+				]],
 				['注销登录', 'javascript:top.location.reload(localStorage.removeItem("token"));', 'style' => 'color:maroon']
 			]);
 			if ($this->users)
@@ -182,7 +185,8 @@ JS);
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->fieldset('USDT / TRC');
 		$form->field('trc', 'text', [
-			'pattern' => '^[0-9a-zA-Z]{34}$',
+			'pattern' => '^T[0-9a-zA-Z]{33}$',
+			'placeholder' => '钱包地址',
 			'style' => 'width:30rem',
 			'required' => NULL]);
 		$form->fieldset('输入金额');
@@ -190,11 +194,19 @@ JS);
 			'value' => $this->user['balance'],
 			'max' => $this->user['balance'],
 			'min' => 500,
+			'placeholder' => '最低提现金额不得低于 500 元',
 			'style' => 'width:20rem',
 			'required' => NULL]);
-		$form->button('提交提现', 'submit');
+		$form->button('提交提现', 'submit', ['style' => 'width:10rem']);
 		$form->xml['onsubmit'] = 'return top.uploader.form_value(this)';
 		return $form;
+	}
+	function post_exchange()
+	{
+		$this->json($this->form_exchange()->fetch($transfer)
+			&& $this->user->exchange($transfer)
+				? ['goto' => '?uploader/record-exchanges']
+				: ['dialog' => '提现失败！']);
 	}
 	function get_exchange()
 	{
@@ -202,6 +214,21 @@ JS);
 
 
 
+	}
+	function get_record_exchanges(int $page = 1)
+	{
+		$exchange = $this->webapp->mysql->records('WHERE userid=?s AND type="exchange" ORDER BY mtime DESC', $this->user->id)->paging($page);
+		$table = $this->html()->main->table($exchange, function($table, $value)
+		{
+			$table->row();
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell(number_format($value['fee']));
+			$table->cell(json_decode($value['ext'], TRUE)['trc']);
+			$table->cell(base::record_results[$value['result']]);
+		});
+		$table->fieldset('创建时间', '提现', 'TRC', '状态');
+		$table->header('提现记录');
+		$table->paging($this->webapp->at(['page' => '']));
 	}
 
 	function get_videos(string $search = NULL, int $page = 1)

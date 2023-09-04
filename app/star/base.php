@@ -577,7 +577,11 @@ class base extends webapp
 		//增加500个金币（赠5%金币）
 		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+525') === 1;
 	}
-
+	const record_results = [
+		'pending' => '待定',
+		'success' => '完成',
+		'failure' => '失败'
+	];
 	//记录（回调）
 	function record(string $hash, bool $result = FALSE):bool
 	{

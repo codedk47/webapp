@@ -1492,8 +1492,70 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function get_record_exchange_balance(int $page = 1)
 	{
+		$conds = [['type="exchange"']];
+		if ($userid = $this->webapp->query['userid'] ?? '')
+		{
+			$conds[0][] = 'userid=?s';
+			$conds[] = $userid;
+		}
+		if ($result = $this->webapp->query['result'] ?? '')
+		{
+			$conds[0][] = 'result=?s';
+			$conds[] = $result;
+		}
+		$conds[0] = sprintf('%sORDER BY mtime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$exchange = $this->webapp->mysql->records(...$conds)->paging($page);
+		$table = $this->main->table($exchange, function($table, $value)
+		{
+			$table->row();
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell($value['userid']);
+			$table->cell(number_format($value['fee']));
+			$table->cell(json_decode($value['ext'], TRUE)['trc']);
+
+			$action = $table->cell();
+			if ($value['result'] === 'pending')
+			{
+				$action->append('a', ['完成',
+					'href' => "?control/record-exchange-balance,hash:{$value['hash']},result:success",
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				]);
+				$action->append('span', ' | ');
+				$action->append('a', ['拒绝',
+					'href' => "?control/record-exchange-balance,hash:{$value['hash']},result:failure",
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				]);
+			}
+			else
+			{
+				$action->text(base::record_results[$value['result']]);
+			}
+		});
+		$table->paging($this->webapp->at(['page' => '']));
+		$table->fieldset('创建时间', '用户ID', '提现', 'TRC', '状态');
+		$table->header('提现记录');
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $userid,
+			'style' => 'padding:2px;width:8rem',
+			'placeholder' => '用户ID',
+			'onkeydown' => 'event.keyCode==13&&g({userid:this.value||null,page:null})'
+		]);
+		$table->bar->select(['' => '全部'] + base::record_results)
+			->setattr(['onchange' => 'g({result:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($result);
+	}
+	function patch_record_exchange_balance(string $hash, string $result)
+	{
+		$this->webapp->record($hash, $result === 'success')
+			? $this->goto()
+			: $this->dialog('操作失败！');
 
 	}
+
+
 	function get_record_exchange_game(int $page = 1)
 	{
 		
