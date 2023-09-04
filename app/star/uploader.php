@@ -193,8 +193,8 @@ JS);
 		$form->field('fee', 'number', [
 			'value' => $this->user['balance'],
 			'max' => $this->user['balance'],
-			'min' => 500,
-			'placeholder' => '最低提现金额不得低于 500 元',
+			'min' => 100,
+			'placeholder' => '最低提现金额不得低于 100 元',
 			'style' => 'width:20rem',
 			'required' => NULL]);
 		$form->button('提交提现', 'submit', ['style' => 'width:10rem']);

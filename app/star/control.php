@@ -335,7 +335,8 @@ class webapp_router_control extends webapp_echo_html
 		return [
 			1 => '全大图',
 			2 => '全小图',
-			5 => '5宫格'
+			5 => '5宫格',
+			7 => '个人'
 		];
 	}
 	function subject_fetch_methods():array
