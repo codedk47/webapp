@@ -670,7 +670,6 @@ class base extends webapp
 		}
 	}
 
-
 	//根据分类标签ID拉取专题
 	function fetch_subjects(string $tagid):array
 	{
@@ -678,13 +677,9 @@ class base extends webapp
 		foreach ($this->mysql->subjects('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
 		{
 			$value = $this->mysql->videos('WHERE FIND_IN_SET(?s,subjects)', $subject['hash'])->select('COUNT(1) c,SUM(view) v')->array();
-
-
 			$videos = preg_match('/^\d{1,2}$/', $subject['videos'], $count)
 				? $this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY mtime DESC LIMIT ?i', $subject['hash'], $count[0])
 					->column('hash') : ($subject['videos'] ? str_split($subject['videos'], 12) : []);
-
-
 			$subjects[] = [
 				'hash' => $subject['hash'],
 				'name' => $subject['name'],

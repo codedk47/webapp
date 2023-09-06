@@ -1158,7 +1158,11 @@ class webapp_router_control extends webapp_echo_html
 		return [
 			0 => '开屏广告',
 			1 => '首页轮播',
-			255 => '待定分类'
+			2 => '中间轮播',
+			3 => '游戏轮播',
+			4 => '社区轮播',
+			5 => '个人中心'
+			//255 => '待定分类'
 		];
 	}
 	function ad_displays():array
