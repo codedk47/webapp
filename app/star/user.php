@@ -299,21 +299,36 @@ class user extends ArrayObject
 		return array_column($this->webapp->mysql->records('WHERE userid=?s AND type="video" and ext->>"$.type"=?s ORDER BY mtime DESC', $this->id, $type)
 			->select('ext->>"$.hash"')->paging($page, $size)->all(), 'ext->>"$.hash"');
 	}
-
-	//发起话题（帖子）
-	function reply_topic(string $phash, string $content, string $title = NULL):bool
+	function comment_video(string $hash, string $content):bool
 	{
-		return $this->webapp->mysql->topics('WHERE hash=?s LIMIT 1', $phash)->update('`count`=`count`+1') === 1
-			&& $this->webapp->mysql->topics->insert([
+		return $this->webapp->mysql->comments->insert([
+			'hash' => $this->webapp->random_hash(FALSE),
+			'phash' => $hash,
+			'userid' => $this->id,
+			'mtime' => $this->webapp->time,
+			'ctime' => $this->webapp->time,
+			'sort' => 0,
+			'type' => 'video',
+			'check' => 'pending',
+			'count' => 0,
+			'content' => $content
+		]);
+	}
+	//发起话题、帖子、回复
+	function comment_topic(string $phash, string $content, $type = 'reply', string $title = NULL):bool
+	{
+		return $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $phash)->update('`count`=`count`+1') === 1
+			&& $this->webapp->mysql->comments->insert([
 				'hash' => $this->webapp->random_hash(FALSE),
+				'phash' => $phash,
+				'userid' => $this->id,
 				'mtime' => $this->webapp->time,
 				'ctime' => $this->webapp->time,
-				'userid' => $this->id,
-				'phash' => $phash,
-				'title' => $title,
+				'sort' => 0,
+				'type' => $type,
 				'check' => 'pending',
 				'count' => 0,
-				'sort' => 0,
+				'title' => $title,
 				'content' => $content]);
 	}
 

@@ -48,7 +48,7 @@ class webapp_router_uploader
 				['用户信息', '?uploader/info'],
 				['视频列表', '?uploader/videos'],
 				['导出异常影片', '?uploader/exceptions'],
-				['话题', '?uploader/topics'],
+				['话题 & 帖子', '?uploader/comments'],
 				['记录', [
 					['提现', '?uploader/record-exchanges']
 				]],
@@ -483,7 +483,7 @@ JS);
 
 
 
-	function get_topics(int $page = 1)
+	function get_comments(int $page = 1)
 	{
 		$conds = [['userid=?s'], $this->user->id];
 		if ($check = $this->webapp->query['check'] ?? '')
@@ -493,36 +493,38 @@ JS);
 		}
 
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ctime DESC,hash ASC';
-		$table = $this->html()->main->table($this->webapp->mysql->topics(...$conds)->paging($page), function($table, $topic)
+		$table = $this->html()->main->table($this->webapp->mysql->comments(...$conds)->paging($page), function($table, $topic)
 		{
 			$table->row();
 			$table->cell($topic['hash']);
 			$table->cell(date('Y-m-d\\TH:i:s', $topic['mtime']));
+			$table->cell(base::comment_type[$topic['type']]);
 			$table->cell(number_format($topic['count']));
 			$table->cell($topic['title']);
+			$table->cell()->append('a', ['asdasd', 'href' => '#']);
 		});
-		$table->fieldset('HASH', '发布时间', '回复数', '标题 & 内容');
+		$table->fieldset('HASH', '发布时间', '类型', '回复数', '标题 & 内容', '回复');
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->header('话题');
+		$table->header('话题、帖子、回复');
 		
-		$table->bar->append('button', ['发布话题', 'onclick' => 'top.framer("?uploader/topic")']);
+		$table->bar->append('button', ['发布话题', 'onclick' => 'top.framer("?uploader/comment")']);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
 			->setattr(['onchange' => 'r({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
 
 
 	}
-	function form_topic(webapp_html $html = NULL):webapp_form
+	function form_comment(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
 		$form->fieldset('话题 / 标题');
 		$form->field('phash', 'select', ['options' => $this->webapp->select_topics(), 'required' => NULL]);
-		$form->field('title', 'text', ['style' => 'width:30rem', 'required' => NULL]);
+		$form->field('title', 'text', ['placeholder' => '标题', 'style' => 'width:30rem', 'required' => NULL]);
 
 		$form->fieldset('内容');
 		$form->field('content', 'textarea', [
-			'placeholder' => '名称',
+			'placeholder' => '内容',
 			'rows' => 20,
 			'cols' => 70,
 			'required' => NULL]);
@@ -532,16 +534,16 @@ JS);
 		$form->xml['onsubmit'] = 'return top.uploader.form_value(this)';
 		return $form;
 	}
-	function get_topic()
+	function get_comment()
 	{
-		$this->form_topic($this->html()->main);
+		$this->form_comment($this->html()->main);
 	}
-	function post_topic()
+	function post_comment(string $type = 'topic')
 	{
 		$json = $this->json();
-		if ($this->form_topic()->fetch($topic)
-			&& $this->user->reply_topic($topic['phash'], $topic['content'], $topic['title'])) {
-			$json['goto'] = '?uploader/topics';
+		if ($this->form_comment()->fetch($topic)
+			&& $this->user->comment_topic($topic['phash'], $topic['content'], $type, $topic['title'])) {
+			$json['goto'] = '?uploader/comments';
 			return;
 		}
 		$json['dialog'] = '发布失败！';

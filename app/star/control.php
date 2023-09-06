@@ -34,7 +34,7 @@ class webapp_router_control extends webapp_echo_html
 					['游戏提现', '?control/record-exchange-game']
 				]],
 
-				['话题', '?control/topics'],
+				['评论 & 话题', '?control/comments'],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -1324,8 +1324,8 @@ class webapp_router_control extends webapp_echo_html
 		$this->main->append('h4', '广告更新失败！');
 	}
 
-	//社区话题
-	function get_topics(string $search = NULL, string $phash = NULL, int $page = 1)
+	//话题 & 评论
+	function get_comments(string $search = NULL, string $phash = NULL, int $page = 1)
 	{
 		$conds = [[]];
 		if ($phash)
@@ -1349,11 +1349,11 @@ class webapp_router_control extends webapp_echo_html
 		}
 
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY `sort` DESC,`mtime` DESC';
-		$table = $this->main->table($this->webapp->mysql->topics(...$conds)->paging($page, 10), function($table, $value)
+		$table = $this->main->table($this->webapp->mysql->comments(...$conds)->paging($page, 10), function($table, $value)
 		{
 			$table->row();
 			$table->cell($value['hash']);
-			$table->cell()->append('a', [$value['userid'], 'href' => "?control/topics,userid:{$value['userid']}"]);
+			$table->cell()->append('a', [$value['userid'], 'href' => "?control/comments,userid:{$value['userid']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
 			$table->cell($value['title'] === NULL ? '评论' : '帖子');
@@ -1362,13 +1362,13 @@ class webapp_router_control extends webapp_echo_html
 			if ($value['check'] === 'pending')
 			{
 				$check->append('a', ['允许',
-					'href' => "?control/topic,hash:{$value['hash']},check:allow",
+					'href' => "?control/comment,hash:{$value['hash']},check:allow",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				]);
 				$check->append('span', ' | ');
 				$check->append('a', ['拒绝',
-					'href' => "?control/topic,hash:{$value['hash']},check:deny",
+					'href' => "?control/comment,hash:{$value['hash']},check:deny",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				]);
@@ -1392,25 +1392,25 @@ class webapp_router_control extends webapp_echo_html
 
 		});
 		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '类型', '审核');
-		$table->header('话题 %s 项', $table->count());
+		$table->header('话题、评论 %s 项', $table->count());
 
-		$table->bar->append('button', ['发布话题', 'onclick' => 'location.href="?control/topic"']);
+		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment"']);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
-			->select(['' => '全部话题'] + $this->webapp->select_topics())
+			->select(['' => '全部分类'] + $this->webapp->select_topics())
 			->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
 			->setattr(['onchange' => 'g({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
 
-		$table->bar->append('button', ['删除该话题以及所有帖子和评论',
+		$table->bar->append('button', ['删除该分类和话题以及所有帖子和评论',
 			'style' => 'margin-left:.6rem',
-			'data-src' => "?control/topic,hash:{$phash}",
+			'data-src' => "?control/comment,hash:{$phash}",
 			'data-method' => 'delete',
 			'data-dialog' => '删除后不可恢复',
 			'data-bind' => 'click'
 		]);
 	}
-	function form_topic(webapp_html $html = NULL):webapp_form
+	function form_comment(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->fieldset('标题 / 排序（越大越靠前）');
@@ -1419,38 +1419,38 @@ class webapp_router_control extends webapp_echo_html
 		$form->button('提交', 'submit');
 		return $form;
 	}
-	function get_topic()
+	function get_comment()
 	{
-		$this->form_topic($this->main);
+		$this->form_comment($this->main);
 	}
-	function post_topic()
+	function post_comment()
 	{
-		if ($this->form_topic()->fetch($data)
-			&& $this->webapp->mysql->topics->insert([
+		if ($this->form_comment()->fetch($data)
+			&& $this->webapp->mysql->comments->insert([
 				'hash' => $this->webapp->random_hash(FALSE),
 				'mtime' => $this->webapp->time,
 				'ctime' => $this->webapp->time,
+				'type' => 'topic',
 				'check' => 'allow',
 				'count' => 0,
-				'sort' => 0,
 				'content' => ''] + $data)) {
-			$this->webapp->response_location('?control/topics');
+			$this->webapp->response_location('?control/comments');
 			return;
 		}
 		$this->main->append('h4', '话题发布失败！');
 	}
-	function delete_topic(string $hash)
+	function delete_comment(string $hash)
 	{
-		if ($this->admin && $this->webapp->mysql->topics('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
+		if ($this->admin && $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
 		{
 			$count_topic = 0;
 			$count_reply = 0;
-			foreach ($this->webapp->mysql->topics('WHERE phash=?s', $hash)->column('hash') as $hash)
+			foreach ($this->webapp->mysql->comments('WHERE phash=?s', $hash)->column('hash') as $hash)
 			{
-				if ($this->webapp->mysql->topics('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
+				if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
 				{
 					++$count_topic;
-					$count_reply += $this->webapp->mysql->topics('WHERE phash=?s', $hash)->delete();
+					$count_reply += $this->webapp->mysql->comments('WHERE phash=?s', $hash)->delete();
 				}
 			}
 			$this->dialog("删除 {$count_topic} 个帖子，删除 {$count_reply} 个评论。");
@@ -1459,9 +1459,9 @@ class webapp_router_control extends webapp_echo_html
 		}
 		$this->dialog('需要超级管理员权限或者删除失败！');
 	}
-	function patch_topic(string $hash, string $check)
+	function patch_comment(string $hash, string $check)
 	{
-		if ($this->webapp->mysql->topics('WHERE hash=?s AND `check`="pending" LIMIT 1', $hash)->update('`check`=?s', $check) === 1)
+		if ($this->webapp->mysql->comments('WHERE hash=?s AND `check`="pending" LIMIT 1', $hash)->update('`check`=?s', $check) === 1)
 		{
 			$this->goto();
 			return;

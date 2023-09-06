@@ -686,7 +686,9 @@ class base extends webapp
 				'view' => $value['v'] ?? 0,
 				'num' => $value['c'] ?? 0,
 				'style' => $subject['style'],
-				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : []
+				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : [],
+				'fetch_method' => $subject['fetch_method'],
+				'fetch_values' => $subject['fetch_values']
 			];
 		}
 		return $subjects;
@@ -705,10 +707,29 @@ class base extends webapp
 			];
 		}
 	}
+	//根据影片拉取评论
+	function fetch_comments(string $hash):iterable
+	{
+		foreach ($this->mysql->comments('WHERE phash=?s AND type="video" AND `check`="allow" ORDER BY mtime DESC,hash ASC', $hash) as $comment)
+		{
+			yield [
+				'hash' => $comment['hash'],
+				'mtime' => $comment['mtime'],
+				'content' => $comment['content']
+			];
+		}
+	}
+	const comment_type = [
+		'class' => '社区分类',
+		'topic' => '分类话题',
+		'post' => '话题帖子',
+		'reply' => '帖子回复',
+		'video' => '视频评论'
+	];
 	//根据父级拉取话题
 	function fetch_topics(string $phash = NULL):iterable
 	{
-		foreach ($this->mysql->topics(...$phash
+		foreach ($this->mysql->comments(...$phash
 			? ['WHERE `check`="allow" AND phash=?s ORDER BY ctime DESC,hash ASC', $phash]
 			: ['WHERE `check`="allow" AND phash IS NULL ORDER BY ctime DESC,hash ASC']) as $topic) {
 			yield $topic;
@@ -716,6 +737,6 @@ class base extends webapp
 	}
 	function select_topics():array
 	{
-		return $this->mysql->topics('WHERE `check`="allow" AND phash IS NULL ORDER BY sort DESC')->column('title', 'hash');
+		return $this->mysql->comments('WHERE `check`="allow" AND phash IS NULL ORDER BY sort DESC')->column('title', 'hash');
 	}
 }
