@@ -501,7 +501,17 @@ JS);
 			$table->cell(base::comment_type[$topic['type']]);
 			$table->cell(number_format($topic['count']));
 			$table->cell($topic['title']);
-			$table->cell()->append('a', ['asdasd', 'href' => '#']);
+			$action = $table->cell();
+			if ($topic['type'] === 'post')
+			{
+				$action->append('a', ['发布帖子', 'href' => '#']);
+			}
+			else
+			{
+				$action->append('a', ['发布帖子', 'href' => '#']);
+			}
+			
+			
 		});
 		$table->fieldset('HASH', '发布时间', '类型', '回复数', '标题 & 内容', '回复');
 		$table->paging($this->webapp->at(['page' => '']));

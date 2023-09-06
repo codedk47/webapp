@@ -328,9 +328,7 @@ class base extends webapp
 			{
 				match ($data['fetch_method'])
 				{
-					'tags' => $video['tags'] && count(array_intersect(
-						explode(',', $video['tags']), $data['fetch_values'])
-					) === count($data['fetch_values']),
+					'tags' => $video['tags'] && array_intersect(explode(',', $video['tags']), $data['fetch_values']),
 					'words' => words($video['name'], $data['fetch_values']),
 					'uploader' => in_array($video['userid'], $data['fetch_values'], TRUE),
 					default => FALSE
@@ -680,13 +678,20 @@ class base extends webapp
 		foreach ($this->mysql->subjects('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
 		{
 			$value = $this->mysql->videos('WHERE FIND_IN_SET(?s,subjects)', $subject['hash'])->select('COUNT(1) c,SUM(view) v')->array();
+
+
+			$videos = preg_match('/^\d{1,2}$/', $subject['videos'], $count)
+				? $this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY mtime DESC LIMIT ?i', $subject['hash'], $count[0])
+					->column('hash') : ($subject['videos'] ? str_split($subject['videos'], 12) : []);
+
+
 			$subjects[] = [
 				'hash' => $subject['hash'],
 				'name' => $subject['name'],
 				'view' => $value['v'] ?? 0,
 				'num' => $value['c'] ?? 0,
 				'style' => $subject['style'],
-				'videos' => $subject['videos'] ? str_split($subject['videos'], 12) : [],
+				'videos' => $videos,
 				'fetch_method' => $subject['fetch_method'],
 				'fetch_values' => $subject['fetch_values']
 			];
@@ -720,11 +725,11 @@ class base extends webapp
 		}
 	}
 	const comment_type = [
-		'class' => '社区分类',
-		'topic' => '分类话题',
-		'post' => '话题帖子',
-		'reply' => '帖子回复',
-		'video' => '视频评论'
+		'class' => '社区的分类',
+		'topic' => '分类的话题',
+		'post' => '话题的帖子',
+		'reply' => '帖子的回复',
+		'video' => '视频的评论'
 	];
 	//根据父级拉取话题
 	function fetch_topics(string $phash = NULL):iterable
