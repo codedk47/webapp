@@ -740,6 +740,11 @@ class webapp_router_control extends webapp_echo_html
 			$conds[0][] = 'userid=?s';
 			$conds[] = $userid;
 		}
+		if ($tag = $this->webapp->query['tag'] ?? '')
+		{
+			$conds[0][] = 'FIND_IN_SET(?s,tags)';
+			$conds[] = $tag;
+		}
 		if ($sync = $this->webapp->query['sync'] ?? '')
 		{
 			switch ($sync)
@@ -904,10 +909,13 @@ class webapp_router_control extends webapp_echo_html
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $search,
-			'style' => 'margin-left:.6rem;padding:2px;width:26rem',
+			'style' => 'margin-left:.6rem;padding:2px;width:24rem',
 			'placeholder' => '请输入视频HASH、标签HASH、关键字按【Enter】进行搜索。',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
+		$table->bar->select(['' => '全部分类'] + $this->tag_types())
+			->setattr(['onchange' => 'g({tag:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($tag);
 		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
 			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
@@ -1160,7 +1168,7 @@ class webapp_router_control extends webapp_echo_html
 			1 => '首页轮播',
 			2 => '中间轮播',
 			3 => '游戏轮播',
-			4 => '社区轮播',
+			4 => '待定',
 			5 => '个人中心'
 			//255 => '待定分类'
 		];
