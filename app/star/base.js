@@ -1,5 +1,13 @@
 const resorigin = document.currentScript.dataset.origin;
-
+function content_to_buffer(contents)
+{
+	return Uint8Array.from(encodeURIComponent(contents).match(/%[0-F]{2}|[^%]/g)
+		.map(a => a.startsWith('%') ? parseInt(a.substring(1), 16) : a.codePointAt(0)));
+}
+function buffer_to_content(bytes)
+{
+	return (new TextDecoder).decode(bytes);
+}
 function g(p,a)
 {
 	location.assign(((o,q)=>Object.keys(o).reduce((p,k)=>o[k]===null?p:`${p},${k}:${o[k]}`,q))
