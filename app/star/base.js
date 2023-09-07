@@ -1,12 +1,23 @@
 const resorigin = document.currentScript.dataset.origin;
-function content_to_buffer(contents)
+function content_to_buffer(contents, hash = null)
 {
-	return Uint8Array.from(encodeURIComponent(contents).match(/%[0-F]{2}|[^%]/g)
-		.map(a => a.startsWith('%') ? parseInt(a.substring(1), 16) : a.codePointAt(0)));
+	const
+		buffer = Uint8Array.from(encodeURIComponent(contents).match(/%[0-F]{2}|[^%]/g)
+			.map(a => a.startsWith('%') ? parseInt(a.substring(1), 16) : a.codePointAt(0))),
+		key = /^[0-f]{16}$/.test(hash) ? hash.match(/.{2}/g).map(value => parseInt(value, 16)) : [];
+	if (key.length === 8)
+	{
+		for (let i = 0; i < buffer.length; ++i)
+		{
+			buffer[i] ^= key[i % 8];
+		}
+	}
+	return buffer;
 }
-function buffer_to_content(bytes)
+function buffer_to_content(bytes, hash = null)
 {
-	return (new TextDecoder).decode(bytes);
+	const key = /^[0-f]{16}$/.test(hash) ? hash.match(/.{2}/g).map(value => parseInt(value, 16)) : [];
+	return (new TextDecoder).decode(key.length === 8 ? bytes.map((byte, i) => byte ^ key[i % 8]) : bytes);
 }
 function g(p,a)
 {
