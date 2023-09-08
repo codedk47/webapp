@@ -303,7 +303,7 @@ class user extends ArrayObject
 	}
 	function comment_video(string $hash, string $content):bool
 	{
-		return $this->webapp->mysql->video('WHERE hash=?s AND sync="allow" LIMIT 1', $hash)->array()
+		return $this->webapp->mysql->videos('WHERE hash=?s AND sync="allow" LIMIT 1', $hash)->array()
 			&& $this->webapp->mysql->comments->insert([
 				'hash' => $this->webapp->random_hash(FALSE),
 				'phash' => $hash,
