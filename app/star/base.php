@@ -708,16 +708,17 @@ class base extends webapp
 		}
 	}
 	//根据影片拉取评论
-	function fetch_comments(string $hash, int $page, int $size = 10):iterable
+	function fetch_comments(string $hash, int $page, int $size = 10):array
 	{
 		$data = $this->mysql->comments('WHERE phash=?s AND type="video" AND `check`="allow" ORDER BY mtime DESC,hash ASC', $hash)->paging($page, $size);
 		if ($page > $data->paging['max'])
 		{
-			yield []; 
+			return []; 
 		}
+		$all = [];
 		foreach ($data as $comment)
 		{
-			yield [
+			$all[] = [
 				'hash' => $comment['hash'],
 				'user_id' => $comment['userid'],
 				'user_fid' => '/faces/1',
@@ -726,6 +727,7 @@ class base extends webapp
 				'content' => $comment['content']
 			];
 		}
+		return $all;
 	}
 	const comment_type = [
 		'class' => '社区的分类',
