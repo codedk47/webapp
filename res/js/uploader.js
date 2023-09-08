@@ -1,3 +1,19 @@
+const datakey = document.currentScript.dataset.key;
+function content_to_buffer(contents, hash = null)
+{
+	const
+		buffer = Uint8Array.from(encodeURIComponent(contents).match(/%[0-F]{2}|[^%]/g)
+			.map(a => a.startsWith('%') ? parseInt(a.substring(1), 16) : a.codePointAt(0))),
+		key = /^[0-f]{16}$/.test(hash) ? hash.match(/.{2}/g).map(value => parseInt(value, 16)) : [];
+	if (key.length === 8)
+	{
+		for (let i = 0; i < buffer.length; ++i)
+		{
+			buffer[i] ^= key[i % 8];
+		}
+	}
+	return buffer;
+}
 async function uploader(resource, files, pending = file => null)
 {
 	const
@@ -41,16 +57,7 @@ async function uploader(resource, files, pending = file => null)
 		let progress = pending({...i}) || Boolean, response = await fetch(resource, {
 			method: 'POST',
 			headers: {'Mask-Key': key},
-			body: mask(key.match(/.{2}/g).map(value => parseInt(value, 16)), Uint8Array.from(Array.from(JSON.stringify(i)).reduce((result, value) =>
-			{
-				const code = value.codePointAt(0);
-				code < 128
-					? result[result.length] = code
-					: result.push(...(code < 2048
-						? [code >> 6 | 192, code & 63 | 128]
-						: [code >> 12 | 224, code >> 6 & 63 | 128, code & 63 | 128]));
-				return result;
-			}, [])))
+			body: content_to_buffer(JSON.stringify(i), key)
 		});
 		if (response.ok)
 		{

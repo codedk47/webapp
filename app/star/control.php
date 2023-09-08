@@ -14,7 +14,10 @@ class webapp_router_control extends webapp_echo_html
 
 			$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
 			$this->script(['src' => '/webapp/res/js/loader.js']);
-			$this->script(['src' => '/webapp/app/star/base.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
+			$this->script([
+				'src' => '/webapp/app/star/base.js',
+				'data-key' => bin2hex(random_bytes(8)),
+				'data-origin' => $this->webapp['app_resorigins'][0]]);
 			$this->nav([
 				['数据', '?control/home'],
 				['标签 & 分类', '?control/tags'],

@@ -1,3 +1,4 @@
+const datakey = document.currentScript.dataset.key;
 const resorigin = document.currentScript.dataset.origin;
 function content_to_buffer(contents, hash = null)
 {
@@ -129,25 +130,10 @@ function video_value(form)
 		}
 	}
 	data.tags = tags.join(',');
-	const raw = JSON.stringify(data), buffer = [];
-	let hash = 5381n;
-	for (let unicode of raw)
-	{
-		const value = unicode.codePointAt(0);
-		value < 128
-			? buffer[buffer.length] = value
-			: buffer.push(...(value < 2048
-				? [value >> 6 | 192, value & 63 | 128]
-				: [value >> 12 | 224, value >> 6 & 63 | 128, value & 63 | 128]));
-
-		hash = (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(value);
-	}
-	const key = hash.toString(16).padStart(16, 0);
-	hash = key.match(/.{2}/g).map(value => parseInt(value, 16));
 	fetch (form.action, {
 		method: 'PATCH',
-		headers: {'Mask-Key': key},
-		body: Uint8Array.from(buffer.map((byte, i) => byte ^ hash[i % 8])).buffer
+		headers: {'Mask-Key': datakey},
+		body: content_to_buffer(JSON.stringify(data), datakey)
 	}).then(r => r.json()).then(json => {
 		if (json.errors.length)
 		{

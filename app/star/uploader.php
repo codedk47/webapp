@@ -33,13 +33,16 @@ class webapp_router_uploader
 		$this->echo = new webapp_echo_htmlmask($this->webapp);
 		if ($this->echo->entry)
 		{
-			$this->echo->script(['src' => '/webapp/res/js/uploader.js']);
+			$this->echo->script(['src' => '/webapp/res/js/uploader.js', 'data-key' => bin2hex(random_bytes(8))]);
 			$this->echo->script(['src' => '/webapp/app/star/uploader.js']);
 		}
 		else
 		{
 			$this->echo->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
-			$this->echo->script(['src' => '/webapp/app/star/base.js', 'data-origin' => $this->webapp['app_resorigins'][0]]);
+			$this->echo->script([
+				'src' => '/webapp/app/star/base.js',
+				'data-key' => bin2hex(random_bytes(8)),
+				'data-origin' => $this->webapp['app_resorigins'][0]]);
 		}
 		$this->echo->title($title);
 		if (in_array($this->webapp->method, ['get_home', 'get_auth', 'get_test']) === FALSE)
