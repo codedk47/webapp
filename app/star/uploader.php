@@ -538,14 +538,14 @@ JS);
 		}
 		else
 		{
-			$form->field('phash', 'text', ['value' => $this->webapp->query['phash'] ?? NULL, 'disabled' => NULL]);
+			$form->field('phash', 'text', ['value' => $this->webapp->query['phash'] ?? NULL, 'readonly' => NULL]);
 		}
 		$form->field('title', 'text', ['placeholder' => '标题', 'style' => 'width:30rem', 'required' => NULL]);
 
 		$form->fieldset('内容');
 		$form->field('content', 'textarea', [
 			'placeholder' => '内容',
-			'rows' => 20,
+			'rows' => 10,
 			'cols' => 70,
 			'required' => NULL]);
 

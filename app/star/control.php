@@ -1371,7 +1371,7 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell()->append('a', [$value['userid'], 'href' => "?control/comments,userid:{$value['userid']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
-			$table->cell($value['title'] === NULL ? '评论' : '帖子');
+			$table->cell(base::comment_type[$value['type']]);
 
 			$check = $table->cell();
 			if ($value['check'] === 'pending')
@@ -1395,7 +1395,7 @@ class webapp_router_control extends webapp_echo_html
 
 			$table->row();
 			$contents = $table->cell(['colspan' => 6])->append('pre', ['style' => 'margin:0;line-height:1.4rem;']);
-			if ($value['title'])
+			if ($value['type'] !== 'video' && $value['title'])
 			{
 				$contents->text($value['title']);
 				$contents->text("\n");
@@ -1408,7 +1408,7 @@ class webapp_router_control extends webapp_echo_html
 		});
 		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '类型', '审核');
 		$table->header('话题、评论 %s 项', $table->count());
-
+		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment"']);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 			->select(['' => '全部分类'] + $this->webapp->select_topics())
@@ -1549,9 +1549,9 @@ class webapp_router_control extends webapp_echo_html
 				$action->text(base::record_results[$value['result']]);
 			}
 		});
-		$table->paging($this->webapp->at(['page' => '']));
 		$table->fieldset('创建时间', '用户ID', '提现', 'TRC', '状态');
 		$table->header('提现记录');
+		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $userid,

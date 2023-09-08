@@ -1456,7 +1456,8 @@ JS);
 		$form->field('title', 'text', ['style' => 'width:40rem', 'required' => NULL]);
 		$form->fieldset('lists');
 		$form->field('lists', 'textarea', ['rows' => 30, 'cols' => 65]);
-
+		$form->fieldset();
+		$form->button('Submit', 'submit');
 		return $form;
 	}
 	function get_serial($hash = NULL)
@@ -1467,6 +1468,19 @@ JS);
 			$ser['lists'] = json_encode(json_decode($ser['lists'], TRUE), JSON_FORCE_OBJECT | JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 			$form->echo($ser);
 		}
+	}
+	function post_serial($hash = NULL)
+	{
+		$this->form_serial($this->webapp)->fetch($data)
+			&& $this->webapp->mysql->serials('WHERE hash=?s LIMIT 1', $hash)->update($data)
+			&& $this->webapp->mysql->serials('WHERE hash=?s LIMIT 1', $hash)->fetch($serial)
+			&& $this->webapp->call('saveSerial', $this->webapp->xml->append('serial', [
+				'hash' => $serial['hash'],
+				'time' => $serial['time'],
+				'last' => $serial['last'],
+				'title' => $serial['title']
+			])->cdata($serial['lists']))
+				? $this->okay('?admin/serials') : $this->warn('更新失败！');
 	}
 	function get_serials(string $search = NULL, int $page = 1)
 	{

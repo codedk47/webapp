@@ -314,7 +314,7 @@ class user extends ArrayObject
 				'type' => 'video',
 				'check' => 'pending',
 				'count' => 0,
-				'title' => $this->fid() . ',' . $this['nickname'],
+				'title' => strstr($this->fid(), '?', TRUE) . ',' . $this['nickname'],
 				'content' => $content
 		]);
 	}
