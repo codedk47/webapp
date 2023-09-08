@@ -303,17 +303,19 @@ class user extends ArrayObject
 	}
 	function comment_video(string $hash, string $content):bool
 	{
-		return $this->webapp->mysql->comments->insert([
-			'hash' => $this->webapp->random_hash(FALSE),
-			'phash' => $hash,
-			'userid' => $this->id,
-			'mtime' => $this->webapp->time,
-			'ctime' => $this->webapp->time,
-			'sort' => 0,
-			'type' => 'video',
-			'check' => 'pending',
-			'count' => 0,
-			'content' => $content
+		return $this->webapp->mysql->video('WHERE hash=?s AND sync="allow" LIMIT 1', $hash)->array()
+			&& $this->webapp->mysql->comments->insert([
+				'hash' => $this->webapp->random_hash(FALSE),
+				'phash' => $hash,
+				'userid' => $this->id,
+				'mtime' => $this->webapp->time,
+				'ctime' => $this->webapp->time,
+				'sort' => 0,
+				'type' => 'video',
+				'check' => 'pending',
+				'count' => 0,
+				'title' => $this->fid() . ',' . $this['nickname'],
+				'content' => $content
 		]);
 	}
 	//发起话题、帖子、回复

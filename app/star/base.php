@@ -718,11 +718,12 @@ class base extends webapp
 		$all = [];
 		foreach ($data as $comment)
 		{
+			$ext = explode(',', $comment['title'], 2);
 			$all[] = [
 				'hash' => $comment['hash'],
 				'user_id' => $comment['userid'],
-				'user_fid' => '/faces/1',
-				'user_nickname' => 'asd',
+				'user_fid' => $ext[0],
+				'user_nickname' => $ext[1],
 				'mtime' => $comment['mtime'],
 				'content' => $comment['content']
 			];
