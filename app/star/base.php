@@ -714,6 +714,8 @@ class base extends webapp
 		{
 			yield [
 				'hash' => $comment['hash'],
+				'user_fid' => '/faces/1',
+				'user_nickname' => 'adasdasdasd',
 				'mtime' => $comment['mtime'],
 				'content' => $comment['content']
 			];
