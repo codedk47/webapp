@@ -708,14 +708,20 @@ class base extends webapp
 		}
 	}
 	//根据影片拉取评论
-	function fetch_comments(string $hash):iterable
+	function fetch_comments(string $hash, int $page, int $size = 10):iterable
 	{
-		foreach ($this->mysql->comments('WHERE phash=?s AND type="video" AND `check`="allow" ORDER BY mtime DESC,hash ASC', $hash) as $comment)
+		$data = $this->mysql->comments('WHERE phash=?s AND type="video" AND `check`="allow" ORDER BY mtime DESC,hash ASC', $hash)->paging($page, $size);
+		if ($page > $data->paging['max'])
+		{
+			yield []; 
+		}
+		foreach ($data as $comment)
 		{
 			yield [
 				'hash' => $comment['hash'],
+				'user_id' => $comment['userid'],
 				'user_fid' => '/faces/1',
-				'user_nickname' => 'adasdasdasd',
+				'user_nickname' => 'asd',
 				'mtime' => $comment['mtime'],
 				'content' => $comment['content']
 			];
