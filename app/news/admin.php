@@ -1471,16 +1471,21 @@ JS);
 	}
 	function post_serial($hash = NULL)
 	{
-		$this->form_serial($this->webapp)->fetch($data)
+		if ($this->form_serial($this->webapp)->fetch($data)
 			&& $this->webapp->mysql->serials('WHERE hash=?s LIMIT 1', $hash)->update($data)
-			&& $this->webapp->mysql->serials('WHERE hash=?s LIMIT 1', $hash)->fetch($serial)
-			&& $this->webapp->call('saveSerial', $this->webapp->xml->append('serial', [
+			&& $this->webapp->mysql->serials('WHERE hash=?s LIMIT 1', $hash)->fetch($serial)) {
+			$node = $this->webapp->xml->append('serial', [
 				'hash' => $serial['hash'],
 				'time' => $serial['time'],
 				'last' => $serial['last'],
 				'title' => $serial['title']
-			])->cdata($serial['lists']))
-				? $this->okay('?admin/serials') : $this->warn('更新失败！');
+			]);
+			$node->cdata($serial['lists']);
+			$this->webapp->call('saveSerial', $node);
+			$this->okay('?admin/serials');
+			return;
+		}
+		$this->warn('更新失败！');
 	}
 	function get_serials(string $search = NULL, int $page = 1)
 	{
