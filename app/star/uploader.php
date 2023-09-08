@@ -507,11 +507,11 @@ JS);
 			$action = $table->cell();
 			if ($topic['type'] === 'post')
 			{
-				$action->append('a', ['发布帖子', 'href' => '#']);
+				$action->append('a', ['发布帖子', 'href' => "?uploader/comment,type:post,phash:{$topic['hash']}"]);
 			}
 			else
 			{
-				$action->append('a', ['发布帖子', 'href' => '#']);
+				$action->append('a', ['发布帖子', 'href' => "?uploader/comment,type:post,phash:{$topic['hash']}"]);
 			}
 			
 			
@@ -527,12 +527,19 @@ JS);
 
 
 	}
-	function form_comment(webapp_html $html = NULL):webapp_form
+	function form_comment(string $type, webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
-		$form->fieldset('话题 / 标题');
-		$form->field('phash', 'select', ['options' => $this->webapp->select_topics(), 'required' => NULL]);
+		$form->fieldset('上级 / 标题');
+		if ($type === 'topic')
+		{
+			$form->field('phash', 'select', ['options' => $this->webapp->select_topics(), 'required' => NULL]);
+		}
+		else
+		{
+			$form->field('phash', 'text', ['value' => $this->webapp->query['phash'] ?? NULL, 'disabled' => NULL]);
+		}
 		$form->field('title', 'text', ['placeholder' => '标题', 'style' => 'width:30rem', 'required' => NULL]);
 
 		$form->fieldset('内容');
@@ -547,14 +554,14 @@ JS);
 		$form->xml['onsubmit'] = 'return top.uploader.form_value(this)';
 		return $form;
 	}
-	function get_comment()
+	function get_comment(string $type = 'topic')
 	{
-		$this->form_comment($this->html()->main);
+		$this->form_comment($type, $this->html()->main);
 	}
 	function post_comment(string $type = 'topic')
 	{
 		$json = $this->json();
-		if ($this->form_comment()->fetch($topic)
+		if ($this->form_comment($type)->fetch($topic)
 			&& $this->user->comment_topic($topic['phash'], $topic['content'], $type, $topic['title'])) {
 			$json['goto'] = '?uploader/comments';
 			return;

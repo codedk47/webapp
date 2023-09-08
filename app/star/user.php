@@ -205,10 +205,11 @@ class user extends ArrayObject
 	//用户上传的视频（只返回HASH）
 	function videos(string $type, string $sync, int $page, int $size = 10):array
 	{
-		return $this->webapp->mysql->videos(...$sync === 'all'
+		$data = $this->webapp->mysql->videos(...$sync === 'all'
 			? ['WHERE userid=?s AND type=?s AND sync IN("finished","allow","deny") ORDER BY sort DESC', $this->id, $type]
 			: ['WHERE userid=?s AND type=?s AND sync=?s ORDER BY sort DESC', $this->id, $type, $sync])
-				->paging($page, $size)->column('hash');
+				->paging($page, $size);
+		return $page > $data->paging['max'] ? [] : $data->column('hash');
 	}
 	//用户关注UP主（再次关注即可取消）
 	function follow_uploader_user(string $id):bool
@@ -296,8 +297,9 @@ class user extends ArrayObject
 	//购买的视频数据（只返回HASH）
 	function buy_videos(string $type, int $page, int $size = 10):array
 	{
-		return array_column($this->webapp->mysql->records('WHERE userid=?s AND type="video" and ext->>"$.type"=?s ORDER BY mtime DESC', $this->id, $type)
-			->select('ext->>"$.hash"')->paging($page, $size)->all(), 'ext->>"$.hash"');
+		$data = $this->webapp->mysql->records('WHERE userid=?s AND type="video" and ext->>"$.type"=?s ORDER BY mtime DESC', $this->id, $type)
+			->select('ext->>"$.hash"')->paging($page, $size);
+		return $page > $data->paging['max'] ? [] : array_column($data->all(), 'ext->>"$.hash"');
 	}
 	function comment_video(string $hash, string $content):bool
 	{
