@@ -718,12 +718,11 @@ class base extends webapp
 		$all = [];
 		foreach ($data as $comment)
 		{
-			$ext = explode(',', $comment['title'], 2);
 			$all[] = [
 				'hash' => $comment['hash'],
 				'user_id' => $comment['userid'],
-				'user_fid' => $ext[0],
-				'user_nickname' => $ext[1],
+				'user_fid' => $comment['images'],
+				'user_nickname' => $comment['title'],
 				'mtime' => $comment['mtime'],
 				'content' => $comment['content']
 			];
@@ -741,9 +740,20 @@ class base extends webapp
 	function fetch_topics(string $phash = NULL):iterable
 	{
 		foreach ($this->mysql->comments(...$phash
-			? ['WHERE `check`="allow" AND phash=?s ORDER BY ctime DESC,hash ASC', $phash]
-			: ['WHERE `check`="allow" AND phash IS NULL ORDER BY ctime DESC,hash ASC']) as $topic) {
-			yield $topic;
+			? ['WHERE `check`="allow" AND phash=?s ORDER BY sort DESC,ctime DESC,hash ASC', $phash]
+			: ['WHERE `check`="allow" AND phash IS NULL ORDER BY sort DESC,ctime DESC,hash ASC']) as $topic) {
+			yield [
+
+				'hash' => $topic['hash'],
+				'user_id' => $topic['userid'],
+				'ctime' => $topic['ctime'],
+				'count' => $topic['count'],
+				'type' => $topic['cotypeunt'],
+				'content' => $topic['content'],
+				'title' => $topic['title'],
+				'images' => [],
+				'videos' => []
+			];
 		}
 	}
 	function select_topics():array
