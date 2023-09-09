@@ -42,7 +42,7 @@ class webapp_router_uploader
 			$this->echo->script([
 				'src' => '/webapp/app/star/base.js',
 				'data-key' => bin2hex(random_bytes(8)),
-				'data-origin' => $this->webapp['app_resorigins'][0]]);
+				'data-origin' => current($this->webapp['app_resorigins'])]);
 		}
 		$this->echo->title($title);
 		if (in_array($this->webapp->method, ['get_home', 'get_auth', 'get_test']) === FALSE)
@@ -515,7 +515,7 @@ JS);
 					? "?uploader/comment,type:reply,phash:{$topic['hash']}"
 					: "?uploader/comment,type:reply,phash:{$topic['phash']}"]);
 			}
-			
+
 
 		});
 		$table->fieldset('HASH', '发布时间', '类型', '回复数', '标题 & 内容', '回复');

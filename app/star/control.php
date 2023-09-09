@@ -17,7 +17,7 @@ class webapp_router_control extends webapp_echo_html
 			$this->script([
 				'src' => '/webapp/app/star/base.js',
 				'data-key' => bin2hex(random_bytes(8)),
-				'data-origin' => $this->webapp['app_resorigins'][0]]);
+				'data-origin' => end($this->webapp['app_resorigins'])]);
 			$this->nav([
 				['数据', '?control/home'],
 				['标签 & 分类', '?control/tags'],
