@@ -1372,18 +1372,25 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
 			$table->cell(base::comment_type[$value['type']]);
+			$table->cell([$value['sort'],
+				'data-src' => "?control/comment,hash:{$value['hash']}",
+				'data-method' => 'patch',
+				'data-dialog' => '{"sort":"number"}',
+				'data-value' => $value['sort'],
+				'data-bind' => 'click'
+			]);
 
 			$check = $table->cell();
 			if ($value['check'] === 'pending')
 			{
 				$check->append('a', ['允许',
-					'href' => "?control/comment,hash:{$value['hash']},check:allow",
+					'href' => "?control/comment,hash:{$value['hash']},field:check,value:allow",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				]);
 				$check->append('span', ' | ');
 				$check->append('a', ['拒绝',
-					'href' => "?control/comment,hash:{$value['hash']},check:deny",
+					'href' => "?control/comment,hash:{$value['hash']},field:check,value:deny",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				]);
@@ -1394,7 +1401,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 
 			$table->row();
-			$contents = $table->cell(['colspan' => 6])->append('pre', ['style' => 'margin:0;line-height:1.4rem;']);
+			$contents = $table->cell(['colspan' => 7])->append('pre', ['style' => 'margin:0;line-height:1.4rem;']);
 			if ($value['type'] !== 'video' && $value['title'])
 			{
 				$contents->text($value['title']);
@@ -1406,7 +1413,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 
 		});
-		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '类型', '审核');
+		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '类型', '排序', '审核');
 		$table->header('话题、评论 %s 项', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment"']);
@@ -1474,14 +1481,19 @@ class webapp_router_control extends webapp_echo_html
 		}
 		$this->dialog('需要超级管理员权限或者删除失败！');
 	}
-	function patch_comment(string $hash, string $check)
+	function patch_comment(string $hash, string $field = NULL, string $value = NULL)
 	{
-		if ($this->webapp->mysql->comments('WHERE hash=?s AND `check`="pending" LIMIT 1', $hash)->update('`check`=?s', $check) === 1)
+		if ($input = $this->webapp->request_content())
+		{
+			$field = array_key_first($input);
+			$value = $input[$field];
+		}
+		if ($this->webapp->mysql->comments('WHERE hash=?s AND `check`="pending" LIMIT 1', $hash)->update('?a=?s', $field, $value) === 1)
 		{
 			$this->goto();
 			return;
 		}
-		$this->dialog('审核失败！');
+		$this->dialog('操作失败！');
 	}
 
 

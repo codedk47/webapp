@@ -50,6 +50,7 @@ class webapp_router_uploader
 			$nav = $this->echo->nav([
 				['用户信息', '?uploader/info'],
 				['视频列表', '?uploader/videos'],
+				['图片列表', '?uploader/images'],
 				['导出异常影片', '?uploader/exceptions'],
 				['话题 & 帖子', '?uploader/comments'],
 				['记录', [
@@ -484,7 +485,10 @@ JS);
 		}
 	}
 
-
+	function get_images()
+	{
+		$this->html();
+	}
 
 	function get_comments(int $page = 1)
 	{
@@ -503,7 +507,7 @@ JS);
 			$table->cell(date('Y-m-d\\TH:i:s', $topic['mtime']));
 			$table->cell(base::comment_type[$topic['type']]);
 			$table->cell(number_format($topic['count']));
-			$table->cell($topic['title']);
+			$table->cell($topic['check']);
 			$action = $table->cell();
 			if ($topic['type'] === 'topic')
 			{
@@ -511,14 +515,33 @@ JS);
 			}
 			else
 			{
-				$action->append('a', ['回复帖子', 'href' => $topic['type'] === 'post'
-					? "?uploader/comment,type:reply,phash:{$topic['hash']}"
-					: "?uploader/comment,type:reply,phash:{$topic['phash']}"]);
+				if ($topic['type'] === 'video')
+				{
+					//$action->append('span', '视频评论');
+				}
+				else
+				{
+					$action->append('a', ['回复帖子', 'href' => $topic['type'] === 'post'
+						? "?uploader/comment,type:reply,phash:{$topic['hash']}"
+						: "?uploader/comment,type:reply,phash:{$topic['phash']}"]);
+				}
+			}
+
+			$table->row();
+			$contents = $table->cell(['colspan' => 6])->append('pre', ['style' => 'margin:0;line-height:1.4rem;']);
+			if ($topic['type'] !== 'video' && $topic['title'])
+			{
+				$contents->text($topic['title']);
+				$contents->text("\n");
+			}
+			if ($topic['content'])
+			{
+				$contents->text("\t{$topic['content']}");
 			}
 
 
 		});
-		$table->fieldset('HASH', '发布时间', '类型', '回复数', '标题 & 内容', '回复');
+		$table->fieldset('HASH', '发布时间', '类型', '回复数', '状态', '回复');
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->header('话题、帖子、回复');
 		
@@ -550,6 +573,9 @@ JS);
 			'rows' => 10,
 			'cols' => 70,
 			'required' => NULL]);
+		$form->fieldset();
+
+
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
