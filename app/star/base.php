@@ -741,14 +741,14 @@ class base extends webapp
 	{
 		foreach ($this->mysql->comments('WHERE type!="video" AND `check`="allow" ORDER BY sort DESC,ctime DESC,hash ASC') as $topic) {
 			yield [
-
 				'hash' => $topic['hash'],
 				'phash' => $topic['phash'],
 				'user_id' => $topic['userid'],
 				'ctime' => $topic['ctime'],
 				'count' => $topic['count'],
-				'view' => $topic['view'],
+				'sort' => $topic['sort'],
 				'type' => $topic['type'],
+				'view' => $topic['view'],
 				'content' => $topic['content'],
 				'title' => $topic['title'],
 				'images' => [],
