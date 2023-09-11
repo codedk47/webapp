@@ -737,11 +737,9 @@ class base extends webapp
 		'video' => '视频的评论'
 	];
 	//根据父级拉取话题
-	function fetch_topics(string $phash = NULL):iterable
+	function fetch_topics():iterable
 	{
-		foreach ($this->mysql->comments(...$phash
-			? ['WHERE `check`="allow" AND phash=?s ORDER BY sort DESC,ctime DESC,hash ASC', $phash]
-			: ['WHERE `check`="allow" AND phash IS NULL ORDER BY sort DESC,ctime DESC,hash ASC']) as $topic) {
+		foreach ($this->mysql->comments('WHERE type!="video" AND `check`="allow" ORDER BY sort DESC,ctime DESC,hash ASC') as $topic) {
 			yield [
 
 				'hash' => $topic['hash'],
