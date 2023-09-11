@@ -314,6 +314,7 @@ class user extends ArrayObject
 				'type' => 'video',
 				'check' => 'pending',
 				'count' => 0,
+				'view' => 0,
 				'title' => $this['nickname'],
 				'images' => strstr($this->fid(), '?', TRUE),
 				'content' => $content
@@ -333,7 +334,9 @@ class user extends ArrayObject
 				'type' => $type,
 				'check' => 'pending',
 				'count' => 0,
-				'title' => $title,
+				'view' => 0,
+				'title' => $type === 'reply' ? $this['nickname'] : $title,
+				'images' => $type === 'reply' ? strstr($this->fid(), '?', TRUE) : NULL,
 				'content' => $content]);
 	}
 

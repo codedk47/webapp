@@ -745,6 +745,7 @@ class base extends webapp
 			yield [
 
 				'hash' => $topic['hash'],
+				'phash' => $topic['phash'],
 				'user_id' => $topic['userid'],
 				'ctime' => $topic['ctime'],
 				'count' => $topic['count'],
