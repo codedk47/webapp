@@ -736,7 +736,7 @@ class base extends webapp
 		'reply' => '帖子的回复',
 		'video' => '视频的评论'
 	];
-	//根据父级拉取话题
+	//拉取所有话题
 	function fetch_topics():iterable
 	{
 		foreach ($this->mysql->comments('WHERE type!="video" AND `check`="allow" ORDER BY sort DESC,ctime DESC,hash ASC') as $topic) {
