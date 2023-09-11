@@ -749,6 +749,7 @@ class base extends webapp
 				'user_id' => $topic['userid'],
 				'ctime' => $topic['ctime'],
 				'count' => $topic['count'],
+				'view' => $topic['view'],
 				'type' => $topic['type'],
 				'content' => $topic['content'],
 				'title' => $topic['title'],
