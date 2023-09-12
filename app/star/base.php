@@ -783,7 +783,7 @@ class base extends webapp
 				'view' => $topic['view'],
 				'content' => $topic['content'],
 				'title' => $topic['title'],
-				'images' => $topic['type'] === 'reply' ? $topic['images'] : [],
+				'images' => $topic['type'] === 'reply' || $topic['type'] === 'video' ? $topic['images'] : [],
 				'videos' => []
 			];
 		}

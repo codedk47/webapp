@@ -754,9 +754,9 @@ class webapp_router_control extends webapp_echo_html
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $search,
-			'placeholder' => '关键字',
+			'placeholder' => 'HASH',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})',
-			'style' => 'margin-left:1rem;width:40rem'
+			'style' => 'margin-left:1rem'
 		]);
 	}
 
