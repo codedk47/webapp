@@ -347,7 +347,7 @@ class user extends ArrayObject
 		]);
 	}
 	//发起话题、帖子、回复
-	function comment_topic(string $phash, string $content, $type = 'reply', string $title = NULL):bool
+	function comment(string $phash, string $content, $type = 'reply', string $title = NULL):bool
 	{
 		return $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $phash)->update('`count`=`count`+1') === 1
 			&& $this->webapp->mysql->comments->insert([
