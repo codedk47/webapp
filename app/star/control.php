@@ -757,7 +757,10 @@ class webapp_router_control extends webapp_echo_html
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('label', '添加图片')->append('input', [
 			'type' => 'file',
-			'style' => ''
+			'accept' => 'image/*',
+			'style' => 'display:none',
+			'data-uploadurl' => '?uploadimage',
+			'onchange' => 'upload_image(this)'
 		]);
 		$table->bar->append('input', [
 			'type' => 'search',

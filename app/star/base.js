@@ -170,11 +170,42 @@ function video_cover(input, preview)
 			body: buffer.map((byte, i) => byte ^ key[i % 8])
 		}).then(r => r.json()).then(json =>
 		{
-			// console.log(json);
+			//console.log(json);
 			preview.style.backgroundImage = `url(${URL.createObjectURL(input.files[0])})`;
 			preview.textContent = '';
 			input.disabled = false;
 		})
+	};
+	reader.readAsArrayBuffer(input.files[0]);
+}
+function upload_image(input)
+{
+	if (input.files.length < 1) return alert('请选择一个wenjian ！');
+	if (input.disabled) return;
+	input.disabled = true;
+	const reader = new FileReader;
+	reader.onload = event =>
+	{
+		console.log(event.target.result)
+		// const
+		// buffer = new Uint8Array(event.target.result),
+		// key = input.dataset.key.match(/.{2}/g).map(value => parseInt(value, 16));
+		// top.fetch(input.dataset.uploadurl, {
+		// 	method: 'PATCH',
+		// 	headers: {'Mask-Key': input.dataset.key},
+		// 	body: buffer.map((byte, i) => byte ^ key[i % 8])
+		// }).then(r => r.json()).then(json =>
+		// {
+		// 	//console.log(json);
+		// 	if (preview)
+		// 	{
+		// 		preview.style.backgroundImage = `url(${URL.createObjectURL(input.files[0])})`;
+		// 		preview.textContent = '';
+		// 	}
+
+
+		// 	input.disabled = false;
+		// })
 	};
 	reader.readAsArrayBuffer(input.files[0]);
 }

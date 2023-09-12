@@ -206,6 +206,10 @@ class base extends webapp
 		}
 		$json['dialog'] = '修改失败！';
 	}
+	function patch_uploadimage()
+	{
+
+	}
 	//本地命令行运行封面同步处理和广告
 	function get_sync_cover()
 	{
@@ -744,6 +748,7 @@ class base extends webapp
 				'hash' => $topic['hash'],
 				'phash' => $topic['phash'],
 				'user_id' => $topic['userid'],
+				'mtime' => $topic['mtime'],
 				'ctime' => $topic['ctime'],
 				'count' => $topic['count'],
 				'sort' => $topic['sort'],
