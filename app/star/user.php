@@ -245,7 +245,7 @@ class user extends ArrayObject
 	{
 		if ($followed_ids = $this['followed_ids'] ? str_split($this['followed_ids'], 10) : [])
 		{
-			$videos = $this->webapp->mysql->videos('WHERE userid IN(?S) AND type=?s ORDER BY mtime DESC,hash ASC', $followed_ids, $type)->paging($page, $size);
+			$videos = $this->webapp->mysql->videos('WHERE userid IN(?S) AND sync="allow" AND type=?s ORDER BY mtime DESC,hash ASC', $followed_ids, $type)->paging($page, $size);
 			if ($page <= $videos->paging['max'])
 			{
 				return $videos->column('hash');
@@ -253,12 +253,12 @@ class user extends ArrayObject
 		}
 		return [];
 	}
-	//获取关注的UP主发布的评论（参数评论类型）
-	function follow_uploader_comments(string $type, int $page = 1, int $size = 10):array
+	//获取关注的UP主发布的帖子
+	function follow_uploader_posts(int $page = 1, int $size = 10):array
 	{
 		if ($followed_ids = $this['followed_ids'] ? str_split($this['followed_ids'], 10) : [])
 		{
-			$videos = $this->webapp->mysql->videos('WHERE userid IN(?S) AND type=?s ORDER BY mtime DESC,hash ASC', $followed_ids, $type)->paging($page, $size);
+			$videos = $this->webapp->mysql->comments('WHERE userid IN(?S) AND type="post" AND `check`="allow" ORDER BY mtime DESC,hash ASC', $followed_ids)->paging($page, $size);
 			if ($page <= $videos->paging['max'])
 			{
 				return $videos->column('hash');
