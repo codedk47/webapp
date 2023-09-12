@@ -139,3 +139,25 @@ label.uploaderface:hover{
 label.uploaderface>input{
 	display: none;
 }
+div.images{
+	width: 68rem;
+	display: flex;
+	gap: 1rem;
+	padding: .4rem;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+div.images>div{
+	border: black 1px solid;
+}
+div.images>div>div:first-child{
+	width: 16rem;
+	height: 9rem;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: cover;
+}
+div.images>div>div:last-child{
+	background-color: black;
+	color: white;
+}

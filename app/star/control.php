@@ -24,10 +24,9 @@ class webapp_router_control extends webapp_echo_html
 				['专题', '?control/subjects'],
 				['上传账号', '?control/uploaders'],
 				['用户', '?control/users'],
-
+				['图片', '?control/images'],
 				['视频', '?control/videos'],
 				['产品', '?control/prods'],
-				
 				['广告', '?control/ads'],
 				['记录', [
 					// ['充值VIP', '?control'],
@@ -716,7 +715,58 @@ class webapp_router_control extends webapp_echo_html
 			$this->dialog('用户信息更新失败');
 		}
 	}
+	//========图片========
+	function get_images(string $search = NULL, int $page = 1)
+	{
+		$conds = [[]];
+		if (is_string($search))
+		{
+			$search = urldecode($search);
+			if (trim($search, webapp::key))
+			{
+				$conds[0][] = 'name LIKE ?s';
+				$conds[] = "%{$search}%";
+			}
+			else
+			{
+				$conds[0][] = 'hash=?s';
+				$conds[] = $search;
+			}
+		}
+		$conds[0][] = 'sync="allow"';
+		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY mtime DESC,hash ASC';
+		$figures = NULL;
+		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 20), function($table, $value) use(&$figures)
+		{
+			if ($figures === NULL)
+			{
+				$table->row();
+				$figures = $table->cell()->append('div', ['class' => 'images']);
+			}
 
+			$ym = date('ym', $value['mtime']);
+			$content = $figures->append('div');
+			$content->append('div', [
+				'id' => "v{$value['hash']}",
+				'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['ctime']}"
+			]);
+			$content->append('div', $value['hash']);
+
+		});
+		$table->header('图片 %d 项', $table->count());
+		$table->paging($this->webapp->at(['page' => '']));
+		$table->bar->append('label', '添加图片')->append('input', [
+			'type' => 'file',
+			'style' => ''
+		]);
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $search,
+			'placeholder' => '关键字',
+			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})',
+			'style' => 'margin-left:1rem;width:40rem'
+		]);
+	}
 
 	//========视频========
 	function get_videos(string $search = NULL, int $page = 1)
