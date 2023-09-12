@@ -274,7 +274,7 @@ class base extends webapp
 				is_file($image = "{$this['imgs_savedir']}/{$ym}/{$img['hash']}")
 				&& (is_dir($syncdir = "{$this['imgs_syncdir']}/{$ym}") || mkdir($syncdir))
 				&& copy($image, "{$syncdir}/{$img['hash']}")
-				&& $this->mysql->images('WHERE id=?s LIMIT 1', $img['hash'])->update([
+				&& $this->mysql->images('WHERE hash=?s LIMIT 1', $img['hash'])->update([
 					'ctime' => $this->time(),
 					'sync' => "finished"]) === 1 ? "OK\n" : "NO\n";
 		}
