@@ -206,9 +206,24 @@ class base extends webapp
 		}
 		$json['dialog'] = '修改失败！';
 	}
-	function patch_uploadimage()
+	function patch_uploadimage(string $goto = NULL)
 	{
-
+		$json = $this->app('webapp_echo_json');
+		$ym = date('ym', $this->time);
+		if (is_string($key = $this->request_header('Mask-Key'))
+			&& preg_match('/^[0-f]{16}$/', $key)
+			&& (is_dir("{$this['imgs_savedir']}/{$ym}") || mkdir("{$this['imgs_savedir']}/{$ym}"))
+			&& $this->mysql->images->insert([
+				'hash' => $hash = $this->time33hash(hexdec($key), FALSE),
+				'mtime' => $this->time,
+				'ctime' => $this->time,
+				'size' => strlen($binary = $this->request_content('binary')),
+				'sync' => 'pending'])
+			&& file_put_contents("{$this['imgs_savedir']}/{$ym}/{$hash}", hex2bin($key) . $binary) !== FALSE) {
+			$goto && $json->goto($this->url64_decode($goto));
+			return;
+		}
+		//$json['dialog'] = '图片上传失败！';
 	}
 	//本地命令行运行封面同步处理和广告
 	function get_sync_cover()

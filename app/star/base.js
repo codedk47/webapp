@@ -180,32 +180,37 @@ function video_cover(input, preview)
 }
 function upload_image(input)
 {
-	if (input.files.length < 1) return alert('请选择一个wenjian ！');
+	if (input.files.length < 1) return alert('请选择一个文件 ！');
+	if (input.files[0].size > 2000000) return alert('文件内容太大 ！');
 	if (input.disabled) return;
 	input.disabled = true;
 	const reader = new FileReader;
 	reader.onload = event =>
 	{
-		console.log(event.target.result)
-		// const
-		// buffer = new Uint8Array(event.target.result),
-		// key = input.dataset.key.match(/.{2}/g).map(value => parseInt(value, 16));
-		// top.fetch(input.dataset.uploadurl, {
-		// 	method: 'PATCH',
-		// 	headers: {'Mask-Key': input.dataset.key},
-		// 	body: buffer.map((byte, i) => byte ^ key[i % 8])
-		// }).then(r => r.json()).then(json =>
-		// {
-		// 	//console.log(json);
-		// 	if (preview)
-		// 	{
-		// 		preview.style.backgroundImage = `url(${URL.createObjectURL(input.files[0])})`;
-		// 		preview.textContent = '';
-		// 	}
-
-
-		// 	input.disabled = false;
-		// })
+		const
+			buffer = new Uint8Array(event.target.result),
+			key = buffer.reduce((hash, byte) =>
+				(hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(byte),
+					5381n).toString(16).padStart(16, 0),
+			keys = key.match(/.{2}/g).map(value => parseInt(value, 16));
+		for (let i = 0; i < buffer.length; ++i)
+		{
+			buffer[i] ^= keys[i % 8];
+		}
+		top.fetch(input.dataset.uploadurl, {
+			method: 'PATCH',
+			headers: {'Mask-Key': key},
+			body: buffer
+		}).then(response => response.json()).then(json =>
+		{
+			input.disabled = false;
+			Array.isArray(json.errors) && json.errors.length && alert(json.errors.join('\n'));
+			json.hasOwnProperty('dialog') && alert(json.dialog);
+			if (json.hasOwnProperty('goto'))
+			{
+				top.framer ? top.framer(json.goto) : location.assign(json.goto);
+			}
+		});
 	};
 	reader.readAsArrayBuffer(input.files[0]);
 }

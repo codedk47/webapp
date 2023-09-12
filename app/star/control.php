@@ -721,22 +721,12 @@ class webapp_router_control extends webapp_echo_html
 		$conds = [[]];
 		if (is_string($search))
 		{
-			$search = urldecode($search);
-			if (trim($search, webapp::key))
-			{
-				$conds[0][] = 'name LIKE ?s';
-				$conds[] = "%{$search}%";
-			}
-			else
-			{
-				$conds[0][] = 'hash=?s';
-				$conds[] = $search;
-			}
+			$conds[0][] = 'hash=?s';
+			$conds[] = $search;
 		}
-		$conds[0][] = 'sync="allow"';
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY mtime DESC,hash ASC';
 		$figures = NULL;
-		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 20), function($table, $value) use(&$figures)
+		$table = $this->main->table($this->webapp->mysql->images(...$conds)->paging($page, 20), function($table, $value) use(&$figures)
 		{
 			if ($figures === NULL)
 			{
@@ -746,10 +736,9 @@ class webapp_router_control extends webapp_echo_html
 
 			$ym = date('ym', $value['mtime']);
 			$content = $figures->append('div');
-			$content->append('div', [
-				'id' => "v{$value['hash']}",
-				'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['ctime']}"
-			]);
+			$content->append('div', $value['sync'] === 'pending'
+				? ['asdasd']
+				: ['data-cover' => "/imgs/{$ym}/{$value['hash']}?{$value['ctime']}"]);
 			$content->append('div', $value['hash']);
 
 		});
