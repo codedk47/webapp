@@ -266,6 +266,16 @@ class base extends webapp
 					'ctime' => $this->time(),
 					'fid' => 255]) === 1 ? "OK\n" : "NO\n";
 		}
+		echo "----SYNC IMGS----\n";
+		foreach ($this->mysql->images('WHERE sync="pending"') as $img)
+		{
+			echo "{$img['hash']} - ",
+				is_file($image = "{$this['imgs_savedir']}/{$img['hash']}")
+				&& copy($image, "{$this['imgs_syncdir']}/{$img['hash']}")
+				&& $this->mysql->images('WHERE id=?s LIMIT 1', $img['hash'])->update([
+					'ctime' => $this->time(),
+					'sync' => "finished"]) === 1 ? "OK\n" : "NO\n";
+		}
 	}
 	//本地命令行运行视频同步处理
 	function get_sync_video()
@@ -727,27 +737,27 @@ class base extends webapp
 		}
 	}
 	//根据影片拉取评论
-	function fetch_comments(string $hash, int $page, int $size = 10):array
-	{
-		$data = $this->mysql->comments('WHERE phash=?s AND type="video" AND `check`="allow" ORDER BY mtime DESC,hash ASC', $hash)->paging($page, $size);
-		if ($page > $data->paging['max'])
-		{
-			return []; 
-		}
-		$all = [];
-		foreach ($data as $comment)
-		{
-			$all[] = [
-				'hash' => $comment['hash'],
-				'user_id' => $comment['userid'],
-				'user_fid' => $comment['images'],
-				'user_nickname' => $comment['title'],
-				'mtime' => $comment['mtime'],
-				'content' => $comment['content']
-			];
-		}
-		return $all;
-	}
+	// function fetch_comments(string $hash, int $page, int $size = 10):array
+	// {
+	// 	$data = $this->mysql->comments('WHERE phash=?s AND type="video" AND `check`="allow" ORDER BY mtime DESC,hash ASC', $hash)->paging($page, $size);
+	// 	if ($page > $data->paging['max'])
+	// 	{
+	// 		return []; 
+	// 	}
+	// 	$all = [];
+	// 	foreach ($data as $comment)
+	// 	{
+	// 		$all[] = [
+	// 			'hash' => $comment['hash'],
+	// 			'user_id' => $comment['userid'],
+	// 			'user_fid' => $comment['images'],
+	// 			'user_nickname' => $comment['title'],
+	// 			'mtime' => $comment['mtime'],
+	// 			'content' => $comment['content']
+	// 		];
+	// 	}
+	// 	return $all;
+	// }
 	const comment_type = [
 		'class' => '社区的分类',
 		'topic' => '分类的话题',
@@ -755,10 +765,10 @@ class base extends webapp
 		'reply' => '帖子的回复',
 		'video' => '视频的评论'
 	];
-	//拉取所有话题
-	function fetch_topics():iterable
+	//拉取所有评论
+	function fetch_comments():iterable
 	{
-		foreach ($this->mysql->comments('WHERE type!="video" AND `check`="allow" ORDER BY sort DESC,ctime DESC,hash ASC') as $topic) {
+		foreach ($this->mysql->comments('WHERE `check`="allow" ORDER BY ctime DESC,hash ASC') as $topic) {
 			yield [
 				'hash' => $topic['hash'],
 				'phash' => $topic['phash'],
@@ -771,7 +781,7 @@ class base extends webapp
 				'view' => $topic['view'],
 				'content' => $topic['content'],
 				'title' => $topic['title'],
-				'images' => [],
+				'images' => $topic['type'] === 'reply' ? $topic['images'] : [],
 				'videos' => []
 			];
 		}
