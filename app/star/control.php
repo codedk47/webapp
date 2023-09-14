@@ -738,7 +738,7 @@ class webapp_router_control extends webapp_echo_html
 			$ym = date('ym', $value['mtime']);
 			$content = $figures->append('div');
 			$content->append('div', $value['sync'] === 'pending'
-				? ['asdasd']
+				? ['pending']
 				: ['data-cover' => "/imgs/{$ym}/{$value['hash']}?{$value['ctime']}"]);
 			$content->append('div', $value['hash']);
 
