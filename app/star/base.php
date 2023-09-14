@@ -738,28 +738,6 @@ class base extends webapp
 			];
 		}
 	}
-	//根据影片拉取评论
-	// function fetch_comments(string $hash, int $page, int $size = 10):array
-	// {
-	// 	$data = $this->mysql->comments('WHERE phash=?s AND type="video" AND `check`="allow" ORDER BY mtime DESC,hash ASC', $hash)->paging($page, $size);
-	// 	if ($page > $data->paging['max'])
-	// 	{
-	// 		return []; 
-	// 	}
-	// 	$all = [];
-	// 	foreach ($data as $comment)
-	// 	{
-	// 		$all[] = [
-	// 			'hash' => $comment['hash'],
-	// 			'user_id' => $comment['userid'],
-	// 			'user_fid' => $comment['images'],
-	// 			'user_nickname' => $comment['title'],
-	// 			'mtime' => $comment['mtime'],
-	// 			'content' => $comment['content']
-	// 		];
-	// 	}
-	// 	return $all;
-	// }
 	const comment_type = [
 		'class' => '社区的分类',
 		'topic' => '分类的话题',
@@ -771,6 +749,23 @@ class base extends webapp
 	function fetch_comments():iterable
 	{
 		foreach ($this->mysql->comments('WHERE `check`="allow" ORDER BY ctime DESC,hash ASC') as $topic) {
+
+			if ($topic['type'] === 'reply' || $topic['type'] === 'video')
+			{
+				$images = $topic['images'];
+			}
+			else
+			{
+				$images = [];
+				if ($image = $topic['images'] ? str_split($topic['images'], 12) : [])
+				{
+					foreach ($this->mysql->images('WHERE hash IN(?S)', $image) as $img)
+					{
+						$ym = date('ym', $img['mtime']);
+						$images[] = "/imgs/{$ym}/{$img['hash']}";
+					}
+				}
+			}
 			yield [
 				'hash' => $topic['hash'],
 				'phash' => $topic['phash'],
@@ -783,7 +778,7 @@ class base extends webapp
 				'view' => $topic['view'],
 				'content' => $topic['content'],
 				'title' => $topic['title'],
-				'images' => $topic['type'] === 'reply' || $topic['type'] === 'video' ? $topic['images'] : [],
+				'images' => $images,
 				'videos' => []
 			];
 		}

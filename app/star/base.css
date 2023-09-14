@@ -161,3 +161,31 @@ div.images>div>div:last-child{
 	background-color: black;
 	color: white;
 }
+
+
+fieldset.search_comment{
+	height: 10rem;
+	border: 1px solid black !important;
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+fieldset.search_comment>ul
+{
+	padding: 0;
+	margin: 0;
+	line-height: 2rem;
+}
+
+fieldset.search_comment>ul>li:hover{
+	background-color: beige;
+}
+fieldset.search_comment>ul>li>label{
+	width: 31rem;
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+fieldset.search_comment>ul>li>label>input{
+	padding: .4rem;
+}

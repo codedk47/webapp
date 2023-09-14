@@ -178,7 +178,7 @@ function video_cover(input, preview)
 	};
 	reader.readAsArrayBuffer(input.files[0]);
 }
-function upload_image(input)
+function upload_image(input, callback)
 {
 	if (input.files.length < 1) return alert('请选择一个文件 ！');
 	if (input.files[0].size > 2000000) return alert('文件内容太大 ！');
@@ -188,10 +188,10 @@ function upload_image(input)
 	reader.onload = event =>
 	{
 		const
+			code = '0123456789ABCDEFGHIJKLMNOPQRSTUV',
 			buffer = new Uint8Array(event.target.result),
-			key = buffer.reduce((hash, byte) =>
-				(hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(byte),
-					5381n).toString(16).padStart(16, 0),
+			hash = buffer.reduce((hash, byte) => (hash & 0xfffffffffffffffn) + ((hash & 0x1ffffffffffffffn) << 5n) + BigInt(byte), 5381n),
+			key = hash.toString(16).padStart(16, 0),
 			keys = key.match(/.{2}/g).map(value => parseInt(value, 16));
 		for (let i = 0; i < buffer.length; ++i)
 		{
@@ -205,14 +205,65 @@ function upload_image(input)
 		{
 			input.disabled = false;
 			Array.isArray(json.errors) && json.errors.length && alert(json.errors.join('\n'));
-			json.hasOwnProperty('dialog') && alert(json.dialog);
-			if (json.hasOwnProperty('goto'))
+			if (callback)
 			{
-				top.framer ? top.framer(json.goto) : location.assign(json.goto);
+				callback(Array.from(Array(12)).map((v, i) => code[hash >> BigInt(i) * 5n & 31n]).join(''));
+			}
+			else
+			{
+				json.hasOwnProperty('dialog') && alert(json.dialog);
+				if (json.hasOwnProperty('goto'))
+				{
+					top.framer ? top.framer(json.goto) : location.assign(json.goto);
+				}
 			}
 		});
 	};
 	reader.readAsArrayBuffer(input.files[0]);
+}
+function search_comment(input, select)
+{
+	//console.log(input.dataset.type, input.value);
+	fetch(`${input.dataset.action},type:${input.dataset.type}`, {
+		method: 'POST',
+		body: input.value
+	}).then(response => response.json()).then(data => {
+		select.innerHTML = '';
+		const ul = document.createElement('ul');
+		for (const [hash, title] of Object.entries(data.comments))
+		{
+			const
+			select_li = document.createElement('li'),
+			select_label = document.createElement('label'),
+			select_input = document.createElement('input');
+
+			select_input.name = 'phash';
+			select_input.type = 'radio';
+			select_input.value = hash;
+			select_label.appendChild(select_input);
+			select_label.appendChild(document.createTextNode(title));
+			select_li.appendChild(select_label);
+			ul.appendChild(select_li);
+		}
+		select.appendChild(ul);
+	});
+}
+function admin_comment(form)
+{
+	fetch(form.action, {
+		method: 'POST',
+		body: new FormData(form)
+	}).then(response => response.json()).then(json => {
+		if (json.hasOwnProperty('goto'))
+		{
+			top.framer ? top.framer(json.goto) : location.assign(json.goto);
+		}
+	});
+	return false;
+}
+function admin_comment_image(hash)
+{
+	document.querySelector('input[name=images]').value += hash;
 }
 document.addEventListener('DOMContentLoaded', event =>
 {

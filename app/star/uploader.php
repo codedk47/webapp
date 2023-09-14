@@ -52,7 +52,7 @@ class webapp_router_uploader
 				['视频列表', '?uploader/videos'],
 				['图片列表', '?uploader/images'],
 				['导出异常影片', '?uploader/exceptions'],
-				['话题 & 帖子', '?uploader/comments'],
+				//['评论', '?uploader/comments'],
 				['记录', [
 					['提现', '?uploader/record-exchanges']
 				]],
@@ -590,7 +590,7 @@ JS);
 	{
 		$json = $this->json();
 		if ($this->form_comment($type)->fetch($topic)
-			&& $this->user->comment_topic($topic['phash'], $topic['content'], $type, $topic['title'])) {
+			&& $this->user->comment($topic['phash'], $topic['content'], $type, $topic['title'])) {
 			$json['goto'] = '?uploader/comments';
 			return;
 		}

@@ -24,11 +24,12 @@ class webapp_router_control extends webapp_echo_html
 				['专题', '?control/subjects'],
 				['上传账号', '?control/uploaders'],
 				['用户', '?control/users'],
-				['图片', '?control/images'],
+				
 				['视频', '?control/videos'],
 				['产品', '?control/prods'],
 				['广告', '?control/ads'],
 				['记录', [
+					['上传的图片', '?control/images'],
 					// ['充值VIP', '?control'],
 					// ['充值金币', '?control'],
 					['购买影片', '?control/record-video'],
@@ -36,7 +37,7 @@ class webapp_router_control extends webapp_echo_html
 					['游戏提现', '?control/record-exchange-game']
 				]],
 
-				['评论 & 话题', '?control/comments'],
+				['评论', '?control/comments'],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -1387,7 +1388,14 @@ class webapp_router_control extends webapp_echo_html
 		$conds = [[]];
 		if ($phash)
 		{
-			$conds[0][] = 'phash=?s';
+			if ($phash === 'video')
+			{
+				$conds[0][] = 'type=?s';
+			}
+			else
+			{
+				$conds[0][] = 'phash=?s';
+			}
 			$conds[] = $phash;
 		}
 		else
@@ -1456,11 +1464,11 @@ class webapp_router_control extends webapp_echo_html
 
 		});
 		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '类型', '排序', '审核');
-		$table->header('话题、评论 %s 项', $table->count());
+		$table->header('评论 %s 项', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment"']);
+		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment_class"']);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
-			->select(['' => '全部分类'] + $this->webapp->select_topics())
+			->select(['' => '全部分类', 'video' => '影片评论'] + $this->webapp->select_topics())
 			->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
@@ -1473,8 +1481,113 @@ class webapp_router_control extends webapp_echo_html
 			'data-dialog' => '删除后不可恢复',
 			'data-bind' => 'click'
 		]);
+		$table->bar->append('button', ['辅助UP主发布评论',
+			'style' => 'margin-left:.6rem',
+			'onclick' => 'location.href="?control/comment"'
+		]);
+	}
+	function post_comments(string $type)
+	{
+		$search = $this->webapp->request_content();
+		if ($type === 'reply')
+		{
+			$this->json['comments'] = [];
+			return;
+		}
+		$this->json['comments'] = $type === 'video'
+			? $this->webapp->mysql->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 10', "%{$search}%")
+				->column('name', 'hash')
+			: $this->webapp->mysql->comments('WHERE type=?s AND `check`="allow" AND title LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 10', $type, "%{$search}%")
+				->column('title', 'hash');
 	}
 	function form_comment(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+
+		$form->fieldset('用户ID');
+		
+		$form->field('userid', 'text', ['maxlength' => 10, 'oninput' => 'localStorage.setItem("comment_userid",this.value)', 'required' => NULL]);
+		$form->fieldset->append('script')->cdata('document.querySelector("form.webapp>fieldset>input[name=userid]").value=localStorage.getItem("comment_userid")');
+
+		$form->fieldset('类型 / 搜索');
+		$form->field('type', 'select', ['options' => ['reply' => '请选择类型'] + base::comment_type,
+			'onchange' => 'this.nextElementSibling.dataset.type=this.value;search_comment(this.nextElementSibling,this.parentElement.nextElementSibling)',
+			'required' => NULL]);
+		$form->field('phash', 'search', [
+			'data-type' => 'reply',
+			'data-action' => '?control/comments',
+			'placeholder' => '选择左边类型后输入关键字进行搜索选择',
+			'oninput' => 'search_comment(this,this.parentElement.nextElementSibling)',
+			'style' => 'width:24rem']);
+		$form->fieldset()->setattr('class', 'search_comment');
+
+		$form->fieldset('标题');
+		$form->field('title', 'text', ['placeholder' => '话题和评论必须要一个标题', 'style' => 'width:31rem']);
+
+		$form->fieldset('内容');
+		$form->field('content', 'textarea', ['rows' => 10, 'cols' => 50, 'required' => NULL]);
+
+		$form->fieldset('图片');
+		//$form->field('images', 'text', ['readonly' => NULL]);
+		$form->field('images', 'text');
+		$form->fieldset->append('label', '添加图片')->append('input', [
+			'type' => 'file',
+			'accept' => 'image/*',
+			'style' => 'display:none',
+			'data-uploadurl' => '?uploadimage',
+			'onchange' => 'upload_image(this,admin_comment_image)'
+		]);
+
+		$form->fieldset();
+		$form->button('提交', 'submit');
+
+		$form->xml['onsubmit'] = 'return admin_comment(this)';
+		return $form;
+	}
+	function get_comment()
+	{
+
+
+
+		$this->form_comment($this->main);
+
+
+	}
+	function post_comment()
+	{
+		$error = '无效内容！';
+		while ($this->form_comment()->fetch($comment))
+		{
+			if ($comment['type'] === 'video')
+			{
+				if ($this->webapp->user($comment['userid'])->comment_video($comment['phash'], $comment['content']) === FALSE)
+				{
+					$error = '视频评论失败！';
+					break;
+				}
+			}
+			else
+			{
+				[$images, $videos] = $comment['type'] === 'topic' || $comment['type'] === 'post'
+					? [$comment['images'], NULL]
+					: [NULL, NULL];
+				if ($this->webapp->user($comment['userid'])->comment($comment['phash'], $comment['content'], match ($comment['type'])
+				{
+					'class' => 'topic',
+					'topic' => 'post',
+					default => 'reply'
+				}, $comment['title'], $images, $videos, TRUE) === FALSE) {
+					$error = '社区评论失败！';
+					break;
+				}
+			}
+			return $this->goto('/comments');
+		}
+		$this->dialog($error);
+	}
+
+
+	function form_comment_class(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->fieldset('标题 / 排序（越大越靠前）');
@@ -1483,13 +1596,13 @@ class webapp_router_control extends webapp_echo_html
 		$form->button('提交', 'submit');
 		return $form;
 	}
-	function get_comment()
+	function get_comment_class()
 	{
-		$this->form_comment($this->main);
+		$this->form_comment_class($this->main);
 	}
-	function post_comment()
+	function post_comment_class()
 	{
-		if ($this->form_comment()->fetch($data)
+		if ($this->form_comment_class()->fetch($data)
 			&& $this->webapp->mysql->comments->insert([
 				'hash' => $this->webapp->random_hash(FALSE),
 				'mtime' => $this->webapp->time,
@@ -1508,16 +1621,24 @@ class webapp_router_control extends webapp_echo_html
 		if ($this->admin && $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
 		{
 			$count_topic = 0;
+			$count_post = 0;
 			$count_reply = 0;
-			foreach ($this->webapp->mysql->comments('WHERE phash=?s', $hash)->column('hash') as $hash)
+			foreach ($this->webapp->mysql->comments('WHERE phash=?s', $hash)->column('hash') as $topic_hash)
 			{
-				if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
+				if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $topic_hash)->delete() === 1)
 				{
 					++$count_topic;
-					$count_reply += $this->webapp->mysql->comments('WHERE phash=?s', $hash)->delete();
+					foreach ($this->webapp->mysql->comments('WHERE phash=?s', $topic_hash)->column('hash') as $post_hash)
+					{
+						if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $topic_hash)->delete() === 1)
+						{
+							++$count_post;
+							$count_reply += $this->webapp->mysql->comments('WHERE phash=?s', $post_hash)->delete();
+						}
+					}
 				}
 			}
-			$this->dialog("删除 {$count_topic} 个帖子，删除 {$count_reply} 个评论。");
+			$this->dialog("删除 {$count_topic} 个话题。\n删除 {$count_post} 个帖子。\n删除 {$count_reply} 个评论。");
 			$this->goto();
 			return;
 		}

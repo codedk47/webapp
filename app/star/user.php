@@ -347,7 +347,7 @@ class user extends ArrayObject
 		]);
 	}
 	//发起话题、帖子、回复
-	function comment(string $phash, string $content, $type = 'reply', string $title = NULL):bool
+	function comment(string $phash, string $content, $type = 'reply', string $title = NULL, string $images = NULL, string $videos = NULL, bool $check = FALSE):bool
 	{
 		return $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $phash)->update('`count`=`count`+1') === 1
 			&& $this->webapp->mysql->comments->insert([
@@ -358,11 +358,12 @@ class user extends ArrayObject
 				'ctime' => $this->webapp->time,
 				'sort' => 0,
 				'type' => $type,
-				'check' => 'pending',
+				'check' => $check ? 'allow' : 'pending',
 				'count' => 0,
 				'view' => 0,
 				'title' => $type === 'reply' ? $this['nickname'] : $title,
-				'images' => $type === 'reply' ? strstr($this->fid(), '?', TRUE) : NULL,
+				'images' => $type === 'reply' ? strstr($this->fid(), '?', TRUE) : $images,
+				'videos' => $videos,
 				'content' => $content]);
 	}
 
