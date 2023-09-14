@@ -657,7 +657,7 @@ class webapp_router_admin extends webapp_echo_html
 			return $this->warn('该标签存在资源，无法删除！');
 		}
 		if ($this->webapp->admin[2]
-			&& $this->webapp->call('delTag', $hash)
+			//&& $this->webapp->call('delTag', $hash)
 			&& $this->webapp->mysql->tags->delete('WHERE hash=?s', $hash)) {
 			return $this->okay("?admin/tags");
 		}
@@ -935,10 +935,15 @@ class webapp_router_admin extends webapp_echo_html
 			$cond[0] .= ' AND (hash=?s or actors=?s or name like ?s)';
 			array_push($cond, $search = urldecode($search), $search, "%{$search}%");
 		}
-		if (strlen($tag = $this->webapp->query['tag'] ?? ''))
+		if (strlen($tag1 = $this->webapp->query['tag1'] ?? ''))
 		{
 			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
-			$cond[] = $tag;
+			$cond[] = $tag1;
+		}
+		if (strlen($tag2 = $this->webapp->query['tag2'] ?? ''))
+		{
+			$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+			$cond[] = $tag2;
 		}
 		if (strlen($type = $this->webapp->query['type'] ?? ''))
 		{
@@ -1006,7 +1011,11 @@ class webapp_router_admin extends webapp_echo_html
 		$table->header('Found %s item', number_format($table->count()));
 		$table->button('Upload Resource', ['onclick' => 'location.href="?admin/resource-upload"']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
-		$table->bar->select(['' => '全部标签'] + $this->webapp->selecttags())->setattr(['onchange' => 'g({tag:this.value===""?null:this.value})'])->selected($tag);
+
+		$selecttags = $this->webapp->selecttags();
+		$table->bar->select(['' => '全部标签1'] + $selecttags)->setattr(['onchange' => 'g({tag1:this.value||null})'])->selected($tag1);
+		$table->bar->select(['' => '全部标签2'] + $selecttags)->setattr(['onchange' => 'g({tag2:this.value||null})'])->selected($tag2);
+
 		$table->bar->select(['' => '全部类型'] + $this->webapp['app_restype'])->setattr(['onchange' => 'g({type:this.value===""?null:this.value})'])->selected($type);
 		$table->bar->select([
 			'' => '任何要求',
@@ -1162,14 +1171,16 @@ JS);
 		}
 
 		$cond[0] .= ' order by time desc';
+		$acccsv = $this->webapp->url64_encode((string)$this->webapp->mysql->accounts(...$cond));
 		$table = $this->main->table($this->webapp->mysql->accounts(...$cond)->paging($page), function($table, $acc)
 		{
 			$table->row();
 			$table->cell()->append('a', [$acc['uid'], 'href' => "?admin/account-update,uid:{$acc['uid']}"]);
-			$table->cell($acc['date']);
-			$table->cell(date('Y-m-d', $acc['expire']));
-			$table->cell(number_format($acc['balance']));
-			$table->cell()->append('a', ['游戏信息', 'href' => "?admin/gameinfo,uid:{$acc['uid']}"]);
+			$table->cell(date('Y-m-d\\TH:i:s', $acc['time']));
+			//$table->cell($acc['date']);
+			//$table->cell(date('Y-m-d', $acc['expire']));
+			//$table->cell(number_format($acc['balance']));
+			//$table->cell()->append('a', ['游戏信息', 'href' => "?admin/gameinfo,uid:{$acc['uid']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $acc['lasttime']));
 			$table->cell($this->webapp->hexip($acc['lastip']));
 			$table->cell($acc['device']);
@@ -1187,14 +1198,53 @@ JS);
 			$table->cell($acc['name']);
 			$table->cell(strlen($acc['history']) / 12);
 		});
-		$table->fieldset('账号(uid)', '注册日期(date)', '会员过期(expire)', '余额(balance)', '游戏信息', '最后登录时间(lasttime)', '最后登录IP(lastip)', '设备类型(device)', '单位(unit)', '邀请账号(code)', '设备ID(did)', '绑定手机(phone)', '名称(name)', '记录(history)');
+		$table->fieldset('账号(uid)', '注册日期(date)', /*'会员过期(expire)', '余额(balance)', '游戏信息',*/ '最后登录时间(lasttime)', '最后登录IP(lastip)', '设备类型(device)', '单位(unit)', '邀请账号(code)', '设备ID(did)', '绑定手机(phone)', '名称(name)', '记录(history)');
 		$table->header('Found %s item', number_format($table->count()));
-		$table->bar->select(['' => '全部单位', '0000' => '官方单位'] + $this->webapp->mysql->unitsets('where site=?i', $this->webapp->site)->column('name', 'unit'))
+		$table->bar->select(['' => '全部单位', '0200' => '官方单位'] + $this->webapp->mysql->unitsets('where site=?i', $this->webapp->site)->column('name', 'unit'))
 			->setattr(['onchange' => 'g({unit:this.value?this.value:null})'])->selected($uint);
 		$table->bar->append('input', ['type' => 'date', 'value' => "{$date}", 'onchange' => 'g({date:this.value})']);
 		$table->search(['value' => $search, 'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})']);
+		$table->bar->append('button', ['按条件导出CSV', 'onclick' => "window.open('?admin/acccsv,cond:{$acccsv}')"]);
+		
+
 		$table->bar->append('span', [join(', ', $counts), 'style' => 'padding-left:1rem;font-weight:bold;color:green']);
 		$table->paging($this->webapp->at(['page' => '']));
+	}
+	function get_acccsv(string $cond)
+	{
+		$stream = fopen('php://output', 'r+');
+		fputcsv($stream, [
+			'账号',
+			'注册日期',
+			'最后登录时间',
+			'最后登录IP',
+			'设备类型',
+			'单位',
+			'邀请账号',
+			'设备ID',
+			'绑定手机',
+			'名称',
+			//'记录',
+			//'登录次数',
+			'用户看片总数量'
+		], "\t");
+		foreach ($this->webapp->mysql->accounts($this->webapp->url64_decode($cond)) as $acc)
+		{
+			fputcsv($stream, [
+				$acc['uid'],
+				$acc['time'],
+				$acc['lasttime'],
+				$this->webapp->hexip($acc['lastip']),
+				$acc['device'],
+				$acc['unit'],
+				$acc['code'],
+				$acc['did'],
+				$acc['phone'],
+				$acc['name'],
+				strlen($acc['history']) / 12
+			], "\t");
+		}
+		//echo stream_copy_to_stream()
 	}
 	function get_gamekick(string $uid)
 	{

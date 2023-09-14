@@ -1651,7 +1651,7 @@ class webapp_router_control extends webapp_echo_html
 			$field = array_key_first($input);
 			$value = $input[$field];
 		}
-		if ($this->webapp->mysql->comments('WHERE hash=?s AND `check`="pending" LIMIT 1', $hash)->update('?a=?s', $field, $value) === 1)
+		if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->update('?a=?s', $field, $value) === 1)
 		{
 			$this->goto();
 			return;
