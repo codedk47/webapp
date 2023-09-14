@@ -1528,8 +1528,7 @@ class webapp_router_control extends webapp_echo_html
 		$form->field('content', 'textarea', ['rows' => 10, 'cols' => 50, 'required' => NULL]);
 
 		$form->fieldset('图片');
-		//$form->field('images', 'text', ['readonly' => NULL]);
-		$form->field('images', 'text');
+		$form->field('images', 'text', ['style' => 'width:26rem', 'readonly' => NULL]);
 		$form->fieldset->append('label', '添加图片')->append('input', [
 			'type' => 'file',
 			'accept' => 'image/*',
@@ -1537,6 +1536,17 @@ class webapp_router_control extends webapp_echo_html
 			'data-uploadurl' => '?uploadimage',
 			'onchange' => 'upload_image(this,admin_comment_image)'
 		]);
+		$form->fieldset('视频');
+		$form->field('video', 'search', [
+			'data-action' => '?control/videos',
+			'placeholder' => '输入视频关键字进行搜索选择',
+			'oninput' => 'search_videos(this,this.parentElement.nextElementSibling.firstElementChild)',
+			'style' => 'width:32rem']);
+		$form->fieldset()->setattr([
+			'class' => 'search_comment',
+			'style' => 'height:20rem'
+		])->append('ul');
+
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
@@ -1544,20 +1554,23 @@ class webapp_router_control extends webapp_echo_html
 		$form->xml['onsubmit'] = 'return admin_comment(this)';
 		return $form;
 	}
+	function post_videos(string $userid)
+	{
+		$search = $this->webapp->request_content();
+		$this->json['videos'] = $this->webapp->mysql
+			->videos('WHERE userid=?s AND sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', $userid, "%{$search}%")
+			->column('name', 'hash');
+	}
 	function get_comment()
 	{
-
-
-
 		$this->form_comment($this->main);
-
-
 	}
 	function post_comment()
 	{
 		$error = '无效内容！';
 		while ($this->form_comment()->fetch($comment))
 		{
+			$comment['videos'] = $_POST['videos'] ?? [];
 			if ($comment['type'] === 'video')
 			{
 				if ($this->webapp->user($comment['userid'])->comment_video($comment['phash'], $comment['content']) === FALSE)
@@ -1568,9 +1581,12 @@ class webapp_router_control extends webapp_echo_html
 			}
 			else
 			{
-				[$images, $videos] = $comment['type'] === 'topic' || $comment['type'] === 'post'
-					? [$comment['images'], NULL]
-					: [NULL, NULL];
+				[$images, $videos] = match ($comment['type'])
+				{
+					'topic' => [NULL, $comment['videos']],
+					'post' => [$comment['images'], $comment['videos']],
+					default => [NULL, NULL]
+				};
 				if ($this->webapp->user($comment['userid'])->comment($comment['phash'], $comment['content'], match ($comment['type'])
 				{
 					'class' => 'topic',

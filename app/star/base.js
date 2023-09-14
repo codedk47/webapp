@@ -253,7 +253,10 @@ function admin_comment(form)
 	fetch(form.action, {
 		method: 'POST',
 		body: new FormData(form)
-	}).then(response => response.json()).then(json => {
+	}).then(response => response.text()).then(json => {
+
+		console.log(json);
+		return;
 		if (json.hasOwnProperty('goto'))
 		{
 			top.framer ? top.framer(json.goto) : location.assign(json.goto);
@@ -264,6 +267,32 @@ function admin_comment(form)
 function admin_comment_image(hash)
 {
 	document.querySelector('input[name=images]').value += hash;
+}
+function search_videos(input, ul)
+{
+
+	//console.log(localStorage.getItem('comment_userid'), input.value)
+	fetch(`${input.dataset.action},userid:${localStorage.getItem('comment_userid')}`, {
+		method: 'POST',
+		body: input.value
+	}).then(response => response.json()).then(json => {
+		ul.querySelectorAll('li>label>input').forEach(node => node.checked || ul.removeChild(node.parentNode.parentNode));
+		for (const [hash, title] of Object.entries(json.videos))
+		{
+			const
+			select_li = document.createElement('li'),
+			select_label = document.createElement('label'),
+			select_input = document.createElement('input');
+			select_input.name = 'videos[]';
+			select_input.type = 'checkbox';
+			select_input.value = hash;
+			select_label.appendChild(select_input);
+			select_label.appendChild(document.createTextNode(title));
+			select_li.appendChild(select_label);
+			ul.appendChild(select_li);
+		}
+	});
+	
 }
 document.addEventListener('DOMContentLoaded', event =>
 {
