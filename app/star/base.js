@@ -253,7 +253,7 @@ function admin_comment(form)
 	fetch(form.action, {
 		method: 'POST',
 		body: new FormData(form)
-	}).then(response => response.text()).then(json => {
+	}).then(response => response.json()).then(json => {
 		if (json.hasOwnProperty('goto'))
 		{
 			top.framer ? top.framer(json.goto) : location.assign(json.goto);
