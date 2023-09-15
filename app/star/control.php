@@ -1450,7 +1450,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 
 			$table->row();
-			$contents = $table->cell(['colspan' => 7])->append('pre', ['style' => 'width:60rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap: break-word;']);
+			$contents = $table->cell(['colspan' => 7])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap: break-word;']);
 			if ($value['type'] !== 'video' && $value['title'])
 			{
 				$contents->text($value['title']);
