@@ -1633,7 +1633,7 @@ class webapp_router_control extends webapp_echo_html
 						'title' => $comment['title'],
 						'content' => $comment['content'],
 						'images' => $images]) === FALSE) {
-						$error = '更新评论失败！';
+						$error = '修改评论失败！';
 						break;
 					}
 				}
@@ -1641,7 +1641,7 @@ class webapp_router_control extends webapp_echo_html
 				{
 					if ($user->comment($comment['phash'], $comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE)
 					{
-						$error = '社区评论失败！';
+						$error = '发布评论失败！';
 						break;
 					}
 				}
