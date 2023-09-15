@@ -1612,8 +1612,7 @@ class webapp_router_control extends webapp_echo_html
 				};
 				[$images, $videos] = match ($type)
 				{
-					'topic' => [NULL, $comment['videos']],
-					'post' => [$comment['images'], $comment['videos']],
+					'topic', 'post' => [$comment['images'], $comment['videos']],
 					default => [NULL, NULL]
 				};
 				if ($this->webapp->user($comment['userid'])->comment($comment['phash'],
