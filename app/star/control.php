@@ -1387,19 +1387,18 @@ class webapp_router_control extends webapp_echo_html
 		$conds = [[]];
 		if ($phash)
 		{
-			if ($phash === 'video')
-			{
-				$conds[0][] = 'type=?s';
-			}
-			else
-			{
-				$conds[0][] = 'phash=?s';
-			}
+			$conds[0][] = 'phash=?s';
 			$conds[] = $phash;
 		}
 		else
 		{
 			$conds[0][] = 'phash IS NOT NULL';
+		}
+
+		if ($type = $this->webapp->query['type'] ?? '')
+		{
+			$conds[0][] = 'type=?s';
+			$conds[] = $type;
 		}
 		if ($check = $this->webapp->query['check'] ?? '')
 		{
@@ -1467,8 +1466,11 @@ class webapp_router_control extends webapp_echo_html
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment_class"']);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
-			->select(['' => '全部分类', 'video' => '影片评论'] + $this->webapp->select_topics())
+			->select(['' => '全部分类'] + $this->webapp->select_topics())
 			->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
+		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
+			->select(['' => '全部类型'] + array_slice(base::comment_type, 1))
+			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'padding:.1rem'])->selected($type);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
 			->setattr(['onchange' => 'g({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
@@ -1690,36 +1692,55 @@ class webapp_router_control extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->channels(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
-			// $table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
-			// $table->cell($value['userid']);
-			// $table->cell($value['cid']);
-			// $table->cell($value['fee']);
-			// $table->cell($value['result']);
+			$table->cell()->append('a', ['删除']);
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell($value['hash']);
+			$table->cell($value['rate']);
+			$table->cell($value['name']);
+			$table->cell($value['url']);
 		});
-		$table->fieldset('创建日期', '渠道ID');
+		$table->fieldset('删除', '创建日期', '渠道ID', '扣量比率', '名称', '地址');
 		$table->header('渠道');
 		$table->bar->append('button', ['创建渠道', 'onclick' => 'location.href="?control/channel"']);
-
-
-
 	}
 	function form_channel(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
-		$form->fieldset('渠道ID / 密码 ');
-		$form->field('hash', 'text', ['pattern' => '^[\w\-]{4}$', 'required' => NULL]);
+		$form->fieldset('渠道ID / 密码');
+		$form->field('hash', 'text', ['pattern' => '^[0-9A-Za-z]{4}$', 'style' => 'width:6rem', 'placeholder' => '4位字母数字', 'required' => NULL]);
+		$form->field('pwd', 'text', ['maxlength' => 16, 'placeholder' => '渠道后台密码', 'required' => NULL]);
 
-
-		$form->field('pwd', 'text', ['maxlength' => 16, 'required' => NULL]);
+		$form->fieldset('名称 / 扣量比率（Nx）');
 
 		$form->field('name', 'text', ['required' => NULL]);
+		$form->field('rate', 'number', ['min' => 0.01, 'max' => 2, 'step' => 0.01, 'value' => 1, 'required' => NULL]);
 
+		$form->fieldset('主页');
+		$form->field('url', 'text', ['style' => 'width:20rem']);
+
+		$form->fieldset();
 		$form->button('提交', 'submit');
+		$form->echo && $form->echo([
+			'hash' => $hash = substr(preg_replace('/[\-\_]+/', '', $this->webapp->random_hash(TRUE)), -4),
+			'pwd' => $this->webapp->random_int(100000, 999999),
+			'name' => $hash
+		]);
+		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
 	function get_channel()
 	{
 		$this->form_channel($this->main);
+	}
+	function post_channel()
+	{
+		if ($this->form_channel()->fetch($channel) && $this->webapp->mysql->channels->insert([
+			'mtime' => $this->webapp->time,
+			'ctime' => $this->webapp->time
+		] + $channel)) {
+			return $this->goto('/channels');
+		}
+		$this->dialog('渠道创建失败！');
 	}
 	function get_record_video(int $page = 1)
 	{
