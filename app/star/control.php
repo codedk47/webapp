@@ -1464,13 +1464,13 @@ class webapp_router_control extends webapp_echo_html
 			if ($value['images'])
 			{
 				$table->row();
-				$image = $table->cell(['colspan' => 8])->append('div', ['style' => 'display:flex;gap:.4rem;width:51rem;flex-wrap: wrap;']);
+				$image = $table->cell(['colspan' => 8])->append('div', ['style' => 'display:flex;gap:.4rem;width:53rem;flex-wrap: wrap;']);
 				foreach ($this->webapp->mysql->images('WHERE hash IN(?S)', str_split($value['images'], 12)) as $img)
 				{
 					$image->append('div', $img['sync'] === 'finished' ? [
 						'data-cover' => sprintf('/imgs/%s/%s', date('ym', $img['mtime']), $img['hash']),
 						'class' => 'cover',
-						'style' => 'width:8rem;height:8rem;display:inline-block'
+						'style' => 'width:10rem;height:10rem;display:inline-block'
 					] : ['pending']);
 				}
 			}
