@@ -1634,7 +1634,7 @@ class webapp_router_control extends webapp_echo_html
 				if ($hash)
 				{
 					if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->update([
-						'ctime' => $this->webapp->atime,
+						'ctime' => $this->webapp->time,
 						'title' => $comment['title'],
 						'content' => $comment['content'],
 						'images' => $images]) === FALSE) {
