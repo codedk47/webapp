@@ -1415,7 +1415,7 @@ class webapp_router_control extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->comments(...$conds)->paging($page, 10), function($table, $value)
 		{
 			$table->row();
-			$table->cell($value['hash']);
+			$table->cell()->append('a', [$value['hash'], 'href' => "?control/comment,hash:{$value['hash']}"]);
 			$table->cell()->append('a', [$value['userid'], 'href' => "?control/comments,userid:{$value['userid']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
@@ -1578,11 +1578,15 @@ class webapp_router_control extends webapp_echo_html
 			->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', "%{$search}%")
 			->column('name', 'hash');
 	}
-	function get_comment()
+	function get_comment(string $hash = NULL)
 	{
-		$this->form_comment($this->main);
+		$form = $this->form_comment($this->main);
+		if ($hash && $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->fetch($comment))
+		{
+			$form->echo($comment);
+		}
 	}
-	function post_comment()
+	function post_comment(string $hash = NULL)
 	{
 		$error = '无效内容！';
 		while ($this->form_comment()->fetch($comment))
@@ -1622,10 +1626,23 @@ class webapp_router_control extends webapp_echo_html
 					'topic', 'post' => [$comment['images'], $comment['videos']],
 					default => [NULL, NULL]
 				};
-				if ($user->comment($comment['phash'], $comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE)
+				if ($hash)
 				{
-					$error = '社区评论失败！';
-					break;
+					if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->update([
+						'title' => $comment['title'],
+						'content' => $comment['content'],
+						'images' => $images]) === FALSE) {
+						$error = '更新评论失败！';
+						break;
+					}
+				}
+				else
+				{
+					if ($user->comment($comment['phash'], $comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE)
+					{
+						$error = '社区评论失败！';
+						break;
+					}
 				}
 			}
 			return $this->goto('/comments');
