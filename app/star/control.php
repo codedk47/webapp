@@ -1583,7 +1583,7 @@ class webapp_router_control extends webapp_echo_html
 			{
 				[$images, $videos] = match ($comment['type'])
 				{
-					'topic' => [NULL, join($comment['videos'])],
+					'topic' => [NULL, $comment['videos']],
 					'post' => [$comment['images'], $comment['videos']],
 					default => [NULL, NULL]
 				};
