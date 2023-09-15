@@ -1621,6 +1621,11 @@ class webapp_router_control extends webapp_echo_html
 					'topic' => 'post',
 					default => 'reply'
 				};
+				if ($type === 'reply' || $user['uid'] === 0)
+				{
+					$error = '用户必须是UP主！';
+					break;
+				}
 				[$images, $videos] = match ($type)
 				{
 					'topic', 'post' => [$comment['images'], $comment['videos']],
