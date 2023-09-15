@@ -1600,6 +1600,12 @@ class webapp_router_control extends webapp_echo_html
 					'post' => [$comment['images'], $comment['videos']],
 					default => [NULL, NULL]
 				};
+
+				print_r($comment);
+				var_dump($type, $images, $videos);
+
+
+				return;
 				if ($this->webapp->user($comment['userid'])->comment($comment['phash'],
 					$comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE) {
 					$error = '社区评论失败！';

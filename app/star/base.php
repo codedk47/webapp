@@ -780,7 +780,7 @@ class base extends webapp
 				'content' => $topic['content'],
 				'title' => $topic['title'],
 				'images' => $images,
-				'videos' => []
+				'videos' => $topic['videos'] ? str_split($topic['videos'], 12) : []
 			];
 		}
 	}
