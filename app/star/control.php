@@ -36,8 +36,8 @@ class webapp_router_control extends webapp_echo_html
 					['余额提现', '?control/record-exchange-balance'],
 					['游戏提现', '?control/record-exchange-game']
 				]],
-
 				['评论', '?control/comments'],
+				['渠道', '?control/channels'],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -1255,7 +1255,6 @@ class webapp_router_control extends webapp_echo_html
 		$form->fieldset();
 		$form->button('提交', 'submit');
 
-
 		return $form;
 	}
 	function get_ads(int $page = 1)
@@ -1558,7 +1557,8 @@ class webapp_router_control extends webapp_echo_html
 	{
 		$search = $this->webapp->request_content();
 		$this->json['videos'] = $this->webapp->mysql
-			->videos('WHERE userid=?s AND sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', $userid, "%{$search}%")
+			//->videos('WHERE userid=?s AND sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', $userid, "%{$search}%")
+			->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', "%{$search}%")
 			->column('name', 'hash');
 	}
 	function get_comment()
@@ -1610,7 +1610,6 @@ class webapp_router_control extends webapp_echo_html
 		}
 		$this->dialog($error);
 	}
-
 
 	function form_comment_class(webapp_html $html = NULL):webapp_form
 	{
@@ -1683,9 +1682,6 @@ class webapp_router_control extends webapp_echo_html
 		}
 		$this->dialog('操作失败！');
 	}
-
-
-
 
 	function get_record_video(int $page = 1)
 	{
