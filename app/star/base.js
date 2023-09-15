@@ -263,7 +263,7 @@ function admin_comment(form)
 }
 function admin_comment_image(hash)
 {
-	document.querySelector('input[name=images]').value += hash;
+	document.querySelector('textarea[name=images]').value += hash;
 }
 function search_videos(input, ul)
 {
