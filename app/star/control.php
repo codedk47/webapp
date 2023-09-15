@@ -1449,7 +1449,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 
 			$table->row();
-			$contents = $table->cell(['colspan' => 7])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap: break-word;']);
+			$contents = $table->cell(['colspan' => 7])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap:break-word']);
 			if ($value['type'] !== 'video' && $value['title'])
 			{
 				$contents->text($value['title']);
@@ -1460,6 +1460,19 @@ class webapp_router_control extends webapp_echo_html
 				$contents->text("\t{$value['content']}");
 			}
 
+			if ($value['images'])
+			{
+				$table->row();
+				$image = $table->cell(['colspan' => 7])->append('div', ['style' => 'display:flex;gap:.4rem;width:51rem;flex-wrap: wrap;']);
+				foreach ($this->webapp->mysql->images('WHERE hash IN(?S)', str_split($value['images'], 12)) as $img)
+				{
+					$image->append('div', $img['sync'] === 'finished' ? [
+						'data-cover' => sprintf('/imgs/%s/%s', date('ym', $img['mtime']), $img['hash']),
+						'class' => 'cover',
+						'style' => 'width:8rem;height:8rem;display:inline-block'
+					] : ['pending']);
+				}
+			}
 		});
 		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '类型', '排序', '审核');
 		$table->header('评论 %s 项', $table->count());
