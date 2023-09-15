@@ -6,6 +6,7 @@ class webapp_router_packer
 	private readonly string $type, $cid;
 	function __construct(private readonly webapp $webapp)
 	{
+		//$this->cid = trim($webapp->query['cid'] ?? self::cid, "/ \t\n\r\0\x0B");
 		if (preg_match('/android|iphone/i', $webapp->request_device, $device))
 		{
 			$this->mobile = TRUE;
@@ -17,7 +18,6 @@ class webapp_router_packer
 			//$this->type = preg_match('/i?pad/i', $webapp->request_device) ? 'pad' : 'desktop';
 			$this->type = 'desktop';
 		}
-		//$this->cid = trim($webapp->query['cid'] ?? self::cid, "/ \t\n\r\0\x0B");
 	}
 	function channel(?string $id):bool
 	{

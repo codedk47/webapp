@@ -30,11 +30,10 @@ class webapp_router_control extends webapp_echo_html
 				['广告', '?control/ads'],
 				['记录', [
 					['上传的图片', '?control/images'],
-					// ['充值VIP', '?control'],
-					// ['充值金币', '?control'],
-					['购买影片', '?control/record-video'],
+					//['购买影片', '?control/record-video'],
 					['余额提现', '?control/record-exchange-balance'],
-					['游戏提现', '?control/record-exchange-game']
+					['游戏提现', '?control/record-exchange-game'],
+					['充值', '?control/record-recharge']
 				]],
 				['评论', '?control/comments'],
 				['渠道', '?control/channels'],
@@ -1784,6 +1783,82 @@ class webapp_router_control extends webapp_echo_html
 		}
 		$this->dialog('渠道创建失败！');
 	}
+
+
+	//记录
+	function get_record_recharge(string $type = NULL, int $page = 1)
+	{
+		$conds = [[]];
+		if ($type)
+		{
+			$conds[0][] = 'type=?s';
+			$conds[] = $type;
+		}
+		else
+		{
+			$conds[0][] = 'type IN("vip","coin","game")';
+		}
+		if ($userid = $this->webapp->query['userid'] ?? '')
+		{
+			$conds[0][] = 'userid=?s';
+			$conds[] = $userid;
+		}
+		if ($result = $this->webapp->query['result'] ?? '')
+		{
+			$conds[0][] = 'result=?s';
+			$conds[] = $result;
+		}
+
+		if ($datefrom = $this->webapp->query['datefrom'] ?? '')
+		{
+			$conds[0][] = 'mtime>=?s';
+			$conds[] = strtotime($datefrom);
+		}
+		if ($dateto = $this->webapp->query['dateto'] ?? '')
+		{
+			$conds[0][] = 'mtime<=?s';
+			$conds[] = strtotime($dateto);
+		}
+
+		$conds[0] = sprintf('%sORDER BY mtime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$table = $this->main->table($this->webapp->mysql->records(...$conds)->paging($page), function($table, $value, $recordtype)
+		{
+			$table->row();
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell()->append('a', [$value['userid'], 'href' => "?control/record-recharge,userid:{$value['userid']}"]);
+			$table->cell($value['cid']);
+			$table->cell($value['fee']);
+			$table->cell($recordtype[$value['type']]);
+			$table->cell(base::record_results[$value['result']]);
+		}, $recordtype = ['vip' => '会员', 'coin' => '金币', 'game' => '游戏']);
+		$table->fieldset('时间', '用户ID', '渠道ID', '金额', '类型', '结果');
+		$table->header('用户充值 %d 项', $table->count());
+		$table->paging($this->webapp->at(['page' => '']));
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $userid,
+			'style' => 'padding:2px;width:8rem',
+			'placeholder' => '用户ID',
+			'onkeydown' => 'event.keyCode==13&&g({userid:this.value||null,page:null})'
+		]);
+		$table->bar->select(['' => '全部'] + $recordtype)
+			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($type);
+		$table->bar->select(['' => '状态'] + base::record_results)
+			->setattr(['onchange' => 'g({result:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($result);
+
+		$table->bar->append('input', ['type' => 'date',
+			'value' => $datefrom,
+			'style' => 'margin-left:.6rem;padding:.1rem',
+			'onchange' => 'g({datefrom:this.value||null})']);
+		$table->bar->append('input', ['type' => 'date',
+			'value' => $dateto,
+			'style' => 'margin:0 .6rem;padding:.1rem',
+			'onchange' => 'g({dateto:this.value||null})']);
+		$all = $this->webapp->mysql->records(...$conds)->select('SUM(fee)')->value() ?? 0;
+		$table->bar->append('span', sprintf('总计：%s', number_format($all)));
+	}
 	function get_record_video(int $page = 1)
 	{
 		$conds = [['type="video"']];
@@ -1799,6 +1874,8 @@ class webapp_router_control extends webapp_echo_html
 		});
 		$table->fieldset('时间', '用户ID', '用户渠道ID', '费用', '结果');
 		$table->header('用户购买视频 %d 项', $table->count());
+		$table->paging($this->webapp->at(['page' => '']));
+		
 		$table->bar->append('input', ['type' => 'date']);
 		$table->bar->append('span', ' - ');
 		$table->bar->append('input', ['type' => 'date']);
