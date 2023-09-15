@@ -207,7 +207,7 @@ function upload_image(input, callback)
 			Array.isArray(json.errors) && json.errors.length && alert(json.errors.join('\n'));
 			if (callback)
 			{
-				callback(Array.from(Array(12)).map((v, i) => code[hash >> BigInt(i) * 5n & 31n]).join(''));
+				callback(Array.from(Array(12)).map((v, i) => code[hash >> BigInt(11 - i) * 5n & 31n]).join(''));
 			}
 			else
 			{

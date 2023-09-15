@@ -1570,7 +1570,6 @@ class webapp_router_control extends webapp_echo_html
 		$error = '无效内容！';
 		while ($this->form_comment()->fetch($comment))
 		{
-			$comment['videos'] = join($_POST['videos'] ?? []);
 			if ($comment['type'] === 'video')
 			{
 				if ($this->webapp->user($comment['userid'])->comment_video($comment['phash'], $comment['content']) === FALSE)
@@ -1581,18 +1580,28 @@ class webapp_router_control extends webapp_echo_html
 			}
 			else
 			{
-				[$images, $videos] = match ($comment['type'])
+				if (empty($comment['images']))
+				{
+					$comment['images'] = NULL;
+				}
+				if (empty($comment['videos'] = join($_POST['videos'] ?? [])))
+				{
+					$comment['videos'] = NULL;
+				}
+				$type = match ($comment['type'])
+				{
+					'class' => 'topic',
+					'topic' => 'post',
+					default => 'reply'
+				};
+				[$images, $videos] = match ($type)
 				{
 					'topic' => [NULL, $comment['videos']],
 					'post' => [$comment['images'], $comment['videos']],
 					default => [NULL, NULL]
 				};
-				if ($this->webapp->user($comment['userid'])->comment($comment['phash'], $comment['content'], match ($comment['type'])
-				{
-					'class' => 'topic',
-					'topic' => 'post',
-					default => 'reply'
-				}, $comment['title'], $images, $videos, TRUE) === FALSE) {
+				if ($this->webapp->user($comment['userid'])->comment($comment['phash'],
+					$comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE) {
 					$error = '社区评论失败！';
 					break;
 				}
