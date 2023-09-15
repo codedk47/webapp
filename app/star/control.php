@@ -1419,6 +1419,7 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell()->append('a', [$value['userid'], 'href' => "?control/comments,userid:{$value['userid']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
+			$table->cell(number_format($value['view']));
 			$table->cell(base::comment_type[$value['type']]);
 			$table->cell([$value['sort'],
 				'data-src' => "?control/comment,hash:{$value['hash']}",
@@ -1449,7 +1450,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 
 			$table->row();
-			$contents = $table->cell(['colspan' => 7])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap:break-word']);
+			$contents = $table->cell(['colspan' => 8])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap:break-word']);
 			if ($value['type'] !== 'video' && $value['title'])
 			{
 				$contents->text($value['title']);
@@ -1463,7 +1464,7 @@ class webapp_router_control extends webapp_echo_html
 			if ($value['images'])
 			{
 				$table->row();
-				$image = $table->cell(['colspan' => 7])->append('div', ['style' => 'display:flex;gap:.4rem;width:51rem;flex-wrap: wrap;']);
+				$image = $table->cell(['colspan' => 8])->append('div', ['style' => 'display:flex;gap:.4rem;width:51rem;flex-wrap: wrap;']);
 				foreach ($this->webapp->mysql->images('WHERE hash IN(?S)', str_split($value['images'], 12)) as $img)
 				{
 					$image->append('div', $img['sync'] === 'finished' ? [
@@ -1474,7 +1475,7 @@ class webapp_router_control extends webapp_echo_html
 				}
 			}
 		});
-		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '类型', '排序', '审核');
+		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '观看', '类型', '排序', '审核');
 		$table->header('评论 %s 项', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment_class"']);
@@ -1586,6 +1587,12 @@ class webapp_router_control extends webapp_echo_html
 		$error = '无效内容！';
 		while ($this->form_comment()->fetch($comment))
 		{
+			$user = $this->webapp->user(trim($comment['userid']));
+			if ($user->id === NULL)
+			{
+				$error = '用户不存在！';
+				break;
+			}
 			if ($comment['type'] === 'video')
 			{
 				if ($this->webapp->user($comment['userid'])->comment_video($comment['phash'], $comment['content']) === FALSE)
@@ -1615,8 +1622,8 @@ class webapp_router_control extends webapp_echo_html
 					'topic', 'post' => [$comment['images'], $comment['videos']],
 					default => [NULL, NULL]
 				};
-				if ($this->webapp->user($comment['userid'])->comment($comment['phash'],
-					$comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE) {
+				if ($user->comment($comment['phash'], $comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE)
+				{
 					$error = '社区评论失败！';
 					break;
 				}
