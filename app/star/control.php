@@ -1528,7 +1528,7 @@ class webapp_router_control extends webapp_echo_html
 		$form->field('content', 'textarea', ['rows' => 10, 'cols' => 50, 'required' => NULL]);
 
 		$form->fieldset('图片');
-		$form->field('images', 'text', ['style' => 'width:26rem', 'readonly' => NULL]);
+		$form->field('images', 'textarea', ['rows' => 4, 'cols' => 36, 'readonly' => NULL]);
 		$form->fieldset->append('label', '添加图片')->append('input', [
 			'type' => 'file',
 			'accept' => 'image/*',
