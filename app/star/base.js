@@ -254,9 +254,6 @@ function admin_comment(form)
 		method: 'POST',
 		body: new FormData(form)
 	}).then(response => response.text()).then(json => {
-
-		console.log(json);
-		return;
 		if (json.hasOwnProperty('goto'))
 		{
 			top.framer ? top.framer(json.goto) : location.assign(json.goto);
