@@ -17,6 +17,7 @@ class webapp_router_packer
 			//$this->type = preg_match('/i?pad/i', $webapp->request_device) ? 'pad' : 'desktop';
 			$this->type = 'desktop';
 		}
+		//$this->cid = trim($webapp->query['cid'] ?? self::cid, "/ \t\n\r\0\x0B");
 	}
 	function channel(?string $id):bool
 	{
@@ -136,6 +137,10 @@ class webapp_router_packer
 	}
 	function get_home(string $cid = NULL)
 	{
+		if (is_string($cid))
+		{
+			$cid = trim($cid, "/ \t\n\r\0\x0B");
+		}
 		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, match ($this->type)
 		{
 			'android' => 'dpv_android',
@@ -143,7 +148,7 @@ class webapp_router_packer
 			default => 'dpv'
 		});
 		//var_dump($this->mobile, $this->type);
-		$dl = $this->webapp->request_entry() . '' . $this->webapp->at([], '?packer/dl');
+		$dl = $this->webapp->request_entry() . '' . $this->webapp->at(['cid' => $cid], '?packer/dl');
 		$html = new webapp_echo_html($this->webapp);
 		$html->loadHTMLFile("{$this->webapp['android_apk']['prepare_directory']}/../rstar.html");
 		if ($this->mobile)
