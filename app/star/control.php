@@ -1570,7 +1570,7 @@ class webapp_router_control extends webapp_echo_html
 		$error = '无效内容！';
 		while ($this->form_comment()->fetch($comment))
 		{
-			$comment['videos'] = $_POST['videos'] ?? [];
+			$comment['videos'] = join($_POST['videos'] ?? []);
 			if ($comment['type'] === 'video')
 			{
 				if ($this->webapp->user($comment['userid'])->comment_video($comment['phash'], $comment['content']) === FALSE)
@@ -1583,7 +1583,7 @@ class webapp_router_control extends webapp_echo_html
 			{
 				[$images, $videos] = match ($comment['type'])
 				{
-					'topic' => [NULL, $comment['videos']],
+					'topic' => [NULL, join($comment['videos'])],
 					'post' => [$comment['images'], $comment['videos']],
 					default => [NULL, NULL]
 				};
