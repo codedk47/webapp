@@ -212,14 +212,15 @@ class base extends webapp
 		$ym = date('ym', $this->time);
 		if (is_string($key = $this->request_header('Mask-Key'))
 			&& preg_match('/^[0-f]{16}$/', $key)
-			&& (is_dir("{$this['imgs_savedir']}/{$ym}") || mkdir("{$this['imgs_savedir']}/{$ym}"))
-			&& $this->mysql->images->insert([
+			&& (is_dir("{$this['imgs_savedir']}/{$ym}") || mkdir("{$this['imgs_savedir']}/{$ym}"))) {
+			$this->mysql->images->insert([
 				'hash' => $hash = $this->time33hash(hexdec($key), FALSE),
 				'mtime' => $this->time,
 				'ctime' => $this->time,
 				'size' => strlen($binary = $this->request_content('binary')),
 				'sync' => 'pending'])
-			&& file_put_contents("{$this['imgs_savedir']}/{$ym}/{$hash}", hex2bin($key) . $binary) !== FALSE) {
+			&& file_put_contents("{$this['imgs_savedir']}/{$ym}/{$hash}", hex2bin($key) . $binary);
+			$json['errors'] = [];
 			$goto && $json->goto($this->url64_decode($goto));
 			return;
 		}
