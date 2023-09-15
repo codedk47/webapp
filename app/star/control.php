@@ -1450,7 +1450,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 
 			$table->row();
-			$contents = $table->cell(['colspan' => 7])->append('pre', ['style' => 'margin:0;line-height:1.4rem;']);
+			$contents = $table->cell(['colspan' => 7])->append('pre', ['style' => 'width:60rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap: break-word;']);
 			if ($value['type'] !== 'video' && $value['title'])
 			{
 				$contents->text($value['title']);
@@ -1527,7 +1527,8 @@ class webapp_router_control extends webapp_echo_html
 		$form->field('content', 'textarea', ['rows' => 10, 'cols' => 50, 'required' => NULL]);
 
 		$form->fieldset('图片');
-		$form->field('images', 'textarea', ['rows' => 4, 'cols' => 36, 'readonly' => NULL]);
+		$form->field('images', 'textarea', ['rows' => 4, 'cols' => 36,
+			'placeholder' => '图片最多不超过10个','readonly' => NULL]);
 		$form->fieldset->append('label', '添加图片')->append('input', [
 			'type' => 'file',
 			'accept' => 'image/*',
@@ -1538,7 +1539,7 @@ class webapp_router_control extends webapp_echo_html
 		$form->fieldset('视频');
 		$form->field('video', 'search', [
 			'data-action' => '?control/videos',
-			'placeholder' => '输入视频关键字进行搜索选择',
+			'placeholder' => '输入视频关键字进行搜索选择，勾选最多不超过100个视频',
 			'oninput' => 'search_videos(this,this.parentElement.nextElementSibling.firstElementChild)',
 			'style' => 'width:32rem']);
 		$form->fieldset()->setattr([
@@ -1682,7 +1683,44 @@ class webapp_router_control extends webapp_echo_html
 		}
 		$this->dialog('操作失败！');
 	}
+	function get_channels(int $page = 1)
+	{
+		$conds = [[]];
+		$conds[0] = sprintf('%sORDER BY mtime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$table = $this->main->table($this->webapp->mysql->channels(...$conds)->paging($page), function($table, $value)
+		{
+			$table->row();
+			// $table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			// $table->cell($value['userid']);
+			// $table->cell($value['cid']);
+			// $table->cell($value['fee']);
+			// $table->cell($value['result']);
+		});
+		$table->fieldset('创建日期', '渠道ID');
+		$table->header('渠道');
+		$table->bar->append('button', ['创建渠道', 'onclick' => 'location.href="?control/channel"']);
 
+
+
+	}
+	function form_channel(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+		$form->fieldset('渠道ID / 密码 ');
+		$form->field('hash', 'text', ['pattern' => '^[\w\-]{4}$', 'required' => NULL]);
+
+
+		$form->field('pwd', 'text', ['maxlength' => 16, 'required' => NULL]);
+
+		$form->field('name', 'text', ['required' => NULL]);
+
+		$form->button('提交', 'submit');
+		return $form;
+	}
+	function get_channel()
+	{
+		$this->form_channel($this->main);
+	}
 	function get_record_video(int $page = 1)
 	{
 		$conds = [['type="video"']];
