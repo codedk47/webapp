@@ -231,9 +231,15 @@ class base extends webapp
 	{
 		//if (PHP_SAPI !== 'cli') return 404;
 		echo "----SYNC RECORD----\n";
-		$a = $this->mysql->records('WHERE result!="pending" AND type!="video" AND log="pending"')->all();
+		foreach ($this->mysql->records('WHERE result!="pending" AND type!="video" AND log="pending"')->all() as $record)
+		{
+			$this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->fetch($user);
 
-		print_r($a);
+			print_r($user);
+			print_r($record);
+		}
+
+		
 
 		return;
 		echo "----SYNC COVER----\n";
@@ -514,7 +520,8 @@ class base extends webapp
 		return [];
 	}
 	//用户模型
-	function user(string $id = 'FABqsZrf0g'):user
+	//'FABqsZrf0g'
+	function user(string $id = NULL):user
 	{
 		return $id ? user::from_id($this, $id) : new user($this,
 			$this->authorize($this->request_authorization($type), $this->user_fetch(...)));
