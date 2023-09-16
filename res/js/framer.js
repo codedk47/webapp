@@ -1,5 +1,11 @@
 addEventListener('DOMContentLoaded', async event =>
 {
+	history.pushState(null, null, document.URL);
+	window.addEventListener('popstate', function()
+	{
+		history.pushState(null, null, document.URL);
+	});
+
 	class frame
 	{
 		#frame;
@@ -259,19 +265,13 @@ addEventListener('DOMContentLoaded', async event =>
 		headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
 	}
 
-	// history.pushState(null, null, document.URL);
-	// window.addEventListener('popstate', function()
+	// history.pushState(null, null, null);
+	// window.onpopstate = () =>
 	// {
-	// 	history.pushState(null, null, document.URL);
-	// });
-
-	history.pushState(null, null, null);
-	window.onpopstate = () =>
-	{
-		framer.close();
-		framer(render.dataset.load);
-		console.log(render.dataset.load);
-	};
+	// 	framer.close();
+	// 	framer(render.dataset.load);
+	// 	console.log(render.dataset.load);
+	// };
 
 	render.load().then(frame => framer(homepage));
 });
