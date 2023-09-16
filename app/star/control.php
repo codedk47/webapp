@@ -620,8 +620,9 @@ class webapp_router_control extends webapp_echo_html
 
 
 		$form->fieldset();
-		$form->field('followed_ids', 'textarea');
+		$form->field('followed_ids', 'textarea', ['rows' => 4, 'cols' => 40]);
 
+		$form->fieldset();
 		$form->button('更新', 'submit');
 
 		$form->xml['method'] = 'patch';
