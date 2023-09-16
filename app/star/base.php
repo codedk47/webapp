@@ -731,7 +731,6 @@ class base extends webapp
 			yield $prod;
 		}
 	}
-
 	//根据分类标签ID拉取专题
 	function fetch_subjects(string $tagid):array
 	{
