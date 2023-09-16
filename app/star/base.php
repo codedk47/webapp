@@ -226,22 +226,27 @@ class base extends webapp
 		}
 		//$json['dialog'] = '图片上传失败！';
 	}
-	//本地命令行运行封面同步处理和广告
-	function get_sync_cover()
+	//本地命令行运行同步记录
+	function get_sync_record()
 	{
-		//if (PHP_SAPI !== 'cli') return 404;
+		if (PHP_SAPI !== 'cli') return 404;
 		echo "----SYNC RECORD----\n";
-		foreach ($this->mysql->records('WHERE result!="pending" AND type!="video" AND log="pending"')->all() as $record)
+		foreach ($this->mysql->records('WHERE result="success" AND type NOT IN("video","exchange") AND log="pending"')->all() as $record)
 		{
-			$this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->fetch($user);
-
-			print_r($user);
-			print_r($record);
+			$this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->select('id,date,device')->fetch($user);
+			echo "{$record['hash']} - ",
+			$this->mysql->sync(fn() => $this->recordlog($record['cid'], match ($user['device'])
+				{
+					'android' => 'order_android_ok',
+					'ios' => 'order_ios_ok',
+					default => 'order_ok'
+				}, 1, $record['mtime'])
+				&& $this->recordlog($record['cid'], sprintf('recharge%s%s',
+					in_array($record['type'], ['vip', 'coin'], TRUE) ? "_{$record['type']}" : '',
+					date('Y-m-d', $record['mtime']) === $user['date'] ? '_new' : '_old'), $record['fee'], $record['mtime'])
+				&& $this->mysql->records('WHERE hash=?s AND log="pending" LIMIT 1', $record['hash'])->update('log="success"') === 1)
+			? "OK\n" : "NO\n";
 		}
-
-		
-
-		return;
 		echo "----SYNC COVER----\n";
 		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change"') as $cover)
 		{
@@ -429,8 +434,17 @@ class base extends webapp
 			$field === 'signup' => ['signup' => $value],
 			in_array($field, ['signup_ios', 'signup_android'], TRUE) => ['signup' => $value, $field => $value],
 
-			// in_array($field, ['recharge_new', 'recharge_old', 'recharge_coin', 'recharge_vip', 'recharge_vip_new'], TRUE)
-			// 	=> ['recharge' => $value, $field => $value],
+			in_array($field, ['recharge_new', 'recharge_old'], TRUE) => ['recharge' => $value, $field => $value],
+
+			$field === 'recharge_coin_new'
+				=> ['recharge' => $value, 'recharge_coin' => $value, 'recharge_new' => $value],
+			$field === 'recharge_coin_old'
+				=> ['recharge' => $value, 'recharge_coin' => $value, 'recharge_old' => $value],
+
+			$field === 'recharge_vip_new'
+				=> ['recharge' => $value, 'recharge_vip' => $value, 'recharge_new' => $value, 'recharge_vip_new' => 1],
+			$field === 'recharge_vip_old'
+				=> ['recharge' => $value, 'recharge_vip' => $value, 'recharge_old' => $value],
 
 			$field === 'order' => ['order' => $value],
 			in_array($field, ['order_ios', 'order_android'], TRUE) => ['order' => $value, $field => $value],
