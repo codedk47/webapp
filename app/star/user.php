@@ -246,15 +246,16 @@ class user extends ArrayObject
 				++$result;
 				$followed_ids[] = $id;
 			}
-			if ($this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update('follower_num=follower_num+?i', $result) === 1)
-			{
+			//if ($this->webapp->mysql->users('WHERE id=?s AND uid!=0 LIMIT 1', $id)->update('follower_num=follower_num+?i', $result) === 1)
+			//{
+				$this->webapp->mysql->users('WHERE id=?s AND uid!=0 LIMIT 1', $id)->update('follower_num=follower_num+?i', $result);
 				$followed_ids = join(array_slice($followed_ids, -50));
 				if ($this->cond()->update('ctime=?i,followed_ids=?s', $this->webapp->time, $followed_ids) === 1)
 				{
 					$this['followed_ids'] = $followed_ids;
 					return TRUE;
 				}
-			}
+			//}
 		}
 		return FALSE;
 	}
