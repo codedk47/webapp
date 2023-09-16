@@ -402,16 +402,16 @@ class base extends webapp
 	{
 		return $this->request_ip();
 	}
-	function cid():string
-	{
-		return preg_match('/CID\:(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000';
-		// return is_string($cid = $this->request_cookie('cid') ?? $this->query['cid'] ?? NULL)
-		// 	&& preg_match('/^\w{4,}/', $cid) ? substr($cid, 0, 4)
-		// 	: (preg_match('/CID\:(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000');
-	}
 	function did():?string
 	{
-		return preg_match('/DID\:(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
+		return preg_match('/DID\/(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
+	}
+	function cid():string
+	{
+		// return preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000';
+		return is_string($cid = $this->request_cookie('cid') ?? $this->query['cid'] ?? NULL)
+			&& preg_match('/^\w{4,}/', $cid) ? substr($cid, 0, 4)
+			: (preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000');
 	}
 	function channel(?string $id, string $sid = '0000'):bool
 	{
