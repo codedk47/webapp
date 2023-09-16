@@ -401,6 +401,7 @@ class user extends ArrayObject
 			{
 				break;
 			}
+			$cid = $user['cid'] ?? $webapp->cid;
 			$device = $user['device'] ?? $webapp->request_device();
 			$nickname = $user['nickname'] ?? NULL;
 			$user = [
@@ -420,7 +421,7 @@ class user extends ArrayObject
 				'ticket' => 0,
 				'fid' => random_int(1, 8),
 				'uid' => $user['uid'] ?? 0,
-				'cid' => $user['cid'] ?? $webapp->cid,
+				'cid' => $cid,
 				'did' => $did,
 				'tid' => $tid,
 				'gender' => 'none',
