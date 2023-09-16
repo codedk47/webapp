@@ -650,7 +650,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 		}
 
-		$conds[0] = sprintf('%sORDER BY id,mtime DESC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY mtime DESC,id ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$table = $this->main->table($this->webapp->mysql->users(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
