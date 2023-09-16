@@ -44,11 +44,11 @@ class webapp_router_packer
 			//这里也许需要在 REDIS 保存渠道码
 			$redis = new Redis();
 			$redis->pconnect(
-				$this['redis_config'][0]['host'],
-				$this['redis_config'][0]['port'],
+				$this->webapp['redis_config'][0]['host'],
+				$this->webapp['redis_config'][0]['port'],
 				2
 			);
-			$redis->select($this['redis_config'][0]['db_index']);
+			$redis->select($this->webapp['redis_config'][0]['db_index']);
 			$redis->set("channel:random:{$random}", $cid, 300);
 			$this->webapp->recordlog($cid, 'dpc_ios');
 		}
