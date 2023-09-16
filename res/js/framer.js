@@ -259,6 +259,12 @@ addEventListener('DOMContentLoaded', async event =>
 		headers.Authorization = `Bearer ${localStorage.getItem('token')}`;
 	}
 
+	// history.pushState(null, null, document.URL);
+	// window.addEventListener('popstate', function()
+	// {
+	// 	history.pushState(null, null, document.URL);
+	// });
+
 	history.pushState(null, null, null);
 	window.onpopstate = () =>
 	{
