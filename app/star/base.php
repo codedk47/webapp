@@ -229,7 +229,13 @@ class base extends webapp
 	//本地命令行运行封面同步处理和广告
 	function get_sync_cover()
 	{
-		if (PHP_SAPI !== 'cli') return 404;
+		//if (PHP_SAPI !== 'cli') return 404;
+		echo "----SYNC RECORD----\n";
+		$a = $this->mysql->records('WHERE result!="pending" AND type!="video" AND log="pending"')->all();
+
+		print_r($a);
+
+		return;
 		echo "----SYNC COVER----\n";
 		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change"') as $cover)
 		{
@@ -420,8 +426,11 @@ class base extends webapp
 			// in_array($field, ['recharge_new', 'recharge_old', 'recharge_coin', 'recharge_vip', 'recharge_vip_new'], TRUE)
 			// 	=> ['recharge' => $value, $field => $value],
 
-			// in_array($field, ['order_ok', 'order_ios', 'order_ios_ok', 'order_android', 'order_android_ok'], TRUE)
-			// 	=> ['order' => $value, $field => $value],
+			$field === 'order' => ['order' => $value],
+			in_array($field, ['order_ios', 'order_android'], TRUE) => ['order' => $value, $field => $value],
+
+			$field === 'order_ok' => ['order_ok' => $value],
+			in_array($field, ['order_ios_ok', 'order_android_ok'], TRUE) => ['order_ok' => $value, $field => $value],
 			default => []
 		};
 		if (empty($values)) return FALSE;
@@ -613,13 +622,13 @@ class base extends webapp
 		'failure' => '失败'
 	];
 	//记录（回调）
-	function record(string $hash, bool $result = FALSE):bool
+	function record(string $hash, bool $result = FALSE):array
 	{
 		return $this->mysql->records('WHERE hash=?s AND result="pending" AND type!="video" LIMIT 1', $hash)->fetch($record)
-			&& $this->mysql->sync(fn() => (($record['ext'] = json_decode($record['ext'], TRUE))['vtid']
+			&& $this->mysql->sync(fn() => (array_key_exists('vtid', $record['ext'] = json_decode($record['ext'], TRUE))
 				? method_exists($this, $record['ext']['vtid']) && $this->{$record['ext']['vtid']}($result, $record)
 				: TRUE) && $this->mysql->records('WHERE hash=?s LIMIT 1', $hash)
-					->update('result=?s', $result ? 'success' : 'failure') === 1);
+					->update('result=?s', $result ? 'success' : 'failure') === 1) ? $record: [];
 	}
 	//获取源
 	function fetch_origins():array

@@ -25,7 +25,7 @@ class user extends ArrayObject
 					'type' => $data['type']]],
 				default => [$this->webapp->time, $data['fee'], $data]
 			};
-			if ($this->webapp->mysql->records->insert($record = [
+			$record = [
 				'hash' => $this->id . $this->webapp->time33hash($time33, TRUE),
 				'userid' => $this->id,
 				'ctime' => $this->webapp->time,
@@ -36,7 +36,25 @@ class user extends ArrayObject
 				'cid' => $this['cid'],
 				'fee' => $fee,
 				'ext' => json_encode($ext, JSON_UNESCAPED_UNICODE)
-			])) return $record;
+			];
+			if (in_array($type, ['video', 'exchange']))
+			{
+				if ($this->webapp->mysql->records->insert($record))
+				{
+					return $record;
+				}
+			}
+			else
+			{
+				if ($this->webapp->mysql->sync(fn() => $this->webapp->recordlog($this['cid'], match ($this['device'])
+					{
+						'android' => 'order_android',
+						'ios' => 'order_ios',
+						default => 'order'
+					}) && $this->webapp->mysql->records->insert($record))) {
+					return $record;
+				};
+			}
 		}
 		return [];
 	}

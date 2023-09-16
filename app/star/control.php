@@ -1786,6 +1786,12 @@ class webapp_router_control extends webapp_echo_html
 
 
 	//记录
+	function patch_record(string $hash)
+	{
+		$this->webapp->record($hash, TRUE)
+			? $this->goto()
+			: $this->dialog('回调记录失败！');
+	}
 	function get_record_recharge(string $type = NULL, int $page = 1)
 	{
 		$conds = [[]];
@@ -1825,13 +1831,25 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell($value['hash']);
 			$table->cell()->append('a', [$value['userid'], 'href' => "?control/record-recharge,userid:{$value['userid']}"]);
 			$table->cell($value['cid']);
-			$table->cell($value['fee']);
+			$table->cell([number_format($value['fee']), 'style' => 'text-align:right']);
 			$table->cell($recordtype[$value['type']]);
-			$table->cell(base::record_results[$value['result']]);
+			$table->cell([base::record_results[$value['result']], 'style' => match ($value['result'])
+			{
+				'success' => 'color:green',
+				'failure' => 'color:red',
+				default => 'color:blue'
+			}]);
+			$table->cell()->append('a', ['回调记录',
+				'href' => "?control/record,hash:{$value['hash']}",
+				'data-method' => 'patch',
+				'data-bind' => 'click',
+				'data-dialog' => '回调记录将纳入统计，确定回调记录？']);
+
 		}, $recordtype = ['vip' => '会员', 'coin' => '金币', 'game' => '游戏']);
-		$table->fieldset('时间', '用户ID', '渠道ID', '金额', '类型', '结果');
+		$table->fieldset('时间', 'HASH', '用户ID', '渠道ID', '金额', '类型', '结果', '回调记录');
 		$table->header('用户充值 %d 项', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('input', [
