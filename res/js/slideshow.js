@@ -137,7 +137,7 @@ function slideshow(element, duration = 4)
 		node.style.width = '100%';
 		node.style.backgroundPosition = 'center';
 		node.style.backgroundRepeat = 'no-repeat';
-		node.style.backgroundSize = '100%';
+		node.style.backgroundSize = '100% 100%';
 		// node.style.backgroundColor = ['red', 'blue', 'green'][i];
 		// node.textContent = ['red', 'blue', 'green'][i];
 		return node;
