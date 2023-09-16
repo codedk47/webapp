@@ -431,6 +431,7 @@ class user extends ArrayObject
 				'followed_ids' => '',
 				'follower_num' => 0,
 				'video_num' => 0,
+				'video_watch' => 0,
 				'like_num' => 0
 			];
 			$i = 0;
