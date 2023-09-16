@@ -290,7 +290,7 @@ customElements.define('webapp-video', class extends HTMLElement
 });
 customElements.define('webapp-videos', class extends HTMLElement
 {
-	#loader = 'framer' in top ? top.framer.source : loader;
+	#loader = 'framer' in top ? top.framer.loader : loader;
 	#slide = document.createElement('div');
 	#shift = true;
 	#index = 0;
