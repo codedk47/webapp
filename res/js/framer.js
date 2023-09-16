@@ -264,7 +264,7 @@ addEventListener('DOMContentLoaded', async event =>
 	{
 		framer.close();
 		framer(render.dataset.load);
-		console.log(render.dataset.load)
+		console.log(render.dataset.load);
 	};
 
 	render.load().then(frame => framer(homepage));
