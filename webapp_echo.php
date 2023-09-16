@@ -296,6 +296,7 @@ class webapp_echo_htmlmask extends webapp_echo_html
 		}
 		else
 		{
+			$this->script('history.pushState(null,null,document.URL);window.addEventListener("popstate",()=>history.pushState(null,null,document.URL))');
 			unset($this->xml->head->link[1]);
 		}
 	}
