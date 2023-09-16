@@ -726,7 +726,7 @@ class base extends webapp
 	//获取所有产品
 	function fetch_prods():iterable
 	{
-		foreach ($this->mysql->prods('WHERE count>0 ORDER BY ctime DESC') as $prod)
+		foreach ($this->mysql->prods('WHERE count>0 ORDER BY LEFT(vtid, 13) ASC,price ASC') as $prod)
 		{
 			yield $prod;
 		}
