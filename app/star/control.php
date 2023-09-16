@@ -618,9 +618,8 @@ class webapp_router_control extends webapp_echo_html
 		$form->field('coin', 'number', ['min' => 0]);
 		$form->field('uid', 'number', ['min' => 0, 'max' => 65535]);
 
-
-		$form->fieldset();
-		$form->field('followed_ids', 'textarea', ['rows' => 4, 'cols' => 40]);
+		// $form->fieldset();
+		// $form->field('followed_ids', 'textarea', ['rows' => 4, 'cols' => 40]);
 
 		$form->fieldset();
 		$form->button('更新', 'submit');
