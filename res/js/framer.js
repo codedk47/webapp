@@ -1,11 +1,5 @@
 addEventListener('DOMContentLoaded', async event =>
 {
-	history.pushState(null, null, document.URL);
-	window.addEventListener('popstate', function()
-	{
-		history.pushState(null, null, document.URL);
-	});
-
 	class frame
 	{
 		#frame;
