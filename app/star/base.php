@@ -412,6 +412,10 @@ class base extends webapp
 	{
 		return preg_match('/DID\:(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
 	}
+	function channel(?string $id, string $sid = '0000'):bool
+	{
+		return $id && ($id === $sid || $this->mysql->channels('WHERE hash=?s LIMIT 1', $id)->fetch());
+	}
 	//记录日志
 	function recordlog(string $cid, string $field, int $value = 1, int $nowtime = NULL):bool
 	{

@@ -21,7 +21,7 @@ class webapp_router_packer
 	}
 	function channel(?string $id):bool
 	{
-		return $id && ($id === self::cid || $this->webapp->mysql->channels('WHERE hash=?s LIMIT 1', $id)->fetch());
+		return $this->webapp->channel($id, self::cid);
 	}
 	function iphone_webcilp(?string $cid):int
 	{
