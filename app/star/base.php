@@ -693,7 +693,7 @@ class base extends webapp
 	function fetch_ads(int $seat):array
 	{
 		$ads = [];
-		foreach ($this->mysql->ads('WHERE display="show" AND seat=?i', $seat) as $ad)
+		foreach ($this->mysql->ads('WHERE display="show" AND seat=?i ORDER BY sort DESC,hash ASC', $seat) as $ad)
 		{
 			$ads[] = [
 				'hash' => $ad['hash'],
