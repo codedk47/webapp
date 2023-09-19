@@ -87,14 +87,15 @@ class webapp_router_control extends webapp_echo_html
 		$this->json['dialog'] = $msg;
 	}
 
-
-
-
-	function get_home(string $datefrom = '')
+	function get_home(string $cid = NULL, string $datefrom = '', string $dateto = '')
 	{
 		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $datefrom))
 		{
-			$datefrom = date('Y-m-d');
+			$datefrom = date('Y-m-01');
+		}
+		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $dateto))
+		{
+			$dateto = date('Y-m-t');
 		}
 		$statistics = [
 			'dpv',
@@ -138,9 +139,11 @@ class webapp_router_control extends webapp_echo_html
 			$merge[] = sprintf('JSON_OBJECT(%s)', join(',', $fields));
 		}
 
-		$logs = $this->webapp->mysql('SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date=?s GROUP BY cid',
-			join(',', $sum), join(',', $merge), $datefrom);
-		$table = $this->main->table($logs, function($table, $log, $statistics)
+		$cond = $cid
+			? ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s AND cid=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid]
+			: ['SELECT "全部" cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto];
+
+		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics)
 		{
 			$node = [$table->row()];
 			$table->cell([$log['cid'], 'rowspan' => 24]);
@@ -200,10 +203,13 @@ class webapp_router_control extends webapp_echo_html
 			$hourdata = json_decode($log['hourdata'], TRUE);
 			foreach ($statistics as $i => $field)
 			{
-				$node[$i]->append('td', number_format($log[$field]));
+				$node[$i]->append('td', number_format($log[$field] ?? 0));
+
+
+
 				foreach (range(0, 23) as $hour)
 				{
-					$node[$i]->append('td', number_format($hourdata[$hour][$field]));
+					$node[$i]->append('td', number_format($hourdata[$hour][$field] ?? 0));
 				}
 			}
 		}, $statistics);
@@ -211,8 +217,14 @@ class webapp_router_control extends webapp_echo_html
 		$table->fieldset('渠道', '分类', '详细', '总计', ...range(0, 23));
 		$table->header('数据统计');
 		$table->bar->append('input', ['type' => 'date', 'value' => $datefrom, 'onchange' => 'g({datefrom:this.value||null})']);
-		//$table->bar->append('input', ['type' => 'date', 'value' => $datefrom]);
-
+		$table->bar->append('input', ['type' => 'date', 'value' => $dateto, 'onchange' => 'g({dateto:this.value||null})']);
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $cid,
+			'style' => 'padding:1px;width:8rem',
+			'placeholder' => '渠道ID',
+			'onkeydown' => 'event.keyCode==13&&g({cid:this.value||null})'
+		]);
 	}
 
 	//========标签========

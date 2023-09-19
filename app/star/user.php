@@ -208,7 +208,7 @@ class user extends ArrayObject
 				++$result;
 				$favorites[] = $hash;
 			}
-			if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`like`=`like`+?i', $result) === 1)
+			if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`view`=`view`+1,`like`=`like`+?i', $result) === 1)
 			{
 				$favorites = join(array_slice($favorites, -50));
 				if ($this->cond()->update('ctime=?i,favorites=?s', $this->webapp->time, $favorites) === 1)
