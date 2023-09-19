@@ -30,7 +30,7 @@ class webapp_router_control extends webapp_echo_html
 				['广告', '?control/ads'],
 				['记录', [
 					['上传的图片', '?control/images'],
-					//['购买影片', '?control/record-video'],
+					['购买影片', '?control/record-video'],
 					['余额提现', '?control/record-exchange-balance'],
 					['游戏提现', '?control/record-exchange-game'],
 					['充值', '?control/record-recharge']
@@ -1890,12 +1890,12 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell($value['hash']);
 			$table->cell($value['userid']);
 			$table->cell($value['cid']);
 			$table->cell($value['fee']);
-			$table->cell($value['result']);
 		});
-		$table->fieldset('时间', '用户ID', '用户渠道ID', '费用', '结果');
+		$table->fieldset('时间', 'HASH', '用户ID', '渠道ID', '金币');
 		$table->header('用户购买视频 %d 项', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
 		
