@@ -713,6 +713,7 @@ class webapp_router_control extends webapp_echo_html
 		if ($this->form_user()->fetch($user) && $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update([
 			'ctime' => $this->webapp->time
 		] + $user)) {
+			$this->webapp->user_sync($id);
 			$this->goto("/users,search:{$id}");
 		}
 		else
@@ -1789,12 +1790,11 @@ class webapp_router_control extends webapp_echo_html
 		$this->dialog('渠道创建失败！');
 	}
 
-
 	//记录
-	function patch_record(string $hash)
+	function patch_record(string $hash, string $userid)
 	{
 		$this->webapp->record($hash, TRUE)
-			? $this->goto()
+			? ($this->webapp->user_sync($userid) || $this->goto())
 			: $this->dialog('回调记录失败！');
 	}
 	function get_record_recharge(string $type = NULL, int $page = 1)
@@ -1848,7 +1848,7 @@ class webapp_router_control extends webapp_echo_html
 				default => 'color:blue'
 			}]);
 			$table->cell()->append('a', ['回调记录',
-				'href' => "?control/record,hash:{$value['hash']}",
+				'href' => "?control/record,hash:{$value['hash']},userid:{$value['userid']}",
 				'data-method' => 'patch',
 				'data-bind' => 'click',
 				'data-dialog' => '回调记录将纳入统计，确定回调记录？']);

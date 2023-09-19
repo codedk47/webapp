@@ -507,6 +507,10 @@ class base extends webapp
 		}
 		return TRUE;
 	}
+	function user_sync(string $id)
+	{
+		$this->webapp->remote($this->webapp['app_sync_call'], 'sync_user', [$id]);
+	}
 	//创建用户
 	function user_create(array $user):user
 	{
