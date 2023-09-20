@@ -185,6 +185,12 @@ class base extends webapp
 		$json = $this->app('webapp_echo_json');
 		if (is_string($hash = $this->decrypt($encrypt))
 			&& $this->form_video(json_decode($this->request_maskdata() ?? '[]', TRUE))->fetch($video)) {
+
+			if ($video['require'] === '0')
+			{
+				$video['require'] = '-1';
+			}
+
 			$video['preview'] = $video['preview_end'] > $video['preview_start']
 				? ($video['preview_start'] & 0xffff) << 16 | ($video['preview_end'] - $video['preview_start']) & 0xffff : 10;
 			unset($video['preview_start'], $video['preview_end']);
