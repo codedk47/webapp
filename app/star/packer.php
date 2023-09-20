@@ -170,8 +170,8 @@ class webapp_router_packer
 			// 	? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this)']
 			// 	: ['Android 下载', 'href' => $dl, 'class' => 'android']);
 			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
-				? ['iOS 下载', 'href' => '/pwa/uni.apk', 'class' => 'iphone', 'onclick' => 'return iphone(this)']
-				: ['Android 下载', 'href' => '/pwa/rstar.mobileconfig', 'class' => 'android']);
+				? ['iOS 下载', 'href' => '/pwa/rstar.mobileconfig', 'class' => 'iphone', 'onclick' => 'return iphone(this)']
+				: ['Android 下载', 'href' => '/pwa/uni.apk', 'class' => 'android']);
 		}
 		else
 		{
