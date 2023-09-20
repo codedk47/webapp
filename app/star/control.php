@@ -205,8 +205,6 @@ class webapp_router_control extends webapp_echo_html
 			{
 				$node[$i]->append('td', number_format($log[$field] ?? 0));
 
-
-
 				foreach (range(0, 23) as $hour)
 				{
 					$node[$i]->append('td', number_format($hourdata[$hour][$field] ?? 0));

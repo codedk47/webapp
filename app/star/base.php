@@ -180,13 +180,13 @@ class base extends webapp
 			&& ($size = $this->request_uploaddata($this->path_video(FALSE, $video, '/video.sb'))) !== -1
 			&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('tell=tell+?i', $size) === 1 ? 200 : 404;
 	}
-	function patch_video_value(string $encrypt, string $goto = NULL)
+	function patch_video_value(string $encrypt, string $goto = NULL, string $up = NULL)
 	{
 		$json = $this->app('webapp_echo_json');
 		if (is_string($hash = $this->decrypt($encrypt))
 			&& $this->form_video(json_decode($this->request_maskdata() ?? '[]', TRUE))->fetch($video)) {
 
-			if ($video['require'] === '0')
+			if (is_string($up) && $video['require'] === '0') //??fix
 			{
 				$video['require'] = '-1';
 			}

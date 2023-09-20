@@ -433,8 +433,7 @@ JS);
 	{
 		//$goto ??= $this->webapp->url64_encode('?uploader/videos');
 		$form = $this->webapp->form_video($this->html()->main, $hash);
-		$form->xml['action'] .= ",goto:{$goto}";
-		unset($form['sort']);
+		$form->xml['action'] .= ",goto:{$goto},up:1";
 
 	}
 	function get_uploading()
