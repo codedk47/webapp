@@ -179,7 +179,7 @@ class webapp_router_packer
 			$html->xml->xpath('//div[@class="qrcode"]')[0]['style'] = "background-image:url({$dl})";
 			$html->xml->xpath('//div[@data-tg]')[0]->dom()->appendChild($html->xml->body->a->dom());
 		}
-		$html->script("var bg='{$binary}'");
+		//$html->script("var bg='{$binary}'");
 		$this->webapp->echo($html);
 	}
 	function get_dl(string $cid = NULL):int
