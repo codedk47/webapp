@@ -161,7 +161,7 @@ class webapp_router_packer
 		$html->loadHTMLFile("{$this->webapp['android_apk']['prepare_directory']}/../rstar.html");
 		if ($this->mobile)
 		{
-			$binary = bin2hex(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
+			//$binary = bin2hex(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
 			$html->xml->body['style'] = "background-position: center 6rem;background-color: #1f1d1f";
 			$html->xml->body->header['class'] = 'mobile';
 			$html->xml->body->a['style'] = 'position:fixed;top:1.3rem;right:1rem';
@@ -172,7 +172,7 @@ class webapp_router_packer
 		}
 		else
 		{
-			$binary = bin2hex(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../desktop.png"));
+			//$binary = bin2hex(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../desktop.png"));
 			//$html->xml->body['style'] = "background-image: url(data:image/png;base64,{$base64bg})";
 			$html->xml->body->header['class'] = 'desktop';
 			$html->xml->body->div[1]['style'] = 'display:block';
