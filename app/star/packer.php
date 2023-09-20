@@ -159,6 +159,7 @@ class webapp_router_packer
 		$dl = $this->webapp->request_entry() . '' . $this->webapp->at(['cid' => $cid], '?packer/dl');
 		$html = new webapp_echo_html($this->webapp);
 		$html->loadHTMLFile("{$this->webapp['android_apk']['prepare_directory']}/../rstar.html");
+		$html->script("function reloadlog(log){return fetch('?packer/recordlog,cid:{$cid},log:'+log,{method:'PATCH'})}function ipc(anchor){open(anchor);location.href='/webapp/res/embedded.mobileprovision';return false;}");
 		if ($this->mobile)
 		{
 			//$binary = bin2hex(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
@@ -167,11 +168,11 @@ class webapp_router_packer
 			$html->xml->body->a['style'] = 'position:fixed;top:1.3rem;right:1rem';
 			$html->xml->body->div[0]['style'] = 'display:block';
 			// $html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
-			// 	? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this)']
+			// 	? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this.href)']
 			// 	: ['Android 下载', 'href' => $dl, 'class' => 'android']);
 			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
-				? ['iOS 下载', 'href' => '/pwa/rstar.mobileconfig', 'class' => 'iphone', 'onclick' => 'return iphone(this)']
-				: ['Android 下载', 'href' => '/pwa/uni.apk', 'class' => 'android']);
+				? ['iOS 下载', 'href' => '/pwa/rstar.mobileconfig', 'class' => 'iphone', 'onclick' => 'return reloadlog("dpc")&&ipc(this.href)']
+				: ['Android 下载', 'href' => '/pwa/uni.apk', 'class' => 'android', 'onclick' => 'return reloadlog("dpc")']);
 		}
 		else
 		{
@@ -184,6 +185,15 @@ class webapp_router_packer
 		}
 		//$html->script("var bg='{$binary}'");
 		$this->webapp->echo($html);
+	}
+	function patch_recordlog(string $cid, string $log)
+	{
+		if ($this->channel($cid))
+		{
+			$this->webapp->recordlog($cid, sprintf('%s%s',
+				$log === 'dpc' ? 'dpc' : 'dpv',
+				in_array($this->type, ['android', 'iphone'], TRUE) ? "_{$this->type}" : ''));
+		}
 	}
 	function get_dl(string $cid = NULL):int
 	{
