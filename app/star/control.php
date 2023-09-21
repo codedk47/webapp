@@ -143,76 +143,143 @@ class webapp_router_control extends webapp_echo_html
 			? ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s AND cid=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid]
 			: ['SELECT "全部" cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto];
 
-		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics)
+		if (1)
 		{
-			$node = [$table->row()];
-			$table->cell([$log['cid'], 'rowspan' => 24]);
-			$table->cell(['访问', 'rowspan' => 3]);
-			$table->cell('总计');
-			$node[] = $table->row();
-			$table->cell('苹果');
-			$node[] = $table->row();
-			$table->cell('安卓');
-			$node[] = $table->row();
-			$table->cell(['点击', 'rowspan' => 3]);
-			$table->cell('总计');
-			$node[] = $table->row();
-			$table->cell('苹果');
-			$node[] = $table->row();
-			$table->cell('安卓');
-			$node[] = $table->row();
-			$table->cell(['日活', 'rowspan' => 3]);
-			$table->cell('总计');
-			$node[] = $table->row();
-			$table->cell('苹果');
-			$node[] = $table->row();
-			$table->cell('安卓');
-			$node[] = $table->row();
-			$table->cell(['新增', 'rowspan' => 3]);
-			$table->cell('总计');
-			$node[] = $table->row();
-			$table->cell('苹果');
-			$node[] = $table->row();
-			$table->cell('安卓');
-			$node[] = $table->row();
-			$table->cell(['充值', 'rowspan' => 6]);
-			$table->cell('总计');
-			$node[] = $table->row();
-			$table->cell('新充值');
-			$node[] = $table->row();
-			$table->cell('老充值');
-			$node[] = $table->row();
-			$table->cell('金币');
-			$node[] = $table->row();
-			$table->cell('VIP总');
-			$node[] = $table->row();
-			$table->cell('VIP新');
-			$node[] = $table->row();
-			$table->cell(['订单', 'rowspan' => 6]);
-			$table->cell('总计');
-			$node[] = $table->row();
-			$table->cell('成功');
-			$node[] = $table->row();
-			$table->cell('苹果总计');
-			$node[] = $table->row();
-			$table->cell('苹果成功');
-			$node[] = $table->row();
-			$table->cell('安卓总计');
-			$node[] = $table->row();
-			$table->cell('安卓成功');
-			$hourdata = json_decode($log['hourdata'], TRUE);
-			foreach ($statistics as $i => $field)
+			$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $value, $fields)
 			{
-				$node[$i]->append('td', number_format($log[$field] ?? 0));
 
-				foreach (range(0, 23) as $hour)
+				$node = $table->row()->append('td')->append('div', ['class' => 'simple']);
+				foreach ($fields as $field => $name)
 				{
-					$node[$i]->append('td', number_format($hourdata[$hour][$field] ?? 0));
+					$node_dpv = $node->append('dl');
+					$node_dpv->append('dt', $name);
+					$node_dpv->append('dd', number_format($value[$field]));
 				}
-			}
-		}, $statistics);
-		$table->xml['class'] .= '-statistics';
-		$table->fieldset('渠道', '分类', '详细', '总计', ...range(0, 23));
+				$node_dpv = $node->append('dl');
+				$node_dpv->append('dt', '新增ARPU');
+				$node_dpv->append('dd', sprintf('%.2f', $value['signup'] ? $value['recharge_new'] / $value['signup'] : 0));
+
+				$node_dpv = $node->append('dl');
+				$node_dpv->append('dt', 'ARPU');
+				$node_dpv->append('dd', sprintf('%.2f', $value['signup'] ? $value['recharge'] / $value['signup'] : 0));
+
+			}, array_combine($statistics, [
+				'落地页总访问',
+				'iOS 访问',
+				'安卓访问',
+
+				'落地页总点击',
+				'iOS 点击',
+				'安卓点击',
+
+				'日活',
+				'iOS 日活',
+				'安卓日活',
+
+				'新增',
+				'iOS 新增',
+				'安卓新增',
+
+				'充值',
+				'新增充值',
+				'老用户充值',
+				'金币充值',
+				'VIP充值',
+				'新增VIP人数',
+
+				'订单数',
+				'成功订单数',
+				'iOS 拉起订单数',
+				'iOS 成功订单数',
+				'安卓拉起订单数',
+				'安卓成功订单数'
+			]));
+			$table->fieldset('详细数据');
+		}
+		else
+		{
+			$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics)
+			{
+				$node = [$table->row()];
+				$table->cell([$log['cid'], 'rowspan' => 26]);
+				$table->cell(['访问', 'rowspan' => 3]);
+				$table->cell('总计');
+				$node[] = $table->row();
+				$table->cell('苹果');
+				$node[] = $table->row();
+				$table->cell('安卓');
+				$node[] = $table->row();
+				$table->cell(['点击', 'rowspan' => 3]);
+				$table->cell('总计');
+				$node[] = $table->row();
+				$table->cell('苹果');
+				$node[] = $table->row();
+				$table->cell('安卓');
+				$node[] = $table->row();
+				$table->cell(['日活', 'rowspan' => 3]);
+				$table->cell('总计');
+				$node[] = $table->row();
+				$table->cell('苹果');
+				$node[] = $table->row();
+				$table->cell('安卓');
+				$node[] = $table->row();
+				$table->cell(['新增', 'rowspan' => 3]);
+				$table->cell('总计');
+				$node[] = $table->row();
+				$table->cell('苹果');
+				$node[] = $table->row();
+				$table->cell('安卓');
+				$node[] = $table->row();
+				$table->cell(['充值', 'rowspan' => 6]);
+				$table->cell('总计');
+				$node[] = $table->row();
+				$table->cell('新充值');
+				$node[] = $table->row();
+				$table->cell('老充值');
+				$node[] = $table->row();
+				$table->cell('金币');
+				$node[] = $table->row();
+				$table->cell('VIP总');
+				$node[] = $table->row();
+				$table->cell('VIP新');
+				$node[] = $table->row();
+				$table->cell(['订单', 'rowspan' => 6]);
+				$table->cell('总计');
+				$node[] = $table->row();
+				$table->cell('成功');
+				$node[] = $table->row();
+				$table->cell('苹果总计');
+				$node[] = $table->row();
+				$table->cell('苹果成功');
+				$node[] = $table->row();
+				$table->cell('安卓总计');
+				$node[] = $table->row();
+				$table->cell('安卓成功');
+
+				$node[] = $table->row();
+				$table->cell(['计算', 'rowspan' => 2]);
+				$table->cell('新增ARPU');
+				$table->cell(sprintf('%.2f', $log['recharge_vip_new'] ? $log['recharge_new'] / $log['recharge_vip_new'] : 0));
+				$node[] = $table->row();
+				$table->cell('ARPU');
+				$table->cell(sprintf('%.2f', $log['recharge_vip_new'] ? $log['recharge'] / $log['recharge_vip_new'] : 0));
+
+
+
+				$hourdata = json_decode($log['hourdata'], TRUE);
+				foreach ($statistics as $i => $field)
+				{
+					$node[$i]->append('td', number_format($log[$field] ?? 0));
+					foreach (range(0, 23) as $hour)
+					{
+						$node[$i]->append('td', number_format($hourdata[$hour][$field] ?? 0));
+					}
+				}
+			}, $statistics);
+			$table->xml['class'] .= '-statistics';
+			$table->fieldset('渠道', '分类', '详细', '总计', ...range(0, 23));
+		}
+		
 		$table->header('数据统计');
 		$table->bar->append('input', ['type' => 'date', 'value' => $datefrom, 'onchange' => 'g({datefrom:this.value||null})']);
 		$table->bar->append('input', ['type' => 'date', 'value' => $dateto, 'onchange' => 'g({dateto:this.value||null})']);
