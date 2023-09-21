@@ -966,6 +966,7 @@ class webapp_router_admin extends webapp_echo_html
 
 		$cond[0] .= match ($sort = $this->webapp->query['sort'] ?? '')
 		{
+			'duration' => ' ORDER BY duration ASC,hash ASC',
 			'favorite' => $this->webapp->mysql->format(' ORDER BY CAST(data->>\'$."?i".favorite\' AS UNSIGNED) DESC', $this->webapp->site),
 			'view' => $this->webapp->mysql->format(' ORDER BY CAST(data->>\'$."?i".view\' AS UNSIGNED) DESC', $this->webapp->site),
 			'like' => $this->webapp->mysql->format(' ORDER BY CAST(data->>\'$."?i".like\' AS UNSIGNED) DESC', $this->webapp->site),
@@ -1026,6 +1027,7 @@ class webapp_router_admin extends webapp_echo_html
 		])->setattr(['onchange' => 'g({require:this.value||null})'])->selected($require);
 		$table->bar->select([
 			'' => '最新上传',
+			'duration' => '时长升序',
 			'favorite' => '最多收藏',
 			'view' => '最多观看',
 			'like' => '最多点赞'

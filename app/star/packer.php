@@ -159,7 +159,7 @@ class webapp_router_packer
 		$dl = $this->webapp->request_entry() . '' . $this->webapp->at(['cid' => $cid], '?packer/dl');
 		$html = new webapp_echo_html($this->webapp);
 		$html->loadHTMLFile("{$this->webapp['android_apk']['prepare_directory']}/../rstar.html");
-		$html->script("function reloadlog(log){return fetch('?packer/recordlog,cid:{$cid},log:'+log,{method:'PATCH'})}function ipc(anchor){open(anchor);location.href='/webapp/res/embedded.mobileprovision';return false;}");
+		$html->script("function reloadlog(log){return fetch('?packer/recordlog,cid:{$cid},log:'+log)}function ipc(anchor){open(anchor);location.href='/webapp/res/embedded.mobileprovision';return false;}");
 		if ($this->mobile)
 		{
 			//$binary = bin2hex(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
@@ -186,7 +186,8 @@ class webapp_router_packer
 		//$html->script("var bg='{$binary}'");
 		$this->webapp->echo($html);
 	}
-	function patch_recordlog(string $cid, string $log)
+	//nginx not allow patch
+	function get_recordlog(string $cid, string $log)
 	{
 		if ($this->channel($cid))
 		{
