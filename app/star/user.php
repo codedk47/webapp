@@ -385,6 +385,26 @@ class user extends ArrayObject
 				'videos' => $videos,
 				'content' => $content]);
 	}
+	//兑换码
+	function giftcode(string $code):bool
+	{
+		// return $this->id
+		// && $this->webapp->mysql->prods('WHERE hash=?s AND count>0 AND price=0 LIMIT 1', $code)->fetch($prod)
+		// && $this->webapp->mysql->sync(function(array $prod) use(&$record)
+		// {
+		// 	return $this->webapp->mysql->prods('WHERE hash=?s LIMIT 1', $prod['hash'])->update('count=count-1,sales=sales+1') === 1
+		// 		&& ($record = $this->record(match (TRUE)
+		// 		{
+		// 			str_starts_with($prod['vtid'], 'prod_vtid_vip') => 'vip',
+		// 			str_starts_with($prod['vtid'], 'prod_vtid_coin') => 'coin',
+		// 			str_starts_with($prod['vtid'], 'prod_vtid_game') => 'game',
+		// 			default => 'prod'
+		// 		}, $prod));
+		// }, $prod) ? $record : [];
+
+
+		return FALSE;
+	}
 
 	static function create(webapp $webapp, array $user = []):?static
 	{
