@@ -118,6 +118,16 @@ class webapp_router_packer
 			|| webapp::lib('apkpacker/apkpacker.php')("{$android_apk['prepare_directory']}/{$currentapk}", $cid, $packcid))) {
 			$this->webapp->recordlog($cid, 'dpc_android');
 			$currentapk ="{$currentfix}/{$cid}.{$android_apk['packer_suffix']}";
+
+
+			// $redis = new Redis();
+			// $redis->pconnect(
+			// 	$this->webapp['redis_config'][0]['host'],
+			// 	$this->webapp['redis_config'][0]['port'],
+			// 	2
+			// );
+			// $redis->select($this->webapp['redis_config'][0]['db_index']);
+			// $redis->set('channel:random:' . self::clientid($this->webapp), $cid, 300);
 		}
 		$this->webapp->response_location("{$android_apk['download_path']}/{$currentapk}");
 		return 302;
@@ -172,7 +182,7 @@ class webapp_router_packer
 			// 	: ['Android 下载', 'href' => $dl, 'class' => 'android']);
 			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
 				? ['iOS 下载', 'href' => '/pwa/rstar.mobileconfig', 'class' => 'iphone', 'onclick' => 'return iphone(this.href)']
-				: ['Android 下载', 'href' => '/pwa/u157.apk', 'class' => 'android', 'onclick' => 'return reloadlog("dpc")']);
+				: ['Android 下载', 'href' => '/pwa/u939.apk', 'class' => 'android', 'onclick' => 'return reloadlog("dpc")']);
 		}
 		else
 		{
@@ -213,5 +223,10 @@ class webapp_router_packer
 	static function dl(webapp $webapp, ?string $cid):int
 	{
 		return (new static($webapp))->get_dl($cid);
+	}
+	static function clientid(webapp $webapp):string
+	{
+		return $webapp->hash($webapp->request_ip()
+			. (preg_match('/(?:build|mobile)\/(\w+)/i', $webapp->request_device, $model) ? strtoupper($model[1]) : ''));
 	}
 }
