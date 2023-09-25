@@ -82,6 +82,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	static function time33(string $data):int
 	{
+		// static $bit = PHP_INT_MAX >> 6, $add = PHP_INT_MAX >> 2;
+		// for ($hash = 5381, $i = strlen($data); $i;)
+		// {
+		// 	$hash = (($hash & $bit) << 5) + ($hash & $add) + ord($data[--$i]);
+		// }
+		// return $hash;
 		for ($hash = 5381, $i = strlen($data); $i;)
 		{
 			$hash = ($hash & 0xfffffffffffffff) + (($hash & 0x1ffffffffffffff) << 5) + ord($data[--$i]);

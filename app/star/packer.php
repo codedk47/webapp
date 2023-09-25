@@ -172,7 +172,7 @@ class webapp_router_packer
 			// 	: ['Android 下载', 'href' => $dl, 'class' => 'android']);
 			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
 				? ['iOS 下载', 'href' => '/pwa/rstar.mobileconfig', 'class' => 'iphone', 'onclick' => 'return iphone(this.href)']
-				: ['Android 下载', 'href' => '/pwa/u343.apk', 'class' => 'android', 'onclick' => 'return reloadlog("dpc")']);
+				: ['Android 下载', 'href' => '/pwa/u157.apk', 'class' => 'android', 'onclick' => 'return reloadlog("dpc")']);
 		}
 		else
 		{
