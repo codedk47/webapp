@@ -214,7 +214,7 @@ class webapp_router_packer
 			case 'iphone': return $this->iphone_webcilp($cid);
 			default: $this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, 'dpc');
 		}
-		$redirect = $this->webapp->request_entry() . '' . $this->webapp->at([]);
+		$redirect = $this->webapp->request_entry() . '' . $this->webapp->at([], '?packer/home');
 		$svg = new webapp_echo_svg($this->webapp);
 		$svg->xml->qrcode(webapp::qrcode($redirect, $this->webapp['qrcode_ecc']), $this->webapp['qrcode_size']);
 		$this->webapp->echo($svg);
