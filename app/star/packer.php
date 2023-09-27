@@ -201,9 +201,13 @@ class webapp_router_packer
 	{
 		if ($this->channel($cid))
 		{
-			$this->webapp->recordlog($cid, sprintf('%s%s',
-				$log === 'dpc' ? 'dpc' : 'dpv',
-				in_array($this->type, ['android', 'iphone'], TRUE) ? "_{$this->type}" : ''));
+			$this->webapp->recordlog($cid, sprintf('%s%s', $log === 'dpc' ? 'dpc' : 'dpv', match($this->type)
+			{
+				'android' => '_android',
+				'iphone' => '_ios',
+				default => ''
+
+			}));
 		}
 	}
 	function get_dl(string $cid = NULL):int
