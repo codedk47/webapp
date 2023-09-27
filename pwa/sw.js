@@ -66,7 +66,7 @@ if (self.window)
 	{
 		self.addEventListener('DOMContentLoaded', () =>
 		{
-			navigator.serviceWorker.register(script.src).then(registration =>
+			navigator.serviceWorker.register(script.src, {scope: '/asd/'}).then(registration =>
 			{
 				console.log('ServiceWorker registration successful with scope: ', registration.scope);
 				//registration.active.postMessage("Hi service worker");
