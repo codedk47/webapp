@@ -521,7 +521,7 @@ class base extends webapp
 	function user_create(array $user):user
 	{
 		$user = user::create($this, $user, $created);
-		$user->id && $this->recordlog($user['cid'], match ($user['device'])
+		$created && $user->id && $this->recordlog($user['cid'], match ($user['device'])
 		{
 			'android' => 'signup_android',
 			'ios' => 'signup_ios',

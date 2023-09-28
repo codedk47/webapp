@@ -406,7 +406,7 @@ class user extends ArrayObject
 		return FALSE;
 	}
 
-	static function create(webapp $webapp, array $user = []):?static
+	static function create(webapp $webapp, array $user = [], ?bool &$created):?static
 	{
 		$userdata = [];
 		$created = FALSE;
