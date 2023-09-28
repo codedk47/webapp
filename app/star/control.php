@@ -1874,7 +1874,7 @@ class webapp_router_control extends webapp_echo_html
 		$form = new webapp_form($html ?? $this->webapp);
 
 		$form->fieldset('公告标题');
-		$form->field('notice_title', 'text', ['style' => 'width:30rem']);
+		$form->field('notice_title', 'text', ['style' => 'width:30rem', 'placeholder' => '标题为空关闭公告']);
 		$form->fieldset('公告内容');
 		$form->field('notice_content', 'textarea', ['rows' => 10, 'cols' => 50]);
 
