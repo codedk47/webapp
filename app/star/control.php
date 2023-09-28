@@ -1873,8 +1873,10 @@ class webapp_router_control extends webapp_echo_html
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
-		$form->fieldset('公告');
-		$form->field('notice', 'textarea', ['rows' => 10, 'cols' => 40]);
+		$form->fieldset('公告标题');
+		$form->field('notice_title', 'text', ['style' => 'width:30rem']);
+		$form->fieldset('公告内容');
+		$form->field('notice_content', 'textarea', ['rows' => 10, 'cols' => 50]);
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
