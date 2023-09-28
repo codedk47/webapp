@@ -4,7 +4,6 @@ async function loader(resource, options = {})
 	let type = response.headers.get('content-type') || 'application/octet-stream', blob;
 	if (options.mask || type.startsWith('@'))
 	{
-		return response;
 		const reader = response.body.getReader(), key = new Uint8Array(8), buffer = [];
 		for (let read, len = 0, offset = 0;;)
 		{
@@ -148,14 +147,9 @@ else
 			if (event.request.url.endsWith('asd.jpg'))
 			{
 
-				console.log('loader');
-				const r = await fetch('/pwa/logo.png');
-				caches.open('v1').then(cache =>{
-					cache.put(event.request, r.clone());
-				});
-				return r;
+				return loader('/pwa/bkdown', {mask: true});
 
-				// return loader('/pwa/logo.png', {mask: true}).then(function(response){
+				// return loader('/pwa/bkdown', {mask: true}).then(function(response){
 
 				// 	caches.open('v1').then(cache =>{
 				// 		console.log('cache')
