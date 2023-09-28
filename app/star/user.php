@@ -406,7 +406,7 @@ class user extends ArrayObject
 		return FALSE;
 	}
 
-	static function create(webapp $webapp, array $user = []):?static
+	static function create(webapp $webapp, array $user = [], bool &$created = FALSE):?static
 	{
 		$userdata = [];
 		do
@@ -462,6 +462,7 @@ class user extends ArrayObject
 				if ($webapp->mysql->users->insert($user))
 				{
 					$userdata = $user;
+					$created = TRUE;
 					break;
 				}
 			} while ($webapp->mysql->errno === 1062 && ++$i < 3);

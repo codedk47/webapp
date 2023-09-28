@@ -37,6 +37,7 @@ class webapp_router_control extends webapp_echo_html
 				]],
 				['评论', '?control/comments'],
 				['渠道', '?control/channels'],
+				['配置', '?control/configs'],
 				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 			]);
 		}
@@ -1867,6 +1868,35 @@ class webapp_router_control extends webapp_echo_html
 			return $this->goto('/channels');
 		}
 		$this->dialog('渠道创建失败！');
+	}
+	function form_configs(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+
+		$form->fieldset('公告');
+		$form->field('notice', 'textarea', ['rows' => 10, 'cols' => 40]);
+
+		$form->fieldset();
+		$form->button('提交', 'submit');
+		$form->xml['data-bind'] = 'submit';
+		return $form;
+	}
+	//配置
+	function get_configs()
+	{
+		$this->form_configs($this->main)->echo($this->webapp->fetch_configs());
+	}
+	function post_configs()
+	{
+		if ($this->form_configs()->fetch($configs))
+		{
+			foreach ($configs as $key => $value)
+			{
+				$this->webapp->mysql->configs('WHERE `key`=?s LIMIT 1', $key)->update('`value`=?s', $value)
+					|| $this->webapp->mysql->configs->insert(['key' => $key, 'value' => $value]);
+			}
+		}
+		$this->goto('/configs');
 	}
 
 	//记录

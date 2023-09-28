@@ -41,6 +41,7 @@ async function loader(resource, options = {})
 			}
 			buffer[buffer.length] = read.value;
 		}
+		console.log('act mask');
 		type = options.type || type.startsWith('@') ? type.substring(1) : type;
 		blob = new Blob(buffer, {type});
 	}
@@ -108,15 +109,27 @@ else
 		return event.respondWith(caches.match(event.request).then(response =>
 		{
 			console.log(event.request.url,response)
+
+
+			
+			
 			
 			if (event.request.url.endsWith('asd.jpg'))
 			{
+
 				console.log('loader');
-				return loader('/pwa/bkdown', {mask: true});
+				return loader('/pwa/bkdown', {mask: true}).then(function(response){
+
+					caches.open('v1').then(function(cache) {
+						cache.put(event.request.clone(), response.clone());
+					});
+					
+					return response;
+				});
 			}
 
 
-		
+
 			return fetch(event.request);
 				
 		}));

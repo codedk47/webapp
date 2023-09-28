@@ -520,8 +520,8 @@ class base extends webapp
 	//创建用户
 	function user_create(array $user):user
 	{
-		$user = user::create($this, $user);
-		$user->id && $this->recordlog($user['cid'], match ($user['device'])
+		$user = user::create($this, $user, $created);
+		$created && $user->id && $this->recordlog($user['cid'], match ($user['device'])
 		{
 			'android' => 'signup_android',
 			'ios' => 'signup_ios',
@@ -666,10 +666,10 @@ class base extends webapp
 				: TRUE) && $this->mysql->records('WHERE hash=?s LIMIT 1', $hash)
 					->update('result=?s', $result ? 'success' : 'failure') === 1) ? $record: [];
 	}
-	//获取源
-	function fetch_origins():array
+	//获配置
+	function fetch_configs():array
 	{
-		return [];
+		return $this->mysql->configs->column('value', 'key');
 	}
 	//获取所有UP主
 	function fetch_uploaders():iterable
