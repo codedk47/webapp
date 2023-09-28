@@ -406,9 +406,10 @@ class user extends ArrayObject
 		return FALSE;
 	}
 
-	static function create(webapp $webapp, array $user = [], bool &$created = FALSE):?static
+	static function create(webapp $webapp, array $user = [], bool &$created):?static
 	{
 		$userdata = [];
+		$created = FALSE;
 		do
 		{
 			$did = isset($user['did']) ? substr(md5($user['did']), -16) : $webapp->did;
