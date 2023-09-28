@@ -1098,6 +1098,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return 404;
 	}
+	function get_service_workers()
+	{
+		$this->response_content_type('text/javascript');
+		$this->response_header('Service-Worker-Allowed', '?');
+		$this->response_sendfile(__DIR__ . '/res/js/sw.js');
+	}
 }
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Countable, Stringable
 {

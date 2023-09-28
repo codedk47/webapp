@@ -48,6 +48,7 @@ async function loader(resource, options = {})
 	{
 		blob = await response.blob();
 	}
+	return new Response(blob);
 
 	switch (options.type || type.split(';')[0])
 	{
@@ -66,7 +67,7 @@ if (self.window)
 	{
 		self.addEventListener('DOMContentLoaded', () =>
 		{
-			navigator.serviceWorker.register(script.src, {scope: '/asd/'}).then(registration =>
+			navigator.serviceWorker.register(script.src, {scope: '?'}).then(registration =>
 			{
 				console.log('ServiceWorker registration successful with scope: ', registration.scope);
 				//registration.active.postMessage("Hi service worker");
@@ -78,24 +79,36 @@ if (self.window)
 				// 	});
 		});
 	}
+	function aa(q)
+	{
+		fetch('?aaaa').then(d => {
+
+			console.log(d)
+		});
+	}
 }
 else
 {
+	console.log('event', self);
 	self.addEventListener('fetch', event =>
 	{
-		console.log('event', event);
+		//event.request.url
+
+		console.log(222,event.request.url );
+
+		//console.log('event', event);
 		return event.respondWith(caches.match(event.request).then(response =>
 		{
-			console.log(event.request.url.endsWith('asd.jpg'));
+			
 			if (event.request.url.endsWith('asd.jpg'))
 			{
-				
-				return fetch('/pwa/logo512x512.png');
+				console.log('loader');
+				return loader('/pwa/bkdown', {mask: true});
 			}
 
 
 		
-			return response || loader(event.request);
+			return fetch(event.request);
 				
 		}));
 	});
