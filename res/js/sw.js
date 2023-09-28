@@ -63,50 +63,51 @@ async function loader(resource, options = {})
 if (self.window)
 {
 	const script = document.currentScript;
-	if ('serviceWorker' in navigator)
+	self.addEventListener('DOMContentLoaded', () =>
 	{
-		self.addEventListener('DOMContentLoaded', () =>
-		{
+		//try {
 			navigator.serviceWorker.register(script.src, {scope: '?'}).then(registration =>
-			{
-				console.log('ServiceWorker registration successful with scope: ', registration.scope);
-				registration.active.postMessage({
-					a: 123,
-					b: 456
+				{
+					console.log('ServiceWorker registration successful with scope: ', registration.scope);
+					registration.active.postMessage({
+						a: 123,
+						b: 456
+					});
 				});
-			});
+		// } catch (error) {
+		// 	alert(error);
+		// }
 
-				// navigator.serviceWorker.ready.then(registration =>
-				// 	{
-				// 		registration.active.postMessage("Hi service worker");
-				// 	});
-		});
-	}
-	function aa(q)
+
+			// navigator.serviceWorker.ready.then(registration =>
+			// 	{
+			// 		registration.active.postMessage("Hi service worker");
+			// 	});
+	});
+	function aa(url)
 	{
-		fetch('?aaaa').then(d => {
-
-			console.log(d)
-		});
+		fetch(url);
 	}
 }
 else
 {
+	let config;
 	self.addEventListener('message', event =>
 	{
-		console.log(event);
+		console.log(event.data);
 
 	});
 	console.log('event', self);
 	self.addEventListener('fetch', event =>
 	{
-		//event.request.url
+		const url = new URL(event.request.url);
 
-		console.log(222,event.request.url );
+		console.log(self.location, url );
 
-		//console.log('event', event);
+		
 		return event.respondWith(caches.match(event.request).then(response =>
 		{
+			console.log(event.request.url,response)
 			
 			if (event.request.url.endsWith('asd.jpg'))
 			{
@@ -126,6 +127,19 @@ else
 	// 	console.log('sync', e)
 	// });
 
-
+	// var cachedResponse = caches
+	// .match(event.request)
+	// .catch(function () {
+	//   return fetch(event.request);
+	// })
+	// .then(function (response) {
+	//   caches.open("v1").then(function (cache) {
+	// 	cache.put(event.request, response);
+	//   });
+	//   return response.clone();
+	// })
+	// .catch(function () {
+	//   return caches.match("/sw-test/gallery/myLittleVader.jpg");
+	// });
 
 }

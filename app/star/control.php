@@ -690,9 +690,10 @@ class webapp_router_control extends webapp_echo_html
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
-		$form->fieldset('会员到期 / 金币余额 / 绑定UP主后台上传ID（0非UP主）');
+		$form->fieldset('会员到期 / 金币余额 / 观影券 / 绑定UP主后台上传ID（0非UP主）');
 		$form->field('expire', 'date', [], fn($v, $i)=>$i?strtotime($v):date('Y-m-d', $v));
 		$form->field('coin', 'number', ['min' => 0]);
+		$form->field('ticket', 'number', ['min' => 0]);
 		$form->field('uid', 'number', ['min' => 0, 'max' => 65535]);
 
 		// $form->fieldset();
