@@ -1906,7 +1906,7 @@ class webapp_router_control extends webapp_echo_html
 		if ($dateto = $this->webapp->query['dateto'] ?? '')
 		{
 			$conds[0][] = 'mtime<=?s';
-			$conds[] = strtotime($dateto);
+			$conds[] = strtotime($dateto) + 68399;
 		}
 
 		$conds[0] = sprintf('%sORDER BY mtime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');

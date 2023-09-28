@@ -70,7 +70,10 @@ if (self.window)
 			navigator.serviceWorker.register(script.src, {scope: '?'}).then(registration =>
 			{
 				console.log('ServiceWorker registration successful with scope: ', registration.scope);
-				//registration.active.postMessage("Hi service worker");
+				registration.active.postMessage({
+					a: 123,
+					b: 456
+				});
 			});
 
 				// navigator.serviceWorker.ready.then(registration =>
@@ -89,6 +92,11 @@ if (self.window)
 }
 else
 {
+	self.addEventListener('message', event =>
+	{
+		console.log(event);
+
+	});
 	console.log('event', self);
 	self.addEventListener('fetch', event =>
 	{
@@ -112,11 +120,7 @@ else
 				
 		}));
 	});
-	// self.addEventListener('message', event =>
-	// {
-	// 	console.log(event);
 
-	// });
 	// self.addEventListener("notificationclick", event => console.log(event));
 	// self.addEventListener('sync', function (e) {
 	// 	console.log('sync', e)
