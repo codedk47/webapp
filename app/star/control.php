@@ -1470,6 +1470,11 @@ class webapp_router_control extends webapp_echo_html
 	function get_comments(string $search = NULL, string $phash = NULL, int $page = 1)
 	{
 		$conds = [[]];
+		if ($search && trim($search, webapp::key) === '')
+		{
+			$conds[0][] = 'hash=?s';
+			$conds[] = $search;
+		}
 		if ($phash)
 		{
 			$conds[0][] = 'phash=?s';
@@ -1479,7 +1484,7 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$conds[0][] = 'phash IS NOT NULL';
 		}
-
+		
 		if ($type = $this->webapp->query['type'] ?? '')
 		{
 			$conds[0][] = 'type=?s';
@@ -1500,12 +1505,19 @@ class webapp_router_control extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->comments(...$conds)->paging($page, 10), function($table, $value)
 		{
 			$table->row();
+			$table->cell()->append('a', ['删除',
+				'href' => "?control/comment-simple,hash:{$value['hash']}",
+				'style' => 'color:red',
+				'data-dialog' => '删除后无法恢复',
+				'data-method' => 'delete',
+				'data-bind' => 'click']);
 			$table->cell()->append('a', [$value['hash'], 'href' => "?control/comment,hash:{$value['hash']}"]);
 			$table->cell()->append('a', [$value['userid'], 'href' => "?control/comments,userid:{$value['userid']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell(number_format($value['count']));
 			$table->cell(number_format($value['view']));
-			$table->cell(base::comment_type[$value['type']]);
+			$table->cell()->append('a', [base::comment_type[$value['type']],
+				'href' => "?control/comments,search:{$value['phash']}", 'target' => '_blank']);
 			$table->cell([$value['sort'],
 				'data-src' => "?control/comment,hash:{$value['hash']}",
 				'data-method' => 'patch',
@@ -1535,7 +1547,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 
 			$table->row();
-			$contents = $table->cell(['colspan' => 8])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap:break-word']);
+			$contents = $table->cell(['colspan' => 9])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap:break-word']);
 			if ($value['type'] !== 'video' && $value['title'])
 			{
 				$contents->text($value['title']);
@@ -1549,7 +1561,7 @@ class webapp_router_control extends webapp_echo_html
 			if ($value['images'])
 			{
 				$table->row();
-				$image = $table->cell(['colspan' => 8])->append('div', ['style' => 'display:flex;gap:.4rem;width:53rem;flex-wrap: wrap;']);
+				$image = $table->cell(['colspan' => 9])->append('div', ['style' => 'display:flex;gap:.4rem;width:53rem;flex-wrap: wrap;']);
 				foreach ($this->webapp->mysql->images('WHERE hash IN(?S)', str_split($value['images'], 12)) as $img)
 				{
 					$image->append('div', $img['sync'] === 'finished' ? [
@@ -1560,7 +1572,7 @@ class webapp_router_control extends webapp_echo_html
 				}
 			}
 		});
-		$table->fieldset('HASH', '用户ID', '发布时间', '数量', '观看', '类型', '排序', '审核');
+		$table->fieldset('删除', 'HASH', '用户ID', '发布时间', '数量', '观看', '类型', '排序', '审核');
 		$table->header('评论 %s 项', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment_class"']);
@@ -1797,6 +1809,16 @@ class webapp_router_control extends webapp_echo_html
 			return;
 		}
 		$this->dialog('需要超级管理员权限或者删除失败！');
+	}
+	function delete_comment_simple(string $hash)
+	{
+		if ($this->webapp->mysql->comments('WHERE hash=?s AND type IN("post","reply") LIMIT 1', $hash)->delete() === 1)
+		{
+			$this->webapp->mysql->comments('WHERE phash=?s', $hash)->delete();
+			$this->goto();
+			return;
+		}
+		$this->dialog('只能删除帖子或者回复！');
 	}
 	function patch_comment(string $hash, string $field = NULL, string $value = NULL)
 	{
