@@ -68,6 +68,40 @@ async function loader(resource, options = {})
 if (self.window)
 {
 	const script = document.currentScript;
+
+	
+
+	// const prefetch = new Promise((resolve, reject) =>
+	// {
+	// 	const resources = document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]');
+	// 	if (resources.length)
+	// 	{
+	// 		const controller = new AbortController;
+	// 		Promise.any(Array.from(resources).map(link =>
+	// 			fetch(`${link.href}`, {cache: 'no-cache', signal: controller.signal}))).then( response => {
+
+	// 				console.log( response );
+
+	// 				//resolve(response.url.slice(0, response.url.indexOf('/', 8)), await response.blob(), controller.abort())
+	// 			} , reject);
+	// 	}
+	// 	else
+	// 	{
+
+	// 		resolve(location.origin);
+	// 	}
+	// });
+
+	async function aasd(path)
+	{
+		return prefetch.then(origin => fetch());
+	}
+
+
+
+	//console.log( Array.from(document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]')).map(link => link.href) );
+
+
 	self.addEventListener('DOMContentLoaded', () =>
 	{
 		//try {
@@ -96,12 +130,14 @@ if (self.window)
 }
 else
 {
-	// let config;
-	// self.addEventListener('message', event =>
-	// {
-	// 	console.log(event.data);
-
-	// });
+	const config = {};
+	self.addEventListener('message', event =>
+	{
+		console.log('event.data');
+		Object.assign(config, event.data);
+		
+		console.log(config);
+	});
 	// console.log('event', self);
 
 	// const putInCache = async (request, response) => {
@@ -122,15 +158,21 @@ else
 
 	console.log(self.location);
 
+	// self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(async response =>{
+
+
+	// 	return response || (
+	// 		/\?mask\d{10}$/.test(event.request.url) || 
+	// 	)
+	// })));
+
 	self.addEventListener('fetch', event =>
 	{
-		const url = new URL(event.request.url);
 
-		
-
-		
 		return event.respondWith(caches.match(event.request).then(async response =>
 		{
+			
+
 			//console.log(event.request.url, response)
 			if (response)
 			{
@@ -138,17 +180,36 @@ else
 				return response;
 			}
 			console.log('cache miss');
+
+			//'http://127.0.0.1/asda/asdaweawe?mask456548796'
 			//return event.respondWith(cacheFirst(event.request));
 			
 
 
 			
+			//1695742222
 			
+			console.log( '----', event.request.url.startsWith(self.location.origin) );
 			
-			if (event.request.url.endsWith('asd.jpg'))
-			{
 
-				return loader('/pwa/bkdown', {mask: true});
+			if (event.request.url.startsWith(self.location.origin))
+			{
+				const url = new URL(event.request.url);
+				console.log(url);
+
+
+				
+
+
+				
+	
+				//const req = new Request('/pwa/bkdown');
+
+				//console.log(req);
+
+				return /\?mask\d{10}$/.test(event.request.url)
+					? loader(event.request, {mask: true})
+					: loader(event.request);
 
 				// return loader('/pwa/bkdown', {mask: true}).then(function(response){
 
