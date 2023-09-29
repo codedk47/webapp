@@ -155,10 +155,7 @@ class webapp_router_packer
 	}
 	function get_home(string $cid = NULL)
 	{
-		if (is_string($cid))
-		{
-			$cid = trim($cid, "/ \t\n\r\0\x0B");
-		}
+		$cid = is_string($cid) ? trim($cid, "/ \t\n\r\0\x0B") : self::cid;
 		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, match ($this->type)
 		{
 			'android' => 'dpv_android',
