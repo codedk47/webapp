@@ -69,33 +69,6 @@ if (self.window)
 {
 	const script = document.currentScript;
 
-	
-
-	// const prefetch = new Promise((resolve, reject) =>
-	// {
-	// 	const resources = document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]');
-	// 	if (resources.length)
-	// 	{
-	// 		const controller = new AbortController;
-	// 		Promise.any(Array.from(resources).map(link =>
-	// 			fetch(`${link.href}`, {cache: 'no-cache', signal: controller.signal}))).then( response => {
-
-	// 				console.log( response );
-
-	// 				//resolve(response.url.slice(0, response.url.indexOf('/', 8)), await response.blob(), controller.abort())
-	// 			} , reject);
-	// 	}
-	// 	else
-	// 	{
-
-	// 		resolve(location.origin);
-	// 	}
-	// });
-
-	async function aasd(path)
-	{
-		return prefetch.then(origin => fetch());
-	}
 
 
 
@@ -107,11 +80,12 @@ if (self.window)
 		//try {
 			navigator.serviceWorker.register(script.src, {scope: '?'}).then(registration =>
 				{
+
+					
+
+
 					//console.log('ServiceWorker registration successful with scope: ', registration.scope);
-					// registration.active.postMessage({
-					// 	a: 123,
-					// 	b: 456
-					// });
+					registration.active.postMessage(Array.from(document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]')).map(link => link.href).join(','));
 				});
 		// } catch (error) {
 		// 	alert(error);
@@ -131,12 +105,36 @@ if (self.window)
 else
 {
 	const config = {};
+
+	let resource;
 	self.addEventListener('message', event =>
 	{
-		console.log('event.data');
-		Object.assign(config, event.data);
-		
-		console.log(config);
+		// if (typeof event.data !== 'string')
+		// {
+		// 	return Object.assign(config, event.data);
+		// }
+
+		resource = new Promise((resolve, reject) =>
+		{
+			const resources = event.data.split(',');
+			if (resources.length)
+			{
+				const controller = new AbortController;
+				Promise.any(Array.from(resources).map(link =>
+					fetch(`${link.href}`, {cache: 'no-cache', signal: controller.signal}))).then( response => {
+
+						console.log( response );
+
+						//resolve(response.url.slice(0, response.url.indexOf('/', 8)), await response.blob(), controller.abort())
+					} , reject);
+			}
+			else
+			{
+
+				resolve(location.origin);
+			}
+		});
+
 	});
 	// console.log('event', self);
 
@@ -202,7 +200,7 @@ else
 
 
 
-				console.log('--->', url, self.location.pathname === url.pathname);
+				//console.log('--->', url, self.location.pathname === url.pathname);
 
 				
 	
