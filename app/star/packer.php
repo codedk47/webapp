@@ -199,7 +199,7 @@ class webapp_router_packer
 	//nginx not allow patch
 	function get_recordlog(string $cid, string $log)
 	{
-		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, sprintf('%s%s', $log === 'dpc' ? 'dpc' : 'dpv', match($this->type)
+		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, sprintf('%s%s', $log === 'dpv' ? 'dpv' : 'dpc', match($this->type)
 		{
 			'android' => '_android',
 			'iphone' => '_ios',
