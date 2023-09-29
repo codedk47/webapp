@@ -123,7 +123,7 @@ class webapp_echo_html extends webapp_implementation
 {
 	use webapp_echo;
 	public readonly webapp_html $header, $aside, $main, $footer;
-	function __construct(public readonly webapp $webapp)
+	function __construct(public readonly webapp $webapp, public readonly bool $mask = FALSE)
 	{
 		//https://validator.w3.org/nu/#textarea
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
@@ -135,10 +135,14 @@ class webapp_echo_html extends webapp_implementation
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
 		if ($webapp['manifests'])
 		{
-			//$this->script(['src' => '/webapp/res/js/sw.js', 'defer' => NULL]);
 			$this->link(['rel' => 'manifest', 'href' => '?manifests']);
-
+			//$this->script(['src' => '?service-workers', 'defer' => NULL]);
 		}
+		else
+		{
+			//$mask && $this->script(['src' => '?service-workers', 'defer' => NULL]);
+		}
+		
 		//$head->append('script', ['type' => 'module', 'src' => '/webapp/res/js/webkit.js']);
 		//$this->script(['src' => '/webapp/res/js/webapp.js']);
 		//$this->script('import $ from "/webapp/res/js/webkit.js";');
@@ -165,10 +169,19 @@ class webapp_echo_html extends webapp_implementation
 	{
 		$this->xml->head->title = $title;
 	}
-	// function script_variables(array $variables, string $name = 'webapp')
-	// {
-	// 	$this->script("const {$name}=" . json_encode($variables, JSON_UNESCAPED_UNICODE));
-	// }
+	function link_resources(string|array $origin, string $rel = 'dns-prefetch'):void
+	{
+		foreach (is_string($origin) ? [$origin] : $origin as $href)
+		{
+			$this->link($rel === 'preconnect'
+				? ['rel' => $rel, 'href' => $href, 'crossorigin' => NULL]
+				: ['rel' => $rel, 'href' => $href]);
+		}
+	}
+	function script_variables(array $variables, string $name = 'WEBAPP'):void
+	{
+		$this->script("const {$name}=" . json_encode($variables, JSON_UNESCAPED_UNICODE));
+	}
 	// function addstyle(string $rule):DOMText
 	// {
 	// 	return ($this->style ??= $this->xml->head->append('style', ['media' => 'all']))->text($rule);

@@ -4,6 +4,7 @@ class webapp_router_control extends webapp_echo_html
 	//private readonly array $signinfo;
 	private array $json = [];
 	private readonly bool $admin;
+	private readonly string $uid;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -11,6 +12,7 @@ class webapp_router_control extends webapp_echo_html
 		if ($signinfo = $webapp->authorize($webapp->request_cookie($webapp['admin_cookie']), $this->sign_in_auth(...)))
 		{
 			$this->admin = $signinfo['is_admin'];
+			$this->uid = $signinfo['uid'];
 
 			$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
 			$this->script(['src' => '/webapp/res/js/loader.js']);
@@ -44,6 +46,7 @@ class webapp_router_control extends webapp_echo_html
 		else
 		{
 			$this->admin = FALSE;
+			$this->uid = NULL;
 			$webapp->method === 'post_sign_in' || $webapp->break($this->sign_in_page(...));
 		}
 	}
@@ -1926,7 +1929,7 @@ class webapp_router_control extends webapp_echo_html
 	//记录
 	function patch_record(string $hash, string $userid)
 	{
-		$this->webapp->record($hash, TRUE)
+		$this->webapp->record($hash, TRUE) && ($this->admin || $this->uid === 'linb')
 			? ($this->webapp->user_sync($userid) || $this->goto())
 			: $this->dialog('回调记录失败！');
 	}

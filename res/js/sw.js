@@ -120,12 +120,13 @@ else
 	// 	return responseFromNetwork;
 	//   };
 
+	console.log(self.location);
 
 	self.addEventListener('fetch', event =>
 	{
 		const url = new URL(event.request.url);
 
-		console.log(self.location, url );
+		
 
 		
 		return event.respondWith(caches.match(event.request).then(async response =>
