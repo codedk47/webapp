@@ -426,10 +426,7 @@ class base extends webapp
 	//记录日志
 	function recordlog(string $cid, string $field, int $value = 1, int $nowtime = NULL):bool
 	{
-		if (!preg_match('/\w{4}/', $cid))
-		{
-			$cid = '0000';
-		}
+		preg_match('/^\w{4}$/', $cid) || $cid = '0000';
 		$ciddate = $cid . date('Ymd', $nowtime);
 		$values = match (TRUE)
 		{
