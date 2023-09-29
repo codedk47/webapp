@@ -195,11 +195,14 @@ else
 			if (event.request.url.startsWith(self.location.origin))
 			{
 				const url = new URL(event.request.url);
-				console.log(url);
+				if (self.location.pathname === url.pathname)
+				{
+					return loader(event.request);
+				}
 
 
-				
 
+				console.log('--->', url, self.location.pathname === url.pathname);
 
 				
 	
