@@ -155,7 +155,10 @@ class webapp_router_packer
 	}
 	function get_home(string $cid = NULL)
 	{
-		$cid = is_string($cid) ? trim($cid, "/ \t\n\r\0\x0B") : self::cid;
+		if (is_string($cid))
+		{
+			$cid = trim($cid, "/ \t\n\r\0\x0B");
+		}
 		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, match ($this->type)
 		{
 			'android' => 'dpv_android',
@@ -196,16 +199,12 @@ class webapp_router_packer
 	//nginx not allow patch
 	function get_recordlog(string $cid, string $log)
 	{
-		if ($this->channel($cid))
+		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, sprintf('%s%s', $log === 'dpc' ? 'dpc' : 'dpv', match($this->type)
 		{
-			$this->webapp->recordlog($cid, sprintf('%s%s', $log === 'dpc' ? 'dpc' : 'dpv', match($this->type)
-			{
-				'android' => '_android',
-				'iphone' => '_ios',
-				default => ''
-
-			}));
-		}
+			'android' => '_android',
+			'iphone' => '_ios',
+			default => ''
+		}));
 	}
 	function get_dl(string $cid = NULL):int
 	{
