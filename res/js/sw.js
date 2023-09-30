@@ -76,7 +76,7 @@ if (self.window)
 
 
 
-	//console.log( Array.from(document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]')).map(link => link.href) );
+	console.log( Array.from(document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]')).map(link => link.href) );
 
 
 	self.addEventListener('DOMContentLoaded', () =>
@@ -86,20 +86,26 @@ if (self.window)
 				{
 
 					
-
+					//console.log(registration);
 
 					//console.log('ServiceWorker registration successful with scope: ', registration.scope);
-					registration.active.postMessage(Array.from(document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]')).map(link => link.href).join(','));
+					//registration.active.postMessage(Array.from(document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]')).map(link => link.href).join(','));
+
+
+
+				// navigator.serviceWorker.ready.then(registration =>
+				// {
+				// 	registration.active.postMessage("Hi service worker");
+				// });
+
+
 				});
 		// } catch (error) {
 		// 	alert(error);
 		// }
 
 
-			// navigator.serviceWorker.ready.then(registration =>
-			// 	{
-			// 		registration.active.postMessage("Hi service worker");
-			// 	});
+
 	});
 	function aa(url)
 	{
@@ -110,7 +116,10 @@ else
 {
 	const config = {};
 
-	let resource;
+	
+	let resources = location.origin;
+	console.log( location.origin );
+
 	self.addEventListener('message', event =>
 	{
 		// if (typeof event.data !== 'string')
@@ -118,7 +127,7 @@ else
 		// 	return Object.assign(config, event.data);
 		// }
 
-		resource = new Promise((resolve, reject) =>
+		resources = new Promise((resolve, reject) =>
 		{
 			const resources = event.data.split(',');
 			if (resources.length)

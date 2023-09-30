@@ -13,6 +13,7 @@ class webapp_router_ca extends webapp_echo_html
 			$this->script(['src' => '/webapp/app/star/base.js']);
 			$this->nav([
 				['数据', '?ca/home'],
+				//['添加渠道', '?ca/add'],
 				['注销登录', "javascript:location.reload(document.cookie='ca=0');", 'style' => 'color:maroon']
 			]);
 			return;
@@ -49,10 +50,41 @@ class webapp_router_ca extends webapp_echo_html
 			$dateto = date('Y-m-t');
 		}
 
+		$statistics = [
+			'dpv',
+			'dpv_ios',
+			'dpv_android',
+			'dpc',
+			'dpc_ios',
+			'dpc_android',
+			'signin',
+			'signin_ios',
+			'signin_android',
+			'signup',
+			'signup_ios',
+			'signup_android',
+			'recharge',
+			'recharge_new',
+			'recharge_old',
+			'recharge_coin',
+			'recharge_vip',
+			'recharge_vip_new',
+			'order',
+			'order_ok',
+			'order_ios',
+			'order_ios_ok',
+			'order_android',
+			'order_android_ok'
+		];
+		$all = array_combine($statistics, array_fill(0, count($statistics), 0));
 		$logs = $this->webapp->mysql->recordlogs('WHERE cid=?s AND date>=?s AND date<=?s ORDER BY date ASC',
 			$this->channel['hash'], $datefrom, $dateto);
-		$table = $this->main->table($logs, function($table, $log)
+		$table = $this->main->table($logs, function($table, $log, $statistics) use(&$all)
 		{
+			foreach ($statistics as $field)
+			{
+				$all[$field] += $log[$field];
+			}
 			$table->row();
 			$table->cell($log['date']);
 			$table->cell(number_format(ceil($log['dpv'])));
@@ -60,10 +92,15 @@ class webapp_router_ca extends webapp_echo_html
 			$table->cell(number_format(ceil($log['signup'])));
 			$table->cell(number_format(ceil($log['signin'])));
 
-		});
+		}, $statistics);
+		$table->row();
+		$table->cell('总计');
+		$table->cell(number_format(ceil($all['dpv'])));
+		$table->cell(number_format(ceil($all['dpc'])));
+		$table->cell(number_format(ceil($all['signup'])));
+		$table->cell(number_format(ceil($all['signin'])));
 		$table->xml['class'] .= '-statistics';
 		$table->fieldset('日期', '访问', '点击', '新增', '登录');
-
 
 		$table->header($this->channel['hash']);
 		$table->bar->append('input', ['type' => 'date', 'value' => $datefrom, 'onchange' => 'g({datefrom:this.value||null})']);
