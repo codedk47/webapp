@@ -734,6 +734,12 @@ class webapp_router_control extends webapp_echo_html
 				$conds[0][] = 'id=?s';
 				$conds[] = $search;
 			}
+			else
+			{
+				$search = urldecode($search);
+				$conds[0][] = 'name LIKE ?s';
+				$conds[] = '%' . $search . '%';
+			}
 		}
 
 		$conds[0] = sprintf('%sORDER BY mtime DESC,id ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
