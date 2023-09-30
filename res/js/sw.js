@@ -1,8 +1,15 @@
 async function loader(resource, options = {})
 {
 	const response = await fetch(resource, options);
-	let type = response.headers.get('content-type') || 'application/octet-stream', blob;
-	if (options.mask || type.startsWith('@'))
+
+
+
+
+
+
+
+
+	if (options.mask || response.headers.get('mask-key'))
 	{
 		const reader = response.body.getReader(), key = new Uint8Array(8), buffer = [];
 		for (let read, len = 0, offset = 0;;)
@@ -41,10 +48,7 @@ async function loader(resource, options = {})
 			}
 			buffer[buffer.length] = read.value;
 		}
-		console.log('act mask');
-		type = options.type || type.startsWith('@') ? type.substring(1) : type;
-		blob = new Blob(buffer, {type});
-		return new Response(blob, response);
+		return new Response(new Blob(buffer, {type: response.headers.get('content-type')}), response);
 	}
 	else
 	{
@@ -99,7 +103,7 @@ if (self.window)
 	});
 	function aa(url)
 	{
-		fetch(url);
+		fetch(url).then(r => r.text()).then(d => console.log(d));
 	}
 }
 else
@@ -195,9 +199,25 @@ else
 				const url = new URL(event.request.url);
 				if (self.location.pathname === url.pathname)
 				{
+					console.log(self.location.pathname , url.pathname)
+
+					if (url.search.startsWith('?/'))
+					{
+
+						
+						console.log(`https://res.rstar.cloud/${url.search.substring(2)}`)
+						return loader(`https://res.rstar.cloud/${url.search.substring(2)}`, {mask: /\?mask\d{10}$/i.test(event.request.url)});
+					}
+					else
+					{
+						return loader(event.request);
+					}
+				}
+				else
+				{
 					return loader(event.request);
 				}
-
+				//return new Promise(() => {});
 
 
 				//console.log('--->', url, self.location.pathname === url.pathname);

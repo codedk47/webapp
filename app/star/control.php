@@ -4,7 +4,7 @@ class webapp_router_control extends webapp_echo_html
 	//private readonly array $signinfo;
 	private array $json = [];
 	private readonly bool $admin;
-	private readonly string $uid;
+	private readonly ?string $uid;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
