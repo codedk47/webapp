@@ -737,7 +737,7 @@ class webapp_router_control extends webapp_echo_html
 			else
 			{
 				$search = urldecode($search);
-				$conds[0][] = 'name LIKE ?s';
+				$conds[0][] = 'nickname LIKE ?s';
 				$conds[] = '%' . $search . '%';
 			}
 		}
