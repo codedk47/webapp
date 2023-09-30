@@ -465,48 +465,64 @@ class base extends webapp
 		$incrdata = [];
 		$hourdata = [];
 		$hour = date('G', $nowtime);
-		foreach ($values as $field => $value)
+		foreach ($values as $fieldname => $value)
 		{
-			$incrdata[] = $this->mysql->format('?a=?a+?i', $field, $field, $value);
-			$hourdata[] = $this->mysql->format('\'$[?i].??\',hourdata->>\'$[?i].??\'+?i', $hour, $field, $hour, $field, $value);
+			$incrdata[] = $this->mysql->format('?a=?a+?i', $fieldname, $fieldname, $value);
+			$hourdata[] = $this->mysql->format('\'$[?i].??\',hourdata->>\'$[?i].??\'+?i', $hour, $fieldname, $hour, $fieldname, $value);
 		}
-		$values = sprintf('%s,hourdata=JSON_SET(hourdata,%s)', join(',', $incrdata), join(',', $hourdata));
-		while ($this->mysql->recordlog('WHERE ciddate=?s LIMIT 1', $ciddate)->update($values) !== 1)
+		$update = sprintf('%s,hourdata=JSON_SET(hourdata,%s)', join(',', $incrdata), join(',', $hourdata));
+		$insert = [
+			'dpv'				=> 0,
+			'dpv_ios'			=> 0,
+			'dpv_android'		=> 0,
+			'dpc'				=> 0,
+			'dpc_ios'			=> 0,
+			'dpc_android'		=> 0,
+			'signin'			=> 0,
+			'signin_ios'		=> 0,
+			'signin_android'	=> 0,
+			'signup'			=> 0,
+			'signup_ios'		=> 0,
+			'signup_android'	=> 0,
+			'recharge'			=> 0,
+			'recharge_new'		=> 0,
+			'recharge_old'		=> 0,
+			'recharge_coin'		=> 0,
+			'recharge_vip'		=> 0,
+			'recharge_vip_new'	=> 0,
+			'order'				=> 0,
+			'order_ok'			=> 0,
+			'order_ios'			=> 0,
+			'order_ios_ok'		=> 0,
+			'order_android'		=> 0,
+			'order_android_ok'	=> 0
+		];
+		while ($this->mysql->recordlog('WHERE ciddate=?s LIMIT 1', $ciddate)->update($update) !== 1)
 		{
-			$insert = [
-				'dpv'				=> 0,
-				'dpv_ios'			=> 0,
-				'dpv_android'		=> 0,
-				'dpc'				=> 0,
-				'dpc_ios'			=> 0,
-				'dpc_android'		=> 0,
-				'signin'			=> 0,
-				'signin_ios'		=> 0,
-				'signin_android'	=> 0,
-				'signup'			=> 0,
-				'signup_ios'		=> 0,
-				'signup_android'	=> 0,
-				'recharge'			=> 0,
-				'recharge_new'		=> 0,
-				'recharge_old'		=> 0,
-				'recharge_coin'		=> 0,
-				'recharge_vip'		=> 0,
-				'recharge_vip_new'	=> 0,
-				'order'				=> 0,
-				'order_ok'			=> 0,
-				'order_ios'			=> 0,
-				'order_ios_ok'		=> 0,
-				'order_android'		=> 0,
-				'order_android_ok'	=> 0
-			];
-			$insert['hourdata'] = json_encode(array_fill(0, 24, $insert), JSON_NUMERIC_CHECK);
 			if ($this->mysql->recordlog->insert([
 				'ciddate' => $ciddate,
 				'cid' => $cid,
 				'date' => date('Y-m-d', $nowtime),
+				'hourdata' => json_encode(array_fill(0, 24, $insert), JSON_NUMERIC_CHECK),
 				...$insert]) === FALSE) {
 				return FALSE;
 			}
+		}
+		if ($this->mysql->channels('WHERE hash=?s LIMIT 1', $cid)->fetch($channel))
+		{
+			$logs = [];
+			foreach ($values as $fieldname => $value)
+			{
+				$logs[] = $this->mysql->format('?a=?a+?f', $fieldname, $fieldname, $value * $channel['rate']);
+			}
+			while ($this->mysql->recordlogs('WHERE ciddate=?s LIMIT 1', $ciddate)->update(join(',', $logs)) !== 1)
+			{
+				if ($this->mysql->recordlogs->insert(['ciddate' => $ciddate, 'cid' => $cid, 'date' => date('Y-m-d', $nowtime), ...$insert]) === FALSE)
+				{
+					break;
+				}
+			}
+			print_r($this->mysql);
 		}
 		return TRUE;
 	}
@@ -560,34 +576,6 @@ class base extends webapp
 	function game_balance():int
 	{
 		return $this->game->balance();
-	}
-	function game_entry():array
-	{
-		return [
-			4 => '百人牛牛',
-			1 => '捕鱼',
-			8 => '德州扑克',
-			6 => '二人麻将',
-			46 => '二人牛牛',
-			19 => '飞禽走兽',
-			7 => '红黑大战',
-			12 => '龙虎大战',
-			22 => '连环夺宝',
-			5 => '抢庄牛牛',
-			49 => '疯狂抢庄牛牛',
-			28 => '抢庄牌九',
-			26 => '抢庄三公',
-			24 => '森林舞会',
-			50 => '四人牛牛',
-			88 => '视讯龙虎',
-			90 => '视讯轮盘',
-			87 => '视讯牛牛',
-			91 => '视讯⾊碟',
-			89 => '视讯骰宝',
-			17 => '骰宝',
-			30 => '通比牛牛',
-			37 => '五星宏辉'
-		];
 	}
 	private function user_exchange(bool $result, array $record):bool
 	{

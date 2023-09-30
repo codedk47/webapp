@@ -151,7 +151,7 @@ class webapp_router_control extends webapp_echo_html
 		{
 			$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $value, $fields)
 			{
-
+				$value = array_map(intval(...), $value);
 				$node = $table->row()->append('td')->append('div', ['class' => 'simple']);
 				foreach ($fields as $field => $name)
 				{
@@ -1853,24 +1853,27 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell()->append('a', ['删除']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell($value['hash']);
+			$table->cell($value['type']);
 			$table->cell($value['rate']);
 			$table->cell($value['name']);
 			$table->cell($value['url']);
 		});
-		$table->fieldset('删除', '创建日期', '渠道ID', '扣量比率', '名称', '地址');
+		$table->fieldset('删除', '创建日期', '渠道ID', '类型', '比率', '名称', '地址');
 		$table->header('渠道');
 		$table->bar->append('button', ['创建渠道', 'onclick' => 'location.href="?control/channel"']);
 	}
 	function form_channel(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
-		$form->fieldset('渠道ID / 密码');
+		$form->fieldset('渠道ID / 密码 / 子渠道数量');
 		$form->field('hash', 'text', ['pattern' => '^[0-9A-Za-z]{4}$', 'style' => 'width:6rem', 'placeholder' => '4位字母数字', 'required' => NULL]);
-		$form->field('pwd', 'text', ['maxlength' => 16, 'placeholder' => '渠道后台密码', 'required' => NULL]);
+		$form->field('pwd', 'text', ['style' => 'width:8rem', 'maxlength' => 16, 'placeholder' => '渠道后台密码', 'required' => NULL]);
+		$form->field('max', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 
-		$form->fieldset('名称 / 扣量比率（Nx）');
+		$form->fieldset('名称 / 类型 / 比率（数据 = 实际 x 比率）');
 
-		$form->field('name', 'text', ['required' => NULL]);
+		$form->field('name', 'text', ['style' => 'width:9rem', 'required' => NULL]);
+		$form->field('type', 'select', ['options' => ['cpa' => 'CPA', 'cpc' => 'CPC', 'cpm' => 'CPM', 'cps' => 'CPS'], 'required' => NULL]);
 		$form->field('rate', 'number', ['min' => 0.01, 'max' => 2, 'step' => 0.01, 'value' => 1, 'required' => NULL]);
 
 		$form->fieldset('主页');
@@ -1908,6 +1911,9 @@ class webapp_router_control extends webapp_echo_html
 		$form->field('notice_title', 'text', ['style' => 'width:30rem', 'placeholder' => '标题为空关闭公告']);
 		$form->fieldset('公告内容');
 		$form->field('notice_content', 'textarea', ['rows' => 10, 'cols' => 50]);
+
+		$form->fieldset('游戏列表');
+		$form->field('game_entry', 'textarea', ['rows' => 10, 'cols' => 50]);
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
