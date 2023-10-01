@@ -1854,7 +1854,7 @@ class webapp_router_control extends webapp_echo_html
 			$table->row();
 			$table->cell()->append('a', ['删除']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
-			$table->cell($value['hash']);
+			$table->cell()->append('a', [$value['hash'], 'href' => "?control/channel,hash:{$value['hash']}"]);
 			$table->cell($value['type']);
 			$table->cell($value['rate']);
 			$table->cell($value['name']);
@@ -1892,19 +1892,39 @@ class webapp_router_control extends webapp_echo_html
 		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
-	function get_channel()
+	function get_channel(string $hash = NULL)
 	{
-		$this->form_channel($this->main);
-	}
-	function post_channel()
-	{
-		if ($this->form_channel()->fetch($channel) && $this->webapp->mysql->channels->insert([
-			'mtime' => $this->webapp->time,
-			'ctime' => $this->webapp->time
-		] + $channel)) {
-			return $this->goto('/channels');
+		$form = $this->form_channel($this->main);
+		if ($hash && $this->webapp->mysql->channels('WHERE hash=?s LIMIT 1', $hash)->fetch($channel))
+		{
+			$form['hash']->setattr(['readonly' => NULL]);
+			$form->echo($channel);
 		}
-		$this->dialog('渠道创建失败！');
+	}
+	function post_channel(string $hash = NULL)
+	{
+		if ($this->form_channel()->fetch($channel, $error) === FALSE)
+		{
+			return $this->dialog($error);
+		}
+		if (is_string($hash))
+		{
+			unset($channel['hash']);
+			if ($this->webapp->mysql->channels('WHERE hash=?s LIMIT 1', $hash)->update($channel) !== 1)
+			{
+				return $this->dialog('渠道更新失败！');
+			}
+		}
+		else
+		{
+			if ($this->webapp->mysql->channels->insert([
+				'mtime' => $this->webapp->time,
+				'ctime' => $this->webapp->time
+			] + $channel) === FALSE) {
+				return $this->dialog('渠道创建失败！');
+			}
+		}
+		$this->goto('/channels');
 	}
 	function form_configs(webapp_html $html = NULL):webapp_form
 	{
