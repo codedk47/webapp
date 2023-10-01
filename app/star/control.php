@@ -1847,8 +1847,9 @@ class webapp_router_control extends webapp_echo_html
 	function get_channels(int $page = 1)
 	{
 		$conds = [[]];
+		$dpurl = $this->webapp->fetch_configs('down_page');
 		$conds[0] = sprintf('%sORDER BY mtime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->channels(...$conds)->paging($page), function($table, $value)
+		$table = $this->main->table($this->webapp->mysql->channels(...$conds)->paging($page), function($table, $value, $dpurl)
 		{
 			$table->row();
 			$table->cell()->append('a', ['删除']);
@@ -1858,8 +1859,9 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell($value['rate']);
 			$table->cell($value['name']);
 			$table->cell($value['url']);
-		});
-		$table->fieldset('删除', '创建日期', '渠道ID', '类型', '比率', '名称', '地址');
+			$table->cell("{$dpurl}{$value['hash']}");
+		}, $dpurl);
+		$table->fieldset('删除', '创建日期', '渠道ID', '类型', '比率', '名称', '地址', '落地页地址');
 		$table->header('渠道');
 		$table->bar->append('button', ['创建渠道', 'onclick' => 'location.href="?control/channel"']);
 	}

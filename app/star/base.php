@@ -652,9 +652,11 @@ class base extends webapp
 					->update('result=?s', $result ? 'success' : 'failure') === 1) ? $record : [];
 	}
 	//获配置
-	function fetch_configs():array
+	function fetch_configs(string $key = NULL):array|string
 	{
-		return $this->mysql->configs->column('value', 'key');
+		return is_string($key)
+			? $this->mysql->configs('WHERE `key`=?s LIMIT 1', $key)->array()['value'] ?? ''
+			: $this->mysql->configs->column('value', 'key');
 	}
 	//获取所有UP主
 	function fetch_uploaders():iterable
