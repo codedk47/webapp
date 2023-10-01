@@ -649,7 +649,7 @@ class base extends webapp
 			&& $this->mysql->sync(fn() => (array_key_exists('vtid', $record['ext'] = json_decode($record['ext'], TRUE))
 				? method_exists($this, $record['ext']['vtid']) && $this->{$record['ext']['vtid']}($result, $record)
 				: TRUE) && $this->mysql->records('WHERE hash=?s LIMIT 1', $hash)
-					->update('result=?s', $result ? 'success' : 'failure') === 1) ? $record: [];
+					->update('result=?s', $result ? 'success' : 'failure') === 1) ? $record : [];
 	}
 	//获配置
 	function fetch_configs():array
