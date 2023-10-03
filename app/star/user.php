@@ -462,12 +462,10 @@ class user extends ArrayObject
 				// if ($user['device'] === 'pc' || $user['device'] === 'pad')
 				// {
 				// 	$user['nickname'] = "游客 - {$user['nickname']}";
+				// 	$userdata = $user;
 				// 	break;
 				// }
-				// else
-				// {
-				// 	$user['nickname'] = $nickname ?? $webapp->time33hash($id);
-				// }
+				$user['nickname'] = $nickname ?? $webapp->time33hash($id);
 				if ($webapp->mysql->users->insert($user))
 				{
 					$userdata = $user;
