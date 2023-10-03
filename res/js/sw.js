@@ -113,21 +113,25 @@ async function loader(resource, options = {})
 
 if (self.window)
 {
-	const script = document.currentScript, resources = new Promise((resolve, reject) =>
-	{
-		const resources = document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]');
-		if (resources.length)
-		{
-			const controller = new AbortController;
-			Promise.any(Array.from(resources).map(link =>
-				fetch(`${link.href}`, {cache: 'no-cache', signal: controller.signal}))).then(response =>
-					controller.abort(resolve(new URL(response.url).origin)), reject);
-		}
-		else
-		{
-			resolve(location.origin);
-		}
-	});
+	const script = document.currentScript;
+	// , resources = new Promise((resolve, reject) =>
+	// {
+	// 	const resources = document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]');
+	// 	if (resources.length)
+	// 	{
+			
+
+
+	// 		const controller = new AbortController;
+	// 		Promise.any(Array.from(resources).map(link =>
+	// 			fetch(`${link.href}`, {cache: 'no-cache', signal: controller.signal}))).then(response =>
+	// 				controller.abort(resolve(new URL(response.url).origin)), reject);
+	// 	}
+	// 	else
+	// 	{
+	// 		resolve(location.origin);
+	// 	}
+	// });
 
 
 
@@ -142,10 +146,15 @@ if (self.window)
 				{
 					//registration.update()
 				
-					registration.active.postMessage({authorization: localStorage.getItem('token')});
-					resources.then(origin => registration.active.postMessage({origin}));
+					//registration.active.postMessage({authorization: localStorage.getItem('token')});
+					// resources.then(origin => {
+					// 	console.log('origin:', origin);
+					// 	registration.active.postMessage({origin})
+					// });
 					
-		
+					// registration.active.postMessage(Array.from(document.querySelectorAll([
+					// 	'link[rel=dns-prefetch]',
+					// 	'link[rel=preconnect]'].join(','))).map(link => link.href));
 					
 
 					//console.log(registration);
@@ -155,10 +164,15 @@ if (self.window)
 
 					
 
-				// navigator.serviceWorker.ready.then(registration =>
-				// {
-				// 	registration.active.postMessage("Hi service worker");
-				// });
+				navigator.serviceWorker.ready.then(registration =>
+				{
+					console.log('dddd');
+					registration.active.postMessage(Array.from(document.querySelectorAll([
+						'link[rel=dns-prefetch]',
+						'link[rel=preconnect]'].join(','))).map(link => link.href));
+
+					registration.active.postMessage(localStorage.getItem('token'));
+				});
 
 
 				});
@@ -176,53 +190,50 @@ if (self.window)
 }
 else
 {
-	const config = {origin: location.origin};
+	
+	const resources = new Promise((resolve, reject) =>
+	{
+		self.addEventListener('message', event =>
+		{
+			console.log('asd', event.data);
+			const controller = new AbortController;
+			event.data.length && Promise.any(event.data.map(url =>
+				fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
+					controller.abort(resolve(new URL(response.url).origin)), reject);
+		}, {once: true});
+	});
+	resources.then(origin => console.log('asd', origin));
 
-
+	let token;
+	const authorization = new Promise(resolve => token = resolve);
 	self.addEventListener('message', event =>
 	{
-		Object.assign(config, event.data);
-		console.log(config);
+		if (typeof event.data === 'string')
+		{
+			token(token = event.data);
+		}
+		authorization.then(() => {
+
+			console.log('token', token);
+		});
 	});
-	// console.log('event', self);
-
-	// const putInCache = async (request, response) => {
-	// 	const cache = await caches.open("v1");
-	// 	await cache.put(request, response);
-	//   };
-	  
-	//   const cacheFirst = async (request) => {
-	// 	const responseFromCache = await caches.match(request);
-	// 	if (responseFromCache) {
-	// 		console.log('use cache');
-	// 	  return responseFromCache;
-	// 	}
-	// 	const responseFromNetwork = await fetch(request);
-	// 	putInCache(request, responseFromNetwork.clone());
-	// 	return responseFromNetwork;
-	//   };
-
-	console.log(self.location);
-
-	// self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(async response =>{
 
 
-	// 	return response || (
-	// 		/\?mask\d{10}$/.test(event.request.url) || 
-	// 	)
-	// })));
+
+
+
 
 	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(async response =>
 	{
 		
 
-		console.log('>>>>>>>>>>>>>',event.request.url)
+		//console.log('>>>>>>>>>>>>>',event.request.url)
 		if (response)
 		{
-			console.log('cache hit');
+			//console.log('cache hit');
 			return response;
 		}
-		console.log('cache miss');
+		//console.log('cache miss');
 
 		//'http://127.0.0.1/asda/asdaweawe?mask456548796'
 		//return event.respondWith(cacheFirst(event.request));
@@ -246,15 +257,20 @@ else
 				if (url.search.startsWith('?/'))
 				{
 
+					console.log('resources', event.request.url);
+					return resources.then(origin => {
+
+						return loader(`${origin}${url.search.substring(1)}`, {mask: /\?mask\d{10}$/i.test(event.request.url)});
+					});
+					// console.log(`${config.origin}${url.search.substring(1)}`)
 					
-					console.log(`${config.origin}${url.search.substring(1)}`)
-					return loader(`${config.origin}${url.search.substring(1)}`, {mask: /\?mask\d{10}$/i.test(event.request.url)});
 				}
 				else
 				{
 					//event.request.headers.set('Authorization', `Bearer ${config.authorization}`);
 					//console.log( Object.fromEntries(event.request.headers.entries())  );
-					return loader(event.request, config.authorization ? {headers: {Authorization: `Bearer ${config.authorization}`}} : {});
+					//return loader(event.request, config.authorization ? {headers: {Authorization: `Bearer ${config.authorization}`}} : {});
+					return loader(event.request);
 				}
 			}
 			else
@@ -273,25 +289,5 @@ else
 		
 			
 	})));
-
-	// self.addEventListener("notificationclick", event => console.log(event));
-	// self.addEventListener('sync', function (e) {
-	// 	console.log('sync', e)
-	// });
-
-	// var cachedResponse = caches
-	// .match(event.request)
-	// .catch(function () {
-	//   return fetch(event.request);
-	// })
-	// .then(function (response) {
-	//   caches.open("v1").then(function (cache) {
-	// 	cache.put(event.request, response);
-	//   });
-	//   return response.clone();
-	// })
-	// .catch(function () {
-	//   return caches.match("/sw-test/gallery/myLittleVader.jpg");
-	// });
 
 }

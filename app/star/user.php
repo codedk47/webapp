@@ -459,7 +459,15 @@ class user extends ArrayObject
 			{
 				$id = $webapp->random_time33();
 				$user['id'] = $webapp->time33hash($id, TRUE);
-				$user['nickname'] = $nickname ?? $webapp->time33hash($id);
+				if ($user['device'] === 'pc' || $user['device'] === 'pad')
+				{
+					$user['nickname'] = "游客 - {$user['nickname']}";
+					break;
+				}
+				else
+				{
+					$user['nickname'] = $nickname ?? $webapp->time33hash($id);
+				}
 				if ($webapp->mysql->users->insert($user))
 				{
 					$userdata = $user;

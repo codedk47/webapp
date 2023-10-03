@@ -423,6 +423,15 @@ class base extends webapp
 	{
 		return $id && ($id === $sid || $this->mysql->channels('WHERE hash=?s LIMIT 1', $id)->fetch());
 	}
+	//IP记录
+	function everydayip(string $iphex = NULL):bool
+	{
+		$date = date('Y-m-d');
+		$iphex ??= $this->request_ip(TRUE);
+		return $this->mysql->everydayip('WHERE ip=?s LIMIT 1', $iphex)->fetch($ip)
+			? ($ip['date'] === $date ? FALSE : $this->mysql->everydayip('WHERE ip=?s LIMIT 1', $iphex)->update('date=?s', $date) === 1)
+			: $this->mysql->everydayip->insert(['ip' => $iphex, 'date' => $date]);
+	}
 	//记录日志
 	function recordlog(string $cid, string $field, int $value = 1, int $nowtime = NULL):bool
 	{
@@ -430,16 +439,17 @@ class base extends webapp
 		$ciddate = $cid . date('Ymd', $nowtime);
 		$values = match (TRUE)
 		{
-			$field === 'dpv' => ['dpv' => $value],
-			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
+			//$field === 'dpv' => ['dpv' => $value],
+			//in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
+			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => $this->everydayip() ? ['dpv' => $value, $field => $value] : [],
 
-			$field === 'dpc' => ['dpc' => $value],
+			//$field === 'dpc' => ['dpc' => $value],
 			in_array($field, ['dpc_ios', 'dpc_android'], TRUE) => ['dpc' => $value, $field => $value],
 
-			$field === 'signin' => ['signin' => $value],
+			//$field === 'signin' => ['signin' => $value],
 			in_array($field, ['signin_ios', 'signin_android'], TRUE) => ['signin' => $value, $field => $value],
 
-			$field === 'signup' => ['signup' => $value],
+			//$field === 'signup' => ['signup' => $value],
 			in_array($field, ['signup_ios', 'signup_android'], TRUE) => ['signup' => $value, $field => $value],
 
 			in_array($field, ['recharge_new', 'recharge_old'], TRUE) => ['recharge' => $value, $field => $value],

@@ -572,6 +572,10 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	
 		// print_r($s);
 	}
+	function engine(string $name):bool
+	{
+		return $this->mysql->real_query('ALTER TABLE ?a ENGINE=?s', $this->tablename, $name);
+	}
 	function fieldinfo()
 	{
 		return ($this->mysql)('SHOW FULL COLUMNS FROM ?a', $this->tablename);
