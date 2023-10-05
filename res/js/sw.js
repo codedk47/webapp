@@ -154,34 +154,48 @@ if (self.window)
 }
 else
 {
-	let token, origin;
+	let origin;
 	const
 		authorization = new Promise(resolve => token = resolve),
 		resources = new Promise(resolve => origin = resolve);
 
 
-
+	const token = {priority: 'high'};
 	self.addEventListener('message', event =>
 	{
-		console.log(clients, event);
-		if (typeof event.data === 'string') return;
+		if (Array.isArray(event.data))
+		{
+			return;
+		}
+		if (typeof event.data === 'string')
+		{
+			token.headers = {Authorization: `Bearer ${event.data}`};
+		}
+		else
+		{
+			delete token.headers;
+		}
+
+
+		// console.log(clients, event);
+		// if (typeof event.data === 'string') return;
 
 		
-		if (Object.hasOwn(event.data, 'signature'))
-		{
-			const options = {priority: 'high'};
-			if (typeof event.data.signature === 'string')
-			{
-				options.headers = {Authorization: `Bearer ${event.data.signature}`};
-			}
-			token.length ? token(token = options) : token = options;
-		}
-		if (typeof event.data.originurl === 'string')
-		{
-			typeof origin === 'string'
-				? origin = new URL(event.data.originurl).origin
-				: origin(origin = new URL(event.data.originurl).origin);
-		}
+		// if (Object.hasOwn(event.data, 'signature'))
+		// {
+		// 	const options = {priority: 'high'};
+		// 	if (typeof event.data.signature === 'string')
+		// 	{
+		// 		options.headers = {Authorization: `Bearer ${event.data.signature}`};
+		// 	}
+		// 	token.length ? token(token = options) : token = options;
+		// }
+		// if (typeof event.data.originurl === 'string')
+		// {
+		// 	typeof origin === 'string'
+		// 		? origin = new URL(event.data.originurl).origin
+		// 		: origin(origin = new URL(event.data.originurl).origin);
+		// }
 	});
 
 
