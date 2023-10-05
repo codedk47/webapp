@@ -867,7 +867,7 @@ class webapp_router_admin extends webapp_echo_html
 			$resource['preview_start'] = date('H:i:s', $preview_start = ($resource['preview'] >> 16) + 57600);
 			$resource['preview_end'] = date('H:i:s', ($resource['preview'] & 0xffff) + $preview_start);
 
-			if ($noplay && $resource['sync'] === 'finished')
+			if ($noplay === NULL && $resource['sync'] === 'finished')
 			{
 				$this->xml->head->append('script', ['src' => '/webapp/res/js/hls.min.js']);
 				$this->xml->head->append('script', ['src' => '/webapp/res/js/loader.js']);
