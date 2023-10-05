@@ -877,8 +877,8 @@ class webapp_router_admin extends webapp_echo_html
 					'data-poster' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/cover", date('ym', $resource['time'])),
 					'data-m3u8' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/play", date('ym', $resource['time'])),
 					'data-mask' => NULL,
-					'muted' => NULL,
-					//'autoplay' => NULL,
+					//'muted' => NULL,
+					'autoplay' => NULL,
 					'controls' => NULL
 				]);
 				if (isset($this->webapp->query['preview']))
