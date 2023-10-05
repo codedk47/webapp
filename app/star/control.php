@@ -149,7 +149,29 @@ class webapp_router_control extends webapp_echo_html
 
 		if (1)
 		{
-			$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $value, $fields)
+			$sign_up = [[
+				'date>=?s',
+				'date<=?s'
+			], $datefrom, $dateto];
+			$sign_in = [[
+				'FROM_UNIXTIME(lasttime,"%Y-%m-%d")>=?s',
+				'FROM_UNIXTIME(lasttime,"%Y-%m-%d")<=?s'
+			], $datefrom, $dateto];
+			$sign_in[0][] = $sign_up[0][] = 'device IN("android","ios")';
+			if ($cid)
+			{
+				$sign_in[0][] = $sign_up[0][] = 'cid=?s';
+				$sign_in[] = $sign_up[] = $cid;
+			}
+			$sign_up[0] = 'WHERE ' . join(' AND ', $sign_up[0]);
+			$sign_in[0] = 'WHERE ' . join(' AND ', $sign_in[0]);
+
+			$sign_up = $this->webapp->mysql->users(...$sign_up)->select('COUNT(1) signup,COUNT(IF(device="ios",1,NULL)) signup_ios,COUNT(IF(device="android",1,NULL)) signup_android')->array();
+			$sign_in = $this->webapp->mysql->users(...$sign_in)->select('COUNT(1) signin,COUNT(IF(device="ios",1,NULL)) signin_ios,COUNT(IF(device="android",1,NULL)) signin_android')->array();
+
+			// print_r($sign_up + $sign_in);
+			// return;
+			$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $value, $fields, $log)
 			{
 				$value = array_map(intval(...), $value);
 				$node = $table->row()->append('td')->append('div', ['class' => 'simple']);
@@ -157,7 +179,7 @@ class webapp_router_control extends webapp_echo_html
 				{
 					$node_dpv = $node->append('dl');
 					$node_dpv->append('dt', $name);
-					$node_dpv->append('dd', number_format($value[$field]));
+					$node_dpv->append('dd', number_format($log[$field] ?? $value[$field]));
 				}
 				$node_dpv = $node->append('dl');
 				$node_dpv->append('dt', '新增ARPU');
@@ -197,7 +219,7 @@ class webapp_router_control extends webapp_echo_html
 				'iOS 成功订单数',
 				'安卓拉起订单数',
 				'安卓成功订单数'
-			]));
+			]), $sign_up + $sign_in);
 			$table->fieldset('详细数据');
 		}
 		else
@@ -220,7 +242,7 @@ class webapp_router_control extends webapp_echo_html
 				$node[] = $table->row();
 				$table->cell('安卓');
 				$node[] = $table->row();
-				$table->cell(['日活', 'rowspan' => 3]);
+				$table->cell(['登录', 'rowspan' => 3]);
 				$table->cell('总计');
 				$node[] = $table->row();
 				$table->cell('苹果');

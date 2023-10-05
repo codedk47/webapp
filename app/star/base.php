@@ -532,7 +532,7 @@ class base extends webapp
 					break;
 				}
 			}
-			print_r($this->mysql);
+			//print_r($this->mysql);
 		}
 		return TRUE;
 	}

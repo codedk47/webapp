@@ -405,7 +405,8 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			//Misc
 			'copy_webapp'		=> 'Web Application v' . self::version,
 			'gzip_level'		=> -1,
-			'manifests'			=> []]];
+			'service_workers'	=> [],
+			'manifests'			=> [],]];
 		[$this->route, $this->entry] = method_exists($this, $route = sprintf('%s_%s', $this['request_method'],
 			$track = preg_match('/^[-\w]+(?=\/([\-\w]*))?/', $this['request_query'], $entry)
 				? strtr($entry[0], '-', '_') : $entry[] = $this['app_index']))
@@ -920,6 +921,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return $this->io->response_sendfile($filename);
 	}
+	function response_maskdata(string $content):string
+	{
+		$maskdata = $this->maskdata($content);
+		$this->response_header('Mask-Key', bin2hex(substr($maskdata, 0, 8)));
+		return substr($maskdata, 8);
+	}
 	//append function
 	function nonematch(string $etag, bool $needhash = FALSE):bool
 	{
@@ -1100,6 +1107,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function get_service_workers()
 	{
+		//if ($this['service_workers'])
 		//$this->response_header('Service-Worker-Allowed', '?');
 		$this->response_content_type('text/javascript');
 		$this->response_sendfile(__DIR__ . '/res/js/sw.js');
