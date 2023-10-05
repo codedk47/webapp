@@ -860,14 +860,14 @@ class webapp_router_admin extends webapp_echo_html
 		}
 		$this->warn('资源更新失败，请确认资源同步状态完成！');
 	}
-	function get_resource_update(string $hash)
+	function get_resource_update(string $hash, string $noplay = NULL)
 	{
 		if ($resource = $this->webapp->resource_get($hash))
 		{
 			$resource['preview_start'] = date('H:i:s', $preview_start = ($resource['preview'] >> 16) + 57600);
 			$resource['preview_end'] = date('H:i:s', ($resource['preview'] & 0xffff) + $preview_start);
 
-			if ($resource['sync'] === 'finished')
+			if ($noplay && $resource['sync'] === 'finished')
 			{
 				$this->xml->head->append('script', ['src' => '/webapp/res/js/hls.min.js']);
 				$this->xml->head->append('script', ['src' => '/webapp/res/js/loader.js']);
@@ -878,7 +878,7 @@ class webapp_router_admin extends webapp_echo_html
 					'data-m3u8' => sprintf("{$this->webapp['app_resoutput']}%s/{$resource['hash']}/play", date('ym', $resource['time'])),
 					'data-mask' => NULL,
 					//'muted' => NULL,
-					//'autoplay' => NULL,
+					'autoplay' => NULL,
 					'controls' => NULL
 				]);
 				if (isset($this->webapp->query['preview']))
