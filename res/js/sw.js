@@ -54,6 +54,7 @@ if (self.window)
 			|| navigator.serviceWorker.ready.then(registration => registration.active.postMessage({signature}));
 
 
+
 	// const configs = new Promise(resolve => {
 	// 	sessionStorage.getItem('configs')
 	// 	? resolve(JSON.parse(sessionStorage.getItem('configs')))
@@ -61,7 +62,11 @@ if (self.window)
 	// });
 
 
-	
+	if ('splashscreen' in script.dataset)
+	{
+
+		
+	}
 	
 
 
@@ -123,6 +128,7 @@ if (self.window)
 					{
 						if (resources.length && resources.join('|') !== sessionStorage.getItem('resources'))
 						{
+							
 							sessionStorage.setItem('resources', resources.join('|'));
 							registration.active.postMessage(resources);
 						}

@@ -219,7 +219,7 @@ class webapp_router_control extends webapp_echo_html
 				'iOS 成功订单数',
 				'安卓拉起订单数',
 				'安卓成功订单数'
-			]), $sign_up + $sign_in);
+			]), []);
 			$table->fieldset('详细数据');
 		}
 		else
