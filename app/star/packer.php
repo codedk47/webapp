@@ -177,12 +177,9 @@ class webapp_router_packer
 			$html->xml->body->header['class'] = 'mobile';
 			$html->xml->body->a['style'] = 'position:fixed;top:1.3rem;right:1rem';
 			$html->xml->body->div[0]['style'] = 'display:block';
-			// $html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
-			// 	? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this.href)']
-			// 	: ['Android 下载', 'href' => $dl, 'class' => 'android']);
 			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
-				? ['iOS 下载', 'href' => '/pwa/rstar.mobileconfig', 'class' => 'iphone', 'onclick' => 'return iphone(this.href)']
-				: ['Android 下载', 'href' => '/pwa/u841.apk', 'class' => 'android', 'onclick' => 'return reloadlog("dpc")']);
+				? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this.href)']
+				: ['Android 下载', 'href' => $dl, 'class' => 'android']);
 		}
 		else
 		{

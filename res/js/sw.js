@@ -61,12 +61,8 @@ if (self.window)
 	// });
 
 
-
-	if ('reload' in script.dataset)
-	{
-		console.log(script.dataset.reload)
-		//location.assign(script.dataset.reload)
-	}
+	
+	
 
 
 
@@ -80,17 +76,7 @@ if (self.window)
 		const
 		resources = Array.from(document.querySelectorAll([
 			'link[rel=dns-prefetch]',
-			'link[rel=preconnect]'].join(','))).map(link => link.href),
-		speedtest = urls =>
-		{
-			const controller = new AbortController;
-			return new Promise(resolve => urls.length && Promise.any(urls.map(url =>
-				fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
-					controller.abort(sessionStorage.setItem('originurl', response.url) || resolve(response.url))));
-		},
-		speedfirst = new Promise(resolve => resources.includes(sessionStorage.getItem('originurl'))
-			? resolve(sessionStorage.getItem('originurl'))
-			: speedtest(resources).then(resolve));
+			'link[rel=preconnect]'].join(','))).map(link => link.href);
 
 
 
@@ -118,12 +104,30 @@ if (self.window)
 					//console.log('ServiceWorker registration successful with scope: ', registration.scope);
 					//registration.active.postMessage(Array.from(document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]')).map(link => link.href).join(','));
 
-				navigator.serviceWorker.ready.then(registration =>
-				{
+				//navigator.serviceWorker.ready.then(registration =>
+				//{
 					console.log('signature')
-					registration.active.postMessage({signature: localStorage.getItem('authorization')});
-					speedfirst.then(originurl => registration.active.postMessage({originurl}));
-				});
+					registration.active.postMessage(localStorage.getItem('token'));
+		
+					
+					if ('reload' in script.dataset)
+					{
+						if (sessionStorage.getItem('resources'))
+						{
+							registration.active.postMessage(sessionStorage.getItem('resources').split('|'));
+						}
+						//console.log(script.dataset.reload)
+						location.assign(script.dataset.reload)
+					}
+					else
+					{
+						if (resources.length && resources.join('|') !== sessionStorage.getItem('resources'))
+						{
+							sessionStorage.setItem('resources', resources.join('|'));
+							registration.active.postMessage(resources);
+						}
+					}
+				//});
 
 
 				});
@@ -135,9 +139,8 @@ if (self.window)
 		//   });
 
 		window.addEventListener('online', () =>
-			speedtest(resources).then(originurl => console.log('reconnect') ||
-				navigator.serviceWorker.ready.then(registration =>
-					registration.active.postMessage({originurl}))));
+			navigator.serviceWorker.ready.then(registration =>
+				registration.active.postMessage(resources)));
 	});
 
 	
@@ -154,60 +157,35 @@ if (self.window)
 }
 else
 {
-	let origin;
+	let token, origin;
 	const
 		authorization = new Promise(resolve => token = resolve),
 		resources = new Promise(resolve => origin = resolve);
 
-
-	const token = {priority: 'high'};
 	self.addEventListener('message', event =>
 	{
 		if (Array.isArray(event.data))
 		{
+			if (event.data.length)
+			{
+				const controller = new AbortController;
+				Promise.any(event.data.map(url =>
+					fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
+						controller.abort(typeof origin === 'string'
+							? origin = new URL(response.url).origin
+							: origin(origin = new URL(response.url).origin)));
+			}
 			return;
 		}
+		const options = {priority: 'high'};
 		if (typeof event.data === 'string')
 		{
-			token.headers = {Authorization: `Bearer ${event.data}`};
+			options.headers = {Authorization: `Bearer ${event.data}`};
 		}
-		else
-		{
-			delete token.headers;
-		}
-
-
-		// console.log(clients, event);
-		// if (typeof event.data === 'string') return;
-
-		
-		// if (Object.hasOwn(event.data, 'signature'))
-		// {
-		// 	const options = {priority: 'high'};
-		// 	if (typeof event.data.signature === 'string')
-		// 	{
-		// 		options.headers = {Authorization: `Bearer ${event.data.signature}`};
-		// 	}
-		// 	token.length ? token(token = options) : token = options;
-		// }
-		// if (typeof event.data.originurl === 'string')
-		// {
-		// 	typeof origin === 'string'
-		// 		? origin = new URL(event.data.originurl).origin
-		// 		: origin(origin = new URL(event.data.originurl).origin);
-		// }
+		token.length ? token(token = options) : token = options;
 	});
-
-
-	console.log('asdasdasd');
-
-
 	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(async response =>
 	{
-		// clients.get(event.clientId).then(client => {
-		// 	console.log(client.postMessage('asdasd'));
-		// });
-		console.log(event, event.clientId)
 		if (response) return response;
 		if (event.request.url.startsWith(self.location.origin))
 		{
@@ -218,14 +196,15 @@ else
 				{
 					return resources.then(() => request(`${origin}${url.search.substring(1)}`, true));
 				}
-				
-				if (event.clientId)
+				if (event.isReload)
 				{
-					return self.location.href === event.request.url
-						? fetch(self.location.href)
-						: authorization.then(() => request(event.request, token));
+					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
+						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
 				}
-				return new Response(new Blob([`<html lang="en"><head><meta charset="utf-8"><script src="${self.location.href}" data-reload="${event.request.url}"></script></head><body></body></html>`], {type: 'text/html'}));
+				return self.location.href === event.request.url
+					? fetch(self.location.href)
+					: authorization.then(() => request(event.request, token));
 			}
 			return request(event.request, true);
 		}
