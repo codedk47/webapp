@@ -91,6 +91,10 @@ class webapp_router_ca extends webapp_echo_html
 			$table->cell(number_format(ceil($log['dpc'])));
 			$table->cell(number_format(ceil($log['signup'])));
 			$table->cell(number_format(ceil($log['signin'])));
+			if ($this->channel['type'] === 'cpa')
+			{
+				$table->cell(number_format(ceil($log['recharge'])));
+			}
 
 		}, $statistics);
 		$table->row();
@@ -99,8 +103,13 @@ class webapp_router_ca extends webapp_echo_html
 		$table->cell(number_format(ceil($all['dpc'])));
 		$table->cell(number_format(ceil($all['signup'])));
 		$table->cell(number_format(ceil($all['signin'])));
+		if ($this->channel['type'] === 'cpa')
+		{
+			$table->cell(number_format(ceil($all['recharge'])));
+		}
 		$table->xml['class'] .= '-statistics';
-		$table->fieldset('日期', '访问', '点击', '新增', '登录');
+		$table->fieldset(...['日期', '访问', '点击', '新增', '登录',
+			...$this->channel['type'] === 'cpa' ? ['充值'] : []]);
 
 		$table->header($this->channel['hash']);
 		$table->bar->append('input', ['type' => 'date', 'value' => $datefrom, 'onchange' => 'g({datefrom:this.value||null})']);

@@ -150,6 +150,11 @@ class webapp_echo_html extends webapp_implementation
 		[$this->header, $this->aside, $this->main, $this->footer] = [
 			&$node->header, &$node->aside, &$node->main,
 			$node->append('footer', $webapp['copy_webapp'])];
+
+		if ($mask)
+		{
+			$webapp->break(function(){});
+		}
 	}
 	function meta(array $attributes):webapp_html
 	{

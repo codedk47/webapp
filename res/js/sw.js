@@ -65,7 +65,7 @@ if (self.window)
 	if ('splashscreen' in script.dataset)
 	{
 
-		
+
 	}
 	
 
@@ -109,8 +109,8 @@ if (self.window)
 					//console.log('ServiceWorker registration successful with scope: ', registration.scope);
 					//registration.active.postMessage(Array.from(document.querySelectorAll('link[rel=dns-prefetch],link[rel=preconnect]')).map(link => link.href).join(','));
 
-				//navigator.serviceWorker.ready.then(registration =>
-				//{
+				navigator.serviceWorker.ready.then(registration =>
+				{
 					console.log('signature')
 					registration.active.postMessage(localStorage.getItem('token'));
 		
@@ -133,7 +133,7 @@ if (self.window)
 							registration.active.postMessage(resources);
 						}
 					}
-				//});
+				});
 
 
 				});
@@ -192,6 +192,7 @@ else
 	});
 	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(async response =>
 	{
+		console.log('event',event);
 		if (response) return response;
 		if (event.request.url.startsWith(self.location.origin))
 		{
@@ -202,6 +203,9 @@ else
 				{
 					return resources.then(() => request(`${origin}${url.search.substring(1)}`, true));
 				}
+
+				console.log('Sec-Fetch-Dest', event.request.headers.get('Sec-Fetch-Dest') );
+
 				if (event.isReload)
 				{
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
