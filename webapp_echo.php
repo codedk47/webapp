@@ -293,7 +293,7 @@ class webapp_echo_htmltest extends webapp_echo_html
 	{
 		parent::__construct($webapp);
 
-
+		//print_r($webapp);
 		
 		$this->script(['src' => '?service-workers']);
 		if ($this->navigated = $webapp->request_header('Sec-Fetch-Dest') === 'document')
