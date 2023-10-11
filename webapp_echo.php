@@ -122,6 +122,7 @@ class webapp_echo_svg extends webapp_implementation
 class webapp_echo_html extends webapp_implementation
 {
 	use webapp_echo;
+	private readonly bool $asd;
 	public readonly webapp_html $header, $aside, $main, $footer;
 	function __construct(public readonly webapp $webapp, public readonly bool $mask = FALSE)
 	{
@@ -151,10 +152,6 @@ class webapp_echo_html extends webapp_implementation
 			&$node->header, &$node->aside, &$node->main,
 			$node->append('footer', $webapp['copy_webapp'])];
 
-		if ($mask)
-		{
-			$webapp->break(function(){});
-		}
 	}
 	function meta(array $attributes):webapp_html
 	{
@@ -287,6 +284,30 @@ class webapp_echo_html extends webapp_implementation
 		$form->button('Build Mobile Config', 'submit');
 
 		return $form;
+	}
+}
+class webapp_echo_htmltest extends webapp_echo_html
+{
+	private readonly bool $navigated;
+	function __construct(webapp $webapp)
+	{
+		parent::__construct($webapp);
+
+
+		
+		$this->script(['src' => '?service-workers']);
+		if ($this->navigated = $webapp->request_header('Sec-Fetch-Dest') === 'document')
+		{
+			$webapp->break($this->init(...));
+		}
+	}
+	function init()
+	{
+		return 200;
+	}
+	function __toString():string
+	{
+		return $this->navigated ? parent::__toString() : $this->webapp->response_maskdata(parent::__toString());
 	}
 }
 class webapp_echo_htmlmask extends webapp_echo_html
