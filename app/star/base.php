@@ -412,10 +412,9 @@ class base extends webapp
 	{
 		return preg_match('/DID\/(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
 	}
-	function cid(?string $cid = '0000'):string
+	function cid():string
 	{
-		return preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1]
-			: (is_string($cid) && preg_match('/^\w{4,}/', $cid) ? $cid : '0000');
+		return preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000';
 		// return is_string($cid = $this->request_cookie('cid') ?? $this->query['cid'] ?? NULL)
 		// 	&& preg_match('/^\w{4,}/', $cid) ? substr($cid, 0, 4)
 		// 	: (preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000');
