@@ -216,6 +216,10 @@ addEventListener('DOMContentLoaded', async event =>
 						if ('support' in splashscreen)
 						{
 							clear();
+							if ('recordlog' in splashscreen)
+							{
+								fetch(splashscreen.recordlog);
+							}
 							switch (true)
 							{
 								case splashscreen.support.startsWith('javascript'): eval(splashscreen.support); break;
