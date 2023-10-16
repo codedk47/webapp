@@ -295,10 +295,23 @@ class webapp_echo_htmltest extends webapp_echo_html
 
 		//print_r($webapp);
 		
-		$this->script(['src' => '?service-workers']);
+		//$this->script(['src' => '?service-workers']);
+		$sw = $this->xml->head->append('script', ['src' => '?masker']);
 		if ($this->navigated = $webapp->request_header('Sec-Fetch-Dest') === 'document')
 		{
+			$sw['data-reload'] = "?{$webapp['request_query']}";
+			
+
 			$webapp->break($this->init(...));
+		}
+		else
+		{
+			if ($webapp['request_query'] !== 'home/ad')
+			{
+				//$sw['data-splashscreen'] = "?home/ad";
+			}
+			
+			
 		}
 	}
 	function init()
@@ -307,6 +320,7 @@ class webapp_echo_htmltest extends webapp_echo_html
 	}
 	function __toString():string
 	{
+		//return parent::__toString();
 		return $this->navigated ? parent::__toString() : $this->webapp->response_maskdata(parent::__toString());
 	}
 }

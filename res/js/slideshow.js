@@ -28,11 +28,12 @@ function slideshow(element, duration = 4)
 		indexbox.childNodes[currentindex].style.backgroundColor = 'white';
 		indexbox.childNodes[currentindex].style.borderColor = 'black';
 	}
-	function setcontent(index, picture, support)
+	function setcontent(index, picture, support, id)
 	{
 		const node = typeof index === 'number' ? slideloop[index] : index;
 		node.style.backgroundImage = `url(${picture})`;
 		node.href = support;
+		node.dataset.id = id;
 	}
 
 	duration *= 1000;
@@ -73,13 +74,13 @@ function slideshow(element, duration = 4)
 			{
 				const content = contents[currentindex - 1 < 0 ? contents.length - 1 : currentindex - 1];
 				setcontent(slidebox.insertBefore(slidebox.lastElementChild, slidebox.firstElementChild),
-					content.picture, content.support);
+					content.picture, content.support, content.id);
 			}
 			else
 			{
 				const content = contents[currentindex + 1 >= contents.length ? 0 : currentindex + 1];
 				setcontent(slidebox.appendChild(slidebox.firstElementChild),
-					content.picture, content.support);
+					content.picture, content.support, content.id);
 			}
 			indexchange();
 		}
@@ -145,7 +146,7 @@ function slideshow(element, duration = 4)
 
 	indexbox.style.cssText = 'position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:1rem;padding:1rem';
 	element.append(slidebox, indexbox);
-	function addition(picture, support)
+	function addition(picture, support, id)
 	{
 		const span = document.createElement('span');
 		span.style.cssText = 'width:.5rem;height:.5rem;display:inline-block;background-color:black;border:.1rem solid white;border-radius:50%;opacity:0.8';
@@ -154,18 +155,18 @@ function slideshow(element, duration = 4)
 		{
 			switch (contents.length)
 			{
-				case 0: setcontent(1, picture, support); indexchange();
-				case 1: setcontent(2, picture, support);
-				case 2: setcontent(0, picture, support);
+				case 0: setcontent(1, picture, support, id); indexchange();
+				case 1: setcontent(2, picture, support, id);
+				case 2: setcontent(0, picture, support, id);
 			}
 		}
-		contents[contents.length] = {picture, support};
+		contents[contents.length] = {picture, support, id};
 	}
 
 	return (additions, loader) =>
 	{
 		loader
-			? loader(additions.picture, {mask: additions.mask}).then(blob => addition(blob, additions.support))
-			: addition(additions.picture, additions.support);
+			? loader(additions.picture, {mask: additions.mask}).then(blob => addition(blob, additions.support, additions.id))
+			: addition(additions.picture, additions.support, additions.id);
 	};
 }

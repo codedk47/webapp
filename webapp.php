@@ -1105,12 +1105,12 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return 404;
 	}
-	function get_service_workers()
+	function get_masker()
 	{
 		//if ($this['service_workers'])
 		//$this->response_header('Service-Worker-Allowed', '?');
 		$this->response_content_type('text/javascript');
-		$this->response_sendfile(__DIR__ . '/res/js/sw.js');
+		$this->response_sendfile(__DIR__ . '/res/js/masker.js');
 	}
 }
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Countable, Stringable
