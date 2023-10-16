@@ -308,7 +308,7 @@ class webapp_echo_htmltest extends webapp_echo_html
 		{
 			if ($webapp['request_query'] !== 'home/ad')
 			{
-				//$sw['data-splashscreen'] = "?home/ad";
+				$sw['data-splashscreen'] = "?home/ad";
 			}
 			
 			

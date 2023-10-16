@@ -5,32 +5,40 @@ if (self.window)
 			navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(() =>
 				navigator.serviceWorker.ready.then(registration => resolve(registration.active)))));
 
-
-
-
 	init.then(sw =>
 	{
 		const speedtest = callback => new Promise(resolve =>
 		{
-			const controller = new AbortController, resources = document.querySelectorAll([
+			const resources = Array.from(document.querySelectorAll([
 				'link[rel=dns-prefetch]',
-				'link[rel=preconnect]'].join(','));
-			resources.length && Promise.any(Array.from(resources).map(link =>
-				fetch(link.href, {cache: 'no-cache', signal: controller.signal}))).then(response =>
-					controller.abort(resolve(new URL(response.url).origin)));
+				'link[rel=preconnect]'].join(','))).map(link => link.href);
+			if (resources.includes(sessionStorage.getItem('origin')))
+			{
+				return resolve(new URL(sessionStorage.getItem('origin')).origin);
+			}
+			if (resources.length)
+			{
+				console.log('retest');
+				const controller = new AbortController;
+				Promise.any(resources.map(url =>
+					fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
+						controller.abort(sessionStorage.setItem('origin', response.url) || resolve(new URL(response.url).origin)));
+			}
 		}).then(callback);
 		sw.postMessage(localStorage.getItem('token'));
-		sessionStorage.getItem('origin') || speedtest(origin => sw.postMessage(origin) || sessionStorage.setItem('origin', origin));
-
-
-
 		if ('reload' in script.dataset)
 		{
 			return location.assign(script.dataset.reload);
 		}
+		speedtest(origin => sw.postMessage(origin));
+		addEventListener('online', () => sessionStorage.removeItem('origin') || speedtest(origin => sw.postMessage(origin)));
 		if ('splashscreen' in script.dataset)
 		{
-			masker.session_once('splashscreen', () => masker.open(script.dataset.splashscreen));
+			masker.session_once('splashscreen', () =>
+			{
+				masker.open(script.dataset.splashscreen);
+				return script.dataset.splashscreen;
+			});
 		}
 	});
 	function masker(resource, options)
@@ -39,10 +47,10 @@ if (self.window)
 	}
 	masker.authorization = signature => localStorage.setItem('token', signature) || init.then(sw => sw.postMessage(signature));
 	masker.then = callback => init.then(callback);
-	masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
-		//|| sessionStorage.setItem('token', localStorage.getItem('token'))
-		|| init.then(callback);
-	masker.session_once = (name, init) => init.then(() => sessionStorage.getItem(name) || sessionStorage.setItem(name, init()));
+	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
+	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
+	// 	|| init.then(callback);
+	masker.session_once = (name, callinit) => init.then(() => sessionStorage.getItem(name) || sessionStorage.setItem(name, callinit()));
 	
 	masker.open = resources => init.then(() =>
 	{
@@ -64,133 +72,6 @@ if (self.window)
 		});
 		return frame;
 	});
-	
-
-
-
-	
-	
-
-
-
-
-
-
-	// try
-	// {
-	// 	navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(registration =>
-	// 	{
-	// 		console.log(registration)
-	// 		addEventListener('DOMContentLoaded', () =>
-	// 		{
-	// 			const resources = Array.from(document.querySelectorAll([
-	// 				'link[rel=dns-prefetch]',
-	// 				'link[rel=preconnect]'].join(','))).map(link => link.href),
-	// 			reselect = registration => registration.active.postMessage(resources);
-	// 			addEventListener('online', () => navigator.serviceWorker.ready.then(reselect));
-		
-	// 		});
-	// 		navigator.serviceWorker.ready.then(registration =>
-	// 		{
-				
-	// 			console.log('signature')
-	// 			registration.active.postMessage(localStorage.getItem('token'));
-
-
-
-				
-	
-				
-	// 			if ('reload' in script.dataset)
-	// 			{
-	// 				// if (sessionStorage.getItem('resources'))
-	// 				// {
-	// 				// 	registration.active.postMessage(sessionStorage.getItem('resources').split('|'));
-	// 				// }
-	// 				//console.log(script.dataset.reload)
-	// 				//location.assign(script.dataset.reload)
-	// 			}
-	// 			else
-	// 			{
-
-	// 			}
-	// 		});
-
-
-	// 	});
-	// 	// if (resources.length && resources.join('|') !== sessionStorage.getItem('resources'))
-	// 	// {
-	// 	// 	sessionStorage.setItem('resources', resources.join('|'));
-	// 	// 	navigator.serviceWorker.ready.then(reselect);
-	// 	// 	console.log(resources);
-	// 	// }
-	// }
-	// catch(error)
-	// {
-	// 	console.error(error);
-	// }
-
-
-
-
-
-
-
-	
-	// window.authorization = async signature =>
-	// 	localStorage.setItem(script.dataset.authorization, signature)
-	// 		|| navigator.serviceWorker.ready.then(registration => registration.active.postMessage({signature}));
-
-
-
-	// const configs = new Promise(resolve => {
-	// 	sessionStorage.getItem('configs')
-	// 	? resolve(JSON.parse(sessionStorage.getItem('configs')))
-	// 	: request(script.src).then(response => response.json()).then(resolve)
-	// });
-
-
-	// if ('splashscreen' in script.dataset)
-	// {
-
-
-	// }
-	
-
-
-
-
-
-
-
-	// window.addEventListener('DOMContentLoaded', async () =>
-	// {
-	// 	console.log('DOMContentLoaded');
-	// 	const
-	// 	resources = Array.from(document.querySelectorAll([
-	// 		'link[rel=dns-prefetch]',
-	// 		'link[rel=preconnect]'].join(','))).map(link => link.href);
-
-
-
-		
-
-
-	// 	navigator.serviceWorker.ready.then(registration =>{
-	// 		console.log('navigator.serviceWorker');
-	// 	}, ()=>{
-	// 		console.log('navigator.serviceWorker1')
-	// 	});
-
-	// 	window.addEventListener('online', () =>
-	// 		navigator.serviceWorker.ready.then(registration =>
-	// 			registration.active.postMessage(resources)));
-	// });
-
-	
-
-
-
 }
 else
 {
@@ -245,29 +126,10 @@ else
 	let token, origin;
 	const
 	authorization = new Promise(resolve => token = resolve),
-	resources = new Promise(resolve => origin = resolve),
-	asd = cmd => new Promise((resolve, reject) => {
-		self.postMessage({id})
-	});
-
+	resources = new Promise(resolve => origin = resolve);
 
 	self.addEventListener('message', event =>
 	{
-		// if (Array.isArray(event.data))
-		// {
-		// 	console.log(event.data)
-		// 	if (event.data.length)
-		// 	{
-				
-		// 		const controller = new AbortController;
-		// 		Promise.any(event.data.map(url =>
-		// 			fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
-		// 				controller.abort(typeof origin === 'string'
-		// 					? origin = new URL(response.url).origin
-		// 					: origin(origin = new URL(response.url).origin)));
-		// 	}
-		// 	return;
-		// }
 		const options = {priority: 'high'};
 		if (typeof event.data === 'string')
 		{
@@ -283,10 +145,6 @@ else
 	});
 	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(async response =>
 	{
-		//console.log('event',clients.get(event.));
-		// clients.get(event.clientId).then(c => {
-		// 	console.log('ccc', c)
-		// })
 		if (response) return response;
 		if (event.request.url.startsWith(self.location.origin))
 		{
@@ -297,11 +155,6 @@ else
 				{
 					return resources.then(() => request(`${origin}${url.search.substring(1)}`, true));
 				}
-
-
-			
-
-
 				if (event.isReload)
 				{
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',

@@ -218,7 +218,7 @@ addEventListener('DOMContentLoaded', async event =>
 							clear();
 							if ('recordlog' in splashscreen)
 							{
-								fetch(splashscreen.recordlog);
+								loader(splashscreen.recordlog);
 							}
 							switch (true)
 							{
