@@ -7,6 +7,11 @@ if (self.window)
 
 	init.then(sw =>
 	{
+		sw.postMessage(localStorage.getItem('token'));
+		if ('reload' in script.dataset)
+		{
+			return location.assign(script.dataset.reload);
+		}
 		const speedtest = callback => new Promise(resolve =>
 		{
 			const resources = Array.from(document.querySelectorAll([
@@ -18,18 +23,12 @@ if (self.window)
 			}
 			if (resources.length)
 			{
-				console.log('retest');
 				const controller = new AbortController;
 				Promise.any(resources.map(url =>
 					fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
 						controller.abort(sessionStorage.setItem('origin', response.url) || resolve(new URL(response.url).origin)));
 			}
 		}).then(callback);
-		sw.postMessage(localStorage.getItem('token'));
-		if ('reload' in script.dataset)
-		{
-			return location.assign(script.dataset.reload);
-		}
 		speedtest(origin => sw.postMessage(origin));
 		addEventListener('online', () => sessionStorage.removeItem('origin') || speedtest(origin => sw.postMessage(origin)));
 		if ('splashscreen' in script.dataset)
@@ -131,7 +130,7 @@ else
 	self.addEventListener('message', event =>
 	{
 		const options = {priority: 'high'};
-		if (typeof event.data === 'string')
+		if (typeof event.data === 'string' && event.data.length)
 		{
 			if (/^https?:\/\//i.test(event.data))
 			{

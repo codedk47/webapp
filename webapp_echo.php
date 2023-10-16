@@ -286,9 +286,10 @@ class webapp_echo_html extends webapp_implementation
 		return $form;
 	}
 }
-class webapp_echo_htmltest extends webapp_echo_html
+class webapp_echo_masker extends webapp_echo_html
 {
-	private readonly bool $navigated;
+	public readonly bool $navigated;
+	public readonly webapp_html $sw;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -296,19 +297,17 @@ class webapp_echo_htmltest extends webapp_echo_html
 		//print_r($webapp);
 		
 		//$this->script(['src' => '?service-workers']);
-		$sw = $this->xml->head->append('script', ['src' => '?masker']);
+		$this->sw = $this->xml->head->append('script', ['src' => '?masker']);
 		if ($this->navigated = $webapp->request_header('Sec-Fetch-Dest') === 'document')
 		{
-			$sw['data-reload'] = "?{$webapp['request_query']}";
-			
-
+			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			$webapp->break($this->init(...));
 		}
 		else
 		{
 			if ($webapp['request_query'] !== 'home/ad')
 			{
-				$sw['data-splashscreen'] = "?home/ad";
+				$this->sw['data-splashscreen'] = "?home/ad";
 			}
 			
 			
@@ -317,6 +316,10 @@ class webapp_echo_htmltest extends webapp_echo_html
 	function init()
 	{
 		return 200;
+	}
+	function splashscreen(string $url)
+	{
+		$this->sw['data-splashscreen'] = $url;
 	}
 	function __toString():string
 	{
