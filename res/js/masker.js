@@ -40,8 +40,12 @@ if (self.window)
 			});
 		}
 	});
-	function masker(resource, options)
+	function masker(resource, options = {})
 	{
+		if (options.body)
+		{
+			
+		}
 		fetch(resource, options).then(r => r.text()).then(d => console.log(d));
 	}
 	masker.authorization = signature => localStorage.setItem('token', signature) || init.then(sw => sw.postMessage(signature));
@@ -54,6 +58,7 @@ if (self.window)
 	masker.open = resources => init.then(() =>
 	{
 		const frame = document.createElement('iframe');
+		frame.src = resources;
 		frame.style.cssText = [
 			'position: fixed',
 			'inset: 0',
@@ -61,7 +66,6 @@ if (self.window)
 			'height: 100%',
 			'border: none'
 		].join(';');
-		frame.src = resources;
 		document.body.appendChild(frame).contentWindow.addEventListener('message', event =>
 		{
 			switch (event.data)
