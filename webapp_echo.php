@@ -298,8 +298,11 @@ class webapp_echo_masker extends webapp_echo_html
 		
 		//$this->script(['src' => '?service-workers']);
 		$this->sw = $this->xml->head->append('script', ['src' => '?masker']);
+		$this->navigated = TRUE;
+		return;
 		if ($this->navigated = $webapp->request_header('Sec-Fetch-Dest') === 'document')
 		{
+			//print_r(getallheaders());
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			$webapp->break($this->init(...));
 		}
@@ -323,7 +326,6 @@ class webapp_echo_masker extends webapp_echo_html
 	}
 	function __toString():string
 	{
-		//return parent::__toString();
 		return $this->navigated ? parent::__toString() : $this->webapp->response_maskdata(parent::__toString());
 	}
 }

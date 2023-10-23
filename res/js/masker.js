@@ -44,7 +44,7 @@ if (self.window)
 	{
 		if (options.body)
 		{
-			
+
 		}
 		fetch(resource, options).then(r => r.text()).then(d => console.log(d));
 	}
