@@ -4,19 +4,24 @@ webapp-video{
 	display: block;
 	position: relative;
 }
-webapp-video>div{
+webapp-video>div.control{
 
-	display: flex;
+	
 	position: absolute;
 	left: 0;
 	right: 0;
 	bottom: 0;
-
-
 }
-webapp-video>div>input[type=range]{
+
+webapp-video>div.control>input[type=range]{
 	width: 100%;
 }
+webapp-video>div.control>div{
+	display: flex;
+	background: red;
+	height: 1rem;
+}
+
 
 
 webapp-video>video{
@@ -43,8 +48,11 @@ webapp-videos>div>webapp-video{
 customElements.define('webapp-video', class extends HTMLElement
 {
 	#video = document.createElement('video');
-	#controls = document.createElement('div');
-	#progress = document.createElement('input');
+	// #controls = document.createElement('div');
+	// #progress = document.createElement('input');
+	// #functions = document.createElement('div');
+
+	
 	#playm3u8;
 	constructor()
 	{
@@ -56,25 +64,26 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
 		this.#video.controlsList = 'nodownload';
 
-		const progress = this.#controls.appendChild(this.#progress);
-		progress.type = 'range';
-		progress.max = 1;
-		progress.step = 0.0001;
-		progress.value = 0;
+		// const progress = this.#controls.appendChild(this.#progress);
+		// progress.type = 'range';
+		// progress.max = 1;
+		// progress.step = 0.0001;
+		// progress.value = 0;
 
-		progress.onmousedown = progress.ontouchstart = () => this.pause();
-		progress.addEventListener('change', () =>
-		{
-			this.#video.currentTime = this.#video.duration * progress.value;
-			this.paused && this.play();
-		});
+		// progress.onmousedown = progress.ontouchstart = () => this.pause();
+		// progress.addEventListener('change', () =>
+		// {
+		// 	this.#video.currentTime = this.#video.duration * progress.value;
+		// 	this.paused && this.play();
+		// });
 
-		this.#video.addEventListener('timeupdate', () =>
-		{
-			progress.value = this.#video.currentTime / this.#video.duration
-		});
+		// this.#video.addEventListener('timeupdate', () =>
+		// {
+		// 	progress.value = this.#video.currentTime / this.#video.duration
+		// });
 
-		this.appendChild(this.#controls);
+		// const functions = this.#controls.appendChild(this.#functions);
+		
 
 		this.#video.addEventListener('canplay', event =>
 		{
@@ -194,9 +203,6 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.autoplay = this.hasAttribute('autoplay');
 		this.#video.controls = this.hasAttribute('controls');
 		this.appendChild(this.#video);
-
-
-
 
 		
 		if ('poster' in this.dataset)

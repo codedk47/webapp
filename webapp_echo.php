@@ -293,27 +293,11 @@ class webapp_echo_masker extends webapp_echo_html
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
-
-		//print_r($webapp);
-		
-		//$this->script(['src' => '?service-workers']);
 		$this->sw = $this->xml->head->append('script', ['src' => '?masker']);
-		$this->navigated = TRUE;
-		return;
-		if ($this->navigated = $webapp->request_header('Sec-Fetch-Dest') === 'document')
+		if ($this->navigated = $webapp->request_header('Sec-Fetch-Mode') === 'navigate')
 		{
-			//print_r(getallheaders());
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			$webapp->break($this->init(...));
-		}
-		else
-		{
-			if ($webapp['request_query'] !== 'home/ad')
-			{
-				$this->sw['data-splashscreen'] = "?home/ad";
-			}
-			
-			
 		}
 	}
 	function init()
