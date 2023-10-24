@@ -48,7 +48,9 @@ if (self.window)
 		}
 		fetch(resource, options).then(r => r.text()).then(d => console.log(d));
 	}
-	masker.authorization = signature => localStorage.setItem('token', signature) || init.then(sw => sw.postMessage(signature));
+	masker.authorization = signature => (signature
+		? localStorage.setItem('token', signature)
+		: localStorage.removeItem('token')) || init.then(sw => sw.postMessage(signature));
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
@@ -133,7 +135,7 @@ else
 
 	self.addEventListener('message', event =>
 	{
-		const options = {priority: 'high'};
+		const options = {priority: 'high', headers: {'Service-Worker': 'masker'}};
 		if (typeof event.data === 'string' && event.data.length)
 		{
 			if (/^https?:\/\//i.test(event.data))
@@ -142,7 +144,7 @@ else
 					? origin = event.data
 					: origin(origin = event.data)
 			}
-			options.headers = {Authorization: `Bearer ${event.data}`};
+			options.headers.Authorization = `Bearer ${event.data}`;
 		}
 		token.length ? token(token = options) : token = options;
 	});

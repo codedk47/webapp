@@ -31,7 +31,9 @@ class webapp_client implements Stringable, Countable
 		$this->ssl = $options['ssl'] ?? [
 			'verify_peer' => FALSE,
 			'verify_peer_name' => FALSE,
-			'allow_self_signed' => TRUE];
+			'allow_self_signed' => TRUE,
+			'security_level' => 2#cloudflare tls fingerprinting with need least level 2
+		];
 		$this->reconnect();
 	}
 	function __destruct()
