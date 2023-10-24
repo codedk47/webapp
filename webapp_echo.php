@@ -288,24 +288,17 @@ class webapp_echo_html extends webapp_implementation
 }
 class webapp_echo_masker extends webapp_echo_html
 {
-	public readonly bool $navigated;
+	public readonly bool $initiated;
 	public readonly webapp_html $sw;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
 		$this->sw = $this->xml->head->append('script', ['src' => '?masker']);
-
-		
-
 		// $webapp->request_header('Sec-Fetch-Dest') === 'document'
 		// $webapp->request_header('Sec-Fetch-Mode') === 'navigate'
 		// $webapp->request_header('Sec-Fetch-Site') === 'none'
-
-		if ($this->navigated = $webapp->request_header('Service-Worker') !== 'masker')
+		if ($this->initiated = $webapp->request_header('Service-Worker') !== 'masker')
 		{
-
-			
-
 			// $this->header->append('textarea', [join(array_map(fn($k, $v) =>
 			// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
 			// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
@@ -323,7 +316,7 @@ class webapp_echo_masker extends webapp_echo_html
 	}
 	function __toString():string
 	{
-		return $this->navigated ? parent::__toString() : $this->webapp->response_maskdata(parent::__toString());
+		return $this->initiated ? parent::__toString() : $this->webapp->response_maskdata(parent::__toString());
 	}
 }
 class webapp_echo_htmlmask extends webapp_echo_html
