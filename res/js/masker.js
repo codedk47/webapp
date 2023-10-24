@@ -133,7 +133,7 @@ else
 
 	self.addEventListener('message', event =>
 	{
-		const options = {priority: 'high', headers: {asd: 1}};
+		const options = {priority: 'high'};
 		if (typeof event.data === 'string' && event.data.length)
 		{
 			if (/^https?:\/\//i.test(event.data))
@@ -142,7 +142,7 @@ else
 					? origin = event.data
 					: origin(origin = event.data)
 			}
-			options.headers.Authorization = `Bearer ${event.data}`;
+			options.headers = {Authorization: `Bearer ${event.data}`};
 		}
 		token.length ? token(token = options) : token = options;
 	});
