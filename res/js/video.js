@@ -4,15 +4,17 @@ webapp-video{
 	display: block;
 	position: relative;
 }
+webapp-video>video{
+	display: block;
+	object-fit: cover;
+}
+/*
 webapp-video>div.control{
-
-	
 	position: absolute;
 	left: 0;
 	right: 0;
 	bottom: 0;
 }
-
 webapp-video>div.control>input[type=range]{
 	width: 100%;
 }
@@ -21,19 +23,11 @@ webapp-video>div.control>div{
 	background: red;
 	height: 1rem;
 }
-
-
-
-webapp-video>video{
-	display: block;
-	object-fit: cover;
-}
+*/
 webapp-videos{
 	display: block;
-	height: 300px;
 	position: relative;
 	overflow: hidden;
-	border: 1px red solid;
 }
 webapp-videos>div{
 	width: 100%;
@@ -42,9 +36,7 @@ webapp-videos>div{
 }
 webapp-videos>div>webapp-video{
 	height: 100%;
-}
-
-`;
+}`;
 customElements.define('webapp-video', class extends HTMLElement
 {
 	#video = document.createElement('video');
@@ -232,8 +224,6 @@ customElements.define('webapp-videos', class extends HTMLElement
 	#current = null;
 	#before = null;
 	#index = -1;
-	#events = {change: Boolean}
-
 	#fetch = true;
 	constructor()
 	{
@@ -329,7 +319,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 			{
 				this.#passive.pause();
 				this.#active.play();
-				this.#change();
+				this.onchange && this.onchange();
 				if (currentindex < beforeindex)
 				{
 					if (currentindex && this.#contents.length - beforeindex > 1)
@@ -355,17 +345,6 @@ customElements.define('webapp-videos', class extends HTMLElement
 	get current(){return this.#current;}
 	get before(){return this.#before;}
 	get index(){return this.#index;}
-	#change()
-	{
-		this.#events.change(this);
-		// console.log({
-		// 	active: this.active,
-		// 	current: this.current,
-		// 	passive: this.passive,
-		// 	before: this.before,
-		// 	index: this.index
-		// });
-	}
 	#setvideo(video, content)
 	{
 		if ('poster' in video)
@@ -394,7 +373,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 						this.#active.play();
 						this.#current = video;
 						this.#index = 0;
-						this.#change();
+						this.onchange && this.onchange();
 					}
 				}
 				this.#contents[this.#contents.length] = video;
@@ -419,19 +398,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 			// this.hasAttribute('controls') && video.setAttributeNode(document.createAttribute('controls'));
 
 		});
-		if ('change' in this.dataset && this.dataset.change in window)
-		{
-			this.#events.change = window[this.dataset.change];
-		}
-		
-		
 		this.appendChild(this.#slide);
 		this.fetch();
 	}
 });
-function vtest(v)
-{
-	console.log(v);
-	//console.log(v.active, v.current);
-	//v.current.canplay.then(t => console.log(t));
-}

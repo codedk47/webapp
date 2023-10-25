@@ -118,10 +118,6 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 			transitioning = false;
 		});
 	}
-	slide(upordown)
-	{
-		this.#slider(Boolean(upordown));
-	}
 	#setcontent(node, content)
 	{
 		node.style.backgroundImage = `url(${content.picture})`;
@@ -137,6 +133,10 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 		}
 		this.#contents[this.#contents.length] = content;
 	}
+	slide(upordown)
+	{
+		this.#slider(Boolean(upordown));
+	}
 	connectedCallback()
 	{
 		this.appendChild(this.#slide);
@@ -148,7 +148,3 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 		});
 	}
 });
-function cc(event)
-{
-	console.log(this, event)
-}
