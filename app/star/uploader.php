@@ -255,15 +255,15 @@ JS);
 		if (is_string($search))
 		{
 			$search = urldecode($search);
-			if (in_array(strlen($search), [4, 12], TRUE) && trim($search, webapp::key))
-			{
-				$conds[0][] = 'name LIKE ?s';
-				$conds[] = "%{$search}%";
-			}
-			else
+			if (in_array(strlen($search), [4, 12], TRUE) && trim($search, webapp::key) === '')
 			{
 				$conds[0][] = strlen($search) === 4 ? 'FIND_IN_SET(?s,tags)' : 'hash=?s';
 				$conds[] = $search;
+			}
+			else
+			{
+				$conds[0][] = 'name LIKE ?s';
+				$conds[] = "%{$search}%";
 			}
 		}
 		if ($sync = $this->webapp->query['sync'] ?? '')
