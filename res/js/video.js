@@ -240,19 +240,19 @@ customElements.define('webapp-videos', class extends HTMLElement
 		super();
 		let transitioning = false, currentindex = 0, beforeindex = 0;
 		const position = {
-			offsettop: 0,
 			offset: 0,
 			start: 0,
-			move: 0
+			move: 0,
+			top: 0
 		}
 		this.#slide.style.top = '0px';
 		this.#slide.addEventListener('touchstart', event =>
 		{
 			//console.log('touchstart');
 			if (transitioning) return;
-			position.offsettop = this.#slide.style.top;
 			position.offset = this.#slide.offsetTop;
 			position.start = event.clientY || event.touches[0].clientY;
+			position.top = this.#slide.style.top;
 		});
 		this.#slide.addEventListener('touchmove', event =>
 		{
@@ -268,7 +268,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 			if (transitioning) return;
 			let [top, direction, clicked] = typeof offset === 'boolean'
 				? [this.#slide.style.top, offset ? -101 : 101, false]
-				: [position.offsettop, position.start - position.move, this.#slide.style.top === position.offsettop];
+				: [position.top, position.start - position.move, this.#slide.style.top === position.top];
 			if (clicked)
 			{
 				console.log('clicked');
@@ -431,6 +431,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 });
 function vtest(v)
 {
-	console.log(v.active, v.current);
-	v.current.canplay.then(t => console.log(t));
+	console.log(v);
+	//console.log(v.active, v.current);
+	//v.current.canplay.then(t => console.log(t));
 }

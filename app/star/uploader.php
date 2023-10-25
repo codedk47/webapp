@@ -255,7 +255,7 @@ JS);
 		if (is_string($search))
 		{
 			$search = urldecode($search);
-			if (trim($search, webapp::key))
+			if (in_array(strlen($search), [4, 12], TRUE) && trim($search, webapp::key))
 			{
 				$conds[0][] = 'name LIKE ?s';
 				$conds[] = "%{$search}%";
