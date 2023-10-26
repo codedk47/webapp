@@ -225,6 +225,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 	#before = null;
 	#index = -1;
 	#fetch = true;
+	#page = -1;
 	constructor()
 	{
 		super();
@@ -356,28 +357,39 @@ customElements.define('webapp-videos', class extends HTMLElement
 			content.canplay = video.m3u8(content.m3u8, content.preview);
 		}
 	}
-	fetch()
+	fetch(index)
 	{
 		if ('fetch' in this.dataset && this.#fetch)
 		{
+			let page = 
+
+
 			this.#fetch = false;
 			//console.log('fetching...');
-			fetch(`${this.dataset.fetch}${'page' in this.dataset ? this.dataset.page++ : ''}`).then(response => response.json()).then(data => data.forEach(video =>
+			fetch(`${this.dataset.fetch}${'page' in this.dataset ? this.dataset.page++ : ''}`).then(response => response.json()).then(data =>
 			{
-				if (this.#contents.length < 3)
+				if (data.length)
 				{
-					this.#setvideo(this.#slide.appendChild(this.#videos[this.#contents.length]), video);
-					if (this.#contents.length === 0)
+					data.forEach(video =>
 					{
-						this.#active = this.#videos[0];
-						this.#active.play();
-						this.#current = video;
-						this.#index = 0;
-						this.onchange && this.onchange();
-					}
+						if (this.#contents.length < 3)
+						{
+							this.#setvideo(this.#slide.appendChild(this.#videos[this.#contents.length]), video);
+							if (this.#contents.length === 0)
+							{
+								this.#active = this.#videos[0];
+								this.#active.play();
+								this.#current = video;
+								this.#index = 0;
+								this.onchange && this.onchange();
+							}
+						}
+						this.#contents[this.#contents.length] = video;
+					});
+					this.#fetch = true;
 				}
-				this.#contents[this.#contents.length] = video;
-			})).then(() => this.#fetch = true);
+
+			});
 		}
 	}
 	slide(upordown)

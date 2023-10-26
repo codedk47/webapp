@@ -1190,15 +1190,7 @@ class webapp_router_control extends webapp_echo_html
 				'prod_vtid_coin500' => '金币 500个'
 			],
 			'游戏' => [
-				'prod_vtid_game100' => '游戏 100元',
-				'prod_vtid_game300' => '游戏 300元',
-				'prod_vtid_game500' => '游戏 500元',
-				'prod_vtid_game800' => '游戏 800元',
-				'prod_vtid_game1000' => '游戏 1000元',
-				'prod_vtid_game2000' => '游戏 2000元',
-				'prod_vtid_game3000' => '游戏 3000元',
-				'prod_vtid_game5000' => '游戏 5000元',
-				'prod_vtid_game10000' => '游戏 10000元'
+				'prod_vtid_top_up_game' => '游戏充值'
 			]
 		];
 		return $listed ? array_merge(['' => array_shift($vtids)], ...array_values($vtids)) : $vtids;
