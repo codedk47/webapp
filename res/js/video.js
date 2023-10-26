@@ -204,7 +204,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		}
 		if ('m3u8' in this.dataset)
 		{
-			this.m3u8(this.dataset.m3u8, this.dataset.preview).then(window[this.dataset.canplay]);
+			this.m3u8(this.dataset.m3u8, this.dataset.preview).then(this.oncanplay);
 			delete this.dataset.m3u8;
 		}
 	}
@@ -361,7 +361,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 	{
 		if ('fetch' in this.dataset && this.#fetch)
 		{
-			let page = 
+			//let page = 
 
 
 			this.#fetch = false;

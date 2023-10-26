@@ -64,7 +64,7 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 		{
 			if (transitioning) return;
 			position.move = event.clientX || event.touches[0].clientX;
-			this.#slide.style.left = `${Math.min(0, Math.max(position.offset + position.move - position.start, -this.offsetWidth * 2))}px`;
+			this.#slide.style.left = `${position.offset + position.move - position.start}px`;
 		});
 		this.#slide.addEventListener('touchend', this.#slider = offset =>
 		{
@@ -101,7 +101,6 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 				this.#slide.style.transition = 'left .4s ease';
 				this.#slide.style.left = left;
 			}
-
 		});
 		this.#slide.addEventListener('transitionend', () =>
 		{
@@ -143,10 +142,9 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 		requestAnimationFrame(() =>
 		{
 			const contents = JSON.parse(this.lastChild.nodeValue);
-			this.removeChild(this.lastChild);
+			//this.removeChild(this.lastChild);
 			Array.isArray(contents) && contents.forEach(content => this.addition(content));
 			setInterval(this.#slider, this.dataset.duration * 1000 || 4000, this.hasAttribute('reverse'));
-
 		});
 	}
 });
