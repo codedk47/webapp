@@ -7,7 +7,7 @@ if (self.window)
 
 	init.then(sw =>
 	{
-		sw.postMessage(localStorage.getItem('token'));
+		sw.postMessage(localStorage.getItem((script.src.match(/\/\w+$/) || ['/token'])[0].substring(1)));
 		if ('reload' in script.dataset)
 		{
 			return location.assign(script.dataset.reload);

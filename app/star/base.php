@@ -588,6 +588,12 @@ class base extends webapp
 	{
 		return $this->game->balance();
 	}
+	private function game_exchange(bool $result, array $record):bool
+	{
+		return $result
+			? $this->remote($this['app_sync_call'], 'game_withdraw', [$record])
+			: $this->game->transfer($record['userid'], floatval($record['fee']), $orderid);
+	}
 	private function user_exchange(bool $result, array $record):bool
 	{
 		return $result || $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])

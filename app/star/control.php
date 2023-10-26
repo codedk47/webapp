@@ -2106,7 +2106,7 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function get_record_exchange_balance(int $page = 1)
 	{
-		$conds = [['type="exchange"']];
+		$conds = [['type="exchange" AND ext->>"$.vtid" = "user_exchange"']];
 		if ($userid = $this->webapp->query['userid'] ?? '')
 		{
 			$conds[0][] = 'userid=?s';
@@ -2148,7 +2148,7 @@ class webapp_router_control extends webapp_echo_html
 			}
 		});
 		$table->fieldset('创建时间', '用户ID', '提现', 'TRC', '状态');
-		$table->header('提现记录');
+		$table->header('余额提现');
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('input', [
 			'type' => 'search',
@@ -2172,6 +2172,88 @@ class webapp_router_control extends webapp_echo_html
 
 	function get_record_exchange_game(int $page = 1)
 	{
-		
+		$conds = [['type="exchange" AND ext->>"$.vtid" = "game_exchange"']];
+		if ($userid = $this->webapp->query['userid'] ?? '')
+		{
+			$conds[0][] = 'userid=?s';
+			$conds[] = $userid;
+		}
+		if ($result = $this->webapp->query['result'] ?? '')
+		{
+			$conds[0][] = 'result=?s';
+			$conds[] = $result;
+		}
+		$conds[0] = sprintf('%sORDER BY mtime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$exchange = $this->webapp->mysql->records(...$conds)->paging($page);
+		$table = $this->main->table($exchange, function($table, $value)
+		{
+			$ext = json_decode($value['ext'], TRUE);
+			$table->row();
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell($value['hash']);
+			$table->cell($value['userid']);
+			$table->cell(number_format($value['fee']));
+
+
+			$table->cell()->details('详细')->append('pre', json_encode($ext,
+				JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK | JSON_UNESCAPED_UNICODE));
+
+			$action = $table->cell();
+			if ($value['result'] === 'pending')
+			{
+				$action->append('a', ['允许提现',
+					'href' => "?control/record-exchange-game,hash:{$value['hash']},result:success",
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				]);
+				$action->append('span', ' | ');
+				$action->append('a', ['退回分数',
+					'href' => "?control/record-exchange-game,hash:{$value['hash']},result:failure",
+					'data-method' => 'patch',
+					'data-bind' => 'click'
+				]);
+			}
+			else
+			{
+				$action->text(base::record_results[$value['result']]);
+			}
+		});
+		$table->fieldset('创建时间', 'HASH', '用户ID', '提现', '扩展数据', '状态');
+		$table->header('游戏提现');
+		$table->paging($this->webapp->at(['page' => '']));
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $userid,
+			'style' => 'padding:2px;width:8rem',
+			'placeholder' => '用户ID',
+			'onkeydown' => 'event.keyCode==13&&g({userid:this.value||null,page:null})'
+		]);
+		$table->bar->select(['' => '全部'] + base::record_results)
+			->setattr(['onchange' => 'g({result:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($result);
+		$table->bar->append('a', isset($this->webapp->query['balance'])
+			? [sprintf('代理游戏余额：%s', number_format($this->webapp->game_balance())),
+				'href' => $this->webapp->at(['balance' => FALSE]),
+				'style' => 'margin-left:.6rem']
+			: ['显示代理游戏余额',
+				'href' => $this->webapp->at(['balance' => 1]),
+				'style' => 'margin-left:.6rem']);
 	}
+	function patch_record_exchange_game(string $hash, string $result)
+	{
+		$this->webapp->record($hash, $result === 'success')
+			? $this->goto()
+			: $this->dialog('操作失败！');
+
+		
+		// $this->webapp->record($hash, $result === 'success')
+		// 	? $this->goto()
+		// 	: $this->dialog('操作失败！');
+
+		//$this->webapp->record
+
+		//$this->webapp->remote($this->webapp['app_sync_call'], 'sync_user', [$id]);
+
+	}
+
 }

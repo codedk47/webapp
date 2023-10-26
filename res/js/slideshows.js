@@ -23,7 +23,7 @@ webapp-slideshows>div:first-child>a{
 customElements.define('webapp-slideshows', class extends HTMLElement
 {
 	#slide = document.createElement('div');
-	#slides = [
+	#anchor = [
 		document.createElement('a'),
 		document.createElement('a'),
 		document.createElement('a')
@@ -35,7 +35,7 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 	{
 		super();
 		this.#slide.style.left = '-100%';
-		this.#slide.append(...this.#slides.map(anchor =>
+		this.#slide.append(...this.#anchor.map(anchor =>
 		{
 			anchor.onclick = event =>
 			{
@@ -127,9 +127,9 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 	{
 		switch (this.#contents.length)
 		{
-			case 0: this.#setcontent(this.#slides[1], content);
-			case 1: this.#setcontent(this.#slides[2], content);
-			case 2: this.#setcontent(this.#slides[0], content);
+			case 0: this.#setcontent(this.#anchor[1], content);
+			case 1: this.#setcontent(this.#anchor[2], content);
+			case 2: this.#setcontent(this.#anchor[0], content);
 		}
 		this.#contents[this.#contents.length] = content;
 	}
