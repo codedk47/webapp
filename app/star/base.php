@@ -605,17 +605,23 @@ class base extends webapp
 		{
 			50 => ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 7], //VIP增加7天
 			100 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+10', $this->time, $this->time, 86400 * 30], //VIP增加30天（送10张观影卷）
-			200 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+30', $this->time, $this->time, 86400 * 365], //VIP增加365天（送30张观影卷）
-			300 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+100', $this->time, $this->time, 86400 * 365 * 20], //永久VIP（送100张观影卷）
+			200 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+20', $this->time, $this->time, 86400 * 90], //VIP增加90天（送20张观影卷）
+			300 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+30', $this->time, $this->time, 86400 * 365], //VIP增加365天（送30张观影卷）
+			400 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+100', $this->time, $this->time, 86400 * 365 * 20], //永久VIP（送100张观影卷）
 			500 => ['expire=0'], //超级VIP（所有VIP金币视频免费解锁）
 			default => []
 		};
 		return $result && $give && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update(...$give) === 1;
 	}
+	private function prod_vtid_vip_premium(bool $result, array $record):bool
+	{
+		//铂金会员卡
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('expire=0') === 1;
+	}
 	private function prod_vtid_vip_11_11(bool $result, array $record):bool
 	{
-		//双11福利卡
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('expire=0') === 1;
+		//双11福利会员卡
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 365 * 20) === 1;
 	}
 	private function prod_vtid_coin_top_up(bool $result, array $record):bool
 	{

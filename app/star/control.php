@@ -1175,12 +1175,15 @@ class webapp_router_control extends webapp_echo_html
 	{
 		$vtids = [
 			'' => '实体产品',
-			'基本虚拟产品' => [
+			'基本固定虚拟产品' => [
 				'prod_vtid_vip_top_up' => '会员卡',
 				'prod_vtid_coin_top_up' => '观影金币',
 				'prod_vtid_game_top_up' => '游戏金币'
 			],
-			'临时虚拟产品' => [
+			'临时添加虚拟产品' => [
+				'prod_vtid_vip_premium' => '铂金永久会员卡'
+			],
+			'促销活动虚拟产品' => [
 				'prod_vtid_vip_11_11' => '双11福利会员卡'
 			],
 		];
