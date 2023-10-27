@@ -1175,23 +1175,14 @@ class webapp_router_control extends webapp_echo_html
 	{
 		$vtids = [
 			'' => '实体产品',
-			'会员' => [
-				'prod_vtid_vip50' => '会员卡 50元',
-				'prod_vtid_vip100' => '会员卡 100元',
-				'prod_vtid_vip200' => '会员卡 200元',
-				'prod_vtid_vip300' => '会员卡 300元',
-				'prod_vtid_vip500' => '会员卡 500元'
+			'基本虚拟产品' => [
+				'prod_vtid_vip_top_up' => '会员卡',
+				'prod_vtid_coin_top_up' => '观影金币',
+				'prod_vtid_game_top_up' => '游戏金币'
 			],
-			'金币' => [
-				'prod_vtid_coin50' => '金币 50个',
-				'prod_vtid_coin100' => '金币 100个',
-				'prod_vtid_coin200' => '金币 200个',
-				'prod_vtid_coin300' => '金币 300个',
-				'prod_vtid_coin500' => '金币 500个'
+			'临时虚拟产品' => [
+				'prod_vtid_vip_11_11' => '双11福利会员卡'
 			],
-			'游戏' => [
-				'prod_vtid_top_up_game' => '游戏充值'
-			]
 		];
 		return $listed ? array_merge(['' => array_shift($vtids)], ...array_values($vtids)) : $vtids;
 	}
@@ -1232,10 +1223,12 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
 			$table->cell($value['hash']);
 			$table->cell($prod[$value['vtid']] ?? '未知');
-			$table->cell([number_format($value['sales']), 'style' => 'text-align:right']);
-			$table->cell()->append('a', [$value['name'], 'href' => "?control/prod-update,hash:{$value['hash']}"]);
-			$table->cell([number_format($value['count']), 'style' => 'text-align:right']);
 			$table->cell([number_format($value['price']), 'style' => 'text-align:right']);
+			
+			$table->cell()->append('a', [$value['name'], 'href' => "?control/prod-update,hash:{$value['hash']}"]);
+			$table->cell([number_format($value['sales']), 'style' => 'text-align:right']);
+			$table->cell([number_format($value['count']), 'style' => 'text-align:right']);
+			
 
 			$table->cell()->append('a', ['删除',
 				'href' => "?control/prod,hash:{$value['hash']}",
@@ -1247,7 +1240,7 @@ class webapp_router_control extends webapp_echo_html
 		}, $this->prod_vtids(TRUE));
 		$table->paging($this->webapp->at(['page' => '']));
 
-		$table->fieldset('创建时间', '修改时间', 'HASH', 'VTID', '累计销量', '名称', '剩余数量', '单价（元）', '删除');
+		$table->fieldset('创建时间', '修改时间', 'HASH', 'VTID', '单价（元）', '名称', '累计销量', '剩余数量', '删除');
 		$table->header('产品 %d 项', $table->count());
 		$table->bar->append('button', ['添加产品', 'onclick' => 'location.href="?control/prod-insert"']);
 

@@ -7,6 +7,7 @@ webapp-video{
 webapp-video>video{
 	display: block;
 	object-fit: cover;
+	
 }
 /*
 webapp-video>div.control{
@@ -79,6 +80,7 @@ customElements.define('webapp-video', class extends HTMLElement
 
 		this.#video.addEventListener('canplay', event =>
 		{
+			this.oncanplay && this.oncanplay(this.#video);
 			this.#video.setAttribute('height', this.hasAttribute('autoheight')
 				? Math.trunc(event.target.videoHeight * this.scalewidth)
 				: '100%');
@@ -204,7 +206,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		}
 		if ('m3u8' in this.dataset)
 		{
-			this.m3u8(this.dataset.m3u8, this.dataset.preview).then(this.oncanplay ? video => this.oncanplay(video) : null);
+			this.m3u8(this.dataset.m3u8, this.dataset.preview);
 			delete this.dataset.m3u8;
 		}
 	}
@@ -280,6 +282,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 					}
 					else
 					{
+						currentindex < 3 && this.fetch(true);
 						this.#index = currentindex;
 						this.#before = this.#contents[beforeindex];
 						this.#current = this.#contents[currentindex];
@@ -290,7 +293,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 				}
 				else
 				{
-					this.#contents.length - currentindex < 4 && this.fetch();
+					//this.#contents.length - currentindex < 4 && this.fetch();
 					if (++currentindex < this.#contents.length)
 					{
 						this.#index = currentindex;
@@ -357,8 +360,36 @@ customElements.define('webapp-videos', class extends HTMLElement
 			content.canplay = video.m3u8(content.m3u8, content.preview);
 		}
 	}
-	fetch(index)
+	fetch(prev, index)
 	{
+		if ('fetch' in this.dataset && this.#fetch)
+		{
+			if (this.#page)
+			{
+				
+				fetch(`${this.dataset.fetch}${'page' in this.dataset ? this.dataset.page++ : ''}`)
+				
+			}
+			else
+			{
+				fetch(this.dataset.fetch)
+			}
+
+
+
+			// if (prev && this.#page < 1) return;
+			// this.#page
+
+
+
+			// console.log(`${this.dataset.fetch}${this.#page}`)
+
+
+
+			// console.log(this.dataset.fetch, this.#page)
+		}
+
+		return;
 		if ('fetch' in this.dataset && this.#fetch)
 		{
 			//let page = 
@@ -398,6 +429,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 	}
 	connectedCallback()
 	{
+		this.#page = parseInt(this.dataset.page, 10);
 		this.#videos.forEach(video =>
 		{
 			video.setAttributeNode(document.createAttribute('loop'));
@@ -414,8 +446,3 @@ customElements.define('webapp-videos', class extends HTMLElement
 		this.fetch();
 	}
 });
-
-function vv(a)
-{
-	console.log(a)
-}

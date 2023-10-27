@@ -599,72 +599,48 @@ class base extends webapp
 		return $result || $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
 			->update('balance=balance+?i', $record['fee']) === 1;
 	}
-	private function prod_vtid_vip50(bool $result, array $record):bool
+	private function prod_vtid_vip_top_up(bool $result, array $record):bool
 	{
-		//VIP增加7天
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
-			->update('expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 7) === 1;
+		$give = match ($record['fee'])
+		{
+			50 => ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 7], //VIP增加7天
+			100 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+10', $this->time, $this->time, 86400 * 30], //VIP增加30天（送10张观影卷）
+			200 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+30', $this->time, $this->time, 86400 * 365], //VIP增加365天（送30张观影卷）
+			300 => ['expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+100', $this->time, $this->time, 86400 * 365 * 20], //永久VIP（送100张观影卷）
+			500 => ['expire=0'], //超级VIP（所有VIP金币视频免费解锁）
+			default => []
+		};
+		return $result && $give && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update(...$give) === 1;
 	}
-	private function prod_vtid_vip100(bool $result, array $record):bool
+	private function prod_vtid_vip_11_11(bool $result, array $record):bool
 	{
-		//VIP增加30天（送10张观影卷）
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
-			->update('expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+10', $this->time, $this->time, 86400 * 30) === 1;
-	}
-	private function prod_vtid_vip200(bool $result, array $record):bool
-	{
-		//VIP增加365天（送30张观影卷）
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
-			->update('expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+30', $this->time, $this->time, 86400 * 365) === 1;
-	}
-	private function prod_vtid_vip300(bool $result, array $record):bool
-	{
-		//永久VIP（送100张观影卷）
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
-			->update('expire=IF(expire>?i,expire,?i)+?i,ticket=ticket+100', $this->time, $this->time, 86400 * 365 * 20) === 1;
-	}
-	private function prod_vtid_vip500(bool $result, array $record):bool
-	{
-		//超级VIP（所有VIP金币视频免费解锁）
+		//双11福利卡
 		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('expire=0') === 1;
 	}
-	private function prod_vtid_coin50(bool $result, array $record):bool
+	private function prod_vtid_coin_top_up(bool $result, array $record):bool
 	{
-		//增加50个金币（赠3天VIP）
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])
-			->update('coin=coin+50,expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 3) === 1;
-	}
-	private function prod_vtid_coin100(bool $result, array $record):bool
-	{
-		//增加100个金币（赠5%金币）
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+105') === 1;
-	}
-	private function prod_vtid_coin200(bool $result, array $record):bool
-	{
-		//增加200个金币（赠5%金币）
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+210') === 1;
-	}
-	private function prod_vtid_coin300(bool $result, array $record):bool
-	{
-		//增加300个金币（赠5%金币）
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+315') === 1;
-	}
-	private function prod_vtid_coin500(bool $result, array $record):bool
-	{
-		//增加500个金币（赠5%金币）
-		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+525') === 1;
+		return $result && $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update(...match ($record['fee'])
+		{
+			50 => ['coin=coin+50,expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 3], //增加50个金币（赠3天VIP）
+			default => ['coin=coin+?i', $record['fee'] + intval($record['fee'] * 0.05)] //其他金额（赠对应金额5%金币）
+		}) === 1;
 	}
 	private function prod_vtid_game_top_up(bool $result, array $record):bool
 	{
-		[$fee, $coin] = match ($record['fee'])
+		[$fee, $give] = match ($record['fee'])
 		{
-			100 => [100, 50],	//游戏 100 送 50 观影金币
-			300 => [300, 100],	//游戏 300 送 100 观影金币
-			500 => [500, 200],	//游戏 500 送 200 观影金币
+			100 => [100, []],
+			200 => [200, []],
+			300 => [300, []],
+			400 => [400, []],
+			500 => [500, ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 7]],	//游戏冲 500 送 7天会员
+			600 => [600, []],
+			800 => [800, []],
+			1000 => [1000, []],
 			default => [0, 0]
 		};
 		return $result && $fee
-			&& $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update('coin=coin+?i', $coin) === 1
+			&& ($give ? $this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->update(...$give) === 1 : TRUE)
 			&& $this->game->transfer($record['userid'], $fee, $orderid);
 	}
 	const record_results = [
