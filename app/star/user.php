@@ -429,6 +429,7 @@ class user extends ArrayObject
 				'date' => date('Y-m-d', $webapp->time),
 				'ctime' => $webapp->time,
 				'mtime' => $webapp->time,
+				'login' => 0,
 				'lasttime' => $webapp->time,
 				'lastip' => $webapp->iphex($webapp->ip),
 				'device' => match (1) {

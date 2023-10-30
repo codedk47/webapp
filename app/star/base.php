@@ -406,7 +406,7 @@ class base extends webapp
 	}
 	function ip():string
 	{
-		return $this->request_ip();
+		return $this->request_ip(TRUE);
 	}
 	function did():?string
 	{
@@ -564,10 +564,10 @@ class base extends webapp
 				'ios' => 'signin_ios',
 				default => 'signin'
 			});
-			$this->mysql->users('WHERE id=?s LIMIT 1', $user['id'])->update([
-				'lasttime' => $this->time,
-				'lastip' => $this->iphex($this->ip)
-			]);
+			$this->mysql->users('WHERE id=?s LIMIT 1', $user['id'])->update(
+				'`login`=`login`+1,lasttime=?i,lastip=?s',
+				$this->time,
+				$this->iphex($this->ip));
 			return $user;
 		}
 		return [];
