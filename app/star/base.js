@@ -17,8 +17,8 @@ function sign_in(form)
 }
 
 
-
-
+const datakey = document.currentScript.dataset.key;
+const resorigin = document.currentScript.dataset.origin;
 
 function content_to_buffer(contents, hash = null)
 {
