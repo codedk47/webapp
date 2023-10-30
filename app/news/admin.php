@@ -656,12 +656,11 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			return $this->warn('该标签存在资源，无法删除！');
 		}
-		if ($this->webapp->admin[2]
-			//&& $this->webapp->call('delTag', $hash)
+		if (&& $this->webapp->call('delTag', $hash)
 			&& $this->webapp->mysql->tags->delete('WHERE hash=?s', $hash)) {
 			return $this->okay("?admin/tags");
 		}
-		$this->warn($this->webapp->admin[2] ? '标签删除失败！' : '需要全局管理权限！');
+		$this->warn('标签删除失败！');
 	}
 	function check_tags(string $alias, string $hash = NULL):bool
 	{
@@ -678,14 +677,14 @@ class webapp_router_admin extends webapp_echo_html
 	{
 		$tag = $this->webapp->mysql->tags('where hash=?s', $hash)->array();
 		if ($tag
-			&& $this->webapp->admin[2]
+
 			&& $this->form_tag($this->webapp)->fetch($tag)
 			&& $this->check_tags($tag['alias'], $hash)
 			&& $this->webapp->mysql->tags('where hash=?s', $hash)->update($tag)
 			&& $this->webapp->call('saveTag', $this->webapp->tag_xml($tag))) {
 			return $this->okay("?admin/tags,search:{$hash}");
 		}
-		$this->warn($this->webapp->admin[2] ? '标签更新失败！' : '需要全局管理权限，或者标签重复！');
+		$this->warn('标签更新失败！');
 	}
 	function get_tag_update(string $hash)
 	{
@@ -753,7 +752,7 @@ class webapp_router_admin extends webapp_echo_html
 	}
 	function get_tagmerge(string $from, string $to)
 	{
-		if ($this->webapp->admin[2] && count($tag = $this->webapp->mysql->tags('where hash in(?S)', [$from, $to])->column('count', 'hash')) === 2)
+		if (count($tag = $this->webapp->mysql->tags('where hash in(?S)', [$from, $to])->column('count', 'hash')) === 2)
 		{
 			$count = 0;
 			$merge = 0;
@@ -774,7 +773,7 @@ class webapp_router_admin extends webapp_echo_html
 			$stat->text("count: {$count}, merge: {$merge}, total: {$update}");
 			return;
 		}
-		$this->warn($this->webapp->admin[2] ? '标签更新失败！' : '需要全局管理权限！');
+		$this->warn('标签更新失败！');
 	}
 	//资源
 	function form_resource($ctx):webapp_form
