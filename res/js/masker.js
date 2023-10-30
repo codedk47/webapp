@@ -178,7 +178,7 @@ else
 					return resources.then(() => request(`${origin}${url.search.substring(1)}`, true));
 				}
 				console.log(event)
-				if (event.isReload)
+				if (event.isReload || event.request.mode === 'navigate')
 				{
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
 						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
