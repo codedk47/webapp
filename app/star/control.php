@@ -42,7 +42,7 @@ class webapp_router_control extends webapp_echo_masker
 				['评论', '?control/comments'],
 				['渠道', '?control/channels'],
 				['配置', '?control/configs'],
-				['注销登录', "javascript:top.location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
+				['注销登录', "javascript:top.location.reload(masker.authorization(null));", 'style' => 'color:maroon']
 			]);
 		}
 		else
