@@ -94,6 +94,7 @@ if (self.window)
 		});
 		return frame;
 	});
+	window.name = 'asdasd';
 }
 else
 {
@@ -183,11 +184,11 @@ else
 						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
 						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
 				}
-				return event.request.url === self.location.href ? fetch(event.request)
-					: authorization.then(() => request(event.request, {
-						priority: 'high',
-						headers: Object.assign(token, Object.fromEntries(event.request.headers.entries()))
-					}));
+				return event.request.url === self.location.href ? fetch(event.request) : authorization.then(() => request(event.request,
+				{
+					priority: 'high',
+					headers: Object.assign(token, Object.fromEntries(event.request.headers.entries()))
+				}));
 			}
 			return request(event.request, true);
 		}
