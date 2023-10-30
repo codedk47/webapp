@@ -639,7 +639,7 @@ class base extends webapp
 			200 => [200, []],
 			300 => [300, []],
 			400 => [400, []],
-			500 => [500, ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 7]],	//游戏冲 500 送 7天会员
+			500 => [500, ['expire=IF(expire>?i,expire,?i)+?i', $this->time, $this->time, 86400 * 7]], //游戏冲 500 送 7天会员
 			600 => [600, []],
 			800 => [800, []],
 			1000 => [1000, []],

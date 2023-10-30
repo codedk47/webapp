@@ -782,14 +782,30 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function request_content(?string $format = NULL):array|string|webapp_xml
 	{
-		return match ($format ?? $this->request_content_type())
+		if (in_array($format ??= $this->request_content_type(), ['application/x-www-form-urlencoded', 'multipart/form-data']))
 		{
-			'application/x-www-form-urlencoded',
-			'multipart/form-data' => $this->io->request_formdata(),
-			'application/json' => json_decode($this->io->request_content(), TRUE),
-			'application/xml' => static::xml($this->io->request_content()),
-			default => $this->io->request_content()
+			return $this->io->request_formdata();
+		}
+		$content = is_string($key = $this->request_header('Mask-Key'))
+			? $this->unmasker(hex2bin($key), $this->io->request_content())
+			: $this->io->request_content();
+		return match ($format)
+		{
+			'application/json' => json_decode($content, TRUE),
+			'application/xml' => static::xml($content),
+			default => $content
 		};
+		// $content = is_string($key = $this->request_header('Mask-Key'))
+		// 	? $this->unmasker(hex2bin($key), $this->io->request_content())
+		// 	: 
+		// return match ($format ?? $this->request_content_type())
+		// {
+		// 	'application/x-www-form-urlencoded',
+		// 	'multipart/form-data' => $this->io->request_formdata(),
+		// 	'application/json' => json_decode($this->io->request_content(), TRUE),
+		// 	'application/xml' => static::xml($this->io->request_content()),
+		// 	default => $this->io->request_content()
+		// };
 	}
 	function request_uploadedfile(string $name, int $maximum = NULL):webapp_request_uploadedfile
 	{

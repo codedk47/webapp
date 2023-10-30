@@ -3,11 +3,12 @@ if (self.window)
 	const script = document.currentScript, init = new Promise(resolve =>
 		addEventListener('DOMContentLoaded', () =>
 			navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(() =>
-				navigator.serviceWorker.ready.then(registration => resolve(registration.active)))));
+				navigator.serviceWorker.ready.then(registration => resolve(registration.active))))),
+	token = (script.src.match(/\/\w+$/) || ['/token'])[0].substring(1);
 
 	init.then(sw =>
 	{
-		sw.postMessage(localStorage.getItem((script.src.match(/\/\w+$/) || ['/token'])[0].substring(1)));
+		sw.postMessage(localStorage.getItem(token));
 		if ('reload' in script.dataset)
 		{
 			return location.assign(script.dataset.reload);
@@ -44,13 +45,29 @@ if (self.window)
 	{
 		if (options.body)
 		{
-
+			const key = Math.random().toString(36).slice(-8).split('').map(value => value.codePointAt());
+			options.headers = Object.assign({}, options.headers);
+			options.headers['Mask-Key'] = key.map(value => value.toString(16)).join('');
+			switch (true)
+			{
+				case options.body instanceof FormData:
+					options.body = Object.fromEntries(options.body.entries());
+				case Object.prototype.toString.call(options.body) === '[object Object]':
+					options.headers['Content-Type'] = 'application/json';
+					options.body = JSON.stringify(options.body);
+					break;
+			}
+			options.body = Uint8Array.from(encodeURIComponent(options.body).match(/%[0-F]{2}|[^%]/g), (value, index) =>
+			{
+				return (value.startsWith('%') ? parseInt(value.substring(1), 16) : value.codePointAt(0)) ^ key[index % 8];
+			}).buffer;
+			console.log(options)
 		}
-		fetch(resource, options).then(r => r.text()).then(d => console.log(d));
+		return fetch(resource, options);
 	}
 	masker.authorization = signature => (signature
-		? localStorage.setItem('token', signature)
-		: localStorage.removeItem('token')) || init.then(sw => sw.postMessage(signature));
+		? localStorage.setItem(token, signature)
+		: localStorage.removeItem(token)) || init.then(sw => sw.postMessage(signature));
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
@@ -135,7 +152,7 @@ else
 
 	self.addEventListener('message', event =>
 	{
-		const options = {priority: 'high', headers: {'Service-Worker': 'masker'}};
+		const headers = {'Service-Worker': 'masker'};
 		if (typeof event.data === 'string' && event.data.length)
 		{
 			if (/^https?:\/\//i.test(event.data))
@@ -144,9 +161,9 @@ else
 					? origin = event.data
 					: origin(origin = event.data)
 			}
-			options.headers.Authorization = `Bearer ${event.data}`;
+			headers.Authorization = `Bearer ${event.data}`;
 		}
-		token.length ? token(token = options) : token = options;
+		token.length ? token(token = headers) : token = headers;
 	});
 	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(async response =>
 	{
@@ -166,9 +183,11 @@ else
 						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
 						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
 				}
-				return event.request.url === self.location.href
-					? fetch(self.location.href)
-					: authorization.then(() => request(event.request, token));
+				return event.request.url === self.location.href ? fetch(event.request)
+					: authorization.then(() => request(event.request, {
+						priority: 'high',
+						headers: Object.assign(token, Object.fromEntries(event.request.headers.entries()))
+					}));
 			}
 			return request(event.request, true);
 		}

@@ -293,6 +293,7 @@ class webapp_echo_masker extends webapp_echo_html
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
+		//'fetchpriority' => 'high', 
 		$this->sw = $this->xml->head->append('script', ['src' => '?masker']);
 		// $webapp->request_header('Sec-Fetch-Dest') === 'document'
 		// $webapp->request_header('Sec-Fetch-Mode') === 'navigate'

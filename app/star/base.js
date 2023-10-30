@@ -1,5 +1,25 @@
-const datakey = document.currentScript.dataset.key;
-const resorigin = document.currentScript.dataset.origin;
+
+function sign_in(form)
+{
+	masker(form.action, {method: 'POST', body: new FormData(form)}).then(response => response.json()).then(json =>
+	{
+		if (json.errors.length)
+		{
+			return alert(json.errors.join('\n'));
+		}
+		if (typeof json.token === 'string')
+		{
+			masker.authorization(json.token);
+			location.reload();
+		}
+	});
+	return false;
+}
+
+
+
+
+
 function content_to_buffer(contents, hash = null)
 {
 	const
@@ -92,7 +112,7 @@ function view_video(data, preview)
 		video.setAttributeNode(document.createAttribute('autoplay'));
 		video.setAttributeNode(document.createAttribute('controls'));
 		video.mask = true;
-		video.loaded(() => {
+		video.on('canplay', () => {
 			play.style.width = `${parseInt(video.width * 0.7)}px`;
 			play.style.height = `${parseInt(video.height * 0.7)}px`;
 		});
@@ -102,17 +122,8 @@ function view_video(data, preview)
 		document.body.appendChild(dialog);
 	}
 	const play = dialog.querySelector('webapp-video');
-	play.style.width = '1px';
-	play.style.height = '1px';
-	play.poster(`${resorigin}${data.cover}`).then(blob => {
-		const cover = new Image;
-		cover.src = blob;
-		cover.onload = () => {
-			play.style.width = `${parseInt(cover.width * 0.7)}px`;
-			play.style.height = `${parseInt(cover.height * 0.7)}px`;
-			play.m3u8(`${resorigin}${data.playm3u8}`, preview);
-		};
-	});
+	play.poster(data.cover);
+	play.m3u8(data.playm3u8, preview);
 	dialog.showModal();
 }
 

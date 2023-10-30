@@ -1,5 +1,5 @@
 <?php
-class webapp_router_control extends webapp_echo_html
+class webapp_router_control extends webapp_echo_masker
 {
 	//private readonly array $signinfo;
 	private array $json = [];
@@ -8,18 +8,20 @@ class webapp_router_control extends webapp_echo_html
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
+		$this->sw['src'] .= '/admin';
 		$this->title('Control');
-		if ($signinfo = $webapp->authorize($webapp->request_cookie($webapp['admin_cookie']), $this->sign_in_auth(...)))
+		if ($this->initiated)
 		{
-			$this->admin = $signinfo['is_admin'];
-			$this->uid = $signinfo['uid'];
+			return;
+		}
+		$this->script(['src' => '/webapp/app/star/base.js']);
+		if ($acc = $webapp->authorization($this->sign_in_auth(...)))
+		{
+			$this->link_resources($webapp['app_resorigins']);
+			$this->admin = $acc['is_admin'];
+			$this->uid = $acc['uid'];
 
 			$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
-			$this->script(['src' => '/webapp/res/js/loader.js']);
-			$this->script([
-				'src' => '/webapp/app/star/base.js',
-				'data-key' => bin2hex(random_bytes(8)),
-				'data-origin' => end($this->webapp['app_resorigins'])]);
 			$this->nav([
 				['数据', '?control/home'],
 				['标签 & 分类', '?control/tags'],
@@ -52,7 +54,9 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function __toString():string
 	{
-		return $this->json ? (string)($this->webapp)(new webapp_echo_json($this->webapp, $this->json)) : parent::__toString();
+		return $this->json
+			? $this->webapp->response_maskdata((string)($this->webapp)(new webapp_echo_json($this->webapp, $this->json)))
+			: parent::__toString();
 	}
 	function sign_in_auth(string $uid, string $pwd):array
 	{
@@ -68,16 +72,18 @@ class webapp_router_control extends webapp_echo_html
 	}
 	function sign_in_page()
 	{
-		webapp_echo_html::form_sign_in($this->main)->xml['action'] = '?control/sign-in';
+		$form = webapp_echo_html::form_sign_in($this->main);
+		$form->xml['action'] = '?control/sign-in';
+		$form->xml['onsubmit'] = 'return sign_in(this)';
 		return 401;
 	}
 	function post_sign_in()
 	{
-		$this->webapp->response_location($this->webapp->request_referer('?control'));
+		$this->json['token'] = NULL;
 		if (webapp_echo_html::form_sign_in($this->webapp)->fetch($admin)
 			&& $this->webapp->authorize($signature = $this->webapp->signature(
 				$admin['username'], $admin['password']), $this->sign_in_auth(...))) {
-			$this->webapp->response_cookie($this->webapp['admin_cookie'], $signature);
+				$this->json['token'] = $signature;
 			return 200;
 		}
 		return 401;
@@ -850,14 +856,13 @@ class webapp_router_control extends webapp_echo_html
 				$table->row();
 				$figures = $table->cell()->append('div', ['class' => 'images']);
 			}
-
 			$ym = date('ym', $value['mtime']);
-			$content = $figures->append('div');
-			$content->append('div', $value['sync'] === 'pending'
-				? ['pending']
-				: ['data-cover' => "/imgs/{$ym}/{$value['hash']}?{$value['ctime']}"]);
-			$content->append('div', $value['hash']);
-
+			$figure = $figures->append('figure');
+			$figure->append('img', ['src' => $value['sync'] === 'pending'
+				? '/webapp/res/ps/loading.svg'
+				: "?/imgs/{$ym}/{$value['hash']}?mask{$value['ctime']}"
+			]);
+			$figure->append('figcaption', $value['hash']);
 		});
 		$table->header('图片 %d 项', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
@@ -881,7 +886,7 @@ class webapp_router_control extends webapp_echo_html
 	function get_videos(string $search = NULL, int $page = 1)
 	{
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
-		$this->script(['src' => '/webapp/res/js/player.js']);
+		$this->script(['src' => '/webapp/res/js/video.js']);
 		$conds = [[]];
 		if (is_string($search))
 		{
@@ -1042,17 +1047,20 @@ class webapp_router_control extends webapp_echo_html
 
 			if (in_array($value['sync'], ['finished', 'allow', 'deny'] ,TRUE))
 			{
-				$cover->append('div', [
+				$cover->append('img', [
+					'loading' => 'lazy',
+					'src' => "?/{$ym}/{$value['hash']}/cover?mask{$value['ctime']}",
 					'id' => "v{$value['hash']}",
-					'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['ctime']}",
-					'data-playm3u8' => "/{$ym}/{$value['hash']}/play",
-					'onclick' => "view_video(this.dataset, {$value['preview']})"
+					'data-cover' => "?/{$ym}/{$value['hash']}/cover?mask{$value['ctime']}",
+					'data-playm3u8' => "?/{$ym}/{$value['hash']}/play?mask0000000000",
+					'onclick' => "view_video(this.dataset, {$value['preview']})",
+					'style' => 'object-fit: contain;'
 				]);
-				$title['onclick'] = "view_video(document.querySelector('div#v{$value['hash']}').dataset)";
+				$title['onclick'] = "view_video(document.querySelector('img#v{$value['hash']}').dataset)";
 			}
 			else
 			{
-				$cover[0] = 'Pending';
+				$cover->append('img', ['src' => '/webapp/res/ps/loading.svg']);
 			}
 
 		}, $tags);
@@ -1383,16 +1391,10 @@ class webapp_router_control extends webapp_echo_html
 			$table->cell(['信息', 'colspan' => 6]);
 
 			$table->row();
-			$cover = $table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])->append('div');
-			if ($value['change'] === 'sync')
-			{
-				$cover[0] = '等待同步...';
-			}
-			else
-			{
-				$cover['style'] = 'background-size:contain';
-				$cover['data-cover'] = "/news/{$value['hash']}?{$value['ctime']}";
-			}
+			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])
+				->append('img', ['loading' => 'lazy', 'src' => $value['change'] === 'sync'
+					? '/webapp/res/ps/loading.svg'
+					: "?/news/{$value['hash']}?mask{$value['ctime']}"]);
 
 			$table->row();
 			$table->cell('HASH');
@@ -1461,7 +1463,8 @@ class webapp_router_control extends webapp_echo_html
 		if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->fetch($ad))
 		{
 			$form = $this->form_ad($this->main);
-			$form->xml->fieldset->div['data-cover'] = "/news/{$ad['hash']}?{$ad['ctime']}";
+			$form->xml->fieldset->div->append('img', ['src' => "?/news/{$ad['hash']}?mask{$ad['ctime']}"]);
+			//$form->xml->fieldset->div['data-cover'] = "/news/{$ad['hash']}?{$ad['ctime']}";
 			$form->echo($ad);
 		}
 	}
@@ -1584,11 +1587,21 @@ class webapp_router_control extends webapp_echo_html
 				$image = $table->cell(['colspan' => 9])->append('div', ['style' => 'display:flex;gap:.4rem;width:53rem;flex-wrap: wrap;']);
 				foreach ($this->webapp->mysql->images('WHERE hash IN(?S)', str_split($value['images'], 12)) as $img)
 				{
-					$image->append('div', $img['sync'] === 'finished' ? [
-						'data-cover' => sprintf('/imgs/%s/%s', date('ym', $img['mtime']), $img['hash']),
+					$cover = $image->append('div', [
 						'class' => 'cover',
 						'style' => 'width:10rem;height:10rem;display:inline-block'
-					] : ['pending']);
+					]);
+					if ($img['sync'] === 'finished')
+					{
+						$cover->append('img', [
+							'loading' => 'lazy',
+							'src' => sprintf('?/imgs/%s/%s?mask0000000000', date('ym', $img['mtime']), $img['hash'])
+						]);
+					}
+					else
+					{
+						$cover->text('pending');
+					}
 				}
 			}
 		});

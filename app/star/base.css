@@ -1,3 +1,52 @@
+img{
+	width: 100%;
+	height: 100%;
+	display: block;
+	box-sizing: border-box;
+}
+div.images{
+	width: 68rem;
+	display: flex;
+	gap: 1rem;
+	padding: .4rem;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+div.images>figure{
+	margin: 0;
+	width: 16rem;
+	height: 9rem;
+	border: black 1px solid;
+	padding-bottom: 1.1rem;
+}
+div.images>figure>figcaption{
+	background-color: black;
+	color: white;
+}
+
+
+/* div.images>div{
+	width: 16rem;
+	height: 9rem;
+	border: black 1px solid;
+}
+
+div.images>div>div:first-child{
+	width: 16rem;
+	height: 9rem;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: cover;
+}
+div.images>div>div{
+	background-color: black;
+	color: white;
+} */
+
+
+
+
+
 table[class|=webapp][class*=-statistics]>tbody>tr:nth-child(odd):not(:first-child){
 	background-color:powderblue;
 }
@@ -12,6 +61,9 @@ tr.info{
 }
 td.cover{
 	text-align: center;
+}
+td.cover>img{
+	border: black 1px solid;
 }
 td.cover>div[data-cover],div.cover{
 	border: black 1px solid;
@@ -71,6 +123,7 @@ ul.video_tags>li>label:active{
 }
 dialog.play{
 	padding: 0;
+	overflow: hidden;
 }
 dialog.play>webapp-video{
 	transition: width .4s, height .4s;
@@ -139,28 +192,7 @@ label.uploaderface:hover{
 label.uploaderface>input{
 	display: none;
 }
-div.images{
-	width: 68rem;
-	display: flex;
-	gap: 1rem;
-	padding: .4rem;
-	justify-content: center;
-	flex-wrap: wrap;
-}
-div.images>div{
-	border: black 1px solid;
-}
-div.images>div>div:first-child{
-	width: 16rem;
-	height: 9rem;
-	background-repeat: no-repeat;
-	background-position: center;
-	background-size: cover;
-}
-div.images>div>div:last-child{
-	background-color: black;
-	color: white;
-}
+
 
 
 fieldset.search_comment{
