@@ -656,7 +656,7 @@ class webapp_router_admin extends webapp_echo_html
 		{
 			return $this->warn('该标签存在资源，无法删除！');
 		}
-		if (&& $this->webapp->call('delTag', $hash)
+		if ($this->webapp->call('delTag', $hash)
 			&& $this->webapp->mysql->tags->delete('WHERE hash=?s', $hash)) {
 			return $this->okay("?admin/tags");
 		}
