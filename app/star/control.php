@@ -8,7 +8,6 @@ class webapp_router_control extends webapp_echo_masker
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
-		$this->sw['src'] .= '/admin';
 		$this->title('Control');
 		if ($this->initiated)
 		{

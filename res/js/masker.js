@@ -3,12 +3,11 @@ if (self.window)
 	const script = document.currentScript, init = new Promise(resolve =>
 		addEventListener('DOMContentLoaded', () =>
 			navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(() =>
-				navigator.serviceWorker.ready.then(registration => resolve(registration.active))))),
-	token = (script.src.match(/\/\w+$/) || ['/token'])[0].substring(1);
+				navigator.serviceWorker.ready.then(registration => resolve(registration.active)))));
 
 	init.then(sw =>
 	{
-		sw.postMessage(localStorage.getItem(token));
+		sw.postMessage(localStorage.getItem('token'));
 		if ('reload' in script.dataset)
 		{
 			return location.assign(script.dataset.reload);
@@ -66,8 +65,8 @@ if (self.window)
 		return fetch(resource, options);
 	}
 	masker.authorization = signature => (signature
-		? localStorage.setItem(token, signature)
-		: localStorage.removeItem(token)) || init.then(sw => sw.postMessage(signature));
+		? localStorage.setItem('token', signature)
+		: localStorage.removeItem('token')) || init.then(sw => sw.postMessage(signature));
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
