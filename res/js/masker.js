@@ -165,7 +165,7 @@ else
 		}
 		token.length ? token(token = headers) : token = headers;
 	});
-	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(async response =>
+	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
 		if (response) return response;
 		if (event.request.url.startsWith(self.location.origin))
@@ -177,7 +177,6 @@ else
 				{
 					return resources.then(() => request(`${origin}${url.search.substring(1)}`, true));
 				}
-				console.log(event)
 				if (event.isReload || event.request.referrer === '')
 				{
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
