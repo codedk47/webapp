@@ -1,44 +1,60 @@
 if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
-		addEventListener('DOMContentLoaded', () =>
-			navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(() =>
-				navigator.serviceWorker.ready.then(registration => resolve(registration.active)))));
-
-	init.then(sw =>
 	{
-		sw.postMessage(localStorage.getItem('token'));
+		navigator.serviceWorker.addEventListener('message', event => navigator.serviceWorker.ready.then(registration => 
+		{
+			switch (event.data.cmd)
+			{
+				case 'token':
+					registration.active.postMessage({pid: event.data.pid,
+						result: localStorage.getItem('authorization' in script.dataset
+							? script.dataset.authorization : 'token')});
+					break;
+				case 'origin':
+					origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
+					break;
+				default:
+					registration.active.postMessage({pid: event.data.pid, result: null});
+			}
+		}));
+		navigator.serviceWorker.startMessages();
+		navigator.serviceWorker.register(script.src, {scope: location.pathname});
+		addEventListener('DOMContentLoaded', () => {
+			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
+		});
+	}), origin = new Promise(resolve =>
+	{
 		if ('reload' in script.dataset)
 		{
 			return location.assign(script.dataset.reload);
 		}
-		const speedtest = callback => new Promise(resolve =>
+		init.then(() =>
 		{
 			const resources = Array.from(document.querySelectorAll([
 				'link[rel=dns-prefetch]',
 				'link[rel=preconnect]'].join(','))).map(link => link.href);
-			if (resources.includes(sessionStorage.getItem('origin')))
-			{
-				return resolve(new URL(sessionStorage.getItem('origin')).origin);
-			}
 			if (resources.length)
 			{
+				if (resources.includes(sessionStorage.getItem('origin')))
+				{
+					return resolve(new URL(sessionStorage.getItem('origin')).origin);
+				}
 				const controller = new AbortController;
 				Promise.any(resources.map(url =>
 					fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
 						controller.abort(sessionStorage.setItem('origin', response.url) || resolve(new URL(response.url).origin)));
 			}
-		}).then(callback);
-		speedtest(origin => sw.postMessage(origin));
-		addEventListener('online', () => sessionStorage.removeItem('origin') || speedtest(origin => sw.postMessage(origin)));
-		if ('splashscreen' in script.dataset)
-		{
-			masker.session_once('splashscreen', () =>
+			addEventListener('offline', () => sessionStorage.removeItem('origin'));
+			if ('splashscreen' in script.dataset)
 			{
-				masker.open(script.dataset.splashscreen);
-				return script.dataset.splashscreen;
-			});
-		}
+				masker.session_once('splashscreen', () =>
+				{
+					masker.open(script.dataset.splashscreen);
+					return script.dataset.splashscreen;
+				});
+			}
+		});
 	});
 	function masker(resource, options = {})
 	{
@@ -66,7 +82,7 @@ if (self.window)
 	}
 	masker.authorization = signature => (signature
 		? localStorage.setItem('token', signature)
-		: localStorage.removeItem('token')) || init.then(sw => sw.postMessage(signature));
+		: localStorage.removeItem('token')) || init;
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
@@ -93,7 +109,6 @@ if (self.window)
 		});
 		return frame;
 	});
-	window.name = 'asdasd';
 }
 else
 {
@@ -145,25 +160,36 @@ else
 		}
 		return response;
 	}
-	let token, origin;
-	const
-	authorization = new Promise(resolve => token = resolve),
-	resources = new Promise(resolve => origin = resolve);
-
+	let pid = 0;
+	const pending = new Map, require = cmd => clients.matchAll().then(windows => new Promise((resolve, reject) =>
+	{
+		if (windows.length)
+		{
+			pending.set(++pid, {resolve, reject});
+			windows[0].postMessage({pid, cmd});
+		}
+		else
+		{
+			reject();
+		}
+	})), reload = url => new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+		`<script src="${self.location.href}" data-reload="${url}"></script>`,
+		'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
+	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
+	// there are still previous incarnations of this service worker registration active.
+	self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+	// Claim any clients immediately, so that the page will be under SW control without reloading.
+	self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 	self.addEventListener('message', event =>
 	{
-		const headers = {'Service-Worker': 'masker'};
-		if (typeof event.data === 'string' && event.data.length)
+		const promise = pending.get(event.data.pid);
+		if (promise)
 		{
-			if (/^https?:\/\//i.test(event.data))
-			{
-				return typeof origin === 'string'
-					? origin = event.data
-					: origin(origin = event.data)
-			}
-			headers.Authorization = `Bearer ${event.data}`;
+			pending.delete(event.data.pid);
+			'error' in event.data
+				? promise.reject(event.data.error)
+				: promise.resolve(event.data.result);
 		}
-		token.length ? token(token = headers) : token = headers;
 	});
 	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
@@ -175,19 +201,24 @@ else
 			{
 				if (url.search.startsWith('?/'))
 				{
-					return resources.then(() => request(`${origin}${url.search.substring(1)}`, true));
+					return require('origin').then(origin => request(`${origin}${url.search.substring(1)}`, true));
 				}
 				if (event.isReload)
 				{
-					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
+					return reload(event.request.url);
 				}
-				return event.request.url === self.location.href ? fetch(event.request) : authorization.then(() => request(event.request,
-				{
-					priority: 'high',
-					headers: Object.assign(token, Object.fromEntries(event.request.headers.entries()))
-				}));
+				return event.request.url === self.location.href
+					? fetch(event.request)
+					: require('token').then(token =>
+					{
+						const headers = Object.assign({'Service-Worker': 'masker'},
+							Object.fromEntries(event.request.headers.entries()));
+						if (token)
+						{
+							headers.Authorization = `Bearer ${token}`;
+						}
+						return request(event.request, {priority: 'high', headers});
+					}, () => reload(event.request.url));
 			}
 			return request(event.request, true);
 		}
