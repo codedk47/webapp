@@ -752,7 +752,7 @@ class webapp_form implements ArrayAccess
 		}
 		return $this;
 	}
-	function fetch(?array &$data, &$error = NULL):bool
+	function fetch(?array &$data, &$error = NULL, array $input = NULL):bool
 	{
 		do
 		{
@@ -764,12 +764,12 @@ class webapp_form implements ArrayAccess
 			if (is_array($this->context))
 			{
 				$errors = [];
-				$input = $this->context;
+				$input ??= $this->context;
 			}
 			else
 			{
 				$errors = &($this->context)(new stdClass)->errors;
-				$input = is_string($content = $this->context->request_maskdata())
+				$input ??= is_string($content = $this->context->request_maskdata())
 					? json_decode($content, TRUE)
 					: $this->context->request_content((string)$this->xml['enctype']);
 				if (isset($this->captcha) && (isset($input['captcha_encrypt'], $input['captcha_decrypt'])

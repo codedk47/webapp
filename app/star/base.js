@@ -1,22 +1,4 @@
 
-function sign_in(form)
-{
-	masker(form.action, {method: 'POST', body: new FormData(form)}).then(response => response.json()).then(json =>
-	{
-		if (json.errors.length)
-		{
-			return alert(json.errors.join('\n'));
-		}
-		if (typeof json.token === 'string')
-		{
-			masker.authorization(json.token);
-			location.reload();
-		}
-	});
-	return false;
-}
-
-
 const datakey = document.currentScript.dataset.key;
 const resorigin = document.currentScript.dataset.origin;
 

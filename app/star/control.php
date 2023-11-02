@@ -1,101 +1,67 @@
 <?php
 class webapp_router_control extends webapp_echo_masker
 {
-	//private readonly array $signinfo;
-	private array $json = [];
 	private readonly bool $admin;
 	private readonly ?string $uid;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
 		$this->title('Control');
-		if ($this->initiated)
-		{
-			return;
-		}
-		$this->script(['src' => '/webapp/app/star/base.js']);
-		if ($acc = $webapp->authorization($this->sign_in_auth(...)))
-		{
-			$this->link_resources($webapp['app_resorigins']);
-			$this->admin = $acc['is_admin'];
-			$this->uid = $acc['uid'];
-
-			$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
-			$this->nav([
-				['数据', '?control/home'],
-				['标签 & 分类', '?control/tags'],
-				['专题', '?control/subjects'],
-				['上传账号', '?control/uploaders'],
-				['用户', '?control/users'],
-				
-				['视频', '?control/videos'],
-				['产品', '?control/prods'],
-				['广告', '?control/ads'],
-				['记录', [
-					['上传的图片', '?control/images'],
-					['购买影片', '?control/record-video'],
-					['余额提现', '?control/record-exchange-balance'],
-					['游戏提现', '?control/record-exchange-game'],
-					['充值', '?control/record-recharge']
-				]],
-				['评论', '?control/comments'],
-				['渠道', '?control/channels'],
-				['配置', '?control/configs'],
-				['注销登录', "javascript:masker.authorization(null).then(()=>location.reload());", 'style' => 'color:maroon']
-			]);
-		}
-		else
+		if ($this->initiated || isset($this->admin) === FALSE)
 		{
 			$this->admin = FALSE;
 			$this->uid = NULL;
-			$webapp->method === 'post_sign_in' || $webapp->break($this->sign_in_page(...));
+			return;
 		}
+
+		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
+		$this->link_resources($webapp['app_resorigins']);
+		$this->script(['src' => '/webapp/app/star/base.js']);
+		$this->nav([
+			['数据', '?control/home'],
+			['标签 & 分类', '?control/tags'],
+			['专题', '?control/subjects'],
+			['上传账号', '?control/uploaders'],
+			['用户', '?control/users'],
+			
+			['视频', '?control/videos'],
+			['产品', '?control/prods'],
+			['广告', '?control/ads'],
+			['记录', [
+				['上传的图片', '?control/images'],
+				['购买影片', '?control/record-video'],
+				['余额提现', '?control/record-exchange-balance'],
+				['游戏提现', '?control/record-exchange-game'],
+				['充值', '?control/record-recharge']
+			]],
+			['评论', '?control/comments'],
+			['渠道', '?control/channels'],
+			['配置', '?control/configs'],
+			['注销登录', "javascript:masker.authorization(null).then(()=>location.reload());", 'style' => 'color:maroon']
+		]);
 	}
-	function __toString():string
-	{
-		return $this->json
-			? $this->webapp->response_maskdata((string)($this->webapp)(new webapp_echo_json($this->webapp, $this->json)))
-			: parent::__toString();
-	}
-	function sign_in_auth(string $uid, string $pwd):array
+	function authorization($uid, $pwd):array
 	{
 		if ($uid === $this->webapp['admin_username'] && $pwd === $this->webapp['admin_password'])
 		{
-			return ['uid' => $uid, 'is_admin' => TRUE];
+			$this->admin = TRUE;
+			return [$this->uid = $uid, $pwd];
 		}
 		if (array_key_exists($uid, $this->webapp['admin_users']) && $pwd === $this->webapp['admin_users'][$uid])
 		{
-			return ['uid' => $uid, 'is_admin' => FALSE];
+			$this->admin = FALSE;
+			return [$this->uid = $uid, $pwd];
 		}
 		return [];
 	}
-	function sign_in_page()
-	{
-		$form = webapp_echo_html::form_sign_in($this->main);
-		$form->xml['action'] = '?control/sign-in';
-		$form->xml['onsubmit'] = 'return sign_in(this)';
-		return 401;
-	}
-	function post_sign_in()
-	{
-		$this->json['token'] = NULL;
-		if (webapp_echo_html::form_sign_in($this->webapp)->fetch($admin)
-			&& $this->webapp->authorize($signature = $this->webapp->signature(
-				$admin['username'], $admin['password']), $this->sign_in_auth(...))) {
-				$this->json['token'] = $signature;
-			return 200;
-		}
-		return 401;
-	}
 	function goto(string $url = NULL):void
 	{
-		$this->json['goto'] = $url === NULL ? NULL : "?control{$url}";
+		$this->json(['goto' => $url === NULL ? NULL : "?control{$url}"]);
 	}
 	function dialog(string $msg):void
 	{
-		$this->json['dialog'] = $msg;
+		$this->json(['dialog' => $msg]);
 	}
-
 	function get_home(string $cid = NULL, string $datefrom = '', string $dateto = '')
 	{
 		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $datefrom))
@@ -891,15 +857,15 @@ class webapp_router_control extends webapp_echo_masker
 		if (is_string($search))
 		{
 			$search = urldecode($search);
-			if (trim($search, webapp::key))
-			{
-				$conds[0][] = 'name LIKE ?s';
-				$conds[] = "%{$search}%";
-			}
-			else
+			if (in_array(strlen($search), [4, 12], TRUE) && trim($search, webapp::key) === '')
 			{
 				$conds[0][] = strlen($search) === 4 ? 'FIND_IN_SET(?s,tags)' : 'hash=?s';
 				$conds[] = $search;
+			}
+			else
+			{
+				$conds[0][] = 'name LIKE ?s';
+				$conds[] = "%{$search}%";
 			}
 		}
 		if ($userid = $this->webapp->query['userid'] ?? '')
@@ -1636,14 +1602,14 @@ class webapp_router_control extends webapp_echo_masker
 		$search = $this->webapp->request_content();
 		if ($type === 'reply')
 		{
-			$this->json['comments'] = [];
+			$this->json(['comments' => []]);
 			return;
 		}
-		$this->json['comments'] = $type === 'video'
+		$this->json(['comments' => $type === 'video'
 			? $this->webapp->mysql->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 10', "%{$search}%")
 				->column('name', 'hash')
 			: $this->webapp->mysql->comments('WHERE type=?s AND `check`="allow" AND title LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 10', $type, "%{$search}%")
-				->column('title', 'hash');
+				->column('title', 'hash')]);
 	}
 	function form_comment(webapp_html $html = NULL):webapp_form
 	{
@@ -1703,10 +1669,10 @@ class webapp_router_control extends webapp_echo_masker
 	function post_videos(string $userid)
 	{
 		$search = $this->webapp->request_content();
-		$this->json['videos'] = $this->webapp->mysql
+		$this->json(['videos' => $this->webapp->mysql
 			//->videos('WHERE userid=?s AND sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', $userid, "%{$search}%")
 			->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', "%{$search}%")
-			->column('name', 'hash');
+			->column('name', 'hash')]);
 	}
 	function get_comment(string $hash = NULL)
 	{

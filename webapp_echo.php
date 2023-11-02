@@ -119,12 +119,55 @@ class webapp_echo_svg extends webapp_implementation
 		$this->xml->setattr(['xmlns' => 'http://www.w3.org/2000/svg'] + $attributes);
 	}
 }
+class webapp_echo_json extends ArrayObject implements Stringable
+{
+	use webapp_echo;
+	private int $flags = JSON_UNESCAPED_UNICODE;
+	function __construct(public readonly webapp $webapp, array|object $data = [])
+	{
+		$webapp->response_content_type("application/json; charset={$webapp['app_charset']}");
+		parent::__construct($data, ArrayObject::STD_PROP_LIST);
+	}
+
+	function __toString():string
+	{
+		return json_encode($this->getArrayCopy(), $this->flags);
+		// try
+		// {
+		// } catch (JsonException $error)
+		// {
+		// }
+	}
+	function getFlags():int
+	{
+		return $this->flags;
+	}
+	function setFlags(int $flags):void
+	{
+		$this->flags = $flags;
+	}
+	function is_list():bool
+	{
+		return array_is_list($this->getArrayCopy());
+	}
+	function error(string $error):void
+	{
+		$this['errors'][] = $error;
+	}
+	// function dialog(string|array $context, )
+	// {
+	// 	$this['dialog'] = $context;
+	// }
+	function goto(string $url = NULL):void
+	{
+		$this['goto'] = $url;
+	}
+}
 class webapp_echo_html extends webapp_implementation
 {
 	use webapp_echo;
-	private readonly bool $asd;
 	public readonly webapp_html $header, $aside, $main, $footer;
-	function __construct(public readonly webapp $webapp, public readonly bool $mask = FALSE)
+	function __construct(public readonly webapp $webapp)
 	{
 		//https://validator.w3.org/nu/#textarea
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
@@ -290,6 +333,7 @@ class webapp_echo_masker extends webapp_echo_html
 {
 	public readonly bool $initiated;
 	public readonly webapp_html $sw;
+	public ?webapp_echo_json $json;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -306,10 +350,58 @@ class webapp_echo_masker extends webapp_echo_html
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			$webapp->break($this->init(...));
 		}
+		else
+		{
+			if (method_exists($this, 'authorization'))
+			{
+				if (empty($webapp->authorization($this->authorization(...))))
+				{
+					if (is_array($input = json_decode($webapp->request_header('Sign-In') ?? '', TRUE)))
+					{
+						$webapp($this->json(['signature' => NULL], TRUE));
+						if (static::form_sign_in($this->webapp)->fetch($account, $errors, $input))
+						{
+							if ($user = $this->authorization($account['username'], $account['password'], $webapp->time, 'signature'))
+							{
+								$this->json['signature'] = $webapp->signature(...$user);
+							}
+							else
+							{
+								$this->json['errors'][] = 'Authorization failed';
+							}
+						}
+					}
+					else
+					{
+						$webapp->break($this->sign_in(...));
+					}
+				}
+			}
+		}
 	}
 	function init()
 	{
 		return 200;
+	}
+	function json(array|object $data):webapp_echo_json
+	{
+		return $this->json = new webapp_echo_json($this->webapp, $data);
+	}
+	function sign_in()
+	{
+		static::form_sign_in($this->main)->xml['onsubmit'] = <<<'JS'
+if (this.style.pointerEvents !== 'none')
+{
+	this.style.pointerEvents = 'none';
+	masker(this.action, {headers: {'Sign-In': JSON.stringify(Object.fromEntries(new FormData(this).entries()))}}).then(response => response.json()).then(data =>
+	{
+		data.errors.length && alert(data.errors.join('\n'));
+		data.signature && masker.authorization(data.signature).then(() => location.reload());
+	}).finally(() => this.style.pointerEvents = null);
+}
+return false;
+JS;
+		return 401;
 	}
 	function splashscreen(string $url)
 	{
@@ -317,7 +409,8 @@ class webapp_echo_masker extends webapp_echo_html
 	}
 	function __toString():string
 	{
-		return $this->initiated ? parent::__toString() : $this->webapp->response_maskdata(parent::__toString());
+		return $this->initiated ? parent::__toString() : $this->webapp->response_maskdata(
+			isset($this->json) ? (string)$this->json : parent::__toString());
 	}
 }
 class webapp_echo_htmlmask extends webapp_echo_html
@@ -376,38 +469,7 @@ class webapp_echo_htmlmask extends webapp_echo_html
 		return $this->webapp->maskdata(parent::__toString());
 	}
 }
-class webapp_echo_json extends ArrayObject implements Stringable
-{
-	use webapp_echo;
-	private int $flags = JSON_UNESCAPED_UNICODE;
-	function __construct(public readonly webapp $webapp, array|object $data = [])
-	{
-		$webapp->response_content_type("application/json; charset={$webapp['app_charset']}");
-		parent::__construct($data, ArrayObject::STD_PROP_LIST);
-	}
 
-	function __toString():string
-	{
-		return json_encode($this->getArrayCopy(), $this->flags);
-		// try
-		// {
-		// } catch (JsonException $error)
-		// {
-		// }
-	}
-	function error(string $error):void
-	{
-		$this['errors'][] = $error;
-	}
-	// function dialog(string|array $context, )
-	// {
-	// 	$this['dialog'] = $context;
-	// }
-	function goto(string $url = NULL):void
-	{
-		$this['goto'] = $url;
-	}
-}
 /*
 class webapp_echo_xls extends webapp_echo_xml
 {

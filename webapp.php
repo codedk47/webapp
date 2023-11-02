@@ -405,7 +405,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			//Misc
 			'copy_webapp'		=> 'Web Application v' . self::version,
 			'gzip_level'		=> -1,
-			'service_workers'	=> [],
 			'manifests'			=> [],]];
 		[$this->route, $this->entry] = method_exists($this, $route = sprintf('%s_%s', $this['request_method'],
 			$track = preg_match('/^[-\w]+(?=\/([\-\w]*))?/', $this['request_query'], $entry)
@@ -1123,8 +1122,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function get_masker()
 	{
-		//if ($this['service_workers'])
-		//$this->response_header('Service-Worker-Allowed', '?');
 		$this->response_content_type('text/javascript');
 		$this->response_sendfile(__DIR__ . '/res/js/masker.js');
 	}

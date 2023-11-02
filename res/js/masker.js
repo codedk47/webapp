@@ -7,9 +7,7 @@ if (self.window)
 			switch (event.data.cmd)
 			{
 				case 'token':
-					registration.active.postMessage({pid: event.data.pid,
-						result: localStorage.getItem('authorization' in script.dataset
-							? script.dataset.authorization : 'token')});
+					registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
 					break;
 				case 'origin':
 					origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
@@ -76,7 +74,7 @@ if (self.window)
 			{
 				return (value.startsWith('%') ? parseInt(value.substring(1), 16) : value.codePointAt(0)) ^ key[index % 8];
 			}).buffer;
-			console.log(options)
+			//console.log(options)
 		}
 		return fetch(resource, options);
 	}
