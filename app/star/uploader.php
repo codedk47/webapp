@@ -321,14 +321,14 @@ class webapp_router_uploader extends webapp_echo_masker
 		unset($table->xml->tbody->tr[0]);
 		$table->bar->append('button', ['上传视频', 'onclick' => 'location.href = "?uploader/uploading"']);
 		$table->bar->select(['' => '全部用户'] + $this->users)
-			->setattr(['onchange' => 'r({userid:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->setattr(['onchange' => 'g({userid:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($userid);
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $search,
 			'style' => 'margin-left:.6rem;padding:2px;width:26rem',
 			'placeholder' => '请输入视频HASH、标签HASH、关键字按【Enter】进行搜索。',
-			'onkeydown' => 'event.keyCode==13&&r({search:this.value?urlencode(this.value):null,page:null})'
+			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
 		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
 			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
@@ -465,7 +465,7 @@ class webapp_router_uploader extends webapp_echo_masker
 		$table->bar->append('button', ['发布话题', 'onclick' => 'location.href = "?uploader/comment"']);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
-			->setattr(['onchange' => 'r({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
+			->setattr(['onchange' => 'g({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
 
 
 	}

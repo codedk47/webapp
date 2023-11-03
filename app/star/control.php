@@ -755,7 +755,13 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell($value['nickname']);
 			$table->cell(number_format($value['video_num']));
 			$table->cell(number_format($value['balance']));
-			$table->cell(date('Y-m-d', $value['expire']));
+			$table->cell(match (true)
+			{
+				$value['expire'] === 0 => '超级会员',
+				$value['expire'] < $this->webapp->time => '已经过期',
+				$value['expire'] - 316224000 > $this->webapp->time => '永久会员',
+				default => date('Y-m-d', $value['expire'])
+			});
 			$table->cell(number_format($value['coin']));
 			$table->cell(number_format($value['ticket']));
 
