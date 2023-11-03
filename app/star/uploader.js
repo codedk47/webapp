@@ -122,11 +122,8 @@ uploader.upload_image = (input, preview) =>
 };
 uploader.form_value = form =>
 {
-	fetch(form.action, {
-		method: form.method.toUpperCase(),
-		headers: {'Mask-Key': datakey},
-		body: content_to_buffer(JSON.stringify(Object.fromEntries(new FormData(form))), datakey)
-	}).then(json => {
+	masker(form.action, {method: form.method.toUpperCase(), body: new FormData(form)}).then(response => response.json()).then(json =>
+	{
 		if (Array.isArray(json.errors) && json.errors.length)
 		{
 			alert(json.errors.join('\n'));
