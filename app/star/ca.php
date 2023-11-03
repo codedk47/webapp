@@ -1,5 +1,5 @@
 <?php
-class webapp_router_ca extends webapp_echo_html
+class webapp_router_ca extends webapp_echo_masker
 {
 	private array $channel;
 	function __construct(webapp $webapp)
@@ -7,37 +7,26 @@ class webapp_router_ca extends webapp_echo_html
 		parent::__construct($webapp);
 		$this->footer[0] = NULL;
 		$this->title('CA');
-		if ($this->channel = $webapp->authorize($webapp->request_cookie('ca'), $this->sign_in_auth(...)))
+		if ($this->initiated || isset($this->channel) === FALSE)
 		{
-			$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
-			$this->script(['src' => '/webapp/app/star/base.js']);
-			$this->nav([
-				['数据', '?ca/home'],
-				//['添加渠道', '?ca/add'],
-				['注销登录', "javascript:location.reload(document.cookie='ca=0');", 'style' => 'color:maroon']
-			]);
 			return;
 		}
-		$webapp->method === 'post_sign_in' || $webapp->break(function()
+		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
+		$this->script(['src' => '/webapp/app/star/base.js']);
+		$this->nav([
+			['数据', '?ca/home'],
+			//['添加渠道', '?ca/add'],
+			['注销登录', 'javascript:masker.authorization(null).then(()=>location.reload());', 'style' => 'color:maroon']
+		]);
+	}
+	function authorization($uid, $pwd):array
+	{
+		if ($this->webapp->mysql->channels('WHERE hash=?s LIMIT 1', $uid, $pwd)->fetch($channel))
 		{
-			webapp_echo_html::form_sign_in($this->main)->xml['action'] = '?ca/sign-in';
-			return 401;
-		});
-	}
-	function sign_in_auth(string $uid, string $pwd):array
-	{
-		return $this->webapp->mysql->channels('WHERE hash=?s LIMIT 1', $uid, $pwd)->array();
-	}
-	function post_sign_in()
-	{
-		$this->webapp->response_location($this->webapp->request_referer('?ca'));
-		if (webapp_echo_html::form_sign_in($this->webapp)->fetch($admin)
-			&& $this->webapp->authorize($signature = $this->webapp->signature(
-				$admin['username'], $admin['password']), $this->sign_in_auth(...))) {
-			$this->webapp->response_cookie('ca', $signature);
-			return 200;
+			$this->channel = $channel;
+			return [$uid, $pwd];
 		}
-		return 401;
+		return [];
 	}
 	function get_home(string $datefrom = '', string $dateto = '')
 	{

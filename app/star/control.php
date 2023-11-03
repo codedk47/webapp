@@ -745,6 +745,7 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell($this->webapp->hexip($value['lastip']));
 			$table->cell()->append('a', [$value['id'], 'href' => "?control/user,id:{$value['id']}"]);
 			$table->cell(number_format($value['login']));
+			$table->cell(number_format($value['watch']));
 			$table->cell($value['cid']);
 
 			$table->cell($value['device']);
@@ -752,7 +753,6 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell($value['did']);
 
 			$table->cell($value['nickname']);
-			$table->cell(ceil(strlen($value['historys']) / 12));
 			$table->cell(number_format($value['video_num']));
 			$table->cell(number_format($value['balance']));
 			$table->cell(date('Y-m-d', $value['expire']));
@@ -761,7 +761,7 @@ class webapp_router_control extends webapp_echo_masker
 
 		});
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '登录', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称', '观看数', '影片数', '余额', '会员到期', '金币', '观影券');
+		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '登录', '观看', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称', '影片数', '余额', '会员到期', '金币', '观影券');
 		$table->header('用户 %d 项', $table->count());
 
 		$table->bar->append('input', [

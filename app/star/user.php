@@ -430,6 +430,7 @@ class user extends ArrayObject
 				'ctime' => $webapp->time,
 				'mtime' => $webapp->time,
 				'login' => 0,
+				'watch' => 0,
 				'lasttime' => $webapp->time,
 				'lastip' => $webapp->iphex($webapp->ip),
 				'device' => match (1) {
@@ -452,8 +453,7 @@ class user extends ArrayObject
 				'favorites' => '',
 				'followed_ids' => '',
 				'follower_num' => 0,
-				'video_num' => 0,
-				'like_num' => 0
+				'video_num' => 0
 			];
 			$i = 0;
 			do

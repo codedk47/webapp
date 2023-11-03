@@ -137,7 +137,7 @@ uploader.form_value = form =>
 		}
 		if (json.hasOwnProperty('goto'))
 		{
-			framer(json.goto);
+			location.href = json.goto;
 		}
 		console.log(json);
 	});
