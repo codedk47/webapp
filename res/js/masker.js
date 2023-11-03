@@ -58,9 +58,11 @@ if (self.window)
 	{
 		if (options.body)
 		{
+			//const key = Math.random().toString(36).slice(-8).split('').map(value => value.codePointAt());
 			const key = crypto.getRandomValues(new Uint8Array(8));
 			options.headers = Object.assign({}, options.headers);
-			options.headers['Mask-Key'] = Array.from(key, v => v.toString(16).padStart(2, 0)).join('');
+			//options.headers['Mask-Key'] = key.map(value => value.toString(16)).join('');
+			options.headers['Mask-Key'] = Array.from(key, value => value.toString(16).padStart(2, 0)).join('');
 			switch (true)
 			{
 				case options.body instanceof FormData:
