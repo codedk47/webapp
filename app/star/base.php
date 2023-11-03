@@ -19,7 +19,7 @@ class base extends webapp
 	{
 		$form = new webapp_form($ctx ?? $this, '?video-value/');
 		
-		$cover = $form->fieldset->append('div', ['class' => 'cover', 'style' => 'width:512px;height:288px']);
+		$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
 		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
 			'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
 
@@ -65,14 +65,9 @@ class base extends webapp
 		{
 			$form->xml['action'] .= $this->encrypt($video['hash']);
 			$ym = date('ym', $video['mtime']);
-			if ($video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE))
-			{
-				$cover['data-cover'] = "/{$ym}/{$video['hash']}/cover?{$video['ctime']}";
-			}
-			else
-			{
-				$cover->append('div', '等待处理...');
-			}
+			$cover['src'] = $video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE)
+				? "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}"
+				: '/webapp/res/ps/loading.svg';
 			$video['preview_start'] = $video['preview'] >> 16 & 0xffff;
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
 			$change['data-uploadurl'] = "?video-cover/{$hash}";

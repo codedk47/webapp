@@ -1,132 +1,60 @@
 <?php
-class webapp_router_uploader
+class webapp_router_uploader extends webapp_echo_masker
 {
 	private readonly array $users;
 	private readonly user $user;
-	private readonly webapp_echo_html|webapp_echo_json $echo;
-	function __construct(private readonly webapp $webapp)
+	//private readonly webapp_echo_html|webapp_echo_json $echo;
+	function __construct(webapp $webapp)
 	{
-		$this->users = $webapp->authorization(function($uid, $pwd)
+		parent::__construct($webapp);
+		$this->title('Uploader');
+		if ($this->initiated || isset($this->users, $this->user) === FALSE)
 		{
-			return $this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->fetch()
-				&& count($ids = $this->webapp->mysql->users('WHERE uid=?i', $uid)->column('nickname', 'id')) ? $ids : [];
-		});
-		$this->user = $this->users
-			? user::from_id($this->webapp, isset($this->users[$userid = $webapp->request_cookie('userid')])
-				? $userid : array_keys($this->users)[0]) : new user($this->webapp, []);
+			return;
+		}
+		$this->link_resources($this->webapp['app_resorigins']);
+		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
+
+		$this->script(['src' => '/webapp/res/js/uploader.js', 'data-key' => bin2hex(random_bytes(8))]);
+		$this->script(['src' => '/webapp/app/star/base.js']);
+
+		$this->script(['src' => '/webapp/app/star/uploader.js']);
+		$nav = $this->nav([
+			['用户信息', '?uploader/home'],
+			['视频列表', '?uploader/videos'],
+			['图片列表', '?uploader/images'],
+			['导出异常影片', '?uploader/exceptions'],
+			//['评论', '?uploader/comments'],
+			['记录', [
+				['提现', '?uploader/record-exchanges']
+			]],
+			['注销登录', 'javascript:masker.authorization(null).then(()=>location.reload());', 'style' => 'color:maroon']
+		]);
+		if ($this->users)
+		{
+			$nav->ul->insert('li', 'first')->setattr(['style' => 'margin-left:1rem'])->select($this->users)->selected($this->user->id)
+				->setattr(['onchange' => 'location.reload(document.cookie=`userid=${this.value}`)']);
+		}
 	}
-	function __toString():string
+	function authorization($uid, $pwd):array
 	{
-		if ($this->echo instanceof webapp_echo_htmlmask)
+		if ($this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->fetch())
 		{
-			if ($this->echo->entry === FALSE && $this->user->id === NULL && $this->webapp->method !== 'get_auth')
+
+			if ($this->users = $this->webapp->mysql->users('WHERE uid=?i', $uid)->column('nickname', 'id'))
 			{
-				unset($this->echo->xml->body->div);
-				$this->echo->xml->body->append('h4', ['至少需要绑定一个操作用户，联系客服进行绑定认证。', 'style' => 'margin:1rem']);
+				$this->user = user::from_id($this->webapp,
+					isset($this->users[$userid = $this->webapp->request_cookie('userid')]) ? $userid : array_keys($this->users)[0]);
 			}
-			return (string)$this->echo;
+			return [$uid, $pwd];
 		}
-		return $this->webapp->maskdata((string)$this->echo);
-	}
-	function html(string $title = 'Uploader'):webapp_echo_htmlmask
-	{
-		$this->echo = new webapp_echo_htmlmask($this->webapp);
-		if ($this->echo->entry)
-		{
-			$this->echo->script(['src' => '/webapp/res/js/uploader.js', 'data-key' => bin2hex(random_bytes(8))]);
-			$this->echo->script(['src' => '/webapp/app/star/uploader.js']);
-		}
-		else
-		{
-			$this->echo->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
-			$this->echo->script([
-				'src' => '/webapp/app/star/base.js',
-				'data-key' => bin2hex(random_bytes(8)),
-				'data-origin' => current($this->webapp['app_resorigins'])]);
-		}
-		$this->echo->title($title);
-		if (in_array($this->webapp->method, ['get_home', 'get_auth', 'get_test']) === FALSE)
-		{
-			$nav = $this->echo->nav([
-				['用户信息', '?uploader/info'],
-				['视频列表', '?uploader/videos'],
-				['图片列表', '?uploader/images'],
-				['导出异常影片', '?uploader/exceptions'],
-				//['评论', '?uploader/comments'],
-				['记录', [
-					['提现', '?uploader/record-exchanges']
-				]],
-				['注销登录', 'javascript:top.location.reload(localStorage.removeItem("token"));', 'style' => 'color:maroon']
-			]);
-			if ($this->users)
-			{
-				$nav->ul->insert('li', 'first')->setattr(['style' => 'margin-left:1rem'])->select($this->users)->selected($this->user->id)
-					->setattr(['onchange' => 'top.location.reload(top.document.cookie=`userid=${this.value}`)']);
-			}
-		}
-		return $this->echo;
-	}
-	function json(array $data = []):webapp_echo_json
-	{
-		$this->echo = new webapp_echo_json($this->webapp, $data);
-		$this->webapp->response_content_type('@application/json');
-		return ($this->webapp)($this->echo);
+		return [];
 	}
 	function get_home()
 	{
-		$frame = $this->html()->xml->body->iframe;
-		$frame['data-authorization'] = '?uploader/auth';
-		$frame['data-load'] = '?uploader/info';
-
-	}
-	function get_auth(string $token = NULL)
-	{
-		if ($token === NULL)
-		{
-			webapp_echo_html::form_sign_in($this->html()->main)->xml['onsubmit'] = 'return top.uploader.auth(this)';
-			return 200;
-		}
-		$this->json();
-		if ($uploader = $this->webapp->authorize($token, fn($uid, $pwd) =>
-			$this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->array())) {
-			$this->echo['token'] = $token;
-		}
-	}
-	function post_auth()
-	{
-		$this->json();
-		do
-		{
-			if ((is_array($data = json_decode($this->webapp->request_maskdata(), TRUE))
-				&& isset($data['username'], $data['password'])
-				&& is_string($data['username'])
-				&& is_string($data['password'])) === FALSE) {
-				$this->echo->error('无效数据！');
-				break;
-			}
-			if ($this->webapp['captcha_length'])
-			{
-				if ((isset($data['captcha_encrypt'], $data['captcha_decrypt'])
-					&& is_string($data['captcha_encrypt'])
-					&& is_string($data['captcha_decrypt'])
-					&& $this->webapp->captcha_verify($data['captcha_encrypt'], $data['captcha_decrypt'])) === FALSE) {
-					$this->echo->error('验证码无效！');
-					break;
-				}
-			}
-			if ($this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $data['username'], $data['password'])->update([
-				'lasttime' => $this->webapp->time,
-				'lastip' => $this->webapp->iphex($this->webapp->ip)]) === 1) {
-				$this->echo['token'] = $this->webapp->signature($data['username'], $data['password']);
-			}
-		} while (FALSE);
-	}
-	function get_info()
-	{
-		$html = $this->html();
 		if ($this->user->id)
 		{
-			$form = $html->main->form();
+			$form = $this->main->form();
 			$signature = $this->webapp->encrypt((string)$this->user);
 			$form->fieldset['style'] = join(';', [
 				'width:18rem',
@@ -142,34 +70,29 @@ class webapp_router_uploader
 			]);
 
 			$form->fieldset()->append('label', [
-				'style' => 'width:18rem;height:18rem',
+				'style' => sprintf('width:18rem;height:18rem;background-image:url(?%s)', $this->user->fid()),
 				'class' => 'uploaderface',
-				'data-cover' => $this->user->fid()
 			])->append('input', [
 				'type' => 'file',
 				'accept' => 'image/*',
 				'data-key' => bin2hex($this->webapp->random(8)),
 				'data-uploadurl' => "?uploader/change-face",
-				'onchange' => 'top.uploader.upload_image(this,this.parentNode)'
+				'onchange' => 'uploader.upload_image(this,this.parentNode)'
 			]);
 
 			$form->fieldset('用户昵称：');
 			$form->field('nickname', 'text');
 			$form->button('修改', 'button', [
 				'data-action' => '?uploader/change_nickname',
-				'onclick' => 'top.uploader.change_nickname(this)'
+				'onclick' => 'uploader.change_nickname(this)'
 			]);
 
 			$form->fieldset('提现余额：');
 			$form->field('balance', 'number', ['disabled' => NULL]);
 			$form->button('提现', 'button', [
-				'onclick' => 'top.framer("?uploader/exchange")'
+				'onclick' => 'location.href = "?uploader/exchange"'
 			]);
 			$form->echo($this->user->getArrayCopy());
-			$form->xml->append('script')->cdata(<<<'JS'
-const uploaderface = document.querySelector('label.uploaderface');
-top
-JS);
 		}
 	}
 	function patch_change_face()
@@ -202,7 +125,7 @@ JS);
 			'style' => 'width:20rem',
 			'required' => NULL]);
 		$form->button('提交提现', 'submit', ['style' => 'width:10rem']);
-		$form->xml['onsubmit'] = 'return top.uploader.form_value(this)';
+		$form->xml['onsubmit'] = 'return uploader.form_value(this)';
 		return $form;
 	}
 	function post_exchange()
@@ -214,7 +137,7 @@ JS);
 	}
 	function get_exchange()
 	{
-		$form = $this->form_exchange($this->html()->main);
+		$form = $this->form_exchange($this->main);
 
 
 
@@ -222,7 +145,7 @@ JS);
 	function get_record_exchanges(int $page = 1)
 	{
 		$exchange = $this->webapp->mysql->records('WHERE userid=?s AND type="exchange" ORDER BY mtime DESC', $this->user->id)->paging($page);
-		$table = $this->html()->main->table($exchange, function($table, $value)
+		$table = $this->main->table($exchange, function($table, $value)
 		{
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
@@ -237,9 +160,8 @@ JS);
 
 	function get_videos(string $search = NULL, int $page = 1)
 	{
-		$html = $this->html();
-		$html->script(['src' => '/webapp/res/js/hls.min.js']);
-		$html->script(['src' => '/webapp/res/js/player.js']);
+		$this->script(['src' => '/webapp/res/js/hls.min.js']);
+		$this->script(['src' => '/webapp/res/js/video.js']);
 		if ($this->user->id === NULL) return 401;
 		$conds = [[]];
 		if (isset($this->users[$userid = $this->webapp->query['userid'] ?? '']))
@@ -305,7 +227,7 @@ JS);
 		} . ',hash ASC';
 
 		$tags = $this->webapp->mysql->tags->column('name', 'hash');
-		$table = $html->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags, $goto)
+		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags, $goto)
 		{
 			$ym = date('ym', $value['mtime']);
 
@@ -315,7 +237,7 @@ JS);
 			$usernode->select($this->users)->setattr([
 				'style' => 'padding:2px',
 				'data-action' => "?uploader/change-video-user,hash:{$value['hash']}",
-				'onchange' => 'top.uploader.change_video_user(this)'
+				'onchange' => 'uploader.change_video_user(this)'
 			])->selected($value['userid']);
 			$table->cell(['colspan' => 8])->append('a', ['信息（点击修改下面信息）', 'href' => "?uploader/video,hash:{$value['hash']},goto:{$goto}"]);
 
@@ -348,7 +270,7 @@ JS);
 					'href' => 'javascript:;',
 					'style' => 'color:maroon',
 					'data-action' => "?uploader/video-exception,hash:{$value['hash']}",
-					'onclick' => 'confirm("设为异常后不可撤销！")&&top.uploader.video_patch(this.dataset.action)'
+					'onclick' => 'confirm("设为异常后不可撤销！")&&uploader.video_patch(this.dataset.action)'
 				]);
 			}
 
@@ -374,34 +296,30 @@ JS);
 			$table->cell('名称');
 			$title = $table->cell(['colspan' => 7, 'class' => 'name'])->append('a', [htmlentities($value['name']), 'href' => "javascript:;"]);
 
-			if (in_array($value['sync'], ['finished', 'allow','deny'] ,TRUE))
+			if (in_array($value['sync'], ['finished', 'allow', 'deny'] ,TRUE))
 			{
-				$cover->append('div', [
+				$cover->append('img', [
+					'loading' => 'lazy',
+					'src' => "?/{$ym}/{$value['hash']}/cover?mask{$value['ctime']}",
 					'id' => "v{$value['hash']}",
-					'data-cover' => "/{$ym}/{$value['hash']}/cover?{$value['ctime']}",
-					'data-playm3u8' => "/{$ym}/{$value['hash']}/play",
-					'onclick' => "view_video(this.dataset, {$value['preview']})"
+					'data-cover' => "?/{$ym}/{$value['hash']}/cover?mask{$value['ctime']}",
+					'data-playm3u8' => "?/{$ym}/{$value['hash']}/play?mask0000000000",
+					'onclick' => "view_video(this.dataset, {$value['preview']})",
+					'style' => 'object-fit: contain;'
 				]);
-				$title['onclick'] = "view_video(document.querySelector('div#v{$value['hash']}').dataset)";
+				$title['onclick'] = "view_video(document.querySelector('img#v{$value['hash']}').dataset)";
 			}
 			else
 			{
-				$cover[0] = 'Pending';
+				$cover->append('img', ['src' => '/webapp/res/ps/loading.svg']);
 			}
 
 		}, $tags, $this->webapp->url64_encode($this->webapp->at([],'?uploader/videos')));
 		$table->paging($this->webapp->at(['page' => '']));
-		if ($goto = $table->xml->xpath('tfoot/tr/td/input|tfoot/tr/td/a[@onclick]'))
-		{
-			$goto[0]['onkeypress'] = 'event.keyCode===13&&top.framer(this.nextElementSibling.dataset.action+this.value)';
-			$goto[1]['data-action'] = (string)$goto[1]['href'];
-			$goto[1]['href'] = 'javascript:;';
-			$goto[1]['onclick'] = 'top.framer(this.dataset.action+this.previousElementSibling.value);return false';
-		}
 		$table->fieldset('封面（预览视频）', '信息');
 		$table->header('视频 %d 项', $table->count());
 		unset($table->xml->tbody->tr[0]);
-		$table->bar->append('button', ['上传视频', 'onclick' => 'top.framer("?uploader/uploading")']);
+		$table->bar->append('button', ['上传视频', 'onclick' => 'location.href = "?uploader/uploading"']);
 		$table->bar->select(['' => '全部用户'] + $this->users)
 			->setattr(['onchange' => 'r({userid:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($userid);
@@ -413,43 +331,43 @@ JS);
 			'onkeydown' => 'event.keyCode==13&&r({search:this.value?urlencode(this.value):null,page:null})'
 		]);
 		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
-			->setattr(['onchange' => 'r({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
 		$table->bar->select(['' => '要求', 'vip' => '会员', 'free' => '免费', 'coin' => '金币'])
-			->setattr(['onchange' => 'r({require:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->setattr(['onchange' => 'g({require:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($require);
 		$table->bar->select(['' => '全部类型'] + base::video_type)
-			->setattr(['onchange' => 'r({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($type);
 		$table->bar->select(['' => '默认排序（最后修改）',
 			'view-desc' => '观看（降序）',
 			'like-desc' => '点赞（降序）',
 			'sales-desc' => '销量（降序）'])
-			->setattr(['onchange' => 'r({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sort);
 		$table->bar['style'] = 'white-space:nowrap';
 	}
 	function get_video(string $hash, string $goto = NULL)
 	{
 		//$goto ??= $this->webapp->url64_encode('?uploader/videos');
-		$form = $this->webapp->form_video($this->html()->main, $hash);
+		$form = $this->webapp->form_video($this->main, $hash);
 		$form->xml['action'] .= ",goto:{$goto},up:1";
 
 	}
 	function get_uploading()
 	{
-		$table = $this->html()->main->table();
+		$table = $this->main->table();
 		$table->fieldset('HASH', '大小（字节）', '类型', '名称', '进度');
 		$table->header('上传视频（上传中请不要切换页面，直到上传完成。）');
 		$table->bar->append('button', ['开始上传',
 			'style' => 'margin-right:.6rem;color:maroon',
-			'onclick' => 'top.uploader.uploading(document.querySelector("main>table.webapp:first-child"))'
+			'onclick' => 'uploader.uploading(document.querySelector("main>table.webapp:first-child"))'
 		]);
 		$table->bar->append('input', [
 			'type' => 'file',
 			'accept' => 'video/mp4',
 			'data-uploadurl' => "?uploading/{$this->user}",
-			'onchange' => 'top.uploader.uploadlist(this.files,document.querySelector("main>table.webapp:first-child>tbody"))',
+			'onchange' => 'uploader.uploadlist(this.files,document.querySelector("main>table.webapp:first-child>tbody"))',
 			'multiple' => NULL
 		]);
 		$table->footer('建议单次上传保持在1~5个视频，单个视频不得大于2G');
@@ -470,7 +388,7 @@ JS);
 	}
 	function get_exceptions()
 	{
-		$form = $this->html()->main->form();
+		$form = $this->main->form();
 		$form->fieldset->text('复制保存下列异常影片，等待重新上传！（这个功能是暂时的，以后将被更好的操作取代）');
 		$form->fieldset();
 		$exception = $form->field('exception', 'textarea', [
@@ -486,7 +404,7 @@ JS);
 
 	function get_images()
 	{
-		$this->html();
+
 	}
 
 	function get_comments(int $page = 1)
@@ -499,7 +417,7 @@ JS);
 		}
 
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ctime DESC,hash ASC';
-		$table = $this->html()->main->table($this->webapp->mysql->comments(...$conds)->paging($page), function($table, $topic)
+		$table = $this->main->table($this->webapp->mysql->comments(...$conds)->paging($page), function($table, $topic)
 		{
 			$table->row();
 			$table->cell($topic['hash']);
@@ -544,7 +462,7 @@ JS);
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->header('话题、帖子、回复');
 		
-		$table->bar->append('button', ['发布话题', 'onclick' => 'top.framer("?uploader/comment")']);
+		$table->bar->append('button', ['发布话题', 'onclick' => 'location.href = "?uploader/comment"']);
 		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
 			->setattr(['onchange' => 'r({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
@@ -578,16 +496,16 @@ JS);
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
-		$form->xml['onsubmit'] = 'return top.uploader.form_value(this)';
+		$form->xml['onsubmit'] = 'return uploader.form_value(this)';
 		return $form;
 	}
 	function get_comment(string $type = 'topic')
 	{
-		$this->form_comment($type, $this->html()->main);
+		$this->form_comment($type, $this->main);
 	}
 	function post_comment(string $type = 'topic')
 	{
-		$json = $this->json();
+		$json = $this->json([]);
 		if ($this->form_comment($type)->fetch($topic)
 			&& $this->user->comment($topic['phash'], $topic['content'], $type, $topic['title'])) {
 			$json['goto'] = '?uploader/comments';

@@ -107,7 +107,7 @@ class user extends ArrayObject
 	// }
 	function fid():string
 	{
-		return ($this['fid'] % 255) ? "/faces/{$this['fid']}" : sprintf('/face/%s?%s',
+		return ($this['fid'] % 255) ? "/faces/{$this['fid']}" : sprintf('/face/%s?mask%s',
 			$this->webapp->time33hash($this->webapp->hashtime33($this['id'])), $this['ctime']);
 	}
 	//修改头像

@@ -1,19 +1,10 @@
 uploader.mapfile = new Map;
-uploader.auth = element =>
-{
-	top.loader(`${top.location.href}/auth`, {
-		'method': 'POST',
-		'headers': {'Mask-Key': datakey},
-		'body': content_to_buffer(JSON.stringify(Object.fromEntries(new FormData(element))), datakey)
-	}).then(auth => auth.token ? top.framer.authorization(auth.token) : alert(auth.errors ? auth.errors.join('\n') : '未知错误'));
-	return false;
-};
 uploader.change_nickname = (button) =>
 {
-	top.framer.loader(button.dataset.action, {
+	fetch(button.dataset.action, {
 		method: 'PATCH',
 		body: button.previousElementSibling.value
-	}).then(data => data.result ? top.framer(top.document.querySelector('iframe[data-load]').dataset.load) : alert('用户昵称修改失败！'));
+	}).then(response => response.json()).then(data => data.result ? location.reload() : alert('用户昵称修改失败！'));
 };
 uploader.uploadlist = (files, tbody) =>
 {
@@ -85,17 +76,17 @@ uploader.uploading = table =>
 };
 uploader.video_patch = (action, data = null) =>
 {
-	top.framer.loader(action, {
+	fetch(action, {
 		method: 'PATCH',
 		body: data || null
-	}).then(data => data.result ? top.framer(top.document.querySelector('iframe[data-load]').dataset.load) : alert('修改失败！'));
+	}).then(response => response.json()).then(data => data.result ? location.reload() : alert('修改失败！'));
 }
 uploader.change_video_user = select =>
 {
-	top.framer.loader(select.dataset.action, {
+	fetch(select.dataset.action, {
 		method: 'PATCH',
 		body: select.value
-	}).then(data => data.result ? top.framer(top.document.querySelector('iframe[data-load]').dataset.load) : alert('分配用户失败！'));
+	}).then(response => response.json()).then(data => data.result ? location.reload() : alert('分配用户失败！'));
 };
 uploader.upload_image = (input, preview) =>
 {
@@ -107,11 +98,11 @@ uploader.upload_image = (input, preview) =>
 		const
 		buffer = new Uint8Array(event.target.result),
 		key = input.dataset.key.match(/.{2}/g).map(value => parseInt(value, 16));
-		top.framer.loader(input.dataset.uploadurl, {
+		fetch(input.dataset.uploadurl, {
 			method: 'PATCH',
 			headers: {'Mask-Key': input.dataset.key},
 			body: buffer.map((byte, i) => byte ^ key[i % 8])
-		}).then(json =>
+		}).then(response => response.json()).then(json =>
 		{
 			input.disabled = false;
 			if (json.result)
@@ -131,7 +122,7 @@ uploader.upload_image = (input, preview) =>
 };
 uploader.form_value = form =>
 {
-	framer.loader(top.document.querySelector('iframe[importance="high"]').dataset.load, {
+	fetch(form.action, {
 		method: form.method.toUpperCase(),
 		headers: {'Mask-Key': datakey},
 		body: content_to_buffer(JSON.stringify(Object.fromEntries(new FormData(form))), datakey)

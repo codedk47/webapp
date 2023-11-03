@@ -1,7 +1,3 @@
-
-const datakey = document.currentScript.dataset.key;
-const resorigin = document.currentScript.dataset.origin;
-
 function content_to_buffer(contents, hash = null)
 {
 	const
@@ -29,14 +25,7 @@ function g(p,a)
 			Object.assign(Object.fromEntries(Array.from(location.search.matchAll(/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/g)).map(v=>v.slice(1))),p),
 			a||location.search.replace(/\,.+/,"")]));
 }
-function r(p,a)
-{
-	const url = top.document.querySelector('iframe[importance="high"]').dataset.load;
-	top.framer(((o,q)=>Object.keys(o).reduce((p,k)=>o[k]===null?p:`${p},${k}:${o[k]}`,q))
-		(...typeof(p)==="string"?[{},p]:[
-			Object.assign(Object.fromEntries(Array.from(url.matchAll(/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/g)).map(v=>v.slice(1))),p),
-			a||url.replace(/\,.+/,"")]));
-}
+
 function urlencode(data)
 {
 	return encodeURIComponent(data).replace(/%20|[\!'\(\)\*\+\/@~]/g, (escape)=> ({
@@ -99,7 +88,7 @@ function view_video(data, preview)
 			play.style.height = `${parseInt(video.height * 0.7)}px`;
 		});
 		dialog.onclick = event => event.target === dialog && dialog.close();
-		dialog.onclose = () => {try {video.suspend();} catch {}};
+		dialog.onclose = () => {try {video.pause();} catch {}};
 		dialog.appendChild(video);
 		document.body.appendChild(dialog);
 	}
@@ -134,14 +123,7 @@ function video_value(form)
 		}
 		if (json.hasOwnProperty('goto'))
 		{
-			if (top.window === self.window)
-			{
-				typeof json.goto === 'string' ? location.assign(json.goto) : location.reload();
-			}
-			else
-			{
-				typeof json.goto === 'string' ? top.framer(json.goto) : top.location.reload();
-			}
+			typeof json.goto === 'string' ? location.assign(json.goto) : location.reload();
 		}
 	});
 	return false;
@@ -157,7 +139,7 @@ function video_cover(input, preview)
 		const
 		buffer = new Uint8Array(event.target.result),
 		key = input.dataset.key.match(/.{2}/g).map(value => parseInt(value, 16));
-		top.fetch(input.dataset.uploadurl, {
+		fetch(input.dataset.uploadurl, {
 			method: 'PATCH',
 			headers: {'Mask-Key': input.dataset.key},
 			body: buffer.map((byte, i) => byte ^ key[i % 8])
@@ -190,7 +172,7 @@ function upload_image(input, callback)
 		{
 			buffer[i] ^= keys[i % 8];
 		}
-		top.fetch(input.dataset.uploadurl, {
+		fetch(input.dataset.uploadurl, {
 			method: 'PATCH',
 			headers: {'Mask-Key': key},
 			body: buffer
@@ -207,7 +189,7 @@ function upload_image(input, callback)
 				json.hasOwnProperty('dialog') && alert(json.dialog);
 				if (json.hasOwnProperty('goto'))
 				{
-					top.framer ? top.framer(json.goto) : location.assign(json.goto);
+					location.assign(json.goto);
 				}
 			}
 		});
@@ -249,7 +231,7 @@ function admin_comment(form)
 	}).then(response => response.json()).then(json => {
 		if (json.hasOwnProperty('goto'))
 		{
-			top.framer ? top.framer(json.goto) : location.assign(json.goto);
+			location.assign(json.goto);
 		}
 	});
 	return false;
@@ -424,14 +406,5 @@ document.addEventListener('DOMContentLoaded', event =>
 		return false;
 	});
 
-
-
-	document.querySelectorAll('div[data-cover],label.uploaderface').forEach(element =>
-	{
-		top.loader(`${resorigin}${element.dataset.cover}`, {mask: true}).then(blob =>
-		{
-			element.style.backgroundImage = `url(${blob})`;
-		});
-	});
 
 });

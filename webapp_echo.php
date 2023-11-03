@@ -379,6 +379,11 @@ class webapp_echo_masker extends webapp_echo_html
 			}
 		}
 	}
+	function __toString():string
+	{
+		return $this->initiated ? parent::__toString() : $this->webapp->response_maskdata(
+			isset($this->json) ? (string)$this->json : parent::__toString());
+	}
 	function init()
 	{
 		return 200;
@@ -406,11 +411,6 @@ JS;
 	function splashscreen(string $url)
 	{
 		$this->sw['data-splashscreen'] = $url;
-	}
-	function __toString():string
-	{
-		return $this->initiated ? parent::__toString() : $this->webapp->response_maskdata(
-			isset($this->json) ? (string)$this->json : parent::__toString());
 	}
 }
 class webapp_echo_htmlmask extends webapp_echo_html
