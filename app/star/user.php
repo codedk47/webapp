@@ -74,37 +74,13 @@ class user extends ArrayObject
 				&& ($record = $this->record('exchange', ['vtid' => 'user_exchange'] + $transfer));
 		}, $transfer) ? $record : [];
 	}
-	// function incr_balance(int $fee):bool
-	// {
-	// 	if ($this->id && $this->cond()->update('balance=balance+?i', $fee) === 1)
-	// 	{
-	// 		$this['balance'] += $fee;
-	// 		return TRUE;
-	// 	}
-	// 	return FALSE;
-	// }
-	// function incr_vip(int $day):bool
-	// {
-	// 	if ($this->id && $this->cond()->update('expire=IF(expire>?i,expire,?i)+?i',
-	// 		$this->webapp->time, $this->webapp->time, $sec = $day * 86400) === 1) {
-	// 		$this['expire'] += $sec;
-	// 		return TRUE;
-	// 	}
-	// 	return FALSE;
-	// }
-	// function incr_coin(int $num):bool
-	// {
-	// 	if ($this->id && $this->cond()->update('coin=coin+?i', $num) === 1)
-	// 	{
-	// 		$this['coin'] += $num;
-	// 		return TRUE;
-	// 	}
-	// 	return FALSE;
-	// }
-	// function incr_game(int $coin):bool
-	// {
-	// 	return FALSE;
-	// }
+	//观看影片
+	function watch(string $hash):bool
+	{
+		return $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`view`=`view`+1') === 1
+			&& $this->cond()->update('`watch`=`watch`+1') === 1;
+	}
+	//头像地址
 	function fid():string
 	{
 		return ($this['fid'] % 255) ? "/faces/{$this['fid']}" : sprintf('/face/%s?mask%s',
