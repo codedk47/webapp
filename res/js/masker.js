@@ -3,7 +3,7 @@ if (self.window)
 	const script = document.currentScript, init = new Promise(resolve => addEventListener('DOMContentLoaded', () => 
 	{
 		alert('DOMContentLoaded');
-		navigator.serviceWorker.register(script.src, {scope: location.pathname});
+		navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
 		navigator.serviceWorker.ready.then(registration =>
 		{
 			navigator.serviceWorker.addEventListener('message', event =>
