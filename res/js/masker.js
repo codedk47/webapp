@@ -222,7 +222,7 @@ else
 						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
 				}
 				return event.request.url === self.location.href
-					? fetch(event.request)
+					? fetch(event.request, {cache: 'reload'})
 					: require('token').then(token =>
 					{
 						const headers = Object.assign({'Service-Worker': 'masker'},
