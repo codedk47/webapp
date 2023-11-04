@@ -211,10 +211,13 @@ else
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					}, () => fetch(event.request));
+					}, () => {
+						alert('no window')
+						return fetch(event.request);
+					});
 			}
 			return request(event.request, true);
 		}
 		return fetch(event.request);
-	})));
+	}), () => alert(1)));
 }
