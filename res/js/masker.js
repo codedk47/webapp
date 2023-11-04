@@ -80,9 +80,7 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
-	masker.authorization = signature => (signature
-		? localStorage.setItem('token', signature)
-		: localStorage.removeItem('token')) || init;
+	masker.authorization = signature => (signature ? localStorage.setItem('token', signature) : localStorage.removeItem('token')) || init;
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
