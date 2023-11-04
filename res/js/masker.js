@@ -23,12 +23,12 @@ if (self.window)
 		});
 	}), origin = new Promise(resolve =>
 	{
-		if ('reload' in script.dataset)
-		{
-			return location.replace(script.dataset.reload);
-		}
 		init.then(() =>
 		{
+			if ('reload' in script.dataset)
+			{
+				return location.replace(script.dataset.reload);
+			}
 			const resources = Array.from(document.querySelectorAll([
 				'link[rel=dns-prefetch]',
 				'link[rel=preconnect]'].join(','))).map(link => link.href);
@@ -44,6 +44,7 @@ if (self.window)
 						controller.abort(sessionStorage.setItem('origin', response.url) || resolve(new URL(response.url).origin)));
 			}
 			addEventListener('offline', () => sessionStorage.removeItem('origin'));
+
 			if ('splashscreen' in script.dataset)
 			{
 				masker.session_once('splashscreen', () =>
