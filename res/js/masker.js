@@ -2,7 +2,6 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve => addEventListener('DOMContentLoaded', () => 
 	{
-		alert('DOMContentLoaded');
 		navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
 		navigator.serviceWorker.ready.then(registration =>
 		{
@@ -43,8 +42,7 @@ if (self.window)
 	{
 		if ('reload' in script.dataset)
 		{
-			return location.href = script.dataset.reload;
-			//return location.replace(script.dataset.reload);
+			return location.replace(script.dataset.reload);
 		}
 		const resources = Array.from(document.querySelectorAll([
 			'link[rel=dns-prefetch]',
@@ -203,10 +201,9 @@ else
 				: promise.resolve(event.data.result);
 		}
 	});
-	//self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
-	self.addEventListener('fetch', event => event.respondWith( (() =>
+	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
-		//if (response) return response;
+		if (response) return response;
 		if (event.request.url.startsWith(self.location.origin))
 		{
 			const url = new URL(event.request.url);
@@ -241,5 +238,5 @@ else
 			return request(event.request, true);
 		}
 		return fetch(event.request);
-	})() ) );
+	})));
 }
