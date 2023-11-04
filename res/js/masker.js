@@ -2,7 +2,7 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
-		navigator.serviceWorker.register(script.src, {scope: location.pathname});
+		navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
 		navigator.serviceWorker.ready.then(registration =>
 		{
 			navigator.serviceWorker.addEventListener('message', event =>
@@ -23,12 +23,6 @@ if (self.window)
 		});
 		addEventListener('DOMContentLoaded', () =>
 		{
-			//alert('DOMContentLoaded')
-			// addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(registration =>
-			// {
-			// 	registration.update();
-			// 	//alert('load register')
-			// }));
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});
 	}), origin = new Promise(resolve => init.then(() => 
@@ -87,7 +81,7 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
-	masker.app = window.matchMedia('(display-mode: standalone)').matches;
+	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
 	masker.authorization = signature => (signature ? localStorage.setItem('token', signature) : localStorage.removeItem('token')) || init;
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
@@ -115,7 +109,6 @@ if (self.window)
 		});
 		return frame;
 	});
-	alert(masker.app)
 }
 else
 {
