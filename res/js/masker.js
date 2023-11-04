@@ -211,7 +211,7 @@ else
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					}, () => reload(event.request.url));
+					}, () => fetch(event.request));
 			}
 			return request(event.request, true);
 		}
