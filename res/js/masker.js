@@ -16,7 +16,6 @@ if (self.window)
 						origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
 						break;
 					default:
-						alert(event.data)
 						registration.active.postMessage({pid: event.data.pid, result: null});
 				}
 			});
@@ -179,9 +178,9 @@ else
 	}));
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
-	self.addEventListener('install', event => self.skipWaiting());
+	self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
-	self.addEventListener('activate', event => self.clients.claim());
+	self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 	self.addEventListener('message', event =>
 	{
 		const promise = pending.get(event.data.pid);
@@ -222,10 +221,8 @@ else
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					}, () => {
-						
-						return fetch(event.request, {headers: {asd: '------------------------'}});
 					});
+					//, () => Response.redirect(event.request.url, 302)
 			}
 			return request(event.request, true);
 		}
