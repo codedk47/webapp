@@ -87,6 +87,7 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
+	masker.app = window.matchMedia('(display-mode: standalone)').matches;
 	masker.authorization = signature => (signature ? localStorage.setItem('token', signature) : localStorage.removeItem('token')) || init;
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
@@ -114,6 +115,7 @@ if (self.window)
 		});
 		return frame;
 	});
+	alert(masker.app)
 }
 else
 {
