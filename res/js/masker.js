@@ -18,43 +18,37 @@ if (self.window)
 		}));
 		navigator.serviceWorker.startMessages();
 		navigator.serviceWorker.register(script.src, {scope: location.pathname});
-		addEventListener('DOMContentLoaded', () => {
-			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
-		});
-	}), origin = new Promise(resolve =>
+		addEventListener('DOMContentLoaded', () => navigator.serviceWorker.ready.then(registration => resolve(registration.active)));
+	}), origin = new Promise(resolve => init.then(() => 
 	{
-		init.then(() =>
+		if ('reload' in script.dataset)
 		{
-			if ('reload' in script.dataset)
+			return location.replace(script.dataset.reload);
+		}
+		const resources = Array.from(document.querySelectorAll([
+			'link[rel=dns-prefetch]',
+			'link[rel=preconnect]'].join(','))).map(link => link.href);
+		if (resources.length)
+		{
+			if (resources.includes(sessionStorage.getItem('origin')))
 			{
-				return location.replace(script.dataset.reload);
+				return resolve(new URL(sessionStorage.getItem('origin')).origin);
 			}
-			const resources = Array.from(document.querySelectorAll([
-				'link[rel=dns-prefetch]',
-				'link[rel=preconnect]'].join(','))).map(link => link.href);
-			if (resources.length)
-			{
-				if (resources.includes(sessionStorage.getItem('origin')))
-				{
-					return resolve(new URL(sessionStorage.getItem('origin')).origin);
-				}
-				const controller = new AbortController;
-				Promise.any(resources.map(url =>
-					fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
-						controller.abort(sessionStorage.setItem('origin', response.url) || resolve(new URL(response.url).origin)));
-			}
-			addEventListener('offline', () => sessionStorage.removeItem('origin'));
-
-			if ('splashscreen' in script.dataset)
-			{
-				masker.session_once('splashscreen', () =>
-				{
-					masker.open(script.dataset.splashscreen);
-					return script.dataset.splashscreen;
-				});
-			}
-		});
-	});
+			const controller = new AbortController;
+			Promise.any(resources.map(url =>
+				fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
+					controller.abort(sessionStorage.setItem('origin', response.url) || resolve(new URL(response.url).origin)));
+		}
+		addEventListener('offline', () => sessionStorage.removeItem('origin'));
+		// if ('splashscreen' in script.dataset)
+		// {
+		// 	masker.session_once('splashscreen', () =>
+		// 	{
+		// 		masker.open(script.dataset.splashscreen);
+		// 		return script.dataset.splashscreen;
+		// 	});
+		// }
+	}));
 	function masker(resource, options = {})
 	{
 		if (options.body)
