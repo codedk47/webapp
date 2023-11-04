@@ -165,9 +165,7 @@ else
 		{
 			reject();
 		}
-	})), reload = url => new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-		`<script src="${self.location.href}" data-reload="${url}"></script>`,
-		'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
+	}));
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
 	self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
@@ -198,7 +196,9 @@ else
 				}
 				if (event.isReload)
 				{
-					return reload(event.request.url);
+					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
+						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
 				}
 				return event.request.url === self.location.href
 					? fetch(event.request)
