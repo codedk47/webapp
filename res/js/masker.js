@@ -1,44 +1,31 @@
 if (self.window)
 {
-	const script = document.currentScript, init = new Promise(resolve => addEventListener('DOMContentLoaded', () => 
+	const script = document.currentScript, init = new Promise(resolve =>
 	{
-		navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
-		navigator.serviceWorker.ready.then(registration =>
+		addEventListener('DOMContentLoaded', () => navigator.serviceWorker.ready.then(registration => resolve(registration.active)));
+		addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'}).then(rr =>{
+			alert('r load');
+		}));
+
+
+		navigator.serviceWorker.addEventListener('message', event => navigator.serviceWorker.ready.then(registration => 
 		{
-			navigator.serviceWorker.addEventListener('message', event =>
+			switch (event.data.cmd)
 			{
-				switch (event.data.cmd)
-				{
-					case 'token':
-						registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
-						break;
-					case 'origin':
-						origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
-						break;
-					default:
-						registration.active.postMessage({pid: event.data.pid, result: null});
-				}
-			});
-			resolve(registration.active);
-		});
-		// navigator.serviceWorker.addEventListener('message', event => navigator.serviceWorker.ready.then(registration => 
-		// {
-		// 	switch (event.data.cmd)
-		// 	{
-		// 		case 'token':
-		// 			registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
-		// 			break;
-		// 		case 'origin':
-		// 			origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
-		// 			break;
-		// 		default:
-		// 			registration.active.postMessage({pid: event.data.pid, result: null});
-		// 	}
-		// }));
-		// navigator.serviceWorker.startMessages();
+				case 'token':
+					registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
+					break;
+				case 'origin':
+					origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
+					break;
+				default:
+					registration.active.postMessage({pid: event.data.pid, result: null});
+			}
+		}));
+		navigator.serviceWorker.startMessages();
 		// navigator.serviceWorker.register(script.src, {scope: location.pathname});
 		// addEventListener('DOMContentLoaded', () => navigator.serviceWorker.ready.then(registration => resolve(registration.active)));
-	})), origin = new Promise(resolve => init.then(() => 
+	}), origin = new Promise(resolve => init.then(() => 
 	{
 		if ('reload' in script.dataset)
 		{
