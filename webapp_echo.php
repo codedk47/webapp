@@ -351,7 +351,7 @@ class webapp_echo_masker extends webapp_echo_html
 				array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
 
 			$this->meta(['http-equiv' => 'refresh', 'content' => "10; url=?{$webapp['request_query']}"]);
-			$this->sw['data-reload'] = "?{$webapp['request_query']}";
+			//$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			$webapp->break($this->init(...));
 		}
 		else
