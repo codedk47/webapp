@@ -2,8 +2,7 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
-		//console.log(`${location.origin + location.pathname}`)
-		//navigator.serviceWorker.register(script.src, {scope: location.pathname});
+		navigator.serviceWorker.register(script.src, {scope: location.pathname});
 		navigator.serviceWorker.ready.then(registration =>
 		{
 			navigator.serviceWorker.addEventListener('message', event =>
@@ -25,11 +24,11 @@ if (self.window)
 		addEventListener('DOMContentLoaded', () =>
 		{
 			//alert('DOMContentLoaded')
-			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.origin + location.pathname}).then(registration =>
-			{
-				registration.update();
-				//alert('load register')
-			}));
+			// addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(registration =>
+			// {
+			// 	registration.update();
+			// 	//alert('load register')
+			// }));
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});
 	}), origin = new Promise(resolve => init.then(() => 
@@ -224,7 +223,8 @@ else
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					}, () => fetch(event.request.url, {cache: 'no-store'}));
+					}, () => fetch(event.request));
+					//, () => fetch(event.request)
 					//, () => Response.redirect(event.request.url, 302)
 			}
 			return request(event.request, true);
