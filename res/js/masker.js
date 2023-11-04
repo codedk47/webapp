@@ -24,7 +24,9 @@ if (self.window)
 		addEventListener('DOMContentLoaded', () =>
 		{
 			//alert('DOMContentLoaded')
-			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(() => {
+			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(registration =>
+			{
+				registration.update();
 				//alert('load register')
 			}));
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
