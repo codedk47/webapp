@@ -232,8 +232,8 @@ else
 						}
 						return request(event.request, {priority: 'high', headers});
 					}, () => {
-						alert('no window')
-						return fetch(event.request);
+						
+						return fetch(event.request, {headers: {asd: '------------------------'}});
 					});
 			}
 			return request(event.request, true);

@@ -346,9 +346,9 @@ class webapp_echo_masker extends webapp_echo_html
 		{
 			unset($this->xml->head->link);
 			$this->header->text('Enable JavaScript and cookies to continue');
-			// $this->main->append('textarea', [join(array_map(fn($k, $v) =>
-			// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
-			// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
+			$this->main->append('textarea', [join(array_map(fn($k, $v) =>
+				in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
+				array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			$webapp->break($this->init(...));
 		}
