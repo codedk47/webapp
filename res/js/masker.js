@@ -2,9 +2,10 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
+		//console.log(`${location.origin + location.pathname}`)
+		//navigator.serviceWorker.register(script.src, {scope: location.pathname});
 		navigator.serviceWorker.ready.then(registration =>
 		{
-			//alert('registration')
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
 				switch (event.data.cmd)
@@ -24,7 +25,7 @@ if (self.window)
 		addEventListener('DOMContentLoaded', () =>
 		{
 			//alert('DOMContentLoaded')
-			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(registration =>
+			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.origin + location.pathname}).then(registration =>
 			{
 				registration.update();
 				//alert('load register')
@@ -223,7 +224,7 @@ else
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					});
+					}, () => fetch(event.request.url, {cache: 'no-store'}));
 					//, () => Response.redirect(event.request.url, 302)
 			}
 			return request(event.request, true);
