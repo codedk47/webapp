@@ -350,6 +350,7 @@ class webapp_echo_masker extends webapp_echo_html
 				in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
 				array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
+			$webapp->response_cache_control('no-store');
 			$webapp->break($this->init(...));
 		}
 		else
