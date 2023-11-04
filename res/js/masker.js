@@ -2,7 +2,7 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve => addEventListener('DOMContentLoaded', () => 
 	{
-		//alert('DOMContentLoaded');
+		alert('DOMContentLoaded');
 		navigator.serviceWorker.register(script.src, {scope: location.pathname});
 		navigator.serviceWorker.ready.then(registration =>
 		{
@@ -218,7 +218,6 @@ else
 				if (event.isReload)
 				{
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-						`<meta http-equiv="refresh" content="10; url=${event.request.url}">`
 						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
 						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-cache'}});
 				}
