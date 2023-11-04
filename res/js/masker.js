@@ -4,6 +4,7 @@ if (self.window)
 	{
 		navigator.serviceWorker.ready.then(registration =>
 		{
+			alert('registration')
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
 				switch (event.data.cmd)
@@ -22,7 +23,10 @@ if (self.window)
 		});
 		addEventListener('DOMContentLoaded', () =>
 		{
-			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}));
+			alert('DOMContentLoaded')
+			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(() => {
+				alert('load register')
+			}));
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});
 	}), origin = new Promise(resolve => init.then(() => 
@@ -204,7 +208,7 @@ else
 				{
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
 						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body>asd</body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 				}
 				return event.request.url === self.location.href
 					? fetch(event.request, {cache: 'reload'})
