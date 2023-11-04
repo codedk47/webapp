@@ -25,7 +25,7 @@ if (self.window)
 	{
 		if ('reload' in script.dataset)
 		{
-			return location.assign(script.dataset.reload);
+			return location.replace(script.dataset.reload);
 		}
 		init.then(() =>
 		{
