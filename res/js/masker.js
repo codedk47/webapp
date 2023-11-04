@@ -4,7 +4,7 @@ if (self.window)
 	{
 		navigator.serviceWorker.ready.then(registration =>
 		{
-			alert('registration')
+			//alert('registration')
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
 				switch (event.data.cmd)
@@ -16,6 +16,7 @@ if (self.window)
 						origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
 						break;
 					default:
+						alert(event.data)
 						registration.active.postMessage({pid: event.data.pid, result: null});
 				}
 			});
@@ -23,9 +24,9 @@ if (self.window)
 		});
 		addEventListener('DOMContentLoaded', () =>
 		{
-			alert('DOMContentLoaded')
+			//alert('DOMContentLoaded')
 			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}).then(() => {
-				alert('load register')
+				//alert('load register')
 			}));
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});
@@ -178,9 +179,9 @@ else
 	}));
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
-	//self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+	self.addEventListener('install', event => self.skipWaiting());
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
-	//self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+	self.addEventListener('activate', event => self.clients.claim());
 	self.addEventListener('message', event =>
 	{
 		const promise = pending.get(event.data.pid);
