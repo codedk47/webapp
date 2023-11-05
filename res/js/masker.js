@@ -200,6 +200,7 @@ else
 	self.addEventListener('activate', event => {
 
 		event.waitUntil(caches.keys().then(function(names) {
+			console.log(names)
 			for (let name of names)
 				caches.delete(name);
 			return self.clients.claim();
