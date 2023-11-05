@@ -193,18 +193,12 @@ else
 	}));
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
-	self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
+	addEventListener('install', event => event.waitUntil(skipWaiting()));
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
-	//self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
-	//self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
-	self.addEventListener('activate', event => {
+	addEventListener('activate', event => event.waitUntil(clients.claim()));
+	//addEventListener('activate', event => event.waitUntil(clients.claim()));
 
-		event.waitUntil(caches.keys().then(names => names.forEach(name => caches.delete(name))).then(() => self.clients.claim()));
-
-
-
-	});
-	self.addEventListener('message', event =>
+	addEventListener('message', event =>
 	{
 		const promise = pending.get(event.data.pid);
 		if (promise)
@@ -215,13 +209,13 @@ else
 				: promise.resolve(event.data.result);
 		}
 	});
-	self.addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
+	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
 		if (response) return response;
-		if (event.request.url.startsWith(self.location.origin))
+		if (event.request.url.startsWith(location.origin))
 		{
 			const url = new URL(event.request.url);
-			if (self.location.pathname === url.pathname)
+			if (location.pathname === url.pathname)
 			{
 				if (url.search.startsWith('?/'))
 				{
@@ -230,10 +224,10 @@ else
 				if (event.isReload)
 				{
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-						`<script src="${self.location.href}" data-reload="${event.request.url}"></script>`,
+						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
 						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 				}
-				return event.request.url === self.location.href
+				return event.request.url === location.href
 					? fetch(event.request, {cache: 'reload'})
 					: require('token').then(token =>
 					{
