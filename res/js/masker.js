@@ -181,7 +181,7 @@ else
 	// there are still previous incarnations of this service worker registration active.
 	self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
-	//self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
+	self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 	// self.addEventListener('activate', function(event) {
 	// 	event.waitUntil(
 	// 	  caches.keys().then(function(cacheNames) {
