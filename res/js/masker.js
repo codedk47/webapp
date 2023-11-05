@@ -195,7 +195,7 @@ else
 	// there are still previous incarnations of this service worker registration active.
 	addEventListener('install', event => skipWaiting());
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
-	addEventListener('activate', event => event.waitUntil(clients.claim()));
+	addEventListener('activate', event => clients.claim());
 	//addEventListener('activate', event => event.waitUntil(clients.claim()));
 
 	addEventListener('message', event =>
