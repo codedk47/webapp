@@ -182,22 +182,22 @@ else
 	self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
 	//self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
-	self.addEventListener('activate', function(event) {
-		event.waitUntil(
-		  caches.keys().then(function(cacheNames) {
-			console.log(cacheNames)
-			return Promise.all(
-			  cacheNames.filter(function(cacheName) {
-				// Return true if you want to remove this cache,
-				// but remember that caches are shared across
-				// the whole origin
-			  }).map(function(cacheName) {
-				return caches.delete(cacheName);
-			  })
-			);
-		  })
-		);
-	  });
+	// self.addEventListener('activate', function(event) {
+	// 	event.waitUntil(
+	// 	  caches.keys().then(function(cacheNames) {
+	// 		console.log(cacheNames)
+	// 		return Promise.all(
+	// 		  cacheNames.filter(function(cacheName) {
+	// 			// Return true if you want to remove this cache,
+	// 			// but remember that caches are shared across
+	// 			// the whole origin
+	// 		  }).map(function(cacheName) {
+	// 			return caches.delete(cacheName);
+	// 		  })
+	// 		);
+	// 	  })
+	// 	);
+	//   });
 	self.addEventListener('message', event =>
 	{
 		const promise = pending.get(event.data.pid);
