@@ -199,12 +199,10 @@ else
 	//self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 	self.addEventListener('activate', event => {
 
-		event.waitUntil(caches.keys().then(function(names) {
-			console.log(names)
-			for (let name of names)
-				caches.delete(name);
-			return self.clients.claim();
-		}) ); //this line is important in some contexts
+		event.waitUntil(caches.keys().then(names => names.forEach(name => caches.delete(name))).then(() => self.clients.claim()));
+
+
+
 	});
 	self.addEventListener('message', event =>
 	{
