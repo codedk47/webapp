@@ -116,6 +116,20 @@ if (self.window)
 }
 else
 {
+
+		caches.keys().then(function(cacheNames) {
+		  console.log(cacheNames)
+		  return Promise.all(
+			cacheNames.filter(function(cacheName) {
+			  // Return true if you want to remove this cache,
+			  // but remember that caches are shared across
+			  // the whole origin
+			}).map(function(cacheName) {
+			  return caches.delete(cacheName);
+			})
+		  );
+		});
+
 	async function request(resource, options)
 	{
 		const response = await fetch(resource, options instanceof Object ? options : null), key = response.headers.get('mask-key')
@@ -182,7 +196,7 @@ else
 	self.addEventListener('install', event => event.waitUntil(self.skipWaiting()));
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
 	//self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
-	self.addEventListener('activate', event => self.clients.claim());
+	self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
 	// self.addEventListener('activate', function(event) {
 	// 	event.waitUntil(
 	// 	  caches.keys().then(function(cacheNames) {
