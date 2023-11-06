@@ -25,7 +25,7 @@ if (self.window)
 		{
 			addEventListener('load', () =>
 			{
-				navigator.serviceWorker.register(script.src, {scope: location.pathname});
+				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
 			});
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});

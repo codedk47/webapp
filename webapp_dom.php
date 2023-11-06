@@ -842,7 +842,11 @@ class webapp_form implements ArrayAccess
 		{
 			$this->captcha = $this->fieldset($name);
 			$this->field('captcha_encrypt');
-			$this->field('captcha_decrypt', 'text', ['onfocus' => 'this.select()', 'placeholder' => 'Type following captcha', 'required' => NULL]);
+			$this->field('captcha_decrypt', 'text', [
+				'onfocus' => 'this.select(this.style.imeMode="disabled")',
+				'placeholder' => 'Type following captcha',
+				'required' => NULL
+			]);
 			if ($this->echo)
 			{
 				$this->fields['captcha_encrypt']['value'] = $this->webapp->captcha_random($this->webapp['captcha_length'], $this->webapp['captcha_expire']);

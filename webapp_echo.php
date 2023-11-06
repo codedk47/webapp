@@ -281,6 +281,7 @@ class webapp_echo_html extends webapp_implementation
 		$form->captcha('Captcha');
 		$form->fieldset();
 		$form->button('Sign In', 'submit');
+		$form->xml['spellcheck'] = 'false';
 		return $form;
 	}
 	static function form_mobileconfig(array|webapp|webapp_html $context, ?string $authurl = NULL):webapp_form
