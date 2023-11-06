@@ -425,11 +425,15 @@ class webapp_echo_masker extends webapp_echo_html
 if (this.style.pointerEvents !== 'none')
 {
 	this.style.pointerEvents = 'none';
+	this.querySelectorAll('fieldset').forEach(element => element.disabled = true);
 	masker(this.action, {headers: {'Sign-In': JSON.stringify(Object.fromEntries(new FormData(this).entries()))}}).then(response => response.json()).then(data =>
 	{
 		data.errors.length && alert(data.errors.join('\n'));
 		data.signature && masker.authorization(data.signature).then(() => location.reload());
-	}).finally(() => this.style.pointerEvents = null);
+	}).finally(() => {
+		this.style.pointerEvents = null;
+		this.querySelectorAll('fieldset').forEach(element => element.disabled = false);
+	});
 }
 return false;
 JS;
