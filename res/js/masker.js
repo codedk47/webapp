@@ -183,13 +183,13 @@ else
 	{
 		for (let i in windows)
 		{
-			if (windows[i].url === event.request.url)
-			{
+			//if (windows[i].url === event.request.url)
+			//{
 				pending.set(++pid, {resolve, reject});
-				return windows[i].postMessage({pid, cmd});
-			}
+				windows[i].postMessage({pid, cmd});
+			//}
 		}
-		reject();
+		//reject();
 		// if (windows.length)
 		// {
 
