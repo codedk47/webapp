@@ -861,7 +861,7 @@ class webapp_form implements ArrayAccess
 					'width' => $this->webapp['captcha_params'][0],
 					'height' => $this->webapp['captcha_params'][1],
 					'style' => 'cursor:pointer;object-fit:cover',
-					'onload' => 'this.parentNode.previousElementSibling.disabled=false',
+					'onload' => 'this.parentNode.previousElementSibling.firstElementChild.nextElementSibling.nextElementSibling.value=null;this.parentNode.previousElementSibling.disabled=false',
 					'onclick' => 'this.parentNode.previousElementSibling.disabled||(this.parentNode.previousElementSibling.disabled=Boolean(fetch("?captcha").then(response=>response.text()).then(captcha=>this.src=`?captcha/${captcha})`)))']);
 
 // 				$this->fieldset()->setattr([
