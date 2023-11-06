@@ -209,8 +209,8 @@ else
 				: promise.resolve(event.data.result);
 		}
 	});
-	//addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
-	addEventListener('fetch', event => event.respondWith((()=>
+	addEventListener('fetch', event => event.respondWith(fetch(event.request, {headers: {asd:123}})));
+	addEventListener('fetcha', event => event.respondWith((()=>
 	{
 		//if (response) return response;
 		if (event.request.url.startsWith(location.origin))
