@@ -216,7 +216,19 @@ else
 						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
 						'</head><body><textarea>',
 						
-						JSON.stringify(event)
+						JSON.stringify({
+							'isTrusted': event.isTrusted,
+							'bubbles': event.bubbles,
+							'composed': event.composed,
+							'cancelable': event.cancelable,
+							'clientId': event.clientId,
+							'defaultPrevented': event.defaultPrevented,
+							'eventPhase': event.eventPhase,
+							'isReload': event.isReload,
+							'resultingClientId': event.resultingClientId,
+							'timeStamp': event.timeStamp,
+							'type': event.type,
+						})
 						
 						,'</textarea></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 					// return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
