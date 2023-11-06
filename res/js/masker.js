@@ -223,6 +223,7 @@ else
 				}
 				if (event.isReload)
 				{
+					return Response.redirect(event.request.url, 302);
 					return new Response(['<html lang="en"><head><meta charset="utf-8">',
 						`<script src="${location.href}"></script>`,
 						'</head><body>isReload</body></html>'].join(''), {headers: {
