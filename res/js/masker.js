@@ -165,14 +165,14 @@ else
 		return response;
 	}
 	let pid = 0;
-	const pending = new Map, require = (event, cmd) => clients.matchAll().then(windows => new Promise((resolve, reject) =>
+	const pending = new Map, require = cmd => clients.matchAll().then(windows => new Promise((resolve, reject) =>
 	{
 		windows.some(window =>
 		{
-			console.log(window.url === event.request.url)
-			if (window.url === event.request.url)
+			console.log(window )
+			if (pid++ && window.frameType === 'top-level' && window.visibilityState === 'visible')
 			{
-				pending.set(++pid, {resolve, reject});
+				pending.set(pid, {resolve, reject});
 				window.postMessage({pid, cmd});
 				return true;
 			}
@@ -214,7 +214,9 @@ else
 				// 		`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
 				// 		'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 				// }
-				return require(event, 'token').then(token =>
+				return event.request.url === location.href
+					? fetch(event.request)
+					: require('token').then(token =>
 					{
 						const headers = Object.assign({'Service-Worker': 'masker'},
 							Object.fromEntries(event.request.headers.entries()));
@@ -223,7 +225,7 @@ else
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					}, () => fetch(event.request)   );
+					}, () => request(event.request)   );
 					//, () => fetch(event.request)
 					//, () => Response.redirect(event.request.url, 302)
 			}
