@@ -236,12 +236,9 @@ else
 				{
 					pid = 1;
 					//return Response.redirect(event.request.url, 302);
-					return new Response(['<html lang="en"><head><meta charset="utf-8">',
-						//`<script src="${location.href}"></script>`,
-						'</head><body>isReload</body></html>'].join(''), {headers: {
-							'Content-Type': 'text/html',
-							'Cache-Control': 'no-store'
-						}});
+					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+						'</head><body>isReload</body></html>'], {type: 'text/html'}));
 					// return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
 					// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
 					// 	'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
