@@ -211,7 +211,7 @@ else
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
-		if (response) return response;
+		//if (response) return response;
 		if (event.request.url.startsWith(location.origin))
 		{
 			const url = new URL(event.request.url);
