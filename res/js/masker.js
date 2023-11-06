@@ -238,7 +238,7 @@ else
 					? fetch(event.request, {cache: 'reload'})
 					: require('token').then(token =>
 					{
-						const headers = Object.assign({'Service-Worker': 'masker', 'Cache-Control': 'no-store'},
+						const headers = Object.assign({'Service-Worker': 'masker'},
 							Object.fromEntries(event.request.headers.entries()));
 						if (token)
 						{
