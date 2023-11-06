@@ -844,9 +844,9 @@ class webapp_form implements ArrayAccess
 			$this->field('captcha_encrypt');
 			$this->field('captcha_decrypt', 'text', [
 				'placeholder' => 'Type following captcha',
+				'spellcheck' => 'false',
 				'autocorrect' => 'off',
 				'autocapitalize' => 'off',
-				'spellcheck' => 'false',
 				'onfocus' => 'this.select(this.style.imeMode="disabled")',
 				'required' => NULL
 			]);
