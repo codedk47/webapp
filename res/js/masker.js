@@ -116,20 +116,6 @@ if (self.window)
 }
 else
 {
-
-		caches.keys().then(function(cacheNames) {
-		  console.log(cacheNames)
-		  return Promise.all(
-			cacheNames.filter(function(cacheName) {
-			  // Return true if you want to remove this cache,
-			  // but remember that caches are shared across
-			  // the whole origin
-			}).map(function(cacheName) {
-			  return caches.delete(cacheName);
-			})
-		  );
-		});
-
 	async function request(resource, options)
 	{
 		const response = await fetch(resource, options instanceof Object ? options : null), key = response.headers.get('mask-key')
@@ -228,9 +214,7 @@ else
 				// 		`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
 				// 		'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 				// }
-				return event.request.url === location.href
-					? fetch(event.request)
-					: require(event, 'token').then(token =>
+				return require(event, 'token').then(token =>
 					{
 						const headers = Object.assign({'Service-Worker': 'masker'},
 							Object.fromEntries(event.request.headers.entries()));
