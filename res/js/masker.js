@@ -183,14 +183,14 @@ else
 	{
 		for (let i in windows)
 		{
-			//if (windows[i].url === event.request.url)
-			//{
+			if (windows[i].url === event.request.url)
+			{
 				pending.set(++pid, {resolve, reject});
-				windows[i].postMessage({pid, cmd});
-			//}
+				return windows[i].postMessage({pid, cmd});
+			}
 		}
-		//reject();
-		// if (windows.length)
+		reject();
+		// if (pid && windows.length)
 		// {
 
 		// 	pending.set(++pid, {resolve, reject});
@@ -198,6 +198,7 @@ else
 		// }
 		// else
 		// {
+		// 	pid = 1;
 		// 	reject();
 		// }
 	}));
@@ -231,8 +232,9 @@ else
 				{
 					return require('origin').then(origin => request(`${origin}${url.search.substring(1)}`, true));
 				}
-				if (event.isReload)
+				if (event.isReload || pid === 0)
 				{
+					pid = 1;
 					//return Response.redirect(event.request.url, 302);
 					return new Response(['<html lang="en"><head><meta charset="utf-8">',
 						//`<script src="${location.href}"></script>`,
