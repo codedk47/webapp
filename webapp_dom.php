@@ -852,22 +852,33 @@ class webapp_form implements ArrayAccess
 			]);
 			if ($this->echo)
 			{
+				$this->captcha->setattr('disabled');
 				$this->fields['captcha_encrypt']['value'] = $this->webapp->captcha_random($this->webapp['captcha_length'], $this->webapp['captcha_expire']);
-				$this->fieldset()->setattr([
-					'style' => "height:{$this->webapp['captcha_params'][1]}px;cursor:pointer;background:url(?captcha/{$this->fields['captcha_encrypt']['value']}) no-repeat center",
-					//'onclick' => 'fetch("?captcha").then(r=>r.text()).then(r=>this.style.backgroundImage=`url(?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value=r})`)'
-					'onclick' => <<<'JS'
-if (this.previousElementSibling.disabled === false)
-{
-	this.previousElementSibling.disabled = true;
-	fetch('?captcha').then(response => response.text()).then(captcha =>
-	{
-		this.style.backgroundImage = `url(?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value = captcha})`;
-		this.previousElementSibling.disabled = false;
-	});
-}
-JS
-				]);
+
+
+				$this->fieldset()->append('img', [
+					'src' => "?captcha/{$this->fields['captcha_encrypt']['value']}",
+					'width' => $this->webapp['captcha_params'][0],
+					'height' => $this->webapp['captcha_params'][1],
+					'style' => 'cursor:pointer;object-fit:cover',
+					'onload' => 'this.parentNode.previousElementSibling.disabled=false',
+					'onclick' => 'this.parentNode.previousElementSibling.disabled||(this.parentNode.previousElementSibling.disabled=Boolean(fetch("?captcha").then(response=>response.text()).then(captcha=>this.src=`?captcha/${captcha})`)))']);
+
+// 				$this->fieldset()->setattr([
+// 					'style' => "height:{$this->webapp['captcha_params'][1]}px;cursor:pointer;background:url(?captcha/{$this->fields['captcha_encrypt']['value']}) no-repeat center",
+// 					//'onclick' => 'fetch("?captcha").then(r=>r.text()).then(r=>this.style.backgroundImage=`url(?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value=r})`)'
+// 					'onclick' => <<<'JS'
+// if (this.previousElementSibling.disabled === false)
+// {
+// 	this.previousElementSibling.disabled = true;
+// 	fetch('?captcha').then(response => response.text()).then(captcha =>
+// 	{
+// 		this.style.backgroundImage = `url(?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value = captcha})`;
+// 		this.previousElementSibling.disabled = false;
+// 	});
+// }
+// JS
+// 				]);
 				$this->fieldset = $this->captcha;
 			}
 			unset($this->fields['captcha_encrypt'], $this->fields['captcha_decrypt']);
