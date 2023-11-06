@@ -221,10 +221,10 @@ else
 							// 'bubbles': event.bubbles,
 							// 'composed': event.composed,
 							// 'cancelable': event.cancelable,
-							'--clientIdaaaaa': event.clientId,
+							'clientId': event.clientId,
 							// 'defaultPrevented': event.defaultPrevented,
 							// 'eventPhase': event.eventPhase,
-							'isReload': event.isReload,
+							'---isReload---': event.isReload,
 							// 'resultingClientId': event.resultingClientId,
 							// 'timeStamp': event.timeStamp,
 							'type': event.type
