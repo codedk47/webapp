@@ -222,12 +222,12 @@ else
 				{
 					return require('origin').then(origin => request(`${origin}${url.search.substring(1)}`, true));
 				}
-				if (event.isReload)
-				{
-					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
-				}
+				// if (event.isReload || pid++ === 0)
+				// {
+				// 	return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+				// 		`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+				// 		'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+				// }
 				return event.request.url === location.href
 					? fetch(event.request)
 					: require(event, 'token').then(token =>
