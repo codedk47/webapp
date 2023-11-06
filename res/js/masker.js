@@ -209,7 +209,7 @@ else
 				: promise.resolve(event.data.result);
 		}
 	});
-	addEventListener('fetch', event => event.respondWith(fetch(event.request, {headers: {asd:123}})));
+	addEventListener('fetch', event => event.respondWith(request(event.request, {headers: {'Service-Worker': 'masker'}})));
 	addEventListener('fetcha', event => event.respondWith((()=>
 	{
 		//if (response) return response;
