@@ -170,9 +170,9 @@ else
 		windows.some(window =>
 		{
 			console.log(window )
-			if (pid++ && window.frameType === 'top-level' && window.visibilityState === 'visible')
+			if (window.frameType === 'top-level' && window.visibilityState === 'visible')
 			{
-				pending.set(pid, {resolve, reject});
+				pending.set(++pid, {resolve, reject});
 				window.postMessage({pid, cmd});
 				return true;
 			}
