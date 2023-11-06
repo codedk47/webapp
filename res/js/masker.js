@@ -243,7 +243,7 @@ else
 						return request(event.request, {priority: 'high', headers});
 					}, () => new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
 						`<script src="${location.href}"></script>`,
-						'</head><body>isReload</body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}}));
+						'</head><body>not find</body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}}));
 					//, () => fetch(event.request)
 					//, () => Response.redirect(event.request.url, 302)
 			}

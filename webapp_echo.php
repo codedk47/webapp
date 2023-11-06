@@ -338,6 +338,28 @@ class webapp_echo_masker extends webapp_echo_html
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
+		/*
+		Sets whether a web application runs in full-screen mode.
+		If content is set to yes, the web application runs in full-screen mode; otherwise, it does not. The default behavior is to use Safari to display web content.
+		You can determine whether a webpage is displayed in full-screen mode using the window.navigator.standalone read-only Boolean JavaScript property.
+		*/
+		$this->meta(['name' => 'apple-mobile-web-app-capable', 'content' => 'yes']);
+		/*
+		Sets the style of the status bar for a web application.
+		This meta tag has no effect unless you first specify full-screen mode as described in apple-apple-mobile-web-app-capable.
+		If content is set to default, the status bar appears normal.
+		If set to black, the status bar has a black background.
+		If set to black-translucent, the status bar is black and translucent.
+		If set to default or black, the web content is displayed below the status bar.
+		If set to black-translucent, the web content is displayed on the entire screen, partially obscured by the status bar. The default value is default.
+		*/
+		$this->meta(['name' => 'apple-mobile-web-app-status-bar-style', 'content' => 'black']);
+		/*
+		Enables or disables automatic detection of possible phone numbers in a webpage in Safari on iOS.
+		By default, Safari on iOS detects any string formatted like a phone number and makes it a link that calls the number. Specifying telephone=no disables this feature.
+		*/
+		//$this->meta(['name' => 'format-detection', 'content' => 'telephone=no']);
+
 		//'fetchpriority' => 'high', 
 		$this->sw = $this->xml->head->append('script', ['src' => '?masker']);
 		// $webapp->request_header('Sec-Fetch-Dest') === 'document'
