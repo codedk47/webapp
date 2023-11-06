@@ -209,9 +209,8 @@ else
 				: promise.resolve(event.data.result);
 		}
 	});
-	addEventListener('fetch', event => event.respondWith(fetch(event.request.url)));
-	/*
-	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
+	//addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
+	addEventListener('fetch', event => event.respondWith((function(event)
 	{
 		//if (response) return response;
 		if (event.request.url.startsWith(location.origin))
@@ -259,6 +258,6 @@ else
 			return request(event.request, true);
 		}
 		return fetch(event.request);
-	})));
-	*/
+	})()));
+
 }
