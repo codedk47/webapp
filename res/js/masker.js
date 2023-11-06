@@ -236,21 +236,22 @@ else
 				}
 				return event.request.url === location.href
 					? fetch(event.request, {cache: 'reload'})
-					: require('token').then(token =>
-					{
-						const headers = Object.assign({'Service-Worker': 'masker', 'Cache-Control': 'no-store'},
-							Object.fromEntries(event.request.headers.entries()));
-						if (token)
-						{
-							headers.Authorization = `Bearer ${token}`;
-						}
-						return request(event.request, {priority: 'high', headers});
-					}, () => new Response(['<html lang="en"><head><meta charset="utf-8">',
-					//`<script src="${location.href}"></script>`,
-					'</head><body>not window</body></html>'].join(''), {headers: {
-						'Content-Type': 'text/html',
-						'Cache-Control': 'no-store'
-					}})   );
+					: request(event.request, {headers: {'Service-Worker': 'masker'}});
+					// : require('token').then(token =>
+					// {
+					// 	const headers = Object.assign({'Service-Worker': 'masker', 'Cache-Control': 'no-store'},
+					// 		Object.fromEntries(event.request.headers.entries()));
+					// 	if (token)
+					// 	{
+					// 		headers.Authorization = `Bearer ${token}`;
+					// 	}
+					// 	return request(event.request, {priority: 'high', headers});
+					// }, () => new Response(['<html lang="en"><head><meta charset="utf-8">',
+					// //`<script src="${location.href}"></script>`,
+					// '</head><body>not window</body></html>'].join(''), {headers: {
+					// 	'Content-Type': 'text/html',
+					// 	'Cache-Control': 'no-store'
+					// }})   );
 					//, () => fetch(event.request)
 					//, () => Response.redirect(event.request.url, 302)
 			}
