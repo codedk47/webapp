@@ -225,6 +225,7 @@ else
 							// 'defaultPrevented': event.defaultPrevented,
 							// 'eventPhase': event.eventPhase,
 							'---isReload---': event.isReload,
+							'in---isReload---': 'isReload' in event,
 							// 'resultingClientId': event.resultingClientId,
 							// 'timeStamp': event.timeStamp,
 							'type': event.type
