@@ -181,26 +181,16 @@ else
 	let pid = 0;
 	const pending = new Map, require = (event, cmd) => clients.matchAll().then(windows => new Promise((resolve, reject) =>
 	{
-		for (let i in windows)
+		windows.some(window =>
 		{
-			if (windows[i].url === event.request.url)
+			console.log(window.url === event.request.url)
+			if (window.url === event.request.url)
 			{
 				pending.set(++pid, {resolve, reject});
-				return windows[i].postMessage({pid, cmd});
+				window.postMessage({pid, cmd});
+				return true;
 			}
-		}
-		reject();
-		// if (pid && windows.length)
-		// {
-
-		// 	pending.set(++pid, {resolve, reject});
-		// 	windows[0].postMessage({pid, cmd});
-		// }
-		// else
-		// {
-		// 	pid = 1;
-		// 	reject();
-		// }
+		}) || reject();
 	}));
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
@@ -232,35 +222,24 @@ else
 				{
 					return require('origin').then(origin => request(`${origin}${url.search.substring(1)}`, true));
 				}
-				if (event.isReload || pid === 0)
+				if (event.isReload || pid++ === 0)
 				{
-					pid = 1;
-					//return Response.redirect(event.request.url, 302);
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
 						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body>isReload</body></html>'], {type: 'text/html'}));
-					// return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-					// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-					// 	'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 				}
 				return event.request.url === location.href
-					? fetch(event.request, {cache: 'reload'})
-					//: request(event.request, {headers: {'Service-Worker': 'masker'}});
+					? fetch(event.request)
 					: require(event, 'token').then(token =>
 					{
-						const headers = Object.assign({'Service-Worker': 'masker', 'Cache-Control': 'no-store'},
+						const headers = Object.assign({'Service-Worker': 'masker'},
 							Object.fromEntries(event.request.headers.entries()));
 						if (token)
 						{
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					}, () => new Response(['<html lang="en"><head><meta charset="utf-8">',
-					//`<script src="${location.href}"></script>`,
-					'</head><body>not window</body></html>'].join(''), {headers: {
-						'Content-Type': 'text/html',
-						'Cache-Control': 'no-store'
-					}})   );
+					}, () => fetch(event.request)   );
 					//, () => fetch(event.request)
 					//, () => Response.redirect(event.request.url, 302)
 			}
