@@ -214,7 +214,7 @@ else
 					console.log(event)
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
 						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body><textarea>',
+						'</head><body><textarea style="width:100%;height:100%" rows=40>',
 						
 						JSON.stringify({
 							'isTrusted': event.isTrusted,
