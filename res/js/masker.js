@@ -170,7 +170,7 @@ else
 		windows.some(window =>
 		{
 			console.log(window )
-			if (window.frameType === 'top-level' && window.visibilityState === 'visible')
+			if (window.frameType === 'top-level')
 			{
 				pending.set(++pid, {resolve, reject});
 				window.postMessage({pid, cmd});
@@ -196,9 +196,10 @@ else
 				: promise.resolve(event.data.result);
 		}
 	});
-	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(() =>
+	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
-		//if (response) return response;
+		if (response) return response;
+		
 		if (event.request.url.startsWith(location.origin))
 		{
 			const url = new URL(event.request.url);
@@ -208,15 +209,21 @@ else
 				{
 					return require('origin').then(origin => request(`${origin}${url.search.substring(1)}`, true));
 				}
-				// if (event.isReload || pid++ === 0)
-				// {
-				// 	return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-				// 		`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-				// 		'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
-				// }
-				return event.request.url === location.href
-					? fetch(event.request)
-					: require('token').then(token =>
+				if (event.isReload || pid === 0)
+				{
+					console.log(event)
+					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+						'</head><body><textarea>',
+						
+						JSON.stringify(event)
+						
+						,'</textarea></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+					// return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+					// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+					// 	'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+				}
+				return require(event, 'token').then(token =>
 					{
 						const headers = Object.assign({'Service-Worker': 'masker'},
 							Object.fromEntries(event.request.headers.entries()));
