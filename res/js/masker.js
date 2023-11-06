@@ -209,10 +209,7 @@ else
 				: promise.resolve(event.data.result);
 		}
 	});
-	addEventListener('fetch', event => event.respondWith(
-		caches.match(event.request).then(() => request(event.request, {headers: {'Service-Worker': 'masker'}}))
-	));
-	addEventListener('fetcha', event => event.respondWith((()=>
+	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(() =>
 	{
 		//if (response) return response;
 		if (event.request.url.startsWith(location.origin))
@@ -260,6 +257,6 @@ else
 			return request(event.request, true);
 		}
 		return fetch(event.request);
-	})()));
+	})));
 
 }
