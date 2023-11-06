@@ -224,8 +224,11 @@ else
 				if (event.isReload)
 				{
 					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+						`<script src="${location.href}"></script>`,
+						'</head><body>isReload</body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+					// return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+					// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+					// 	'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 				}
 				return event.request.url === location.href
 					? fetch(event.request, {cache: 'reload'})
@@ -238,7 +241,9 @@ else
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					}, () => fetch(event.request));
+					}, () => new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+						`<script src="${location.href}"></script>`,
+						'</head><body>isReload</body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}}));
 					//, () => fetch(event.request)
 					//, () => Response.redirect(event.request.url, 302)
 			}
