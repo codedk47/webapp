@@ -210,7 +210,7 @@ else
 		}
 	});
 	//addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
-	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(function(event)
+	addEventListener('fetch', event => event.respondWith((()=>
 	{
 		//if (response) return response;
 		if (event.request.url.startsWith(location.origin))
@@ -258,6 +258,6 @@ else
 			return request(event.request, true);
 		}
 		return fetch(event.request);
-	})));
+	})()));
 
 }
