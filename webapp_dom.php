@@ -847,38 +847,22 @@ class webapp_form implements ArrayAccess
 				'spellcheck' => 'false',
 				'autocorrect' => 'off',
 				'autocapitalize' => 'off',
-				'onfocus' => 'this.select(this.style.imeMode="disabled")',
+				'onfocus' => 'this.select()',
+				'style' => 'ime-mode:disabled',
 				'required' => NULL
 			]);
 			if ($this->echo)
 			{
-				$this->captcha->setattr('disabled');
 				$this->fields['captcha_encrypt']['value'] = $this->webapp->captcha_random($this->webapp['captcha_length'], $this->webapp['captcha_expire']);
-
-
+				$this->captcha->setattr('disabled');
 				$this->fieldset()->append('img', [
+					'onload' => '(function(i){i.value="";i.focus()}(this.parentNode.previousElementSibling.firstElementChild.nextElementSibling.nextElementSibling,this.parentNode.previousElementSibling.disabled=false))',
+					'onclick' => '(function(i,f){if(!f.disabled){f.disabled=!!fetch("?captcha").then(r=>r.ok?r.text():Promise.reject()).then(r=>i.src=`?captcha/${r}`,()=>i.onload())}}(this,this.parentNode.previousElementSibling))',
+					'onerror' => 'this.onload()',
 					'src' => "?captcha/{$this->fields['captcha_encrypt']['value']}",
 					'width' => $this->webapp['captcha_params'][0],
 					'height' => $this->webapp['captcha_params'][1],
-					'style' => 'cursor:pointer;object-fit:cover',
-					'onload' => 'this.parentNode.previousElementSibling.firstElementChild.nextElementSibling.nextElementSibling.value=null;this.parentNode.previousElementSibling.disabled=false',
-					'onclick' => 'this.parentNode.previousElementSibling.disabled||(this.parentNode.previousElementSibling.disabled=Boolean(fetch("?captcha").then(response=>response.text()).then(captcha=>this.src=`?captcha/${captcha})`)))']);
-
-// 				$this->fieldset()->setattr([
-// 					'style' => "height:{$this->webapp['captcha_params'][1]}px;cursor:pointer;background:url(?captcha/{$this->fields['captcha_encrypt']['value']}) no-repeat center",
-// 					//'onclick' => 'fetch("?captcha").then(r=>r.text()).then(r=>this.style.backgroundImage=`url(?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value=r})`)'
-// 					'onclick' => <<<'JS'
-// if (this.previousElementSibling.disabled === false)
-// {
-// 	this.previousElementSibling.disabled = true;
-// 	fetch('?captcha').then(response => response.text()).then(captcha =>
-// 	{
-// 		this.style.backgroundImage = `url(?captcha/${this.previousElementSibling.firstElementChild.nextElementSibling.value = captcha})`;
-// 		this.previousElementSibling.disabled = false;
-// 	});
-// }
-// JS
-// 				]);
+					'style' => 'cursor:pointer']);
 				$this->fieldset = $this->captcha;
 			}
 			unset($this->fields['captcha_encrypt'], $this->fields['captcha_decrypt']);
