@@ -217,17 +217,17 @@ else
 						'</head><body><textarea style="width:100%;height:100%" rows=40>',
 						
 						JSON.stringify({
-							'isTrusted': event.isTrusted,
-							'bubbles': event.bubbles,
-							'composed': event.composed,
-							'cancelable': event.cancelable,
+							// 'isTrusted': event.isTrusted,
+							// 'bubbles': event.bubbles,
+							// 'composed': event.composed,
+							// 'cancelable': event.cancelable,
 							'clientId': event.clientId,
-							'defaultPrevented': event.defaultPrevented,
-							'eventPhase': event.eventPhase,
+							// 'defaultPrevented': event.defaultPrevented,
+							// 'eventPhase': event.eventPhase,
 							'isReload': event.isReload,
-							'resultingClientId': event.resultingClientId,
-							'timeStamp': event.timeStamp,
-							'type': event.type,
+							// 'resultingClientId': event.resultingClientId,
+							// 'timeStamp': event.timeStamp,
+							'type': event.type
 						})
 						
 						,'</textarea></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
