@@ -209,8 +209,58 @@ else
 				: promise.resolve(event.data.result);
 		}
 	});
-	addEventListener('fetch', event => fetch(event.request));
-	addEventListener('fetcha', event => event.respondWith(caches.match(event.request).then(response =>
+	addEventListener('fetch', event => caches.match(event.request).then(response =>
+	{
+		if (response) return response;
+		if (event.request.url.startsWith(location.origin))
+		{
+			const url = new URL(event.request.url);
+			if (location.pathname === url.pathname)
+			{
+				if (url.search.startsWith('?/'))
+				{
+					return require('origin').then(origin => request(`${origin}${url.search.substring(1)}`, true));
+				}
+				if (event.isReload)
+				{
+					//return Response.redirect(event.request.url, 302);
+					return new Response(['<html lang="en"><head><meta charset="utf-8">',
+						//`<script src="${location.href}"></script>`,
+						'</head><body>isReload</body></html>'].join(''), {headers: {
+							'Content-Type': 'text/html',
+							'Cache-Control': 'no-store'
+						}});
+					// return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+					// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+					// 	'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+				}
+				return event.request.url === location.href
+					? fetch(event.request, {cache: 'reload'})
+					: require('token').then(token =>
+					{
+						const headers = Object.assign({'Service-Worker': 'masker'},
+							Object.fromEntries(event.request.headers.entries()));
+						if (token)
+						{
+							headers.Authorization = `Bearer ${token}`;
+						}
+						return request(event.request, {priority: 'high', headers});
+					}, () => new Response(['<html lang="en"><head><meta charset="utf-8">',
+					//`<script src="${location.href}"></script>`,
+					'</head><body>not window</body></html>'].join(''), {headers: {
+						'Content-Type': 'text/html',
+						'Cache-Control': 'no-store'
+					}})   );
+					//, () => fetch(event.request)
+					//, () => Response.redirect(event.request.url, 302)
+			}
+			return request(event.request, true);
+		}
+		return fetch(event.request);
+
+	}));
+	/*
+	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
 		if (response) return response;
 		if (event.request.url.startsWith(location.origin))
@@ -259,4 +309,5 @@ else
 		}
 		return fetch(event.request);
 	})));
+	*/
 }
