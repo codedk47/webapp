@@ -223,9 +223,9 @@ else
 				}
 				if (event.isReload)
 				{
-					return Response.redirect(event.request.url, 302);
+					//return Response.redirect(event.request.url, 302);
 					return new Response(['<html lang="en"><head><meta charset="utf-8">',
-						`<script src="${location.href}"></script>`,
+						//`<script src="${location.href}"></script>`,
 						'</head><body>isReload</body></html>'].join(''), {headers: {
 							'Content-Type': 'text/html',
 							'Cache-Control': 'no-store'
@@ -246,7 +246,7 @@ else
 						}
 						return request(event.request, {priority: 'high', headers});
 					}, () => new Response(['<html lang="en"><head><meta charset="utf-8">',
-					`<script src="${location.href}"></script>`,
+					//`<script src="${location.href}"></script>`,
 					'</head><body>not window</body></html>'].join(''), {headers: {
 						'Content-Type': 'text/html',
 						'Cache-Control': 'no-store'
