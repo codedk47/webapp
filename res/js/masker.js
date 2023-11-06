@@ -165,19 +165,31 @@ else
 		return response;
 	}
 	let pid = 0;
-	const pending = new Map, require = cmd => clients.matchAll().then(windows => new Promise((resolve, reject) =>
-	{
-		windows.some(window =>
+	const pending = new Map, require = (event, cmd) => event.clientId
+		? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 		{
-			console.log(window )
-			if (window.frameType === 'top-level')
+			if (client)
 			{
 				pending.set(++pid, {resolve, reject});
-				window.postMessage({pid, cmd});
-				return true;
+				client.postMessage({pid, cmd});
 			}
-		}) || reject();
-	}));
+			else
+			{
+				reject();
+			}
+		}))
+		: clients.matchAll().then(windows => new Promise((resolve, reject) =>
+		{
+			windows.some(window =>
+			{
+				if (window.frameType === 'top-level')
+				{
+					pending.set(++pid, {resolve, reject});
+					window.postMessage({pid, cmd});
+					return true;
+				}
+			}) || reject();
+		}));
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
 	addEventListener('install', event => event.waitUntil(skipWaiting()));
@@ -199,44 +211,30 @@ else
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
 		if (response) return response;
-		
 		if (event.request.url.startsWith(location.origin))
 		{
 			const url = new URL(event.request.url);
 			if (location.pathname === url.pathname)
 			{
+
 				if (url.search.startsWith('?/'))
 				{
-					return require('origin').then(origin => request(`${origin}${url.search.substring(1)}`, true));
+					return require(event, 'origin').then(origin => request(`${origin}${url.search.substring(1)}`, true),
+						() => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
 				}
-				if (event.isReload || pid === 0)
-				{
-					console.log(event)
-					return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body><textarea style="width:100%;height:100%" rows=40>',
-						
-						JSON.stringify({
-							// 'isTrusted': event.isTrusted,
-							// 'bubbles': event.bubbles,
-							// 'composed': event.composed,
-							// 'cancelable': event.cancelable,
-							'clientId': event.clientId,
-							// 'defaultPrevented': event.defaultPrevented,
-							// 'eventPhase': event.eventPhase,
-							'---isReload---': event.isReload,
-							'in---isReload---': 'isReload' in event,
-							// 'resultingClientId': event.resultingClientId,
-							// 'timeStamp': event.timeStamp,
-							'type': event.type
-						})
-						
-						,'</textarea></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
-					// return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
-					// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-					// 	'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
-				}
-				return require(event, 'token').then(token =>
+				// if (event.isReload || event.clientId === '')
+				// {
+				// 	console.log(event)
+				// 	return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+				// 		`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+				// 		'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+				// 	// return new Response(new Blob(['<html lang="en"><head><meta charset="utf-8">',
+				// 	// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+				// 	// 	'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+				// }
+
+				return event.request.url === location.href
+					? fetch(event.request) : require(event, 'token').then(token =>
 					{
 						const headers = Object.assign({'Service-Worker': 'masker'},
 							Object.fromEntries(event.request.headers.entries()));
@@ -245,7 +243,7 @@ else
 							headers.Authorization = `Bearer ${token}`;
 						}
 						return request(event.request, {priority: 'high', headers});
-					}, () => request(event.request)   );
+					}, () => request(event.request) );
 					//, () => fetch(event.request)
 					//, () => Response.redirect(event.request.url, 302)
 			}
