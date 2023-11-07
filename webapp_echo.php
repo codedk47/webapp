@@ -424,9 +424,10 @@ class webapp_echo_masker extends webapp_echo_html
 		static::form_sign_in($this->main)->xml['onsubmit'] = <<<'JS'
 if (this.style.pointerEvents !== 'none')
 {
+	const data = Object.fromEntries(new FormData(this).entries());
 	this.style.pointerEvents = 'none';
 	this.querySelectorAll('fieldset').forEach(element => element.disabled = true);
-	masker(this.action, {headers: {'Sign-In': JSON.stringify(Object.fromEntries(new FormData(this).entries()))}}).then(response => response.json()).then(data =>
+	masker(this.action, {headers: {'Sign-In': JSON.stringify(data)}}).then(response => response.json()).then(data =>
 	{
 		data.errors.length && alert(data.errors.join('\n'));
 		data.signature && masker.authorization(data.signature).then(() => location.reload());
