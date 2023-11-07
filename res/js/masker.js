@@ -171,7 +171,7 @@ else
 		}
 		return response;
 	}
-	let pid = 0, token = undefined;
+	let pid = 0, token = null;
 	const pending = new Map;
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
@@ -209,7 +209,7 @@ else
 					? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 						client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject())).then(origin =>
 							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
-					: (token === undefined || event.request.url === location.href ? request(event.request)
+					: (token === null || event.request.url === location.href ? request(event.request)
 						: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
 							...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))}));
 			}
