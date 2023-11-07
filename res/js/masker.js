@@ -2,10 +2,8 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
-		
 		navigator.serviceWorker.ready.then(registration =>
 		{
-			registration.active.postMessage(localStorage.getItem('token'));
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
 				switch (event.data.cmd)
@@ -175,6 +173,10 @@ else
 				? promise.reject(event.data.error)
 				: promise.resolve(event.data.result);
 		}
+		else
+		{
+			token = event.data;
+		}
 	});
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
@@ -198,17 +200,8 @@ else
 				}
 				if (token === undefined)
 				{
-					return fetch(event.request).then(response =>
-					{
-						if (response.url === location.href)
-						{
-							require(event, 'token').then(value => {
-								console.log('token', value);
-								token = value;
-							});
-						}
-						return response;
-					})
+					return request(event.request).then(response =>
+						(response.url === location.href && require(event, 'token').then(value => token = value), response));
 
 
 					// return event.request.url === location.href ? request(event.request).then(response =>
