@@ -6,7 +6,19 @@ if (self.window)
 		{
 			registration.active.postMessage(localStorage.getItem('token'));
 			navigator.serviceWorker.addEventListener('message', event =>
-				origin.then(result => registration.active.postMessage({pid: event.data.pid, result})));
+			{
+				if (event.data.pid)
+				{
+					origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
+				}
+				else
+				{
+					if ('reload' in script.dataset)
+					{
+						return location.replace(script.dataset.reload);
+					}
+				}
+			});
 			navigator.serviceWorker.startMessages();
 		});
 		addEventListener('DOMContentLoaded', () =>
@@ -19,10 +31,7 @@ if (self.window)
 		});
 	}), origin = new Promise(resolve => init.then(() => 
 	{
-		if ('reload' in script.dataset)
-		{
-			return location.replace(script.dataset.reload);
-		}
+
 		const resources = Array.from(document.querySelectorAll([
 			'link[rel=dns-prefetch]',
 			'link[rel=preconnect]'].join(','))).map(link => link.href);
@@ -152,7 +161,7 @@ else
 		}
 		return response;
 	}
-	let pid = 0, token;
+	let pid = 0, token = undefined;
 	const pending = new Map;
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
@@ -164,6 +173,7 @@ else
 	addEventListener('message', event =>
 	{
 		const promise = pending.get(event.data.pid);
+		console.log(promise, event.data)
 		if (promise)
 		{
 			pending.delete(event.data.pid);
@@ -173,11 +183,12 @@ else
 		}
 		else
 		{
-			token = event.data;
+			event.source.postMessage(token = event.data);
 		}
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
+
 		if (response) return response;
 		if (event.request.url.startsWith(location.origin))
 		{
@@ -188,9 +199,9 @@ else
 					? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 						client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject())).then(origin =>
 							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
-					: token === undefined ? fetch(event.request)
+					: (token === undefined || event.request.url === location.href ? fetch(event.request)
 						: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
-							...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
+							...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))}));
 			}
 			return request(event.request, true);
 		}
