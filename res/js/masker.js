@@ -7,17 +7,27 @@ if (self.window)
 		{
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
-				switch (event.data.cmd)
+				console.log('---',event.data)
+				if (typeof event.data === 'number')
 				{
-					case 'token':
-						registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
-						break;
-					case 'origin':
-						origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
-						break;
-					default:
-						registration.active.postMessage({pid: event.data.pid, result: null});
+					origin.then(result => registration.active.postMessage({pid: event.data, result}));
 				}
+				else
+				{
+					
+					registration.active.postMessage(localStorage.getItem('token'));
+				}
+				// switch (event.data.cmd)
+				// {
+				// 	case 'token':
+				// 		registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
+				// 		break;
+				// 	case 'origin':
+				// 		origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
+				// 		break;
+				// 	default:
+				// 		location.replace(event.data);
+				// }
 			});
 			navigator.serviceWorker.startMessages();
 		});
@@ -25,16 +35,23 @@ if (self.window)
 		{
 			addEventListener('load', () =>
 			{
-				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
+				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'})
+				.then(() =>
+				{
+					if ('reload' in script.dataset)
+					{
+						location.replace(script.dataset.reload);
+					}
+				});
 			});
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});
 	}), origin = new Promise(resolve => init.then(() => 
 	{
-		if ('reload' in script.dataset)
-		{
-			return location.replace(script.dataset.reload);
-		}
+		// if ('reload' in script.dataset)
+		// {
+		// 	return location.replace(script.dataset.reload);
+		// }
 		const resources = Array.from(document.querySelectorAll([
 			'link[rel=dns-prefetch]',
 			'link[rel=preconnect]'].join(','))).map(link => link.href);
@@ -184,17 +201,25 @@ else
 	addEventListener('activate', event => event.waitUntil(clients.claim()));
 	//addEventListener('activate', event => event.waitUntil(clients.claim()));
 
-	addEventListener('message', event =>
+	let token = new Promise(resolve =>
 	{
-		const promise = pending.get(event.data.pid);
-		if (promise)
+		addEventListener('message', event =>
 		{
-			pending.delete(event.data.pid);
-			'error' in event.data
-				? promise.reject(event.data.error)
-				: promise.resolve(event.data.result);
-		}
+			const promise = pending.get(event.data.pid);
+			if (promise)
+			{
+				pending.delete(event.data.pid);
+				'error' in event.data
+					? promise.reject(event.data.error)
+					: promise.resolve(event.data.result);
+			}
+			else
+			{
+				resolve(token = event.data);
+			}
+		});
 	});
+
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
 		if (response) return response;
@@ -205,20 +230,42 @@ else
 			{
 				if (url.search.startsWith('?/'))
 				{
-					return require(event, 'origin').then(origin => request(`${origin}${url.search.substring(1)}`, true),
-						() => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
+					return clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
+						client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject())).then(origin =>
+							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
 				}
-				return event.request.url === location.href
-					? fetch(event.request) : require(event, 'token').then(token =>
+				return token instanceof Promise ? fetch(event.request).then(response => {
+
+					clients.get(event.clientId).then(client =>
 					{
-						const headers = Object.assign({'Service-Worker': 'masker'},
-							Object.fromEntries(event.request.headers.entries()));
-						if (token)
+						if (client)
 						{
-							headers.Authorization = `Bearer ${token}`;
+							client.postMessage(null);
+
 						}
-						return request(event.request, {priority: 'high', headers});
-					}, () => request(event.request));
+					});
+
+					return response;
+				})
+				: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
+						...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
+				// if (token === undefined)
+				// {
+
+				// }
+
+
+				// return event.request.url === location.href
+				// 	? fetch(event.request) : require(event, 'token').then(token =>
+				// 	{
+				// 		const headers = Object.assign({'Service-Worker': 'masker'},
+				// 			Object.fromEntries(event.request.headers.entries()));
+				// 		if (token)
+				// 		{
+				// 			headers.Authorization = `Bearer ${token}`;
+				// 		}
+				// 		return request(event.request, {priority: 'high', headers});
+				// 	}, () => request(event.request));
 			}
 			return request(event.request, true);
 		}
