@@ -192,23 +192,36 @@ else
 			{
 				if (url.search.startsWith('?/'))
 				{
-					return clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
-						client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject())).then(origin =>
-							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
+					return require(event, 'origin').then(origin =>
+						request(`${origin}${url.search.substring(1)}`, true), () =>
+							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
 				}
 				if (token === undefined)
 				{
-					return event.request.url === location.href ? request(event.request).then(response =>
+					return fetch(event.request).then(response =>
 					{
-						console.log(response.url);
-						require(event, 'token').then(a => {
-							console.log('token', a);
-							token = a;
-						});
+						if (response.url === location.href)
+						{
+							require(event, 'token').then(value => {
+								console.log('token', value);
+								token = value;
+							});
+						}
 						return response;
-					}) : new Response(new Blob(['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">',
-						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body>asd</body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+					})
+
+
+					// return event.request.url === location.href ? request(event.request).then(response =>
+					// {
+					// 	console.log(response.url);
+					// 	require(event, 'token').then(a => {
+					// 		console.log('token', a);
+					// 		token = a;
+					// 	});
+					// 	return response;
+					// }) : new Response(new Blob(['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">',
+					// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+					// 	'</head><body>asd</body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 				}
 				return request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
 					...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
