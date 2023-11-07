@@ -167,7 +167,7 @@ else
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject()));
 	addEventListener('message', event =>
 	{
-		if ('pid' in event.data)
+		if (event.data && event.data.pid)
 		{
 			const promise = pending.get(event.data.pid);
 			if (promise)
