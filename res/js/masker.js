@@ -183,7 +183,7 @@ else
 		}
 		else
 		{
-			event.source.postMessage(token = event.data);
+			token = event.data;
 		}
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
@@ -199,7 +199,7 @@ else
 					? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 						client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject())).then(origin =>
 							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
-					: (token === undefined || event.request.url === location.href ? fetch(event.request)
+					: (token === undefined || event.request.url === location.href ? request(event.request)
 						: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
 							...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))}));
 			}
