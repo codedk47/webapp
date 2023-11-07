@@ -81,7 +81,9 @@ if (self.window)
 		return fetch(resource, options);
 	}
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
-	masker.authorization = signature => (signature ? localStorage.setItem('token', signature) : localStorage.removeItem('token')) || init;
+	masker.authorization = signature => (signature
+		? localStorage.setItem('token', signature)
+		: localStorage.removeItem('token')) || init.then(sw => sw.postMessage(signature));
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
@@ -192,44 +194,15 @@ else
 			const url = new URL(event.request.url);
 			if (location.pathname === url.pathname)
 			{
-				if (url.search.startsWith('?/'))
-				{
-					return require(event, 'origin').then(origin =>
+				return url.search.startsWith('?/')
+					? require(event, 'origin').then(origin =>
 						request(`${origin}${url.search.substring(1)}`, true), () =>
-							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
-				}
-				if (token === undefined)
-				{
-					return request(event.request).then(response =>
-						(response.url === location.href && require(event, 'token').then(value => token = value), response));
-
-
-					// return event.request.url === location.href ? request(event.request).then(response =>
-					// {
-					// 	console.log(response.url);
-					// 	require(event, 'token').then(a => {
-					// 		console.log('token', a);
-					// 		token = a;
-					// 	});
-					// 	return response;
-					// }) : new Response(new Blob(['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">',
-					// 	`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-					// 	'</head><body>asd</body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
-				}
-				return request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
-					...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
-
-				// return event.request.url === location.href
-				// 	? fetch(event.request) : require(event, 'token').then(token =>
-				// 	{
-				// 		const headers = Object.assign({'Service-Worker': 'masker'},
-				// 			Object.fromEntries(event.request.headers.entries()));
-				// 		if (token)
-				// 		{
-				// 			headers.Authorization = `Bearer ${token}`;
-				// 		}
-				// 		return request(event.request, {priority: 'high', headers});
-				// 	}, () => request(event.request));
+							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
+					: token === undefined
+						? request(event.request).then(response =>
+							(response.url === location.href && require(event, 'token').then(value => token = value), response))
+						: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
+							...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
 			}
 			return request(event.request, true);
 		}
