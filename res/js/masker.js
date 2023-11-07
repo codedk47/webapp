@@ -2,46 +2,39 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
+		//navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
 		navigator.serviceWorker.ready.then(registration =>
 		{
-			registration.active.postMessage(localStorage.getItem('token'));
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
-				if (event.data.pid)
+				switch (event.data.cmd)
 				{
-					origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
-				}
-				else
-				{
-					alert(event.data)
-					// if ('reload' in script.dataset)
-					// {
-					// 	return location.replace(script.dataset.reload);
-					// }
+					case 'token':
+						registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
+						break;
+					case 'origin':
+						origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
+						break;
+					default:
+						registration.active.postMessage({pid: event.data.pid, result: null});
 				}
 			});
 			navigator.serviceWorker.startMessages();
-			
 		});
 		addEventListener('DOMContentLoaded', () =>
 		{
 			addEventListener('load', () =>
 			{
-				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'}).then(()=>{
-					setTimeout(()=>{
-						if ('reload' in script.dataset)
-						{
-							return location.replace(script.dataset.reload);
-						}
-					}, 5000);
-		
-				});
+				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
 			});
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});
 	}), origin = new Promise(resolve => init.then(() => 
 	{
-
+		if ('reload' in script.dataset)
+		{
+			return location.replace(script.dataset.reload);
+		}
 		const resources = Array.from(document.querySelectorAll([
 			'link[rel=dns-prefetch]',
 			'link[rel=preconnect]'].join(','))).map(link => link.href);
@@ -171,8 +164,19 @@ else
 		}
 		return response;
 	}
-	let pid = 0, token = null;
-	const pending = new Map;
+	let pid = 0;
+	const pending = new Map, require = (event, cmd) => event.clientId
+		? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
+			client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject()))
+		: clients.matchAll().then(windows => new Promise((resolve, reject) => windows.some(window =>
+			{
+				if (window.frameType === 'top-level')
+				{
+					pending.set(++pid, {resolve, reject});
+					window.postMessage({pid, cmd});
+					return true;
+				}
+			}) || reject()));
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
 	addEventListener('install', event => event.waitUntil(skipWaiting()));
@@ -183,7 +187,6 @@ else
 	addEventListener('message', event =>
 	{
 		const promise = pending.get(event.data.pid);
-		console.log(promise, event.data)
 		if (promise)
 		{
 			pending.delete(event.data.pid);
@@ -191,27 +194,31 @@ else
 				? promise.reject(event.data.error)
 				: promise.resolve(event.data.result);
 		}
-		else
-		{
-			token = event.data || false;
-		}
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
-
 		if (response) return response;
 		if (event.request.url.startsWith(location.origin))
 		{
 			const url = new URL(event.request.url);
 			if (location.pathname === url.pathname)
 			{
-				return url.search.startsWith('?/')
-					? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
-						client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject())).then(origin =>
-							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
-					: (token === null || event.request.url === location.href ? request(event.request)
-						: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
-							...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))}));
+				if (url.search.startsWith('?/'))
+				{
+					return require(event, 'origin').then(origin => request(`${origin}${url.search.substring(1)}`, true),
+						() => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
+				}
+				return event.request.url === location.href
+					? fetch(event.request) : require(event, 'token').then(token =>
+					{
+						const headers = Object.assign({'Service-Worker': 'masker'},
+							Object.fromEntries(event.request.headers.entries()));
+						if (token)
+						{
+							headers.Authorization = `Bearer ${token}`;
+						}
+						return request(event.request, {priority: 'high', headers});
+					}, () => request(event.request));
 			}
 			return request(event.request, true);
 		}
