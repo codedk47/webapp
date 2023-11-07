@@ -2,59 +2,53 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
-		//navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
+		
 		navigator.serviceWorker.ready.then(registration =>
 		{
+			registration.active.postMessage(localStorage.getItem('token'));
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
-				console.log('---',event.data)
-				if (typeof event.data === 'number')
+				switch (event.data.cmd)
 				{
-					origin.then(result => registration.active.postMessage({pid: event.data, result}));
+					case 'token':
+						registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
+						break;
+					case 'origin':
+						origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
+						break;
+					default:
+						registration.active.postMessage({pid: event.data.pid, result: null});
 				}
-				else
-				{
-					
-					registration.active.postMessage(localStorage.getItem('token'));
-				}
-				// switch (event.data.cmd)
-				// {
-				// 	case 'token':
-				// 		registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
-				// 		break;
-				// 	case 'origin':
-				// 		origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
-				// 		break;
-				// 	default:
-				// 		location.replace(event.data);
-				// }
 			});
 			navigator.serviceWorker.startMessages();
 		});
 		addEventListener('DOMContentLoaded', () =>
 		{
-			addEventListener('load', () =>
+			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'}));
+
+			navigator.serviceWorker.ready.then(registration =>
 			{
-				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'})
-				.then(() =>
+				navigator.serviceWorker.addEventListener('controllerchange', () => {
+					alert('window.location.reload');
+					
+				  })
+				
+				if ('reload' in script.dataset)
 				{
-					setTimeout(()=>{
-						if ('reload' in script.dataset)
-						{
-							location.replace(script.dataset.reload);
-						}
-					}, 5000)
-			
-				});
+					return location.replace(script.dataset.reload);
+				}
+				else
+				{
+					if ('splashscreen' in script.dataset)
+					{
+						masker.session_once('splashscreen', () => masker.open(script.dataset.splashscreen));
+					}
+				}
+				resolve(registration.active);
 			});
-			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});
 	}), origin = new Promise(resolve => init.then(() => 
 	{
-		// if ('reload' in script.dataset)
-		// {
-		// 	return location.replace(script.dataset.reload);
-		// }
 		const resources = Array.from(document.querySelectorAll([
 			'link[rel=dns-prefetch]',
 			'link[rel=preconnect]'].join(','))).map(link => link.href);
@@ -70,14 +64,6 @@ if (self.window)
 					controller.abort(sessionStorage.setItem('origin', response.url) || resolve(new URL(response.url).origin)));
 		}
 		addEventListener('offline', () => sessionStorage.removeItem('origin'));
-		// if ('splashscreen' in script.dataset)
-		// {
-		// 	masker.session_once('splashscreen', () =>
-		// 	{
-		// 		masker.open(script.dataset.splashscreen);
-		// 		return script.dataset.splashscreen;
-		// 	});
-		// }
 	}));
 	function masker(resource, options = {})
 	{
@@ -184,7 +170,7 @@ else
 		}
 		return response;
 	}
-	let pid = 0;
+	let pid = 0, token;
 	const pending = new Map, require = (event, cmd) => event.clientId
 		? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject()))
@@ -197,31 +183,25 @@ else
 					return true;
 				}
 			}) || reject()));
+	addEventListener('message', event =>
+	{
+		const promise = pending.get(event.data.pid);
+		if (promise)
+		{
+			pending.delete(event.data.pid);
+			'error' in event.data
+				? promise.reject(event.data.error)
+				: promise.resolve(event.data.result);
+		}
+		else{
+			console.log(token = event.data);
+		}
+	});
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
 	addEventListener('install', event => event.waitUntil(skipWaiting()));
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
 	addEventListener('activate', event => event.waitUntil(clients.claim()));
-	//addEventListener('activate', event => event.waitUntil(clients.claim()));
-
-	let token = new Promise(resolve =>
-	{
-		addEventListener('message', event =>
-		{
-			const promise = pending.get(event.data.pid);
-			if (promise)
-			{
-				pending.delete(event.data.pid);
-				'error' in event.data
-					? promise.reject(event.data.error)
-					: promise.resolve(event.data.result);
-			}
-			else
-			{
-				resolve(token = event.data);
-			}
-		});
-	});
 
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
@@ -233,29 +213,14 @@ else
 			{
 				if (url.search.startsWith('?/'))
 				{
-					return clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
-						client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject())).then(origin =>
-							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
+					return require(event, 'origin').then(origin => request(`${origin}${url.search.substring(1)}`, true),
+						() => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
 				}
-				return token instanceof Promise ? fetch(event.request).then(response => {
 
-					clients.get(event.clientId).then(client =>
-					{
-						if (client)
-						{
-							client.postMessage(null);
-
-						}
-					});
-
-					return response;
-				})
-				: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
+				return token === undefined ? fetch(event.request)
+					: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
 						...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
-				// if (token === undefined)
-				// {
 
-				// }
 
 
 				// return event.request.url === location.href
