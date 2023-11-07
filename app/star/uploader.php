@@ -40,13 +40,19 @@ class webapp_router_uploader extends webapp_echo_masker
 	{
 		if ($this->webapp->mysql->uploaders('WHERE uid=?s AND pwd=?s LIMIT 1', $uid, $pwd)->fetch())
 		{
+			$this->users = $this->webapp->mysql->users('WHERE uid=?i', $uid)->column('nickname', 'id');
 
-			if ($this->users = $this->webapp->mysql->users('WHERE uid=?i', $uid)->column('nickname', 'id'))
-			{
-				$this->user = user::from_id($this->webapp,
-					isset($this->users[$userid = $this->webapp->request_cookie('userid')]) ? $userid : array_keys($this->users)[0]);
-			}
+			$this->user = $this->users
+				? user::from_id($this->webapp, isset($this->users[$userid = $this->webapp->request_cookie('userid')])
+					? $userid : array_keys($this->users)[0]) : new user;
+			
+	
 			return [$uid, $pwd];
+		}
+		else
+		{
+			$this->users = [];
+			$this->user = new user;
 		}
 		return [];
 	}
