@@ -38,10 +38,13 @@ if (self.window)
 				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'})
 				.then(() =>
 				{
-					if ('reload' in script.dataset)
-					{
-						location.replace(script.dataset.reload);
-					}
+					setTimeout(()=>{
+						if ('reload' in script.dataset)
+						{
+							location.replace(script.dataset.reload);
+						}
+					}, 5000)
+			
 				});
 			});
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
