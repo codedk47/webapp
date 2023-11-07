@@ -211,11 +211,13 @@ else
 				}
 				if (token === undefined)
 				{
-					return new Response(new Blob(['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">',
-						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
-						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+					return event.request.url === location.href
+						? request(event.request)
+						: new Response(new Blob(['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">',
+							`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+							'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
 				}
-				return event.request.url === location.href ? request(event.request) : request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
+				return request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
 					...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
 
 				// return event.request.url === location.href
