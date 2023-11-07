@@ -193,7 +193,7 @@ else
 		}
 		else
 		{
-			token = event.data
+			token = event.data || null;
 		}
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
