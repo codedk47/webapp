@@ -2,8 +2,10 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
+		
 		navigator.serviceWorker.ready.then(registration =>
 		{
+			registration.active.postMessage(localStorage.getItem('token'));
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
 				switch (event.data.cmd)
@@ -182,6 +184,10 @@ else
 				? promise.reject(event.data.error)
 				: promise.resolve(event.data.result);
 		}
+		else
+		{
+			token = event.data;
+		}
 	});
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
@@ -199,20 +205,30 @@ else
 			{
 				if (url.search.startsWith('?/'))
 				{
-					return require(event, 'origin').then(origin => request(`${origin}${url.search.substring(1)}`, true),
-						() => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
+					return clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
+						client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject())).then(origin =>
+							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
 				}
-				return event.request.url === location.href
-					? fetch(event.request) : require(event, 'token').then(token =>
-					{
-						const headers = Object.assign({'Service-Worker': 'masker'},
-							Object.fromEntries(event.request.headers.entries()));
-						if (token)
-						{
-							headers.Authorization = `Bearer ${token}`;
-						}
-						return request(event.request, {priority: 'high', headers});
-					}, () => request(event.request));
+				if (token === undefined)
+				{
+					return new Response(new Blob(['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">',
+						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
+						'</head><body></body></html>'], {type: 'text/html'}), {headers: {'Cache-Control': 'no-store'}});
+				}
+				return event.request.url === location.href ? request(event.request) : request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
+					...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
+
+				// return event.request.url === location.href
+				// 	? fetch(event.request) : require(event, 'token').then(token =>
+				// 	{
+				// 		const headers = Object.assign({'Service-Worker': 'masker'},
+				// 			Object.fromEntries(event.request.headers.entries()));
+				// 		if (token)
+				// 		{
+				// 			headers.Authorization = `Bearer ${token}`;
+				// 		}
+				// 		return request(event.request, {priority: 'high', headers});
+				// 	}, () => request(event.request));
 			}
 			return request(event.request, true);
 		}
