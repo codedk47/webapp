@@ -2,23 +2,11 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
-		//navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
 		navigator.serviceWorker.ready.then(registration =>
 		{
+			registration.active.postMessage(localStorage.getItem('token'));
 			navigator.serviceWorker.addEventListener('message', event =>
-			{
-				switch (event.data.cmd)
-				{
-					case 'token':
-						registration.active.postMessage({pid: event.data.pid, result: localStorage.getItem('token')});
-						break;
-					case 'origin':
-						origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
-						break;
-					default:
-						registration.active.postMessage({pid: event.data.pid, result: null});
-				}
-			});
+				origin.then(result => registration.active.postMessage({pid: event.data.pid, result})));
 			navigator.serviceWorker.startMessages();
 		});
 		addEventListener('DOMContentLoaded', () =>
@@ -164,19 +152,8 @@ else
 		}
 		return response;
 	}
-	let pid = 0;
-	const pending = new Map, require = (event, cmd) => event.clientId
-		? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
-			client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject()))
-		: clients.matchAll().then(windows => new Promise((resolve, reject) => windows.some(window =>
-			{
-				if (window.frameType === 'top-level')
-				{
-					pending.set(++pid, {resolve, reject});
-					window.postMessage({pid, cmd});
-					return true;
-				}
-			}) || reject()));
+	let pid = 0, token;
+	const pending = new Map;
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
 	addEventListener('install', event => event.waitUntil(skipWaiting()));
@@ -194,6 +171,10 @@ else
 				? promise.reject(event.data.error)
 				: promise.resolve(event.data.result);
 		}
+		else
+		{
+			token = event.data;
+		}
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
@@ -203,22 +184,13 @@ else
 			const url = new URL(event.request.url);
 			if (location.pathname === url.pathname)
 			{
-				if (url.search.startsWith('?/'))
-				{
-					return require(event, 'origin').then(origin => request(`${origin}${url.search.substring(1)}`, true),
-						() => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
-				}
-				return event.request.url === location.href
-					? fetch(event.request) : require(event, 'token').then(token =>
-					{
-						const headers = Object.assign({'Service-Worker': 'masker'},
-							Object.fromEntries(event.request.headers.entries()));
-						if (token)
-						{
-							headers.Authorization = `Bearer ${token}`;
-						}
-						return request(event.request, {priority: 'high', headers});
-					}, () => request(event.request));
+				return url.search.startsWith('?/')
+					? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
+						client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject())).then(origin =>
+							request(`${origin}${url.search.substring(1)}`, true), () => new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
+					: token === undefined ? fetch(event.request)
+						: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
+							...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
 			}
 			return request(event.request, true);
 		}
