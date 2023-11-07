@@ -167,13 +167,16 @@ else
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject()));
 	addEventListener('message', event =>
 	{
-		const promise = pending.get(event.data.pid);
-		if (promise)
+		if ('pid' in event.data)
 		{
-			pending.delete(event.data.pid);
-			'error' in event.data
-				? promise.reject(event.data.error)
-				: promise.resolve(event.data.result);
+			const promise = pending.get(event.data.pid);
+			if (promise)
+			{
+				pending.delete(event.data.pid);
+				'error' in event.data
+					? promise.reject(event.data.error)
+					: promise.resolve(event.data.result);
+			}
 		}
 		else
 		{
