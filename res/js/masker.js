@@ -7,9 +7,18 @@ if (self.window)
 			registration.active.postMessage(localStorage.getItem('token'));
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
-			
-				origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
-				
+				if (event.data.pid)
+				{
+					origin.then(result => registration.active.postMessage({pid: event.data.pid, result}));
+				}
+				else
+				{
+					alert(event.data)
+					// if ('reload' in script.dataset)
+					// {
+					// 	return location.replace(script.dataset.reload);
+					// }
+				}
 			});
 			navigator.serviceWorker.startMessages();
 		});
@@ -23,10 +32,7 @@ if (self.window)
 		});
 	}), origin = new Promise(resolve => init.then(() => 
 	{
-		if ('reload' in script.dataset)
-		{
-			return location.replace(script.dataset.reload);
-		}
+
 		const resources = Array.from(document.querySelectorAll([
 			'link[rel=dns-prefetch]',
 			'link[rel=preconnect]'].join(','))).map(link => link.href);
@@ -178,7 +184,8 @@ else
 		}
 		else
 		{
-			token = event.data;
+			console.log(event);
+			event.source.postMessage(token = event.data)
 		}
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
