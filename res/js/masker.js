@@ -21,16 +21,20 @@ if (self.window)
 				}
 			});
 			navigator.serviceWorker.startMessages();
+			
 		});
 		addEventListener('DOMContentLoaded', () =>
 		{
 			addEventListener('load', () =>
 			{
 				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'}).then(()=>{
+					setTimeout(()=>{
 						if ('reload' in script.dataset)
-					{
-						return location.replace(script.dataset.reload);
-					}
+						{
+							return location.replace(script.dataset.reload);
+						}
+					}, 5000);
+		
 				});
 			});
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
