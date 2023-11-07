@@ -162,18 +162,9 @@ else
 		return response;
 	}
 	let pid = 0, token;
-	const pending = new Map, require = (event, cmd) => event.clientId
-		? clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
-			client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject()))
-		: clients.matchAll().then(windows => new Promise((resolve, reject) => windows.some(window =>
-			{
-				if (window.frameType === 'top-level')
-				{
-					pending.set(++pid, {resolve, reject});
-					window.postMessage({pid, cmd});
-					return true;
-				}
-			}) || reject()));
+	const pending = new Map, require = (event, cmd) =>
+		clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
+			client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject()));
 	addEventListener('message', event =>
 	{
 		const promise = pending.get(event.data.pid);
@@ -183,10 +174,6 @@ else
 			'error' in event.data
 				? promise.reject(event.data.error)
 				: promise.resolve(event.data.result);
-		}
-		else
-		{
-			token = event.data;
 		}
 	});
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
@@ -213,7 +200,11 @@ else
 				{
 					return event.request.url === location.href ? request(event.request).then(response =>
 					{
-						token = 'PLd8lsP7-8IMFIHsg_GM0UXh8DL-8kucVrEB_s8FUK-VX_eDncVTZguLcoh';
+						console.log(response.url);
+						require(event, 'token').then(a => {
+							console.log('token', a);
+							token = a;
+						});
 						return response;
 					}) : new Response(new Blob(['<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">',
 						`<script src="${location.href}" data-reload="${event.request.url}"></script>`,
