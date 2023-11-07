@@ -26,7 +26,12 @@ if (self.window)
 		{
 			addEventListener('load', () =>
 			{
-				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'});
+				navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'}).then(()=>{
+						if ('reload' in script.dataset)
+					{
+						return location.replace(script.dataset.reload);
+					}
+				});
 			});
 			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 		});
@@ -184,12 +189,7 @@ else
 		}
 		else
 		{
-			clients.matchAll().then(windows => {
-				windows.forEach(w => w.postMessage(token = event.data))
-				
-			})
-			// console.log(event);
-			// event.source.postMessage(token = event.data)
+			token = event.data
 		}
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
