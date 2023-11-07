@@ -43,13 +43,13 @@ class webapp_router_uploader extends webapp_echo_masker
 			$this->users = $this->webapp->mysql->users('WHERE uid=?i', $uid)->column('nickname', 'id');
 			$this->user = $this->users
 				? user::from_id($this->webapp, isset($this->users[$userid = $this->webapp->request_cookie('userid')])
-					? $userid : array_keys($this->users)[0]) : new user;
+					? $userid : array_keys($this->users)[0]) : new user($this->webapp);
 			return [$uid, $pwd];
 		}
 		else
 		{
 			$this->users = [];
-			$this->user = new user;
+			$this->user = new user($this->webapp);
 		}
 		return [];
 	}
