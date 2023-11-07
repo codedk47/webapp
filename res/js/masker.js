@@ -185,7 +185,7 @@ else
 		else
 		{
 			clients.matchAll().then(windows => {
-				windows.forEach(w => windows.postMessage(token = event.data))
+				windows.forEach(w => w.postMessage(token = event.data))
 				
 			})
 			// console.log(event);
