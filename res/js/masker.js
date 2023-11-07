@@ -184,8 +184,11 @@ else
 		}
 		else
 		{
-			console.log(event);
-			event.source.postMessage(token = event.data)
+			clients.matchAll().then(windows => {
+				windows[0].postMessage(token = event.data)
+			})
+			// console.log(event);
+			// event.source.postMessage(token = event.data)
 		}
 	});
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
