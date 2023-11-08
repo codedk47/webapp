@@ -1,13 +1,13 @@
 if (self.window)
 {
-	const script = document.currentScript, init = new Promise(resolve =>
+	const script = document.currentScript, message = new MessageChannel, init = new Promise(resolve =>
 	{
 		navigator.serviceWorker.ready.then(registration =>
 		{
-			const message = new MessageChannel;
 			message.port1.onmessage = () => 'reload' in script.dataset && location.replace(script.dataset.reload);
 			registration.active.postMessage(localStorage.getItem('token'), [message.port2]);
-			navigator.serviceWorker.addEventListener('message', event => origin.then(result => registration.active.postMessage({pid: event.data, result})));
+			navigator.serviceWorker.addEventListener('message', event => origin.then(result =>
+				registration.active.postMessage({pid: event.data, result})));
 			navigator.serviceWorker.startMessages();
 		});
 		addEventListener('DOMContentLoaded', () =>
@@ -15,7 +15,6 @@ if (self.window)
 			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'}));
 			navigator.serviceWorker.ready.then(registration =>
 			{
-
 				if ('splashscreen' in script.dataset)
 				{
 					masker.session_once('splashscreen', () => masker.open(script.dataset.splashscreen));
@@ -68,9 +67,8 @@ if (self.window)
 		return fetch(resource, options);
 	}
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
-	masker.authorization = signature => (signature
-		? localStorage.setItem('token', signature)
-		: localStorage.removeItem('token')) || init.then(sw => sw.postMessage(signature));
+	masker.authorization = signature => init.then(active =>
+		localStorage.setItem('token', signature) || active.postMessage(localStorage.getItem('token'), [message.port2]));
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
