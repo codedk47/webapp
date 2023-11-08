@@ -4,6 +4,14 @@ if (self.window)
 	{
 		navigator.serviceWorker.ready.then(registration =>
 		{
+			const messageChannel = new MessageChannel();
+			console.log(messageChannel)
+			messageChannel.port1.onmessage = event=>{
+				alert(event);
+			};
+			registration.active.postMessage('asdasd', [messageChannel.port2]);
+
+
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
 				switch (event.data.cmd)
@@ -25,10 +33,10 @@ if (self.window)
 			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'}));
 			navigator.serviceWorker.ready.then(registration =>
 			{
-				if ('reload' in script.dataset)
-				{
-					return location.replace(script.dataset.reload);
-				}
+				// if ('reload' in script.dataset)
+				// {
+				// 	return location.replace(script.dataset.reload);
+				// }
 				if ('splashscreen' in script.dataset)
 				{
 					masker.session_once('splashscreen', () => masker.open(script.dataset.splashscreen));
@@ -164,30 +172,44 @@ else
 	let pid = 0, token;
 	const pending = new Map, require = (event, cmd) =>
 		clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
-			client ? (pending.set(++pid, {resolve, reject}), client.postMessage({pid, cmd})) : reject()));
+			client ? (pending.set(++pid, {resolve, reject, client}), client.postMessage({pid, cmd})) : reject()));
 	addEventListener('message', event =>
 	{
-		if (event.data && event.data.pid)
-		{
-			const promise = pending.get(event.data.pid);
-			if (promise)
+		// if (event.data && event.data.pid)
+		// {
+		// 	const promise = pending.get(event.data.pid);
+		// 	if (promise)
+		// 	{
+		// 		pending.delete(event.data.pid);
+		// 		'error' in event.data
+		// 			? promise.reject(event.data.error)
+		// 			: promise.resolve(event.data.result);
+		// 	}
+		// }
+		// else
+		// {
+			if (event.ports.length)
 			{
-				pending.delete(event.data.pid);
-				'error' in event.data
-					? promise.reject(event.data.error)
-					: promise.resolve(event.data.result);
+				console.log(event);
+				event.ports[0].postMessage('1111111')
 			}
-		}
-		else
-		{
-			token = event.data;
-		}
+			
+			//token = event.data;
+		//}
 	});
 	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
 	// there are still previous incarnations of this service worker registration active.
 	addEventListener('install', event => event.waitUntil(skipWaiting()));
 	// Claim any clients immediately, so that the page will be under SW control without reloading.
-	addEventListener('activate', event => event.waitUntil(clients.claim()));
+	addEventListener('activate', event => {
+
+		// clients.matchAll().then(a =>{
+
+		// 	console.log(a)
+		// });
+
+		event.waitUntil(clients.claim());
+	});
 
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
@@ -197,15 +219,25 @@ else
 			const url = new URL(event.request.url);
 			if (location.pathname === url.pathname)
 			{
-				return url.search.startsWith('?/')
-					? require(event, 'origin').then(origin =>
+				if (url.search.startsWith('?/'))
+				{
+					return require(event, 'origin').then(origin =>
 						request(`${origin}${url.search.substring(1)}`, true), () =>
-							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
-					: token === undefined
-						? request(event.request).then(response =>
-							(response.url === location.href && require(event, 'token').then(value => token = value), response))
-						: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
-							...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
+							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
+				}
+				if (token === undefined)
+				{
+					return event.request.url === location.href ? fetch(event.request).then(response =>
+					{
+						require(event, 'token').then(value =>
+						{
+							token = value;
+						});
+						return response;
+					}) : fetch(event.request);
+				}
+				return request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
+						...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
 			}
 			return request(event.request, true);
 		}
