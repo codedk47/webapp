@@ -146,19 +146,26 @@ else
 		}
 		return response;
 	}
-	let pid = 0, token;
-	const pending = new Map, require = event =>
+	let pid = 0, passive = true;
+	const pending = new Map, headers = {'Service-Worker': 'masker'}, origin = event =>
 		clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject()));
 	addEventListener('message', event =>
 	{
 		if (event.ports.length)
 		{
-			if (token === undefined)
+			if (event.data)
 			{
-				event.ports[0].postMessage(null);
+				headers.Authorization = `Bearer ${event.data}`;
 			}
-			token = event.data;
+			else
+			{
+				delete headers.Authorization;
+			}
+			if (passive)
+			{
+				passive = event.ports[0].postMessage(null);
+			}
 		}
 		else
 		{
@@ -186,15 +193,12 @@ else
 			const url = new URL(event.request.url);
 			if (location.pathname === url.pathname)
 			{
-				if (url.search.startsWith('?/'))
-				{
-					return require(event, 'origin').then(origin =>
+				return url.search.startsWith('?/')
+					? origin(event).then(origin =>
 						request(`${origin}${url.search.substring(1)}`, true), () =>
-							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}));
-				}
-				return token === undefined ? fetch(event.request)
-					: request(event.request, {priority: 'high', headers: Object.assign({'Service-Worker': 'masker',
-						...token ? {Authorization: `Bearer ${token}`} : {}}, Object.fromEntries(event.request.headers.entries()))});
+							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
+					: request(...[event.request, ...passive ? [] : [{priority: 'high', headers:
+						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}]]);
 			}
 			return request(event.request, true);
 		}
