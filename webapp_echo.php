@@ -368,13 +368,12 @@ class webapp_echo_masker extends webapp_echo_html
 		if ($this->initiated = $webapp->request_header('Service-Worker') !== 'masker')
 		{
 			unset($this->xml->head->link);
-			//$this->meta(['http-equiv' => 'refresh', 'content' => "0;url=?{$webapp['request_query']}"]);
 			$this->header->text('Enable JavaScript and cookies to continue');
 			//if ($webapp->request_header('Referer') === )
 			// $this->main->append('textarea', [join(array_map(fn($k, $v) =>
 			// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
 			// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
-			//$this->sw['data-reload'] = "?{$webapp['request_query']}";
+			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			$webapp->break($this->init(...));
 		}
 		else
