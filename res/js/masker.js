@@ -68,7 +68,7 @@ if (self.window)
 	}
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
 	masker.authorization = signature => init.then(active =>
-		localStorage.setItem('token', signature) || active.postMessage(localStorage.getItem('token'), [message.port2]));
+		localStorage.setItem('token', signature) || active.postMessage(localStorage.getItem('token'), [message.port1]));
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
