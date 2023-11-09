@@ -88,8 +88,8 @@ if (self.window)
 		frame.style.cssText = [
 			'position: fixed',
 			'inset: 0',
-			'width: 100vw',
-			'height: 100vh',
+			'width: 100%',
+			'height: 100%',
 			'border: none'
 		].join(';');
 		document.body.appendChild(frame).contentWindow.addEventListener('message', event =>
@@ -99,6 +99,7 @@ if (self.window)
 				case 'close': return document.body.removeChild(frame);
 			}
 		});
+		frame.contentWindow.focus();
 		return frame;
 	});
 }
