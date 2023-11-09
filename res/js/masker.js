@@ -88,8 +88,8 @@ if (self.window)
 		frame.style.cssText = [
 			'position: fixed',
 			'inset: 0',
-			'width: 100%',
-			'height: 100%',
+			'width: 100vw',
+			'height: 100vh',
 			'border: none'
 		].join(';');
 		document.body.appendChild(frame).contentWindow.addEventListener('message', event =>
