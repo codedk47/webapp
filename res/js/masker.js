@@ -12,7 +12,7 @@ if (self.window)
 		});
 		addEventListener('DOMContentLoaded', () =>
 		{
-			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname, updateViaCache: 'none'}));
+			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}));
 			navigator.serviceWorker.ready.then(registration =>
 			{
 				if ('splashscreen' in script.dataset)
@@ -44,10 +44,8 @@ if (self.window)
 	{
 		if (options.body)
 		{
-			//const key = Math.random().toString(36).slice(-8).split('').map(value => value.codePointAt());
 			const key = crypto.getRandomValues(new Uint8Array(8));
 			options.headers = Object.assign({}, options.headers);
-			//options.headers['Mask-Key'] = key.map(value => value.toString(16)).join('');
 			options.headers['Mask-Key'] = Array.from(key, value => value.toString(16).padStart(2, 0)).join('');
 			switch (true)
 			{
@@ -68,7 +66,7 @@ if (self.window)
 	}
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
 	masker.authorization = signature => init.then(active =>
-		localStorage.setItem('token', signature) || active.postMessage(localStorage.getItem('token'), [message.port1]));
+		active.postMessage(localStorage.setItem('token', signature) || localStorage.getItem('token'), [message.port1]));
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))

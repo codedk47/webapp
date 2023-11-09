@@ -359,9 +359,7 @@ class webapp_echo_masker extends webapp_echo_html
 		By default, Safari on iOS detects any string formatted like a phone number and makes it a link that calls the number. Specifying telephone=no disables this feature.
 		*/
 		//$this->meta(['name' => 'format-detection', 'content' => 'telephone=no']);
-
-		//'fetchpriority' => 'high', 
-		$this->sw = $this->xml->head->append('script', ['src' => '?masker']);
+		$this->sw = $this->xml->head->append('script', ['fetchpriority' => 'high', 'src' => '?masker']);
 		// $webapp->request_header('Sec-Fetch-Dest') === 'document'
 		// $webapp->request_header('Sec-Fetch-Mode') === 'navigate'
 		// $webapp->request_header('Sec-Fetch-Site') === 'none'
@@ -369,7 +367,6 @@ class webapp_echo_masker extends webapp_echo_html
 		{
 			unset($this->xml->head->link);
 			$this->header->text('Enable JavaScript and cookies to continue');
-			//if ($webapp->request_header('Referer') === )
 			// $this->main->append('textarea', [join(array_map(fn($k, $v) =>
 			// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
 			// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);

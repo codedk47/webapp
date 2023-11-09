@@ -26,7 +26,7 @@ interface webapp_io
 }
 abstract class webapp implements ArrayAccess, Stringable, Countable
 {
-	const version = '4.7a', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
+	const version = '4.7.1a', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
 	public readonly self $webapp;
 	public readonly array $query;
 	public object|string $router;
