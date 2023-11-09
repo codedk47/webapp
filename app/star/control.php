@@ -64,7 +64,7 @@ class webapp_router_control extends webapp_echo_masker
 	}
 	function get_splashscreen()
 	{
-
+		$this->script('setTimeout(()=>postMessage("close"), 3000)');
 		$this->main->append('h1', 'get_splashscreen');
 	}
 	function get_home(string $cid = NULL, string $datefrom = '', string $dateto = '')
