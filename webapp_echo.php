@@ -393,6 +393,7 @@ class webapp_echo_masker extends webapp_echo_html
 								$this->json['errors'][] = 'Authorization failed';
 							}
 						}
+						$webapp->response_status(200);
 					}
 					else
 					{

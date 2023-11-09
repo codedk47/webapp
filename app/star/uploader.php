@@ -10,6 +10,7 @@ class webapp_router_uploader extends webapp_echo_masker
 		$this->title('Uploader');
 		if ($this->initiated || isset($this->users, $this->user) === FALSE)
 		{
+			
 			return;
 		}
 		$this->link_resources($this->webapp['app_resorigins']);
@@ -45,11 +46,6 @@ class webapp_router_uploader extends webapp_echo_masker
 				? user::from_id($this->webapp, isset($this->users[$userid = $this->webapp->request_cookie('userid')])
 					? $userid : array_keys($this->users)[0]) : new user($this->webapp, []);
 			return [$uid, $pwd];
-		}
-		else
-		{
-			$this->users = [];
-			$this->user = new user($this->webapp, []);
 		}
 		return [];
 	}
