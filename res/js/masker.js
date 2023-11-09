@@ -192,7 +192,7 @@ else
 		if (event.request.url.startsWith(location.origin))
 		{
 			const url = new URL(event.request.url);
-			if (location.pathname === url.pathname)
+			if (url.pathname === location.pathname)
 			{
 				return url.search.startsWith('?/')
 					? origin(event).then(origin =>
@@ -201,7 +201,13 @@ else
 					: request(...[event.request, ...passive ? [] : [{priority: 'high', headers:
 						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}]]);
 			}
-			return request(event.request, true);
+			switch (url.pathname)
+			{
+				case '/favicon.ico':
+					return fetch('/webapp/favicon.ico');
+				default:
+					return request(event.request, true);
+			}
 		}
 		return fetch(event.request);
 	})));
