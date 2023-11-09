@@ -1,9 +1,10 @@
 if (self.window)
 {
-	const script = document.currentScript, message = new MessageChannel, init = new Promise(resolve =>
+	const script = document.currentScript, init = new Promise(resolve =>
 	{
 		navigator.serviceWorker.ready.then(registration =>
 		{
+			const message = new MessageChannel;
 			message.port1.onmessage = () => 'reload' in script.dataset && location.replace(script.dataset.reload);
 			registration.active.postMessage(localStorage.getItem('token'), [message.port2]);
 			navigator.serviceWorker.addEventListener('message', event => origin.then(result =>
@@ -65,8 +66,7 @@ if (self.window)
 		return fetch(resource, options);
 	}
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
-	masker.authorization = signature => init.then(active =>
-		active.postMessage(localStorage.setItem('token', signature) || localStorage.getItem('token'), [message.port1]));
+	masker.authorization = signature => init.then(active => active.postMessage(localStorage.setItem('token', signature) || localStorage.getItem('token')));
 	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
@@ -150,17 +150,20 @@ else
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject()));
 	addEventListener('message', event =>
 	{
-		if (event.ports.length)
+		if (event.data === null || ['string', 'number', 'boolean'].includes(typeof event.data))
 		{
-			if (event.data)
+			if (event.ports.length ? passive : true)
 			{
-				headers.Authorization = `Bearer ${event.data}`;
+				if (typeof event.data === 'string')
+				{
+					headers.Authorization = `Bearer ${event.data}`;
+				}
+				else
+				{
+					delete headers.Authorization;
+				}
 			}
-			else
-			{
-				delete headers.Authorization;
-			}
-			if (passive)
+			if (event.ports.length)
 			{
 				passive = event.ports[0].postMessage(null);
 			}
