@@ -375,6 +375,14 @@ class webapp_echo_masker extends webapp_echo_html
 		}
 		else
 		{
+			if (method_exists($this, 'get_splashscreen'))
+			{
+				if ($webapp->method !== 'get_splashscreen')
+				{
+					$this->sw['data-splashscreen'] = '?home/splashscreen';
+				}
+				return;
+			}
 			if (method_exists($this, 'authorization'))
 			{
 				if (empty($webapp->authorization($this->authorization(...))))

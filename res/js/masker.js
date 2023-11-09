@@ -5,7 +5,18 @@ if (self.window)
 		navigator.serviceWorker.ready.then(registration =>
 		{
 			const message = new MessageChannel;
-			message.port1.onmessage = () => 'reload' in script.dataset && location.replace(script.dataset.reload);
+			message.port1.onmessage = event =>
+			{
+				if ('reload' in script.dataset)
+				{
+					return location.replace(script.dataset.reload);
+				}
+				if ('splashscreen' in script.dataset)
+				{
+					console.log(event.data == 2)
+					event.data == 2 && masker.open(script.dataset.splashscreen);
+				}
+			};
 			registration.active.postMessage(localStorage.getItem('token'), [message.port2]);
 			navigator.serviceWorker.addEventListener('message', event => origin.then(result =>
 				registration.active.postMessage({pid: event.data, result})));
@@ -13,15 +24,8 @@ if (self.window)
 		});
 		addEventListener('DOMContentLoaded', () =>
 		{
+			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
 			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}));
-			navigator.serviceWorker.ready.then(registration =>
-			{
-				if ('splashscreen' in script.dataset)
-				{
-					masker.session_once('splashscreen', () => masker.open(script.dataset.splashscreen));
-				}
-				resolve(registration.active);
-			});
 		});
 	}), origin = new Promise(resolve => init.then(() => 
 	{
@@ -65,9 +69,9 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
+	masker.then = callback => init.then(callback);
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
 	masker.authorization = signature => init.then(active => active.postMessage(localStorage.setItem('token', signature) || localStorage.getItem('token')));
-	masker.then = callback => init.then(callback);
 	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
 	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
 	// 	|| init.then(callback);
@@ -78,6 +82,7 @@ if (self.window)
 		const frame = document.createElement('iframe');
 		frame.src = resources;
 		frame.style.cssText = [
+			'background-color: red',
 			'position: fixed',
 			'inset: 0',
 			'width: 100%',
@@ -144,7 +149,7 @@ else
 		}
 		return response;
 	}
-	let pid = 0, passive = true;
+	let pid = 0, init = 0;
 	const pending = new Map, headers = {'Service-Worker': 'masker'}, origin = event =>
 		clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject()));
@@ -152,7 +157,7 @@ else
 	{
 		if (event.data === null || ['string', 'number', 'boolean'].includes(typeof event.data))
 		{
-			if (event.ports.length ? passive : true)
+			if (event.ports.length ? init === 0 : true)
 			{
 				if (typeof event.data === 'string')
 				{
@@ -165,7 +170,7 @@ else
 			}
 			if (event.ports.length)
 			{
-				passive = event.ports[0].postMessage(null);
+				event.ports[0].postMessage(++init);
 			}
 		}
 		else
@@ -198,8 +203,8 @@ else
 					? origin(event).then(origin =>
 						request(`${origin}${url.search.substring(1)}`, true), () =>
 							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
-					: request(...[event.request, ...passive ? [] : [{priority: 'high', headers:
-						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}]]);
+					: request(...[event.request, ...init ? [{priority: 'high', headers:
+						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}] : []]);
 			}
 			switch (url.pathname)
 			{
