@@ -37,7 +37,7 @@ class webapp_router_control extends webapp_echo_masker
 			['评论', '?control/comments'],
 			['渠道', '?control/channels'],
 			['配置', '?control/configs'],
-			['注销登录', "javascript:masker.authorization(null).then(()=>location.reload());", 'style' => 'color:maroon']
+			['注销登录', "javascript:masker.authorization(null).then(()=>location.replace(location.href));", 'style' => 'color:maroon']
 		]);
 	}
 	function authorization($uid, $pwd):array

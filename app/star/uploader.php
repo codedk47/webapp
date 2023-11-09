@@ -28,7 +28,7 @@ class webapp_router_uploader extends webapp_echo_masker
 			['记录', [
 				['提现', '?uploader/record-exchanges']
 			]],
-			['注销登录', 'javascript:masker.authorization(null).then(()=>location.reload());', 'style' => 'color:maroon']
+			['注销登录', 'javascript:masker.authorization(null).then(()=>location.replace(location.href));', 'style' => 'color:maroon']
 		]);
 		if ($this->users)
 		{

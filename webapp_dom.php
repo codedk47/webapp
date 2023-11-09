@@ -857,7 +857,7 @@ class webapp_form implements ArrayAccess
 				$this->captcha->setattr('disabled');
 				$this->fieldset()->append('img', [
 					'onload' => '(function(i){i.value="";i.focus()}(this.parentNode.previousElementSibling.firstElementChild.nextElementSibling.nextElementSibling,this.parentNode.previousElementSibling.disabled=false))',
-					'onclick' => '(function(i,f){if(!f.disabled){f.disabled=!!fetch("?captcha").then(r=>r.ok?r.text():Promise.reject()).then(r=>i.src=`?captcha/${r}`,()=>i.onload())}}(this,this.parentNode.previousElementSibling))',
+					'onclick' => '(function(i,f){if(!f.disabled){f.disabled=!!fetch("?captcha").then(r=>r.ok?r.text():Promise.reject()).then(r=>i.src=`?captcha/${f.firstElementChild.nextElementSibling.value=r}`,()=>i.onload())}}(this,this.parentNode.previousElementSibling))',
 					'onerror' => 'this.onload()',
 					'src' => "?captcha/{$this->fields['captcha_encrypt']['value']}",
 					'width' => $this->webapp['captcha_params'][0],
