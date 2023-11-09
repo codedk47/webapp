@@ -62,12 +62,12 @@ class webapp_router_control extends webapp_echo_masker
 	{
 		$this->json(['dialog' => $msg]);
 	}
-	function get_splashscreen()
-	{
-		$this->script('setTimeout(()=>postMessage("close"), 5000)');
-		$this->xml['style'] = $this->xml->body['style'] = 'background:red;height:100%';
-		$this->main->append('h1', 'get_splashscreen');
-	}
+	// function get_splashscreen()
+	// {
+	// 	$this->script('setTimeout(()=>postMessage("close"), 5000)');
+	// 	$this->xml['style'] = $this->xml->body['style'] = 'background:red;height:100%';
+	// 	$this->main->append('h1', 'get_splashscreen');
+	// }
 	function get_home(string $cid = NULL, string $datefrom = '', string $dateto = '')
 	{
 		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $datefrom))
