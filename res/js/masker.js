@@ -86,7 +86,6 @@ if (self.window)
 		const frame = document.createElement('iframe');
 		frame.src = resources;
 		frame.style.cssText = [
-			'background-color: red',
 			'position: fixed',
 			'inset: 0',
 			'width: 100%',
