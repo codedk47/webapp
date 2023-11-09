@@ -371,18 +371,15 @@ class webapp_echo_masker extends webapp_echo_html
 			// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
 			// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
+			if (method_exists($this, 'get_splashscreen'))
+			{
+				$this->sw['data-splashscreen'] = sprintf('?%s/splashscreen', substr(static::class, strlen($webapp['app_router'])));
+			}
 			$webapp->break($this->init(...));
 		}
 		else
 		{
-			if (method_exists($this, 'get_splashscreen'))
-			{
-				if ($webapp->method !== 'get_splashscreen')
-				{
-					$this->sw['data-splashscreen'] = '?home/splashscreen';
-				}
-				return;
-			}
+			if ($webapp->method === 'get_splashscreen') return;
 			if (method_exists($this, 'authorization'))
 			{
 				if (empty($webapp->authorization($this->authorization(...))))

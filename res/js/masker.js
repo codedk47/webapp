@@ -5,16 +5,20 @@ if (self.window)
 		navigator.serviceWorker.ready.then(registration =>
 		{
 			const message = new MessageChannel;
-			message.port1.onmessage = event =>
+			message.port1.onmessage = () =>
 			{
 				if ('reload' in script.dataset)
 				{
+					if ('splashscreen' in script.dataset)
+					{
+						sessionStorage.setItem('splashscreen', script.dataset.splashscreen);
+					}
 					return location.replace(script.dataset.reload);
 				}
-				if ('splashscreen' in script.dataset)
+				if (sessionStorage.getItem('splashscreen'))
 				{
-					console.log(event.data == 2)
-					event.data == 2 && masker.open(script.dataset.splashscreen);
+					masker.open(sessionStorage.getItem('splashscreen'));
+					sessionStorage.removeItem('splashscreen');
 				}
 			};
 			registration.active.postMessage(localStorage.getItem('token'), [message.port2]);
@@ -149,7 +153,7 @@ else
 		}
 		return response;
 	}
-	let pid = 0, init = 0;
+	let pid = 0, passive = true;
 	const pending = new Map, headers = {'Service-Worker': 'masker'}, origin = event =>
 		clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject()));
@@ -157,7 +161,7 @@ else
 	{
 		if (event.data === null || ['string', 'number', 'boolean'].includes(typeof event.data))
 		{
-			if (event.ports.length ? init === 0 : true)
+			if (event.ports.length ? passive : true)
 			{
 				if (typeof event.data === 'string')
 				{
@@ -170,7 +174,7 @@ else
 			}
 			if (event.ports.length)
 			{
-				event.ports[0].postMessage(++init);
+				passive = event.ports[0].postMessage(null);
 			}
 		}
 		else
@@ -203,8 +207,8 @@ else
 					? origin(event).then(origin =>
 						request(`${origin}${url.search.substring(1)}`, true), () =>
 							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
-					: request(...[event.request, ...init ? [{priority: 'high', headers:
-						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}] : []]);
+					: request(...[event.request, ...passive ? [] : [{priority: 'high', headers:
+						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}]]);
 			}
 			switch (url.pathname)
 			{
