@@ -99,7 +99,6 @@ if (self.window)
 				case 'close': return document.body.removeChild(frame);
 			}
 		});
-		frame.contentWindow.focus();
 		return frame;
 	});
 }
