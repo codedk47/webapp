@@ -442,10 +442,6 @@ return false;
 JS;
 		return 401;
 	}
-	function splashscreen(string $url)
-	{
-		$this->sw['data-splashscreen'] = $url;
-	}
 }
 class webapp_echo_htmlmask extends webapp_echo_html
 {
