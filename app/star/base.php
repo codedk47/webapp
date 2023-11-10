@@ -707,22 +707,11 @@ class base extends webapp
 			$ads[] = [
 				'hash' => $ad['hash'],
 				'weight' => $ad['weight'],
-				'imgurl' => "/news/{$ad['hash']}?{$ad['ctime']}",
+				'imgurl' => "?/news/{$ad['hash']}?mask{$ad['ctime']}",
 				'acturl' => $ad['acturl']
 			];
 		}
 		return $ads;
-	}
-	//获取开屏广告
-	function fetch_adsplashscreen():array
-	{
-		return empty($ad = $this->random_weights($this->fetch_ads(0))) ? $ad : [
-			'duration' => 5,
-			'mask' => TRUE,
-			'picture' => $ad['imgurl'],
-			'support' => $ad['acturl'],
-			'autoskip' => TRUE
-		];
 	}
 	//获取所有标签
 	function fetch_tags():iterable

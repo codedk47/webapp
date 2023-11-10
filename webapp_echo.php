@@ -335,6 +335,7 @@ class webapp_echo_masker extends webapp_echo_html
 	public readonly bool $initiated;
 	public readonly webapp_html $sw;
 	public ?webapp_echo_json $json;
+	protected array $allow = ['get_splashscreen'];
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -343,7 +344,7 @@ class webapp_echo_masker extends webapp_echo_html
 		If content is set to yes, the web application runs in full-screen mode; otherwise, it does not. The default behavior is to use Safari to display web content.
 		You can determine whether a webpage is displayed in full-screen mode using the window.navigator.standalone read-only Boolean JavaScript property.
 		*/
-		$this->meta(['name' => 'apple-mobile-web-app-capable', 'content' => 'yes']);
+		//$this->meta(['name' => 'apple-mobile-web-app-capable', 'content' => 'yes']);
 		/*
 		Sets the style of the status bar for a web application.
 		This meta tag has no effect unless you first specify full-screen mode as described in apple-apple-mobile-web-app-capable.
@@ -353,7 +354,7 @@ class webapp_echo_masker extends webapp_echo_html
 		If set to default or black, the web content is displayed below the status bar.
 		If set to black-translucent, the web content is displayed on the entire screen, partially obscured by the status bar. The default value is default.
 		*/
-		$this->meta(['name' => 'apple-mobile-web-app-status-bar-style', 'content' => 'black']);
+		//$this->meta(['name' => 'apple-mobile-web-app-status-bar-style', 'content' => 'black']);
 		/*
 		Enables or disables automatic detection of possible phone numbers in a webpage in Safari on iOS.
 		By default, Safari on iOS detects any string formatted like a phone number and makes it a link that calls the number. Specifying telephone=no disables this feature.
@@ -366,10 +367,10 @@ class webapp_echo_masker extends webapp_echo_html
 		if ($this->initiated = $webapp->request_header('Service-Worker') !== 'masker')
 		{
 			unset($this->xml->head->link);
-			$this->header->text('Enable JavaScript and cookies to continue');
-			// $this->main->append('textarea', [join(array_map(fn($k, $v) =>
+			// $this->aside->append('textarea', [join(array_map(fn($k, $v) =>
 			// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
 			// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
+			$this->main->text('Enable JavaScript and cookies to continue');
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			if (method_exists($this, 'get_splashscreen'))
 			{
@@ -379,7 +380,7 @@ class webapp_echo_masker extends webapp_echo_html
 		}
 		else
 		{
-			if ($webapp->method === 'get_splashscreen') return;
+			if (in_array($webapp->method, $this->allow, TRUE)) return;
 			if (method_exists($this, 'authorization'))
 			{
 				if (empty($webapp->authorization($this->authorization(...))))

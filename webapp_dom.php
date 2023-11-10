@@ -779,6 +779,7 @@ class webapp_form implements ArrayAccess
 					break;
 				}
 			}
+			$data = [];
 			foreach ($this->fields as $field => $node)
 			{
 				switch ($type = $node->getName())
@@ -796,7 +797,6 @@ class webapp_form implements ArrayAccess
 						if ((isset($node[$required]) && strlen($value) === 0) || (isset($node[$multiple])
 							? (is_array($value) && count(array_diff($value, $node->selectable())) === 0)
 							: (in_array($value, $node->selectable(), TRUE))) === FALSE) {
-
 							break 3;
 						};
 						break;
