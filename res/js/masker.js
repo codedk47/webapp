@@ -2,36 +2,38 @@ if (self.window)
 {
 	const script = document.currentScript, init = new Promise(resolve =>
 	{
-		navigator.serviceWorker.ready.then(registration =>
+		const init = new Promise(resolve => navigator.serviceWorker.ready.then(registration =>
 		{
 			const message = new MessageChannel;
 			message.port1.onmessage = () =>
 			{
 				if ('reload' in script.dataset)
 				{
-					if ('splashscreen' in script.dataset)
-					{
-						sessionStorage.setItem('splashscreen', script.dataset.splashscreen);
-					}
+					sessionStorage.setItem('init', JSON.stringify(script.dataset));
 					return location.replace(script.dataset.reload);
 				}
-				if (sessionStorage.getItem('splashscreen'))
+				const init = JSON.parse(sessionStorage.getItem('init'));
+				if (init)
 				{
-					masker.open(sessionStorage.getItem('splashscreen'));
-					sessionStorage.removeItem('splashscreen');
+					sessionStorage.removeItem('init');
+					if (init.splashscreen)
+					{
+						masker.open(init.splashscreen);
+					}
+					resolve(init);
 				}
 			};
 			registration.active.postMessage(localStorage.getItem('token'), [message.port2]);
 			navigator.serviceWorker.addEventListener('message', event => origin.then(result =>
 				registration.active.postMessage({pid: event.data, result})));
 			navigator.serviceWorker.startMessages();
-		});
+		}));
 		addEventListener('DOMContentLoaded', () =>
 		{
-			navigator.serviceWorker.ready.then(registration => resolve(registration.active));
+			navigator.serviceWorker.ready.then(registration => resolve([registration.active, init]));
 			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}));
 		});
-	}), origin = new Promise(resolve => init.then(() => 
+	}), origin = new Promise(resolve => init.then(() =>
 	{
 		const resources = Array.from(document.querySelectorAll([
 			'link[rel=dns-prefetch]',
@@ -73,14 +75,10 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
-	masker.then = callback => init.then(callback);
+	masker.then = callback => init.then(([sw]) => callback(sw));
+	masker.init = callback => init.then(([, init]) => init.then(callback));
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
 	masker.authorization = signature => init.then(active => active.postMessage(localStorage.setItem('token', signature) || localStorage.getItem('token')));
-	// masker.once = callback => sessionStorage.getItem('token') === localStorage.getItem('token')
-	// 	//|| sessionStorage.setItem('token', localStorage.getItem('token'))
-	// 	|| init.then(callback);
-	masker.session_once = (name, callinit) => init.then(() => sessionStorage.getItem(name) || sessionStorage.setItem(name, callinit()));
-	
 	masker.open = resources => init.then(() =>
 	{
 		const frame = document.createElement('iframe');
