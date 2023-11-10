@@ -78,7 +78,7 @@ if (self.window)
 	masker.then = callback => init.then(([sw]) => callback(sw));
 	masker.init = callback => init.then(([, init]) => init.then(callback));
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
-	masker.authorization = signature => init.then(active => active.postMessage(localStorage.setItem('token', signature) || localStorage.getItem('token')));
+	masker.authorization = signature => masker.then(active => active.postMessage(localStorage.setItem('token', signature) || localStorage.getItem('token')));
 	masker.open = resources => init.then(() =>
 	{
 		const frame = document.createElement('iframe');
