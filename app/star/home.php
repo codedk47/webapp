@@ -88,19 +88,19 @@ class webapp_router_home extends webapp_echo_masker
 	function set_header_search():webapp_html
 	{
 		$this->header['class'] = 'search';
+		$this->header->append('a', ['href' => '?home', 'class' => 'arrow']);
 		$this->header->append('input', ['type' => 'search']);
 		$this->header->append('button', ['搜索']);
 
 		return $this->header;
 	}
-	function set_header_title(string $name, bool $gobackable = FALSE):webapp_html
+	function set_header_title(string $name, string $goback = NULL):webapp_html
 	{
-		$this->header['class'] = 'title';
-		if ($gobackable)
+		if ($goback)
 		{
-			$this->header->append('a', ['GoBack', 'href' => 'javascript:history.back();']);
+			$this->header->append('a', ['href' => $goback, 'class' => 'arrow']);
 		}
-		$this->header->text($name);
+		$this->header->append('strong', $name);
 		return $this->header;
 	}
 
@@ -118,31 +118,38 @@ class webapp_router_home extends webapp_echo_masker
 	}
 
 
-	function add_slideshows(webapp_html $node, array $advertisements = []):webapp_html
+	function add_advertisements(webapp_html $node, int $seat):?webapp_html
 	{
-		$element = $node->append('webapp-slideshows', ['class' => 'home']);
-		$element->cdata(json_encode([
-			['support' => 'javascript:alert(1);', 'picture' => '?/news/6UA5CO7B769R?mask1696937379'],
-			['support' => 'javascript:alert(2);', 'picture' => '?/news/C244JVMLB9Q2?mask1696937379'],
-			['support' => 'javascript:alert(3);', 'picture' => '?/news/NSHV5V94QPE6?mask1696937379']
-		], JSON_UNESCAPED_UNICODE));
-		return $element;
+		if ($ads = $this->webapp->data_advertisements($seat))
+		{
+			$element = $node->append('webapp-slideshows');
+			$element->cdata(json_encode($ads));
+			return $element;
+		}
+		return NULL;
 	}
 
-	function add_video_lists(webapp_html $node, string $title, iterable $videos):webapp_html
+	function add_video_lists(webapp_html $node, iterable $videos, int $display = 1, string $title = NULL, string $more = NULL):webapp_html
 	{
-		$element = $node->append('div', ['class' => 'videos']);
+		if ($title)
+		{
+			$element = $node->append('div', ['class' => 'titles']);
+			$element->append('strong', $title);
+			if ($more)
+			{
+				$element->append('a', ['更多 >>', 'href' => $more]);
+			}
+		}
+		$element = $node->append('div', ['class' => "videos-t{$display}"]);
 		foreach ($videos as $video)
 		{
-			$content = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
-			$ym = date('ym', $video['mtime']);
-			$content->append('img', ['loading' => 'lazy', 'src' => "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}"]);
-
-			//$content->append('span', $video['name']);
-
-			$content->append('span', '免费');
-
-
+			$figure = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"])->append('figure', ['data-require' => match (intval($video['require'])) {
+				-1 => '会员',
+				0 => '免费',
+				default => "{$video['require']} 金币"
+			}]);
+			$figure->append('img', ['loading' => 'lazy', 'src' => $video['cover']]);
+			$figure->append('figcaption', $video['name']);
 		}
 		return $element;
 	}
@@ -151,24 +158,52 @@ class webapp_router_home extends webapp_echo_masker
 
 
 
-	function get_home(string $tag = NULL)
+	function get_home(string $type = NULL)
 	{
-		$this->set_header_index();
 		$this->aside['class'] = 'classify';
-		foreach ($this->webapp->mysql->tags('WHERE phash IS NULL ORDER BY ctime DESC') as $tag)
+		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
+		foreach ($classify = $this->webapp->data_classify() as $hash => $name)
 		{
-			$this->aside->append('a', [$tag['name'], 'href' => "?home/home,tag:{$tag['hash']}"]);
+			$node = $this->aside->append('a', [$name, 'href' => "?home/home,type:{$hash}"]);
+			if ($hash === $type)
+			{
+				unset($this->aside->a['class']);
+				$node['class'] = 'selected';
+			}
 		}
-		
-
-		$this->add_slideshows($this->main);
-
-		$v = $this->webapp->mysql->videos('WHERE sync="allow" ORDER BY ctime DESC LIMIT 10');
-		$this->add_video_lists($this->main, 'test', $v);
-
-
-
 		$this->set_footer_menu();
+		$this->add_advertisements($this->main, 1);
+		if ($type === NULL)
+		{
+			foreach ($classify as $hash => $name)
+			{
+				if ($videos = $this->webapp->data_classify_top_videos($hash))
+				{
+					$this->add_video_lists($this->main, $videos, 0, "最新{$name}", "?home/home,type:{$hash}");
+				}
+			}
+			return;
+		}
+		foreach ($this->webapp->data_classify_subjects($type) as $subject)
+		{
+			$this->add_video_lists($this->main,
+				$subject['videos'],
+				$subject['style'],
+				$subject['name'], "?home/subjects,hash:{$subject['hash']}");
+		}
+	}
+	function get_subjects(string $hash, int $page = 0)
+	{
+		if (empty($subject = $this->webapp->data_subjects($hash))) return 404;
+
+
+
+		$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:1';
+		$this->add_advertisements($this->main, 1);
+		$this->add_video_lists($this->main, $this->webapp->data_subjects($hash, 1), $subject['style']);
+		// print_r( $this->webapp->data_subjects($hash) );
+		// print_r( $this->webapp->data_subjects($hash, 1) );
+
 	}
 
 	function get_watch(string $hash)
@@ -190,24 +225,68 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		
 
-		$this->set_header_title($video['name'], TRUE);
+		$this->set_header_search();
 		
 
 
-
-		$this->aside->append('webapp-video',[
+		$this->aside['style'] = 'position:sticky;top:0;z-index:1';
+		$this->aside->append('webapp-video', [
 			'data-poster' => $video['poster'],
 			'data-m3u8' => $video['m3u8'],
-			//'oncanplay' => 'console.log(this)',
+			'oncanplay' => 'masker.canplay(this)',
 			//'autoheight' => NULL,
 			//'autoplay' => NULL,
 			'controls' => NULL,
 			'muted' => NULL
 		]);
+		$node = $this->main->append('div', ['class' => 'videoinfo']);
+		$node->append('div', $video['name']);
+		$tags = $node->append('div', ['class' => 'tags']);
+
+
+
+		
+		foreach (explode(',', $video['tags']) as $tag)
+		{
+			$tags->append('a', [$tag, 'href' => "?home/search,tag:{$tag}"]);
+		}
+
+		//$v = $this->webapp->mysql->videos('WHERE sync="allow" ORDER BY ctime DESC LIMIT 20');
+
+
+
+
+		//$this->add_video_lists($this->main, $v, 2, '可能喜欢');
+
 
 	}
-	function get_short()
+	function get_short(int $page = 0)
 	{
+		if ($page)
+		{
+			$this->json([
+				[ 'poster' => '?/2309/1N1VGT0V6UCT/cover?MASK1695742222', 'm3u8' => '?/2309/1N1VGT0V6UCT/play?mask1670409186' ],
+				[ 'poster' => '?/2308/V9CUN2SBDION/cover?MASK1695742222', 'm3u8' => '?/2308/V9CUN2SBDION/play?mask1670409186' ],
+				[ 'poster' => '?/2309/OKD6KOT82RBP/cover?MASK1695742222', 'm3u8' => '?/2309/OKD6KOT82RBP/play?mask1670409186' ],
+				[ 'poster' => '?/2309/OIM8UP1HL9FD/cover?MASK1695742222', 'm3u8' => '?/2309/OIM8UP1HL9FD/play?mask1670409186' ],
+				[ 'poster' => '?/2309/SEJFF8KRES9L/cover?MASK1695742222', 'm3u8' => '?/2309/SEJFF8KRES9L/play?mask1670409186' ],
+				[ 'poster' => '?/2309/IA9RL8VDDI2J/cover?MASK1695742222', 'm3u8' => '?/2309/IA9RL8VDDI2J/play?mask1670409186' ],
+			]);
+			return;
+		}
+		$this->script(['src' => '/webapp/res/js/hls.min.js']);
+		$this->script(['src' => '/webapp/res/js/video.js']);
+
+		$this->aside->append('webapp-videos', [
+			'style' => 'height: 20rem',
+			//'onchange' => 'console.log(this.current)',
+			'data-fetch' => '?home/short,page:',
+			'data-page' => 1,
+			'autoplay' => NULL,
+			'controls' => NULL,
+			// 'muted' => NULL
+		]);
+		
 		$this->set_footer_menu();
 	}
 	function get_game()

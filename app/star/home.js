@@ -43,3 +43,9 @@ masker.create_account = form =>
 	}
 	return false;
 };
+
+
+masker.canplay = video =>
+{
+	console.log(video);
+};
