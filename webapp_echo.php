@@ -335,10 +335,12 @@ class webapp_echo_masker extends webapp_echo_html
 	public readonly bool $initiated;
 	public readonly webapp_html $sw;
 	public ?webapp_echo_json $json;
+	private ?DOMNode $template = NULL;
 	protected array $allow = ['get_splashscreen'];
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
+		//$this->template = $this->document;
 		/*
 		Sets whether a web application runs in full-screen mode.
 		If content is set to yes, the web application runs in full-screen mode; otherwise, it does not. The default behavior is to use Safari to display web content.
@@ -409,10 +411,16 @@ class webapp_echo_masker extends webapp_echo_html
 			}
 		}
 	}
+	function template():webapp_html
+	{
+		return webapp_html::from($this->template = $this->document->createElement('template'));
+	}
 	function __toString():string
 	{
 		return $this->initiated ? parent::__toString() : $this->webapp->response_maskdata(
-			isset($this->json) ? (string)$this->json : parent::__toString());
+			isset($this->json) ? (string)$this->json : ($this->template
+				? substr($this->document->saveHTML($this->template), 10, -11)
+				: $this->document->saveHTML($this->document)));
 	}
 	function init()
 	{

@@ -29,17 +29,17 @@ class data extends base
 		}
 		return $videos;
 	}
-	// function data_tags(string $classify):array
-	// {
-	// 	return $this->mysql->tags('WHERE hash=?s OR phash=?s ORDER BY sort DESC', $classify, $classify)->column('name', 'hash');
-	// }
+	function data_classify_tags(string $type):array
+	{
+		return $this->mysql->tags('WHERE hash=?s OR phash=?s ORDER BY sort DESC', $type, $type)->column('name', 'hash');
+	}
 	//分类专题数据
 	function data_classify_subjects(string $type):iterable
 	{
 		foreach ($this->webapp->fetch_subjects($type) as $subject)
 		{
 			$videos = [];
-			foreach ($this->webapp->mysql->videos('WHERE hash IN(?S)', $subject['videos']) as $video)
+			foreach ($this->mysql->videos('WHERE hash IN(?S)', $subject['videos']) as $video)
 			{
 				$ym = date('ym', $video['mtime']);
 				$video['cover'] = "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}";
@@ -69,5 +69,28 @@ class data extends base
 		}
 		return $this->mysql->subjects('WHERE hash=?s LIMIT 1', $hash)->array();
 	}
+	function data_search_video(string $word = NULL, string $tags = NULL, int $page = 0, int $size = 20):iterable
+	{
 
+
+
+		foreach ($this->mysql->videos('WHERE sync="allow" ORDER BY ptime DESC')->paging($page, $size) as $video)
+		{
+			$ym = date('ym', $video['mtime']);
+			$video['cover'] = "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}";
+			yield $video;
+		}
+	}
+
+
+	function data_like_videos(array $video):iterable
+	{
+		$cond = $video['tags'] ? sprintf('FIND_IN_SET("%s",tags) AND ', substr($video['tags'], 0, 4)) : '';
+		foreach ($this->mysql->videos('WHERE ??sync="allow" ORDER BY ctime DESC LIMIT 20', $cond) as $video)
+		{
+			$ym = date('ym', $video['mtime']);
+			$video['cover'] = "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}";
+			yield $video;
+		}
+	}
 }

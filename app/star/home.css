@@ -47,9 +47,9 @@ a.arrow::before{
 	border-top-width: 0;
 	border-right-width: 0;
 }
-body>div:first-child{
+/* body>div:first-child{
 	border: 1px solid red;
-}
+} */
 /* splashscreen */
 body>div.splashscreen:first-child>header:not(:empty){
 	position: fixed;
@@ -82,10 +82,12 @@ header:not(:empty){
 	align-items: center;
 	background-color: var(--webapp-background);
 	padding: var(--webapp-gapitem) 0;
+
 }
 header>strong{
 	text-align: center;
 	flex-grow: 1;
+	margin-left: -2rem;
 }
 
 
@@ -94,13 +96,14 @@ header>strong{
 aside.classify{
 	position: sticky;
 	top: 0;
-	z-index: 1;
+	z-index: 2;
 	display: flex;
 	overflow-x: auto;
 	font-weight: bold;
 	background-color: var(--webapp-background);
-	box-shadow: 0 .2rem .6rem rgb(27, 31, 35);
+	/* box-shadow: 0 .2rem .6rem rgb(27, 31, 35); */
 }
+
 aside.classify>a{
 	position: relative;
 	padding: var(--webapp-gapitem) var(--webapp-gap);
@@ -116,10 +119,14 @@ aside.classify>a.selected::before{
 	border-bottom: .2rem solid var(--webapp-foreground);
 }
 
-
 /* main */
 main{
 	padding: 0 var(--webapp-gapitem);
+}
+main>blockquote[data-lazy]{
+	margin: 0;
+	padding: var(--webapp-gap);
+	text-align: center;
 }
 /* footer */
 footer{
@@ -132,7 +139,7 @@ footer{
 footer.nav{
 	display: flex;
 	justify-content: center;
-	box-shadow: 0 .2rem .6rem rgb(27, 31, 35);
+	box-shadow: 0 .2rem .6rem var(--webapp-edge);
 }
 footer.nav>a{
 	padding: var(--webapp-gap) 0;
@@ -232,16 +239,19 @@ div.videoinfo{
 	flex-direction: column;
 	padding: var(--webapp-gapitem) 0;
 }
-/* div.tags */
-div.tags{
+/* mark.tags */
+div.videoinfo>mark{
 	display: flex;
 	gap: var(--webapp-gapitem);
+	flex-wrap: wrap;
+	background-color: transparent;
 }
-div.tags>a{
+div.videoinfo>mark>a{
 	padding: .2rem var(--webapp-gapitem);
 	color: var(--webapp-background);
 	background-color: var(--webapp-danger);
 	border-radius: var(--webapp-gapradius);
+	font-size: var(--webapp-font-small);
 }
 
 button,label.button{
@@ -254,6 +264,10 @@ button,label.button{
 	background-image: linear-gradient(-180deg, #fafbfc 0%, #eff3f6 90%);
 }
 
+webapp-video.v{
+	min-height: 20%;
+
+}
 
 webapp-slideshows{
 	box-shadow: 0 0 .2rem var(--webapp-hint);
