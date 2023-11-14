@@ -70,8 +70,8 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->header['class'] = 'search';
 		$this->header->append('a', ['href' => '?home', 'class' => 'arrow']);
-		$this->header->append('input', ['type' => 'search']);
-		$this->header->append('button', ['搜索']);
+		$this->header->append('input', ['type' => 'search', 'placeholder' => '请输入关键词搜索', 'onkeypress' => 'if(event.keyCode===13)location.href=this.nextElementSibling.dataset.search+this.value']);
+		$this->header->append('button', ['搜索', 'onclick' => 'location.href=this.dataset.search+this.previousElementSibling.value', 'data-search' => '?home/search,word:']);
 
 		return $this->header;
 	}
@@ -114,9 +114,15 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($ads = $this->webapp->data_advertisements($seat))
 		{
+			if ($title)
+			{
+				$element = $node->append('div', ['class' => 'titles']);
+				$element->append('strong', $title);
+			}
+
 			$element = $node->append('div', ['class' => 'grid-icon']);
 
-			//$ads = [...$ads, ...$ads, ...$ads, ...$ads];
+			$ads = [...$ads, ...$ads, ...$ads, ...$ads];
 	
 			foreach ($ads as $ad)
 			{
@@ -205,8 +211,9 @@ class webapp_router_home extends webapp_echo_masker
 		]));
 		$this->set_header_search();
 		$this->set_footer_menu();
-		//$this->add_slideshows_ads($this->main, 1);
-		$this->add_nav_ads($this->main, 1);
+		$this->add_slideshows_ads($this->main, 1);
+	
+		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
 		if ($type === NULL)
 		{
 			foreach ($classify as $hash => $name)
@@ -247,11 +254,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
 		$this->add_slideshows_ads($this->main, 1);
 		$this->add_video_lists($this->main, "?home/subjects,hash:{$hash},page:", $subject['style']);
-		// $this->add_video_lists($this->main, $this->webapp->data_subjects($hash, 1), $subject['style']);
-		// print_r( $this->webapp->data_subjects($hash) );
-		// print_r( $this->webapp->data_subjects($hash, 1) );
-
-		//$this->add_loading_lazy();
+		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
 
 	}
 	function get_search(string $word = NULL, string $tags = NULL, int $page = 0)
@@ -342,15 +345,17 @@ class webapp_router_home extends webapp_echo_masker
 		$this->script(['src' => '/webapp/res/js/video.js']);
 		$this->meta(['name' => 'theme-color', 'content' => 'black']);
 		$this->xml->body->div['class'] = 'short';
+		$this->header->append('a', ['href' => 'javascript:history.back();', 'class' => 'arrow']);
+		$this->header->append('strong', '短视频');
 		$this->main->append('webapp-videos', [
 			'onchange' => 'masker.shortchanged(this)',
 			'data-fetch' => '?home/short,page:',
 			'data-page' => 1,
-			'autoplay' => NULL,
+			//'autoplay' => NULL,
 			'controls' => NULL,
 			// 'muted' => NULL
 		]);
-		
+
 		//$this->set_footer_menu();
 	}
 	function get_game()
@@ -359,6 +364,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_series()
 	{
+		$this->add_nav_ads($this->main, 1, 'asdawd');
 		$this->set_footer_menu();
 	}
 
@@ -375,7 +381,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->body->div['class'] = 'my';
 
 
-
+		//print_r( $this->user );
 		$this->set_footer_menu();
 	}
 }

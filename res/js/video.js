@@ -362,34 +362,34 @@ customElements.define('webapp-videos', class extends HTMLElement
 	}
 	fetch(prev, index)
 	{
-		if ('fetch' in this.dataset && this.#fetch)
-		{
-			if (this.#page)
-			{
+		// if ('fetch' in this.dataset && this.#fetch)
+		// {
+		// 	if (this.#page)
+		// 	{
 				
-				fetch(`${this.dataset.fetch}${'page' in this.dataset ? this.dataset.page++ : ''}`)
+		// 		fetch(`${this.dataset.fetch}${'page' in this.dataset ? this.dataset.page++ : ''}`)
 				
-			}
-			else
-			{
-				fetch(this.dataset.fetch)
-			}
+		// 	}
+		// 	else
+		// 	{
+		// 		fetch(this.dataset.fetch)
+		// 	}
 
 
 
-			// if (prev && this.#page < 1) return;
-			// this.#page
+		// 	// if (prev && this.#page < 1) return;
+		// 	// this.#page
 
 
 
-			// console.log(`${this.dataset.fetch}${this.#page}`)
+		// 	// console.log(`${this.dataset.fetch}${this.#page}`)
 
 
 
-			// console.log(this.dataset.fetch, this.#page)
-		}
+		// 	// console.log(this.dataset.fetch, this.#page)
+		// }
 
-		return;
+		// return;
 		if ('fetch' in this.dataset && this.#fetch)
 		{
 			//let page = 

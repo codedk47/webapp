@@ -1304,19 +1304,14 @@ class webapp_router_control extends webapp_echo_masker
 		return [
 			0 => '开屏广告',
 			1 => '首页轮播',
+
+			
 			2 => '中间轮播',
 			3 => '游戏轮播',
 			4 => '社区轮播',
 			5 => '个人中心',
 			6 => '弹窗广告'
 			//255 => '待定分类'
-		];
-	}
-	function ad_displays():array
-	{
-		return [
-			'hide' => '隐藏（不展示）',
-			'show' => '显示（展示中）'
 		];
 	}
 	function form_ad(webapp_html $html = NULL):webapp_form
@@ -1327,14 +1322,14 @@ class webapp_router_control extends webapp_echo_masker
 			'style' => 'width:32rem;height:18rem;background-size:contain'
 		]);
 
-		$form->fieldset('广告图片');
+		$form->fieldset('广告图片 / 过期时间');
 		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
-		$form->field('display', 'select', ['options' => $this->ad_displays()]);
+		$form->field('expire', 'date', ['value' => date('Y-m-t')], fn($i,$v) => $i ? strtotime($v) : date('Y-m-d', $v) );
 
-		$form->fieldset('展示位置 / 权重（越大越几率越大）');
-
+		$form->fieldset('展示位置 / 权重（越大越几率越大） / 名称');
 		$form->field('seat', 'select', ['options' => $this->ad_seats(), 'required' => NULL]);
 		$form->field('weight', 'number', ['min' => 0, 'max' => 255, 'value' => 1, 'required' => NULL]);
+		$form->field('name', 'text');
 
 		$form->fieldset('行为URL');
 		$form->field('acturl', 'text', [
@@ -1364,11 +1359,11 @@ class webapp_router_control extends webapp_echo_masker
 			$conds[] = $display;
 		}
 		$conds[0] = sprintf('%sORDER BY seat ASC,weight DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats, $displays)
+		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats)
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
 			$table->cell('封面');
-			$table->cell(['信息', 'colspan' => 6]);
+			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?control/ad-update,hash:{$value['hash']}"]);
 
 			$table->row();
 			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])
@@ -1389,21 +1384,22 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell($seats[$value['seat']]);
 			$table->cell('展示权重');
 			$table->cell($value['weight']);
-			$table->cell('是否展示');
-			$table->cell($displays[$value['display']]);
+			$table->cell('过期时间');
+			$table->cell(date('Y-m-d\\TH:i:s', $value['expire']));
 
 			$table->row();
-			$table->cell('行为URL');
-			$table->cell(['colspan' => 6])->append('a', [$value['acturl'], 'href' => $value['acturl']]);
+			$table->cell('名称');
+			$table->cell([$value['name'], 'colspan' => 3]);
+			$table->cell('点击次数');
+			$table->cell(number_format($value['click']));
 
 			$table->row();
-			$table->cell('功能');
-			$td = $table->cell(['colspan' => 5]);
-			// $td->append('button', ['新窗口打开改行为URL', 'onclick' => "location.href='?control/ad-update,hash:{$value['hash']}'"]);
-			// $td->append('span', ' | ');
-			$td->append('button', ['修改信息', 'onclick' => "location.href='?control/ad-update,hash:{$value['hash']}'"]);
+			$table->cell('URL');
+			$table->cell(['colspan' => 5])->append('a', [$value['acturl'], 'href' => $value['acturl']]);
 
-		}, $seats = $this->ad_seats(), $displays = $this->ad_displays());
+
+
+		}, $seats = $this->ad_seats());
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->fieldset('封面', '字段', '信息');
 		$table->header('广告 %d 项', $table->count());
@@ -1413,9 +1409,9 @@ class webapp_router_control extends webapp_echo_masker
 		$table->bar->select(['' => '所有位置'] + $seats)
 			->setattr(['onchange' => 'g({seat:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($seat);
-		$table->bar->select(['' => '所有展示'] + $displays)
-			->setattr(['onchange' => 'g({display:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-			->selected($display);
+		// $table->bar->select(['' => '所有展示'] + $displays)
+		// 	->setattr(['onchange' => 'g({display:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+		// 	->selected($display);
 	}
 	function get_ad_insert()
 	{
