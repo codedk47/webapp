@@ -100,7 +100,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 
 
-	function add_advertisements(webapp_html $node, int $seat):?webapp_html
+	function add_slideshows_ads(webapp_html $node, int $seat):?webapp_html
 	{
 		if ($ads = $this->webapp->data_advertisements($seat))
 		{
@@ -110,8 +110,27 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return NULL;
 	}
+	function add_nav_ads(webapp_html $node, int $seat, string $title = NULL)
+	{
+		if ($ads = $this->webapp->data_advertisements($seat))
+		{
+			$element = $node->append('div', ['class' => 'grid-icon']);
 
-	function add_video_lists(webapp_html $node, iterable|string $videos, int $display = 1, string $title = NULL, string $more = NULL):webapp_html
+			//$ads = [...$ads, ...$ads, ...$ads, ...$ads];
+	
+			foreach ($ads as $ad)
+			{
+				$a = $element->append('a', ['href' => $ad['support']])->append('figure');
+				$a->append('img', ['src' => $ad['picture']]);
+				$a->append('figcaption', $ad['name']);
+				//$element->append('a', ['href' => $ad['support']])->append('img');
+			}
+			return $element;
+		}
+		return NULL;
+	}
+
+	function add_video_lists(webapp_html $node, iterable|string $videos, int $display = 0, string $title = NULL, string $more = NULL):webapp_html
 	{
 		if ($title)
 		{
@@ -122,7 +141,7 @@ class webapp_router_home extends webapp_echo_masker
 				$element->append('a', ['更多 >>', 'href' => $more]);
 			}
 		}
-		$element = $node->getName() === 'template' ? $node : $node->append('div', ['class' => "videos-t{$display}"]);
+		$element = $node->getName() === 'template' ? $node : $node->append('div', ['class' => "grid-t{$display}"]);
 		if (is_string($videos))
 		{
 			$node->append('blockquote', ['内容加载中...', 'data-lazy' => $videos, 'data-page' => 1]);
@@ -142,13 +161,6 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return $element;
 	}
-
-
-	// function add_loading_lazy()
-	// {
-	// 	$this->main->append('blockquote', ['Loading...', 'data-lazy' => '123']);
-	
-	// }
 
 	function get_splashscreen()
 	{
@@ -193,7 +205,8 @@ class webapp_router_home extends webapp_echo_masker
 		]));
 		$this->set_header_search();
 		$this->set_footer_menu();
-		$this->add_advertisements($this->main, 1);
+		//$this->add_slideshows_ads($this->main, 1);
+		$this->add_nav_ads($this->main, 1);
 		if ($type === NULL)
 		{
 			foreach ($classify as $hash => $name)
@@ -232,7 +245,7 @@ class webapp_router_home extends webapp_echo_masker
 		// ]);
 
 		$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
-		$this->add_advertisements($this->main, 1);
+		$this->add_slideshows_ads($this->main, 1);
 		$this->add_video_lists($this->main, "?home/subjects,hash:{$hash},page:", $subject['style']);
 		// $this->add_video_lists($this->main, $this->webapp->data_subjects($hash, 1), $subject['style']);
 		// print_r( $this->webapp->data_subjects($hash) );
@@ -249,7 +262,7 @@ class webapp_router_home extends webapp_echo_masker
 			return;
 		}
 		$this->set_header_search();
-		$this->add_advertisements($this->main, 1);
+		$this->add_slideshows_ads($this->main, 1);
 		$this->add_video_lists($this->main, "?home/search,word:{$word},tags:{$tags},page:", 2);
 	}
 
@@ -327,10 +340,10 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js']);
-
+		$this->meta(['name' => 'theme-color', 'content' => 'black']);
+		$this->xml->body->div['class'] = 'short';
 		$this->main->append('webapp-videos', [
-			'style' => 'height: 20rem',
-			//'onchange' => 'console.log(this.current)',
+			'onchange' => 'masker.shortchanged(this)',
 			'data-fetch' => '?home/short,page:',
 			'data-page' => 1,
 			'autoplay' => NULL,
@@ -338,7 +351,7 @@ class webapp_router_home extends webapp_echo_masker
 			// 'muted' => NULL
 		]);
 		
-		$this->set_footer_menu();
+		//$this->set_footer_menu();
 	}
 	function get_game()
 	{
@@ -348,8 +361,21 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->set_footer_menu();
 	}
+
+	function get_prods()
+	{
+
+	}
+	function get_top_up(string $type)
+	{
+
+	}
 	function get_my()
 	{
+		$this->xml->body->div['class'] = 'my';
+
+
+
 		$this->set_footer_menu();
 	}
 }

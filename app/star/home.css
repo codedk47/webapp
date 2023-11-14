@@ -128,6 +128,7 @@ main>blockquote[data-lazy]{
 	padding: var(--webapp-gap);
 	text-align: center;
 }
+
 /* footer */
 footer{
 	position: fixed;
@@ -155,22 +156,43 @@ div.titles{
 	display: flex;
 	justify-content: space-between;
 }
-div[class|=videos]{
+div[class|=grid]{
 	display: grid;
 	padding: var(--webapp-gapitem) 0;
 	grid-template-columns: 1fr 1fr;
 	gap: var(--webapp-gapitem);
 }
-
-div[class|=videos][class*=-t1]{
+div[class|=grid][class*=-t1]{
 	grid-template-columns: 1fr;
 }
-div[class|=videos][class*=-t5]{
-	grid-template-rows: 1fr;
+div[class|=grid][class*=-t2]{
+	grid-template-columns: 1fr 1fr;
 }
-div[class|=videos][class*=-t5]>a:first-child{
+div[class|=grid][class*=-t3]>a:first-child{
 	grid-column-start: 1;
 	grid-column-end: 3;
+}
+div[class|=grid][class*=-t4]>a:first-child{
+	grid-column-start: 1;
+	grid-column-end: 4;
+}
+div[class|=grid][class*=-t4]>a:first-child>figure{
+	padding-bottom: 56.25%;
+}
+div[class|=grid][class*=-t4]>a:first-child>figure>img{
+	object-position: unset;
+}
+div[class|=grid][class*=-t4],
+div[class|=grid][class*=-t5]{
+	grid-template-columns: 1fr 1fr 1fr;
+}
+div[class|=grid][class*=-t4]>a>figure,
+div[class|=grid][class*=-t5]>a>figure{
+	padding-bottom: 142%;
+}
+div[class|=grid][class*=-t4]>a>figure>img,
+div[class|=grid][class*=-t5]>a>figure>img{
+	object-position: 100% 0;
 }
 /* @media screen and (min-width: 720px) {
 	div[class|=videos]{
@@ -184,12 +206,10 @@ div[class|=videos][class*=-t5]>a:first-child{
 		grid-column-end: 4;
 	}
 } */
-
-
-div[class|=videos]>a{
+div[class|=grid]>a{
 	padding-bottom: 1.4rem;
 }
-div[class|=videos]>a>figure{
+div[class|=grid]>a>figure{
 	margin: 0;
 	position: relative;
 	padding-bottom: 56.25%;
@@ -200,7 +220,25 @@ div[class|=videos]>a>figure{
 	8:5	= 62.5%
 	*/
 }
-div[class|=videos]>a>figure::after{
+div[class|=grid]>a>figure>img{
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--webapp-gapradius);
+	box-shadow: 0 0 .2rem var(--webapp-hint);
+	object-fit: cover;
+	/* aspect-ratio: 16 / 9; */
+}
+div[class|=grid]>a>figure>figcaption{
+	position: absolute;
+	width: 100%;
+	bottom: -1.4rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+div[class|=grid]>a>figure[data-require]::after{
 	content: attr(data-require);
 	position: absolute;
 	top: 0;
@@ -212,25 +250,21 @@ div[class|=videos]>a>figure::after{
 	text-shadow: 1px 1px 0 var(--webapp-foreground);
 	border-radius: 0 var(--webapp-gapradius) 0 0;
 }
-div[class|=videos]>a>figure>img{
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	border-radius: var(--webapp-gapradius);
-	box-shadow: 0 0 .2rem var(--webapp-hint);
-	object-fit: cover;
-	/* aspect-ratio: 16 / 9; */
-}
-div[class|=videos]>a>figure>figcaption{
-	position: absolute;
-	width: 100%;
-	bottom: -1.4rem;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+div[class|=grid][class*=-icon]{
+	gap: var(--webapp-gap);
+	padding: var(--webapp-gapitem);
+	grid-template-columns: repeat(4, 1fr);
 }
 
+div[class|=grid][class*=-icon]>a>figure{
+	padding-bottom: 100%;
+	border-radius: var(--webapp-gapradius);
+	box-shadow: 0 0 .2rem var(--webapp-edge);
+}
+
+div[class|=grid][class*=-icon]>a>figure>figcaption{
+	text-align: center;
+}
 
 /* div.videoinfo */
 div.videoinfo{
@@ -253,6 +287,36 @@ div.videoinfo>mark>a{
 	border-radius: var(--webapp-gapradius);
 	font-size: var(--webapp-font-small);
 }
+
+
+
+div.short,
+div.short>main,div.short,
+div.short>main>webapp-videos{
+	height: 100%;
+}
+div.short>main>webapp-videos{
+	background-color: black;
+}
+
+
+
+
+div.my{
+	height: 50%;
+	background: linear-gradient(to bottom, var(--webapp-primary) 10%, white);
+}
+div.my>aside{
+	height: 4rem;
+}
+div.my>main{
+	margin: 0 var(--webapp-gap);
+	border-radius: var(--webapp-gapradius);
+	background-color: var(--webapp-background);
+	height: 30rem;
+}
+
+
 
 button,label.button{
 	font: 1rem var(--webapp-font-sans-serif);

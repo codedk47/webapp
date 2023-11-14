@@ -415,10 +415,12 @@ class webapp_router_control extends webapp_echo_masker
 	function subject_styles():array
 	{
 		return [
-			1 => '全大图',
-			2 => '全小图',
-			5 => '5宫格',
-			7 => '个人'
+			1 => '1 全大图',
+			2 => '2 全小图',
+			3 => '3 一大两小',
+			4 => '4 一大三竖版右侧封面',
+			5 => '5 竖版右侧封面',
+			7 => '7 个人（没用）'
 		];
 	}
 	function subject_fetch_methods():array
@@ -1378,9 +1380,9 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell('HASH');
 			$table->cell($value['hash']);
 			$table->cell('创建时间');
-			$table->cell(date('Y-m-d\\H:i:s', $value['mtime']));
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell('修改时间');
-			$table->cell(date('Y-m-d\\H:i:s', $value['ctime']));
+			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
 
 			$table->row();
 			$table->cell('位置');

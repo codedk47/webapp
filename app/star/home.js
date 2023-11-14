@@ -98,3 +98,7 @@ masker.canplay = video =>
 {
 	console.log(video);
 };
+masker.shortchanged = videos =>
+{
+	console.log(videos);
+}
