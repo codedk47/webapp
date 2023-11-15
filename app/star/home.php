@@ -102,7 +102,7 @@ class webapp_router_home extends webapp_echo_masker
 
 	function add_slideshows_ads(webapp_html $node, int $seat):?webapp_html
 	{
-		if ($ads = $this->webapp->data_advertisements($seat))
+		if ($ads = $this->webapp->fetch_ads($seat))
 		{
 			$element = $node->append('webapp-slideshows');
 			$element->cdata(json_encode($ads));
@@ -112,7 +112,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function add_nav_ads(webapp_html $node, int $seat, string $title = NULL)
 	{
-		if ($ads = $this->webapp->data_advertisements($seat))
+		if ($ads = $this->webapp->fetch_ads($seat))
 		{
 			if ($title)
 			{
@@ -181,8 +181,8 @@ class webapp_router_home extends webapp_echo_masker
 		$this->script('masker.then(masker.splashscreen)');
 		$this->xml->body->div['class'] = 'splashscreen';
 		$this->xml->body->setattr([
-			'style' => "background: white url({$ad['imgurl']}) center/cover no-repeat",
-			'data-acturl' => $ad['acturl'],
+			'style' => "background: white url({$ad['picture']}) center/cover no-repeat",
+			'data-support' => $ad['support'],
 			'data-duration' => 5,
 			'data-autoskip' => TRUE
 		]);
@@ -191,7 +191,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->aside['class'] = 'classify';
 		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
-		foreach ($classify = $this->webapp->data_classify() as $hash => $name)
+		foreach ($classify = $this->webapp->fetch_tags() as $hash => $name)
 		{
 			$node = $this->aside->append('a', [$name, 'href' => "?home/home,type:{$hash}"]);
 			if ($hash === $type)
@@ -376,12 +376,25 @@ class webapp_router_home extends webapp_echo_masker
 	{
 
 	}
+
 	function get_my()
 	{
 		$this->xml->body->div['class'] = 'my';
 
+		print_r( $this->webapp->fetch_ads(1) );
 
-		//print_r( $this->user );
+		//$this->mysql->configs->column('value', 'key')
+
+
+		// var_dump($this->webapp->redis->hmset );
+		// var_dump( $this->webapp->redis->hmset('dasd', [
+		// 	'asd' => 123,
+		// 	'dweawe' => 4654
+		// ]) );
+		
+		//var_dump( $this->webapp->redis->exists('dasd') );
+
+
 		$this->set_footer_menu();
 	}
 }

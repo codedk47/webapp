@@ -5,6 +5,7 @@ require 'webapp_dom.php';
 require 'webapp_echo.php';
 require 'webapp_image.php';
 require 'webapp_mysql.php';
+require 'webapp_redis.php';
 interface webapp_io
 {
 	function request_ip():string;
@@ -697,7 +698,13 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return $this($mysql);
 	}
-	//function redis():webapp_redis{}
+	function redis():webapp_redis
+	{
+
+		return new webapp_redis('127.0.0.1', 6379);
+	}
+
+
 	//request
 	function request_ip(bool $proxy = FALSE):string
 	{

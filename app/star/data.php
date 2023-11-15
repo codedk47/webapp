@@ -2,15 +2,7 @@
 require 'base.php';
 class data extends base
 {
-	//广告位置数据
-	function data_advertisements(int $seat = 0):array
-	{
-		return [
-			['support' => 'javascript:alert(1);', 'picture' => '?/news/6UA5CO7B769R?mask1696937379', 'name' => 'd'],
-			['support' => 'javascript:alert(2);', 'picture' => '?/news/C244JVMLB9Q2?mask1696937379', 'name' => 'asd'],
-			['support' => 'javascript:alert(3);', 'picture' => '?/news/NSHV5V94QPE6?mask1696937379', 'name' => 'wew']
-		];
-	}
+
 	//分类数据
 	function data_classify():array
 	{

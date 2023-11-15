@@ -1965,6 +1965,7 @@ class webapp_router_control extends webapp_echo_masker
 					|| $this->webapp->mysql->configs->insert(['key' => $key, 'value' => $value]);
 			}
 		}
+		$this->webapp->clear_configs();
 		$this->goto('/configs');
 	}
 

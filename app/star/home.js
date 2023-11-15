@@ -50,7 +50,7 @@ masker.init(() =>
 masker.splashscreen = () =>
 {
 	const header = document.querySelector('header'), duration = document.body.dataset.duration * 1;
-	document.onclick = () => location.href = document.body.dataset.acturl;
+	document.onclick = () => location.href = document.body.dataset.support;
 	setTimeout(function timer(duration)
 	{
 		if (duration)
