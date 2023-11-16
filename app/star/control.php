@@ -19,9 +19,9 @@ class webapp_router_control extends webapp_echo_masker
 		$this->script(['src' => '/webapp/app/star/base.js']);
 		$this->nav([
 			['数据', '?control/home'],
-			['标签 & 分类', '?control/tags'],
+			['分类 & 标签', '?control/tags'],
 			['专题', '?control/subjects'],
-			['上传账号', '?control/uploaders'],
+			//['上传账号', '?control/uploaders'],
 			['用户', '?control/users'],
 			
 			['视频', '?control/videos'],

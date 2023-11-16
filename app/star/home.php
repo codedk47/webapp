@@ -189,6 +189,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_home(string $type = NULL)
 	{
+		$this->webapp->redis->flushall();
 		$this->aside['class'] = 'classify';
 		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
 		foreach ($classify = $this->webapp->fetch_tags() as $hash => $name)
@@ -212,35 +213,41 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_search();
 		$this->set_footer_menu();
 		$this->add_slideshows_ads($this->main, 1);
-	
 		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
-		if ($type === NULL)
+		foreach ($this->webapp->fetch_subjects(isset($classify[$type]) ? $type : NULL) as $subject)
 		{
-			foreach ($classify as $hash => $name)
+			$videos = [];
+			if (strlen($subject['videos']) > 11)
 			{
-				if ($videos = $this->webapp->data_classify_top_videos($hash))
+				foreach (str_split($subject['videos'], 12) as $hash)
 				{
-					$this->add_video_lists($this->main, $videos, 0, "最新{$name}", "?home/home,type:{$hash}");
+					if ($video = $this->webapp->fetch_video($hash))
+					{
+						$videos[] = $video;
+					}
 				}
 			}
-			return;
-		}
-		foreach ($this->webapp->data_classify_subjects($type) as $subject)
-		{
-			$this->add_video_lists($this->main,
-				$subject['videos'],
-				$subject['style'],
-				$subject['name'], "?home/subjects,hash:{$subject['hash']}");
+			$this->add_video_lists($this->main, $videos, $subject['style'], $subject['name'], $subject['page']);
 		}
 	}
-	function get_subjects(string $hash, int $page = 0)
+	function get_subject(string $hash, int $page = 0)
 	{
 		if ($page > 0)
 		{
-			$this->add_video_lists($this->template(), $this->webapp->data_subjects($hash, $page));
+			//$this->add_video_lists($this->template(), $this->webapp->data_subjects($hash, $page));
 			return;
 		}
-		if (empty($subject = $this->webapp->data_subjects($hash))) return 404;
+
+		
+		if ($subject = $this->webapp->fetch_subject($hash))
+		{
+			$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
+			$this->add_slideshows_ads($this->main, 1);
+			$this->add_video_lists($this->main, "?home/subjects,hash:{$hash},page:", $subject['style']);
+			$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
+		}
+
+		//if (empty($subject = $this->webapp->data_subjects($hash))) return 404;
 		// $this->aside['style'] = join(';', [
 		// 	'position: sticky',
 		// 	'top: 2rem',
@@ -251,10 +258,10 @@ class webapp_router_home extends webapp_echo_masker
 		// 	'z-index: 1'
 		// ]);
 
-		$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
-		$this->add_slideshows_ads($this->main, 1);
-		$this->add_video_lists($this->main, "?home/subjects,hash:{$hash},page:", $subject['style']);
-		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
+		// $this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
+		// $this->add_slideshows_ads($this->main, 1);
+		// $this->add_video_lists($this->main, "?home/subjects,hash:{$hash},page:", $subject['style']);
+		// $this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
 
 	}
 	function get_search(string $word = NULL, string $tags = NULL, int $page = 0)
@@ -379,9 +386,22 @@ class webapp_router_home extends webapp_echo_masker
 
 	function get_my()
 	{
+
+		$this->webapp->redis->hMSet('A', ['a' => 1, 'b' => [1,2,3]]);
+
+		print_r($this->webapp->redis->hGetAll('A'));
+		return;
+
+
+
+
+		print_r($this->webapp->fetch_subjects('tAF9'));
+
+
+		return;
 		$this->xml->body->div['class'] = 'my';
 
-		print_r( $this->webapp->fetch_tags() );
+		print_r( $this->webapp->fetch_video('MDSE00000036') );
 
 		//$this->mysql->configs->column('value', 'key')
 

@@ -7,4 +7,5 @@ class webapp_redis extends Redis
 	{
 		$this->pconnect($host, $post);
 	}
+
 }

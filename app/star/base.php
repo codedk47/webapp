@@ -670,22 +670,178 @@ class base extends webapp
 	{
 		return $this->redis->del('configs') === 1;
 	}
-	//获取所有产品
-	function fetch_prods(string $type = NULL):array
+	//获取指定广告（位置）
+	function fetch_ads(int $seat):array
 	{
-		if ($this->redis->exists('prods'))
+		$this->redis->flushall();
+		$ads = [];
+		if ($this->redis->exists($key = "ad:{$seat}"))
+		{
+			$lost = 0;
+			$keys = $this->redis->hGetAll($key);
+			foreach ($keys as $i => $hash)
+			{
+				if ($ad = $this->redis->hGetAll($hash))
+				{
+					$ads[] = $ad;
+				}
+				else
+				{
+					++$lost;
+					unset($keys[$i]);
+				}
+			}
+			$lost && $this->redis->hMSet($key, $keys);
+		}
+		else
+		{
+			$keys = [];
+			foreach ($this->mysql->ads('WHERE seat=?i ORDER BY weight DESC', $seat) as $ad)
+			{
+				$this->redis->hMSet($hash = $keys[] = "ad:{$ad['hash']}", $ads[] = [
+					'hash' => $ad['hash'],
+					'weight' => $ad['weight'],
+					'picture' => "?/news/{$ad['hash']}?mask{$ad['ctime']}",
+					'support' => $ad['acturl'],
+					'name' => $ad['name']
+				]);
+				$this->redis->expireAt($hash, $ad['expire']);
+			}
+			$this->redis->hMSet($key, $keys);
+		}
+		return $ads;
+	}
+	//清除指定广告（位置，[HASH]）
+	function clear_ads(int $seat, string $hash = NULL):bool
+	{
+		$hash && $this->redis->del("ad:{$hash}");
+		return $this->redis->del("ad:{$seat}") === 1;
+	}
+	//获取所有分类或标签
+	function fetch_tags(string $type = NULL):array
+	{
+		if ($this->redis->exists('tags'))
+		{
+			return $this->redis->hGetAll($type ? "tags:{$type}" : 'tags');
+		}
+		$classify = $this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC, ctime DESC')->column('name', 'hash');
+		foreach ($classify as $hash => $name)
+		{
+			$this->redis->hMSet("tags:{$hash}", $this->mysql->tags('WHERE phash=?s ORDER BY sort DESC, ctime DESC', $hash)->column('name', 'hash'));
+		}
+		$this->redis->hMSet('tags', $classify);
+		return $type ? $this->redis->hGetAll("tags:{$type}") : $classify;
+	}
+	//清除所有分类和标签
+	function clear_tags():bool
+	{
+		return $this->redis->del('tags') === 1;
+	}
+	//拉取专题（分类）
+	function fetch_subjects(?string $type):array
+	{
+		$subjects = [];
+		if ($this->redis->exists($key = "subjects:{$type}"))
+		{
+			foreach ($this->redis->hGetAll($key) as $hash)
+			{
+				if ($subject = $this->redis->hGetAll($hash))
+				{
+					$subjects[] = $subject;
+				}
+			}
+			return $subjects;
+		}
+		$keys = [];
+		if ($type)
+		{
+			foreach ($this->mysql->subjects('WHERE type=?s ORDER BY sort DESC, ctime DESC', $type) as $subject)
+			{
+				$this->redis->hMSet($keys[] = "subject:{$subject['hash']}", $subjects[] = [
+					'hash' => $subject['hash'],
+					'name' => $subject['name'],
+					'page' => "?home/subject,hash:{$subject['hash']}",
+					'style' => $subject['style'],
+					'videos' => preg_match('/^\d{1,2}$/', $subject['videos']) ? join($this->mysql
+						->videos('WHERE type="h" AND sync="allow" AND ptime<?i AND FIND_IN_SET(?s,subjects) ORDER BY mtime DESC LIMIT ?i',
+							$this->time, $subject['hash'], $subject['videos'])->column('hash')) : $subject['videos']
+				]);
+			}
+		}
+		else
+		{
+			foreach ($this->fetch_tags() as $hash => $name)
+			{
+				$this->redis->hMSet($keys[] = "classify:{$hash}", $subjects[] = [
+					'hash' => $hash,
+					'name' => "最新{$name}",
+					'page' => "?home/home,type:{$hash}",
+					'style' => 0,
+					'videos' => join($this->mysql->videos('WHERE type="h" AND sync="allow" AND ptime<?i AND FIND_IN_SET(?s,tags) ORDER BY mtime DESC LIMIT 8', $this->time, $hash)->column('hash'))
+				]);
+			}
+		}
+		$this->redis->hMSet($key, $keys);
+		$this->redis->expire($key, 60);
+		return $subjects;
+	}
+	//清除专题（分类）
+	function clear_subjects(?string $type):bool
+	{
+		return $this->redis->del("subjects:{$type}") === 1;
+	}
+	function fetch_subject(string $hash, int $page = 0):array
+	{
+		if ($page)
 		{
 
+			
+			return [];
 		}
-		return [];
-
-
-
-		// foreach ($this->mysql->prods('WHERE count>0 ORDER BY LEFT(vtid, 13) ASC, price ASC, hash ASC') as $prod)
-		// {
-		// 	yield $prod;
-		// }
+		return $this->redis->hGetAll("subject:{$hash}");
 	}
+	function fetch_video(string|array $hash, bool $update = FALSE):array
+	{
+		if ($update || $this->redis->exists($key = "video:{$hash}") === 0)
+		{
+			$video = is_array($hash) ? $hash : $this->mysql->videos('WHERE hash=?s AND sync="allow" LIMIT 1', $hash)->array();
+			$ym = date('ym', $video['mtime']);
+			$this->redis->hMSet($key, $video = [
+				'hash' => $video['hash'],
+				'type' => $video['type'],
+				'm3u8' => "?/{$ym}/{$video['hash']}/play?mask{$video['ctime']}",
+				'cover' => "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}",
+				'duration' => $video['duration'],
+				'preview' => $video['preview'],
+				'require' => $video['require'],
+				'view' => $video['view'],
+				'like' => $video['like'],
+				'name' => $video['name']
+			]);
+			return $video;
+		}
+		return $this->redis->hGetAll($key);
+	}
+	//专题HASH拉取视频
+	function fetch_subject_videos(string $hash):iterable
+	{
+		foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY ctime DESC,sort DESC', $hash) as $video)
+		{
+			yield [
+				'hash' => $video['hash'],
+				'mtime' => $video['mtime'],
+				'ctime' => $video['ctime'],
+				'sort' => $video['sort'],
+				'view' => $video['view']
+			];
+		}
+	}
+
+
+
+
+
+
 	//获取所有UP主
 	// function fetch_uploaders():iterable
 	// {
@@ -721,124 +877,37 @@ class base extends webapp
 			yield $video;
 		}
 	}
-	function fetch_video(string $hash, bool $update = FALSE):iterable
+
+
+	//获取有产品（分类）
+	function fetch_prods(string $type = NULL):array
 	{
-		if ($update || $this->redis->exists("video:{$hash}") === 0)
+		$prods = [];
+		if ($this->redis->exists($key = "prods:{$type}"))
 		{
-			//$this->mysql->videos('WHERE hash=?s AND sync="allow" LIMIT 1', $this->time())
-
-
-
-		}
-	}
-	//获取指定广告（位置）
-	function fetch_ads(int $seat):array
-	{
-		$this->redis->flushall();
-		$ads = [];
-		if ($this->redis->exists($key = "ad:{$seat}"))
-		{
-			$lost = 0;
-			$keys = $this->redis->hGetAll($key);
-			foreach ($keys as $i => $hash)
+			foreach ($this->redis->hGetAll($key) as $hash)
 			{
-				if ($ad = $this->redis->hGetAll($hash))
+				if ($prod = $this->redis->hGetAll($hash))
 				{
-					$ads[] = $ad;
-				}
-				else
-				{
-					++$lost;
-					unset($keys[$i]);
+					$prods[] = $prod;
 				}
 			}
-			$lost && $this->redis->hMSet($key, $keys);
+			return $prods;
 		}
-		else
+		$keys = [];
+		foreach ($this->mysql->prods('WHERE count>0 AND ?? ORDER BY price ASC', match ($type)
 		{
-			$keys = [];
-			foreach ($this->mysql->ads('WHERE seat=?i ORDER BY weight DESC, hash ASC', $seat) as $ad)
-			{
-				$this->redis->hMSet($hash = $keys[] = "ad:{$ad['hash']}", $ads[] = [
-					'hash' => $ad['hash'],
-					'weight' => $ad['weight'],
-					'picture' => "?/news/{$ad['hash']}?mask{$ad['ctime']}",
-					'support' => $ad['acturl'],
-					'name' => $ad['name']
-				]);
-				$this->redis->expireAt($hash, $ad['expire']);
-			}
-			$this->redis->hMSet($key, $keys);
-		}
-		return $ads;
+			'vip' => 'vtid LIKE "prod_vtid_vip%"',
+			'coin' => 'vtid LIKE "prod_vtid_coin%"',
+			'game' => 'vtid LIKE "prod_vtid_game%"',
+			default => 'vtid IS NULL'
+		}) as $prod) $this->redis->hMSet($keys[] = "prod:{$prod['hash']}", $prods[] = $prod);
+		$this->redis->hMSet($key, $keys);
+		return $prods;
 	}
-	//清除指定广告（位置，[HASH]）
-	function clear_ads(int $seat, string $hash = NULL):bool
-	{
-		$hash && $this->redis->del("ad:{$hash}");
-		return $this->redis->del("ad:{$seat}") === 1;
-	}
-	//获取所有分类或标签
-	function fetch_tags(string $type = NULL):array
-	{
-		if ($this->redis->exists('tags'))
-		{
-			return $this->redis->hGetAll($type ? "tags:{$type}" : 'tags');
-		}
-		$classify = $this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC, ctime DESC, hash ASC')->column('name', 'hash');
-		foreach ($classify as $hash => $name)
-		{
-			$this->redis->hMSet("tags:{$hash}", $this->mysql->tags('WHERE phash=?s ORDER BY sort DESC, ctime DESC, hash ASC', $hash)->column('name', 'hash'));
-		}
-		$this->redis->hMSet('tags', $classify);
-		return $type ? $this->redis->hGetAll("tags:{$type}") : $classify;
-	}
-	function clear_tags():bool
+	function clear_prods():bool
 	{
 		return $this->redis->del('tags') === 1;
-	}
-
-
-	//根据分类标签ID拉取专题
-	function fetch_subjects(string $type):array
-	{
-
-
-
-		return [];
-		$subjects = [];
-		foreach ($this->mysql->subjects('WHERE tagid=?s ORDER BY sort DESC', $tagid) as $subject)
-		{
-			$value = $this->mysql->videos('WHERE FIND_IN_SET(?s,subjects)', $subject['hash'])->select('COUNT(1) c,SUM(view) v')->array();
-			$videos = preg_match('/^\d{1,2}$/', $subject['videos'], $count)
-				? $this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY mtime DESC LIMIT ?i', $subject['hash'], $count[0])
-					->column('hash') : ($subject['videos'] ? str_split($subject['videos'], 12) : []);
-			$subjects[] = [
-				'hash' => $subject['hash'],
-				'name' => $subject['name'],
-				'view' => $value['v'] ?? 0,
-				'num' => $value['c'] ?? 0,
-				'style' => $subject['style'],
-				'videos' => $videos,
-				'fetch_method' => $subject['fetch_method'],
-				'fetch_values' => $subject['fetch_values']
-			];
-		}
-		return $subjects;
-	}
-	//专题HASH拉取视频
-	function fetch_subject_videos(string $hash):iterable
-	{
-		foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY ctime DESC,sort DESC', $hash) as $video)
-		{
-			yield [
-				'hash' => $video['hash'],
-				'mtime' => $video['mtime'],
-				'ctime' => $video['ctime'],
-				'sort' => $video['sort'],
-				'view' => $video['view']
-			];
-		}
 	}
 	const comment_type = [
 		'class' => '社区的分类',
