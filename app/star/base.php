@@ -670,6 +670,22 @@ class base extends webapp
 	{
 		return $this->redis->del('configs') === 1;
 	}
+	//获取所有产品
+	function fetch_prods(string $type = NULL):array
+	{
+		if ($this->redis->exists('prods'))
+		{
+
+		}
+		return [];
+
+
+
+		// foreach ($this->mysql->prods('WHERE count>0 ORDER BY LEFT(vtid, 13) ASC, price ASC, hash ASC') as $prod)
+		// {
+		// 	yield $prod;
+		// }
+	}
 	//获取所有UP主
 	// function fetch_uploaders():iterable
 	// {
@@ -691,8 +707,10 @@ class base extends webapp
 	// 	}
 	// }
 	//获取所有视频
-	function fetch_videos():iterable
+	function fetch_videos(string $hash, bool $update = FALSE):iterable
 	{
+
+
 		foreach ($this->mysql->videos('WHERE ptime<?i ORDER BY ctime DESC', $this->time()) as $video)
 		{
 			$ym = date('ym', $video['mtime']);
@@ -701,6 +719,16 @@ class base extends webapp
 			$video['comment'] = 0;
 			$video['share'] = 0;
 			yield $video;
+		}
+	}
+	function fetch_video(string $hash, bool $update = FALSE):iterable
+	{
+		if ($update || $this->redis->exists("video:{$hash}") === 0)
+		{
+			//$this->mysql->videos('WHERE hash=?s AND sync="allow" LIMIT 1', $this->time())
+
+
+
 		}
 	}
 	//获取指定广告（位置）
@@ -728,7 +756,6 @@ class base extends webapp
 		}
 		else
 		{
-			
 			$keys = [];
 			foreach ($this->mysql->ads('WHERE seat=?i ORDER BY weight DESC, hash ASC', $seat) as $ad)
 			{
@@ -751,42 +778,29 @@ class base extends webapp
 		$hash && $this->redis->del("ad:{$hash}");
 		return $this->redis->del("ad:{$seat}") === 1;
 	}
-
-
 	//获取所有分类或标签
 	function fetch_tags(string $type = NULL):array
 	{
 		if ($this->redis->exists('tags'))
 		{
-			return $this->redis->hMGet($type ? "tags:{$type}" : 'tags');
+			return $this->redis->hGetAll($type ? "tags:{$type}" : 'tags');
 		}
 		$classify = $this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC, ctime DESC, hash ASC')->column('name', 'hash');
 		foreach ($classify as $hash => $name)
 		{
 			$this->redis->hMSet("tags:{$hash}", $this->mysql->tags('WHERE phash=?s ORDER BY sort DESC, ctime DESC, hash ASC', $hash)->column('name', 'hash'));
 		}
-		return $type ? $this->redis->hMGet("tags:{$type}") : $classify;
+		$this->redis->hMSet('tags', $classify);
+		return $type ? $this->redis->hGetAll("tags:{$type}") : $classify;
 	}
 	function clear_tags():bool
 	{
 		return $this->redis->del('tags') === 1;
 	}
 
-	//获取所有产品
-	function fetch_prods(string $type = NULL):array
-	{
 
-		return [];
-
-
-
-		// foreach ($this->mysql->prods('WHERE count>0 ORDER BY LEFT(vtid, 13) ASC,price ASC') as $prod)
-		// {
-		// 	yield $prod;
-		// }
-	}
 	//根据分类标签ID拉取专题
-	function fetch_subjects(string $tagid):array
+	function fetch_subjects(string $type):array
 	{
 
 

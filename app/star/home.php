@@ -381,7 +381,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->xml->body->div['class'] = 'my';
 
-		print_r( $this->webapp->fetch_ads(1) );
+		print_r( $this->webapp->fetch_tags() );
 
 		//$this->mysql->configs->column('value', 'key')
 
