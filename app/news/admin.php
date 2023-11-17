@@ -1304,7 +1304,7 @@ JS);
 			$cond[0] .= ' and hash in(?S)';
 			$cond[] = str_split($search, 12);
 		}
-		$cond[0] .= ' order by time desc';
+		$cond[0] .= ' order by `weight` desc, time desc';
 		$table = $this->main->table($this->webapp->mysql->ads(...$cond), function($table, $ad, $week, $auth)
 		{
 			$table->row();
