@@ -673,7 +673,6 @@ class base extends webapp
 	//获取指定广告（位置）
 	function fetch_ads(int $seat):array
 	{
-		$this->redis->flushall();
 		$ads = [];
 		if ($this->redis->exists($key = "ad:{$seat}"))
 		{
@@ -705,7 +704,7 @@ class base extends webapp
 					'support' => $ad['acturl'],
 					'name' => $ad['name']
 				]);
-				$this->redis->expireAt($hash, $ad['expire']);
+				//$this->redis->expireAt($hash, $ad['expire']);
 			}
 			$this->redis->hMSet($key, $keys);
 		}
@@ -760,7 +759,6 @@ class base extends webapp
 				$this->redis->hMSet($keys[] = "subject:{$subject['hash']}", $subjects[] = [
 					'hash' => $subject['hash'],
 					'name' => $subject['name'],
-					'page' => "?home/subject,hash:{$subject['hash']}",
 					'style' => $subject['style'],
 					'videos' => preg_match('/^\d{1,2}$/', $subject['videos']) ? join($this->mysql
 						->videos('WHERE type="h" AND sync="allow" AND ptime<?i AND FIND_IN_SET(?s,subjects) ORDER BY mtime DESC LIMIT ?i',
@@ -775,7 +773,6 @@ class base extends webapp
 				$this->redis->hMSet($keys[] = "classify:{$hash}", $subjects[] = [
 					'hash' => $hash,
 					'name' => "最新{$name}",
-					'page' => "?home/home,type:{$hash}",
 					'style' => 0,
 					'videos' => join($this->mysql->videos('WHERE type="h" AND sync="allow" AND ptime<?i AND FIND_IN_SET(?s,tags) ORDER BY mtime DESC LIMIT 8', $this->time, $hash)->column('hash'))
 				]);
@@ -790,10 +787,31 @@ class base extends webapp
 	{
 		return $this->redis->del("subjects:{$type}") === 1;
 	}
-	function fetch_subject(string $hash, int $page = 0):array
+	function fetch_subject(string $hash, int $page = 0, $size = 20):array
 	{
 		if ($page)
 		{
+			$videos = [];
+			if ($this->redis->exists($key = "subjectvideos:{$hash}"))
+			{
+
+			}
+			$keys = [];
+			
+			foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC, ptime DESC', $hash) as $video)
+			{
+				$keys[] = "video:{$video['hash']}";
+				$videos[] = $this->fetch_video($video);
+			}
+
+			//var_dump($this->redis->hGet("subject:{$hash}", 'style1'));
+			//echo count($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC, ptime DESC', $hash)->all());
+			
+			
+
+
+
+	
 
 			
 			return [];
@@ -909,53 +927,53 @@ class base extends webapp
 	{
 		return $this->redis->del('tags') === 1;
 	}
-	const comment_type = [
-		'class' => '社区的分类',
-		'topic' => '分类的话题',
-		'post' => '话题的帖子',
-		'reply' => '帖子的回复',
-		'video' => '视频的评论'
-	];
-	//拉取所有评论
-	function fetch_comments():iterable
-	{
-		foreach ($this->mysql->comments('WHERE `check`="allow" ORDER BY ctime DESC,hash ASC') as $topic) {
+	// const comment_type = [
+	// 	'class' => '社区的分类',
+	// 	'topic' => '分类的话题',
+	// 	'post' => '话题的帖子',
+	// 	'reply' => '帖子的回复',
+	// 	'video' => '视频的评论'
+	// ];
+	// //拉取所有评论
+	// function fetch_comments():iterable
+	// {
+	// 	foreach ($this->mysql->comments('WHERE `check`="allow" ORDER BY ctime DESC,hash ASC') as $topic) {
 
-			if ($topic['type'] === 'reply' || $topic['type'] === 'video')
-			{
-				$images = $topic['images'];
-			}
-			else
-			{
-				$images = [];
-				if ($image = $topic['images'] ? str_split($topic['images'], 12) : [])
-				{
-					foreach ($this->mysql->images('WHERE hash IN(?S)', $image) as $img)
-					{
-						$ym = date('ym', $img['mtime']);
-						$images[] = "/imgs/{$ym}/{$img['hash']}";
-					}
-				}
-			}
-			yield [
-				'hash' => $topic['hash'],
-				'phash' => $topic['phash'],
-				'user_id' => $topic['userid'],
-				'mtime' => $topic['mtime'],
-				'ctime' => $topic['ctime'],
-				'count' => $topic['count'],
-				'sort' => $topic['sort'],
-				'type' => $topic['type'],
-				'view' => $topic['view'],
-				'content' => $topic['content'],
-				'title' => $topic['title'],
-				'images' => $images,
-				'videos' => $topic['videos'] ? str_split($topic['videos'], 12) : []
-			];
-		}
-	}
-	function select_topics():array
-	{
-		return $this->mysql->comments('WHERE `check`="allow" AND phash IS NULL ORDER BY sort DESC')->column('title', 'hash');
-	}
+	// 		if ($topic['type'] === 'reply' || $topic['type'] === 'video')
+	// 		{
+	// 			$images = $topic['images'];
+	// 		}
+	// 		else
+	// 		{
+	// 			$images = [];
+	// 			if ($image = $topic['images'] ? str_split($topic['images'], 12) : [])
+	// 			{
+	// 				foreach ($this->mysql->images('WHERE hash IN(?S)', $image) as $img)
+	// 				{
+	// 					$ym = date('ym', $img['mtime']);
+	// 					$images[] = "/imgs/{$ym}/{$img['hash']}";
+	// 				}
+	// 			}
+	// 		}
+	// 		yield [
+	// 			'hash' => $topic['hash'],
+	// 			'phash' => $topic['phash'],
+	// 			'user_id' => $topic['userid'],
+	// 			'mtime' => $topic['mtime'],
+	// 			'ctime' => $topic['ctime'],
+	// 			'count' => $topic['count'],
+	// 			'sort' => $topic['sort'],
+	// 			'type' => $topic['type'],
+	// 			'view' => $topic['view'],
+	// 			'content' => $topic['content'],
+	// 			'title' => $topic['title'],
+	// 			'images' => $images,
+	// 			'videos' => $topic['videos'] ? str_split($topic['videos'], 12) : []
+	// 		];
+	// 	}
+	// }
+	// function select_topics():array
+	// {
+	// 	return $this->mysql->comments('WHERE `check`="allow" AND phash IS NULL ORDER BY sort DESC')->column('title', 'hash');
+	// }
 }

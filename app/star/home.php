@@ -227,13 +227,16 @@ class webapp_router_home extends webapp_echo_masker
 					}
 				}
 			}
-			$this->add_video_lists($this->main, $videos, $subject['style'], $subject['name'], $subject['page']);
+			$this->add_video_lists($this->main, $videos, $subject['style'], $subject['name'],
+				isset($classify[$type]) ? "?home/subject,hash:{$subject['hash']}" : "?home/home,type:{$subject['hash']}");
 		}
 	}
 	function get_subject(string $hash, int $page = 0)
 	{
 		if ($page > 0)
 		{
+			$this->template();
+			$this->webapp->fetch_subject($hash, $page);
 			//$this->add_video_lists($this->template(), $this->webapp->data_subjects($hash, $page));
 			return;
 		}
@@ -243,7 +246,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
 			$this->add_slideshows_ads($this->main, 1);
-			$this->add_video_lists($this->main, "?home/subjects,hash:{$hash},page:", $subject['style']);
+			$this->add_video_lists($this->main, "?home/subject,hash:{$hash},page:", $subject['style']);
 			$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
 		}
 
