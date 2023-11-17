@@ -428,7 +428,7 @@ class interfaces extends webapp
 	}
 	function get_ads()
 	{
-		foreach ($this->mysql->ads('WHERE site=?i', $this->site) as $ad)
+		foreach ($this->mysql->ads('WHERE site=?i ORDER BY `weight` DESC', $this->site) as $ad)
 		{
 			$this->ad_xml($ad);
 		}
