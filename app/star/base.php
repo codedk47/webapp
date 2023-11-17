@@ -746,6 +746,15 @@ class base extends webapp
 			{
 				if ($subject = $this->redis->hGetAll($hash))
 				{
+					$videos = [];
+					foreach ($subject['videos'] ? str_split($subject['videos'], 12) : [] as $video)
+					{
+						if ($video = $this->fetch_video($video))
+						{
+							$videos[] = $video;
+						}
+					}
+					$subject['videos'] = $videos;
 					$subjects[] = $subject;
 				}
 			}
@@ -754,28 +763,43 @@ class base extends webapp
 		$keys = [];
 		if ($type)
 		{
-			foreach ($this->mysql->subjects('WHERE type=?s ORDER BY sort DESC, ctime DESC', $type) as $subject)
+			foreach ($this->mysql->subjects('WHERE type=?s ORDER BY sort DESC, ctime DESC', $type) as $data)
 			{
-				$this->redis->hMSet($keys[] = "subject:{$subject['hash']}", $subjects[] = [
-					'hash' => $subject['hash'],
-					'name' => $subject['name'],
-					'style' => $subject['style'],
-					'videos' => preg_match('/^\d{1,2}$/', $subject['videos']) ? join($this->mysql
-						->videos('WHERE type="h" AND sync="allow" AND ptime<?i AND FIND_IN_SET(?s,subjects) ORDER BY mtime DESC LIMIT ?i',
-							$this->time, $subject['hash'], $subject['videos'])->column('hash')) : $subject['videos']
-				]);
+				$videos = [];
+				$subject = [
+					'hash' => $data['hash'],
+					'name' => $data['name'],
+					'style' => $data['style'],
+					'videos' => ''];
+				foreach ($this->mysql->videos(...preg_match('/^\d{1,2}$/', $data['videos'])
+					? ['WHERE type="h" AND sync="allow" AND ptime<?i AND FIND_IN_SET(?s,subjects) ORDER BY mtime DESC LIMIT ?i', $this->time, $data['hash'], $data['videos']]
+					: ['WHERE hash IN(?S)', str_split($data['videos'], 12)]) as $video) {
+					$videos[] = $this->fetch_video($video['hash'], $video);
+					$subject['videos'] .= $video['hash'];
+				}
+				$this->redis->hMSet($keys[] = "subject:{$subject['hash']}", $subject);
+				$subject['videos'] = $videos;
+				$subjects[] = $subject;
 			}
 		}
 		else
 		{
 			foreach ($this->fetch_tags() as $hash => $name)
 			{
-				$this->redis->hMSet($keys[] = "classify:{$hash}", $subjects[] = [
+				$videos = [];
+				$subject = [
 					'hash' => $hash,
 					'name' => "最新{$name}",
 					'style' => 0,
-					'videos' => join($this->mysql->videos('WHERE type="h" AND sync="allow" AND ptime<?i AND FIND_IN_SET(?s,tags) ORDER BY mtime DESC LIMIT 8', $this->time, $hash)->column('hash'))
-				]);
+					'videos' => ''];
+				foreach ($this->mysql->videos('WHERE type="h" AND sync="allow" AND ptime<?i AND FIND_IN_SET(?s,tags) ORDER BY mtime DESC LIMIT 8', $this->time, $hash) as $video)
+				{
+					$videos[] = $this->fetch_video($video['hash'], $video);
+					$subject['videos'] .= $video['hash'];
+				}
+				$this->redis->hMSet($keys[] = "classify:{$hash}", $subject);
+				$subject['videos'] = $videos;
+				$subjects[] = $subject;
 			}
 		}
 		$this->redis->hMSet($key, $keys);
@@ -792,54 +816,106 @@ class base extends webapp
 		if ($page)
 		{
 			$videos = [];
+			$start = max(0, ($page - 1) * $size);
+			$end = $start + $size - 1;
 			if ($this->redis->exists($key = "subjectvideos:{$hash}"))
 			{
-
+				foreach ($this->redis->lRange($key, $start, $end) as $hash)
+				{
+					if ($video = $this->redis->hGetAll($hash))
+					{
+						$videos[] = $video;
+					}
+				}
+				return $videos;
 			}
 			$keys = [];
-			
-			foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC, ptime DESC', $hash) as $video)
+			foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC, ptime DESC', $hash) as $index => $video)
 			{
 				$keys[] = "video:{$video['hash']}";
-				$videos[] = $this->fetch_video($video);
+				$video = $this->fetch_video($video['hash'], $video);
+				if ($index >= $start && $index <= $end)
+				{
+					$videos[] = $video;
+				}
 			}
-
-			//var_dump($this->redis->hGet("subject:{$hash}", 'style1'));
-			//echo count($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC, ptime DESC', $hash)->all());
-			
-			
-
-
-
-	
-
-			
-			return [];
+			$this->redis->rPush($key, ...$keys);
+			return $videos;
 		}
 		return $this->redis->hGetAll("subject:{$hash}");
 	}
-	function fetch_video(string|array $hash, bool $update = FALSE):array
+	function fetch_video(string $hash, ?array $update = NULL):array
 	{
-		if ($update || $this->redis->exists($key = "video:{$hash}") === 0)
+		$key = "video:{$hash}";
+		if ($update)
 		{
-			$video = is_array($hash) ? $hash : $this->mysql->videos('WHERE hash=?s AND sync="allow" LIMIT 1', $hash)->array();
+			$video = $update ?? $this->mysql->videos('WHERE hash=?s AND sync="allow" LIMIT 1', $hash)->array();
 			$ym = date('ym', $video['mtime']);
 			$this->redis->hMSet($key, $video = [
 				'hash' => $video['hash'],
 				'type' => $video['type'],
 				'm3u8' => "?/{$ym}/{$video['hash']}/play?mask{$video['ctime']}",
-				'cover' => "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}",
-				'duration' => $video['duration'],
+				'poster' => "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}",
+				'duration' => static::format_duration($video['duration']),
 				'preview' => $video['preview'],
 				'require' => $video['require'],
 				'view' => $video['view'],
 				'like' => $video['like'],
+				'tags' => $video['tags'],
+				'subjects' => $video['subjects'],
 				'name' => $video['name']
 			]);
 			return $video;
 		}
 		return $this->redis->hGetAll($key);
 	}
+	function fetch_random_videos(string $type):array
+	{
+		return [];
+	}
+	function fetch_like_videos(array $video):array
+	{
+		if ($tags = $video['tags'] ? explode(',', $video['tags']) : [])
+		{
+			$cond = ['WHERE type=?s AND sync="allow" AND FIND_IN_SET(?s,tags)', $video['type'], array_shift($tags)];
+			if ($tags)
+			{
+				$like = [];
+				foreach ($tags as $tag)
+				{
+					$like[] = 'FIND_IN_SET(?s,tags)';
+					$cond[] = $tag;
+				}
+				$cond[0] .= ' AND (' . join(' OR ', $like) . ')';
+			}
+			$cond = $this->mysql->format(...$cond);
+			$videos = [];
+			if ($this->redis->exists($key = sprintf('like:%s:videos', $this->hash($cond, TRUE))))
+			{
+				foreach ($this->redis->hGetAll($key) as $hash)
+				{
+					if ($video = $this->redis->hGetAll($hash))
+					{
+						$videos[] = $video;
+					}
+				}
+				return $videos;
+			}
+			$keys = [];
+			foreach ($this->mysql->videos("{$cond} AND hash!=?s ORDER BY `view` ASC, `like` DESC LIMIT 20", $video['hash']) as $video)
+			{
+				$keys[] = "video:{$video['hash']}";
+				$videos[] = $this->fetch_video($video['hash'], $video);
+			}
+			$this->redis->hMSet($key, $keys);
+			$this->redis->expire($key, 300);
+			return $videos;
+		}
+		return $this->fetch_random_videos($video['type']);
+	}
+
+
+
 	//专题HASH拉取视频
 	function fetch_subject_videos(string $hash):iterable
 	{

@@ -1,12 +1,14 @@
 <?php
 class webapp_router_home extends webapp_echo_masker
 {
+	private readonly bool $free;
 	private readonly user $user;
 	protected array $allow = ['get_splashscreen', 'post_create_account'];
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
 		unset($this->xml->body->div['class']);
+		$this->free = $webapp['app_free'];
 		$this->footer[0] = NULL;
 		$this->title('Star');
 		if ($this->initiated)
@@ -66,10 +68,10 @@ class webapp_router_home extends webapp_echo_masker
 		
 		return $this->header;
 	}
-	function set_header_search():webapp_html
+	function set_header_search(string $goback = 'javascript:history.back();'):webapp_html
 	{
 		$this->header['class'] = 'search';
-		$this->header->append('a', ['href' => '?home', 'class' => 'arrow']);
+		$this->header->append('a', ['href' => $goback, 'class' => 'arrow']);
 		$this->header->append('input', ['type' => 'search', 'placeholder' => '请输入关键词搜索', 'onkeypress' => 'if(event.keyCode===13)location.href=this.nextElementSibling.dataset.search+this.value']);
 		$this->header->append('button', ['搜索', 'onclick' => 'location.href=this.dataset.search+this.previousElementSibling.value', 'data-search' => '?home/search,word:']);
 
@@ -136,15 +138,20 @@ class webapp_router_home extends webapp_echo_masker
 		return NULL;
 	}
 
-	function add_video_lists(webapp_html $node, iterable|string $videos, int $display = 0, string $title = NULL, string $more = NULL):webapp_html
+	function add_video_lists(webapp_html $node,
+		iterable|string $videos,
+		int $display = 0,
+		string $title = NULL,
+		string $anchor = NULL,
+		string $action = '更多 >>'):webapp_html
 	{
 		if ($title)
 		{
 			$element = $node->append('div', ['class' => 'titles']);
 			$element->append('strong', $title);
-			if ($more)
+			if ($anchor)
 			{
-				$element->append('a', ['更多 >>', 'href' => $more]);
+				$element->append('a', [$action, 'href' => $anchor]);
 			}
 		}
 		$element = $node->getName() === 'template' ? $node : $node->append('div', ['class' => "grid-t{$display}"]);
@@ -161,7 +168,7 @@ class webapp_router_home extends webapp_echo_masker
 					0 => '免费',
 					default => "{$video['require']} 金币"
 				}]);
-				$figure->append('img', ['loading' => 'lazy', 'src' => $video['cover']]);
+				$figure->append('img', ['loading' => 'lazy', 'src' => $video['poster']]);
 				$figure->append('figcaption', webapp_html::charsafe($video['name']));
 			}
 		}
@@ -216,18 +223,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
 		foreach ($this->webapp->fetch_subjects(isset($classify[$type]) ? $type : NULL) as $subject)
 		{
-			$videos = [];
-			if (strlen($subject['videos']) > 11)
-			{
-				foreach (str_split($subject['videos'], 12) as $hash)
-				{
-					if ($video = $this->webapp->fetch_video($hash))
-					{
-						$videos[] = $video;
-					}
-				}
-			}
-			$this->add_video_lists($this->main, $videos, $subject['style'], $subject['name'],
+			$this->add_video_lists($this->main, $subject['videos'], $subject['style'], $subject['name'],
 				isset($classify[$type]) ? "?home/subject,hash:{$subject['hash']}" : "?home/home,type:{$subject['hash']}");
 		}
 	}
@@ -235,73 +231,41 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($page > 0)
 		{
-			$this->template();
-			$this->webapp->fetch_subject($hash, $page);
-			//$this->add_video_lists($this->template(), $this->webapp->data_subjects($hash, $page));
+			$this->add_video_lists($this->template(), $this->webapp->fetch_subject($hash, $page));
 			return;
 		}
-
-		
+		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
+		$this->add_slideshows_ads($this->main, 1);
 		if ($subject = $this->webapp->fetch_subject($hash))
 		{
 			$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
-			$this->add_slideshows_ads($this->main, 1);
 			$this->add_video_lists($this->main, "?home/subject,hash:{$hash},page:", $subject['style']);
-			$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
 		}
-
-		//if (empty($subject = $this->webapp->data_subjects($hash))) return 404;
-		// $this->aside['style'] = join(';', [
-		// 	'position: sticky',
-		// 	'top: 2rem',
-		// 	'height: .4rem',
-		// 	'margin-top: -1rem',
-		// 	'box-shadow: 0 0 .6rem var(--webapp-edge)',
-		// 	'margin-bottom: 1rem',
-		// 	'z-index: 1'
-		// ]);
-
-		// $this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
-		// $this->add_slideshows_ads($this->main, 1);
-		// $this->add_video_lists($this->main, "?home/subjects,hash:{$hash},page:", $subject['style']);
-		// $this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
-
 	}
-	function get_search(string $word = NULL, string $tags = NULL, int $page = 0)
-	{
-		if ($page > 0)
-		{
-			$this->add_video_lists($this->template(), $this->webapp->data_search_video($word, $tags, $page));
-			return;
-		}
-		$this->set_header_search();
-		$this->add_slideshows_ads($this->main, 1);
-		$this->add_video_lists($this->main, "?home/search,word:{$word},tags:{$tags},page:", 2);
-	}
+	// function get_search(string $word = NULL, string $tags = NULL, int $page = 0)
+	// {
+	// 	if ($page > 0)
+	// 	{
+	// 		$this->add_video_lists($this->template(), $this->webapp->data_search_video($word, $tags, $page));
+	// 		return;
+	// 	}
+	// 	$this->set_header_search();
+	// 	$this->add_slideshows_ads($this->main, 1);
+	// 	$this->add_video_lists($this->main, "?home/search,word:{$word},tags:{$tags},page:", 2);
+	// }
 
 	function get_watch(string $hash)
 	{
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js']);
-
-
-
-		//$this->set_header_search();
-		
-
-		$video = [];
-		if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
+		if (empty($video = $this->webapp->fetch_video($hash)))
 		{
-			$ym = date('ym', $video['mtime']);
-			$video['poster'] = "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}";
-			$video['m3u8'] = "?/{$ym}/{$video['hash']}/play?mask{$video['mtime']}";
+			return 404;
 		}
-		
+
 
 		$this->set_header_search();
-		
-
-
+		$this->set_footer_menu();
 		$this->aside['style'] = 'position:sticky;top:0;z-index:1';
 		$this->aside->append('webapp-video', [
 			'data-poster' => $video['poster'],
@@ -314,28 +278,30 @@ class webapp_router_home extends webapp_echo_masker
 			'controls' => NULL,
 			// 'muted' => NULL
 		]);
-		$node = $this->main->append('div', ['class' => 'videoinfo']);
-		$node->append('strong', $video['name']);
-		// $statistics = $node->append('div', ['class' => 'statistics']);
-		// $statistics->append('mark', sprintf('%s 次观看, %s', number_format($video['view']), date('Y-m-d', $video['ptime'])));
+		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
+		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
+		$videoinfo->append('strong', $video['name']);
+		// // $statistics = $node->append('div', ['class' => 'statistics']);
+		// // $statistics->append('mark', sprintf('%s 次观看, %s', number_format($video['view']), date('Y-m-d', $video['ptime'])));
 		if ($video['tags'])
 		{
-			$nodetags = $node->append('mark');
-			$datatags = $this->webapp->data_classify_tags(substr($video['tags'], 0, 4));
+			$type = strstr($video['tags'], ',', TRUE);
+			$types = $this->webapp->fetch_tags();
+			$taginfo = $videoinfo->append('mark');
+			if (isset($types[$type]))
+			{
+				$taginfo->append('a', [$types[$type], 'href' => "?home/search,tag:{$type}"]);
+			}
+			$tags = $this->webapp->fetch_tags($type);
 			foreach (explode(',', $video['tags']) as $tag)
 			{
-				if (isset($datatags[$tag]))
+				if (isset($tags[$tag]))
 				{
-					$nodetags->append('a', [$datatags[$tag], 'href' => "?home/search,tag:{$tag}"]);
+					$taginfo->append('a', [$tags[$tag], 'href' => "?home/search,tag:{$tag}"]);
 				}
-				
 			}
 		}
-		
-		
-
-		
-		$this->add_video_lists($this->main, $this->webapp->data_like_videos($video), 2, '可能喜欢');
+		$this->add_video_lists($this->main, $this->webapp->fetch_like_videos($video), 2, '可能喜欢', 'javascript:alert(1);', '换一换');
 	}
 	function get_short(int $page = 0)
 	{

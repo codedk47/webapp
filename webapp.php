@@ -5,7 +5,7 @@ require 'webapp_dom.php';
 require 'webapp_echo.php';
 require 'webapp_image.php';
 require 'webapp_mysql.php';
-//require 'webapp_redis.php';
+require 'webapp_redis.php';
 interface webapp_io
 {
 	function request_ip():string;
