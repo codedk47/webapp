@@ -437,7 +437,7 @@ class webapp_router_control extends webapp_echo_masker
 
 		$form->fieldset('专题分类 / 排序（越大越靠前）');
 
-		$form->field('tagid', 'select', ['options' => $this->tag_types(), 'required' => NULL]);
+		$form->field('type', 'select', ['options' => $this->tag_types(), 'required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 
 		$form->fieldset('专题名称 / 展示样式');
@@ -471,7 +471,7 @@ class webapp_router_control extends webapp_echo_masker
 			$conds[] = $tagid;
 		}
 
-		$conds[0] = sprintf('%sORDER BY tagid ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY type ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 		$tag_types = $this->tag_types();
 		$subject_styles = $this->subject_styles();
 		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $tags, $styles)
@@ -487,7 +487,7 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
 			$table->cell($value['hash']);
 			$table->cell($value['sort']);
-			$table->cell($tags[$value['tagid']]);
+			$table->cell($tags[$value['type']]);
 			$table->cell()->append('a', [$value['name'], 'href' => "?control/subject,hash:{$value['hash']}"]);
 			$table->cell($styles[$value['style']] ?? $value['style']);
 
