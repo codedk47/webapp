@@ -1465,384 +1465,384 @@ class webapp_router_control extends webapp_echo_masker
 		$this->main->append('h4', '广告更新失败！');
 	}
 
-	//话题 & 评论
-	function get_comments(string $search = NULL, string $phash = NULL, int $page = 1)
-	{
-		$conds = [[]];
-		if ($search && trim($search, webapp::key) === '')
-		{
-			$conds[0][] = 'hash=?s';
-			$conds[] = $search;
-		}
-		if ($phash)
-		{
-			$conds[0][] = 'phash=?s';
-			$conds[] = $phash;
-		}
-		else
-		{
-			$conds[0][] = 'phash IS NOT NULL';
-		}
+	// //话题 & 评论
+	// function get_comments(string $search = NULL, string $phash = NULL, int $page = 1)
+	// {
+	// 	$conds = [[]];
+	// 	if ($search && trim($search, webapp::key) === '')
+	// 	{
+	// 		$conds[0][] = 'hash=?s';
+	// 		$conds[] = $search;
+	// 	}
+	// 	if ($phash)
+	// 	{
+	// 		$conds[0][] = 'phash=?s';
+	// 		$conds[] = $phash;
+	// 	}
+	// 	else
+	// 	{
+	// 		$conds[0][] = 'phash IS NOT NULL';
+	// 	}
 		
-		if ($type = $this->webapp->query['type'] ?? '')
-		{
-			$conds[0][] = 'type=?s';
-			$conds[] = $type;
-		}
-		if ($check = $this->webapp->query['check'] ?? '')
-		{
-			$conds[0][] = '`check`=?s';
-			$conds[] = $check;
-		}
-		if ($userid = $this->webapp->query['userid'] ?? '')
-		{
-			$conds[0][] = 'userid=?s';
-			$conds[] = $userid;
-		}
+	// 	if ($type = $this->webapp->query['type'] ?? '')
+	// 	{
+	// 		$conds[0][] = 'type=?s';
+	// 		$conds[] = $type;
+	// 	}
+	// 	if ($check = $this->webapp->query['check'] ?? '')
+	// 	{
+	// 		$conds[0][] = '`check`=?s';
+	// 		$conds[] = $check;
+	// 	}
+	// 	if ($userid = $this->webapp->query['userid'] ?? '')
+	// 	{
+	// 		$conds[0][] = 'userid=?s';
+	// 		$conds[] = $userid;
+	// 	}
 
-		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY `sort` DESC,`mtime` DESC';
-		$table = $this->main->table($this->webapp->mysql->comments(...$conds)->paging($page, 10), function($table, $value)
-		{
-			$table->row();
-			$table->cell()->append('a', ['删除',
-				'href' => "?control/comment-simple,hash:{$value['hash']}",
-				'style' => 'color:red',
-				'data-dialog' => '删除后无法恢复',
-				'data-method' => 'delete',
-				'data-bind' => 'click']);
-			$table->cell()->append('a', [$value['hash'], 'href' => "?control/comment,hash:{$value['hash']}"]);
-			$table->cell()->append('a', [$value['userid'], 'href' => "?control/comments,userid:{$value['userid']}"]);
-			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
-			$table->cell(number_format($value['count']));
-			$table->cell(number_format($value['view']));
-			$table->cell()->append('a', [base::comment_type[$value['type']],
-				'href' => "?control/comments,search:{$value['phash']}", 'target' => '_blank']);
-			$table->cell([$value['sort'],
-				'data-src' => "?control/comment,hash:{$value['hash']}",
-				'data-method' => 'patch',
-				'data-dialog' => '{"sort":"number"}',
-				'data-value' => $value['sort'],
-				'data-bind' => 'click'
-			]);
+	// 	$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY `sort` DESC,`mtime` DESC';
+	// 	$table = $this->main->table($this->webapp->mysql->comments(...$conds)->paging($page, 10), function($table, $value)
+	// 	{
+	// 		$table->row();
+	// 		$table->cell()->append('a', ['删除',
+	// 			'href' => "?control/comment-simple,hash:{$value['hash']}",
+	// 			'style' => 'color:red',
+	// 			'data-dialog' => '删除后无法恢复',
+	// 			'data-method' => 'delete',
+	// 			'data-bind' => 'click']);
+	// 		$table->cell()->append('a', [$value['hash'], 'href' => "?control/comment,hash:{$value['hash']}"]);
+	// 		$table->cell()->append('a', [$value['userid'], 'href' => "?control/comments,userid:{$value['userid']}"]);
+	// 		$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+	// 		$table->cell(number_format($value['count']));
+	// 		$table->cell(number_format($value['view']));
+	// 		$table->cell()->append('a', [base::comment_type[$value['type']],
+	// 			'href' => "?control/comments,search:{$value['phash']}", 'target' => '_blank']);
+	// 		$table->cell([$value['sort'],
+	// 			'data-src' => "?control/comment,hash:{$value['hash']}",
+	// 			'data-method' => 'patch',
+	// 			'data-dialog' => '{"sort":"number"}',
+	// 			'data-value' => $value['sort'],
+	// 			'data-bind' => 'click'
+	// 		]);
 
-			$check = $table->cell();
-			if ($value['check'] === 'pending')
-			{
-				$check->append('a', ['允许',
-					'href' => "?control/comment,hash:{$value['hash']},field:check,value:allow",
-					'data-method' => 'patch',
-					'data-bind' => 'click'
-				]);
-				$check->append('span', ' | ');
-				$check->append('a', ['拒绝',
-					'href' => "?control/comment,hash:{$value['hash']},field:check,value:deny",
-					'data-method' => 'patch',
-					'data-bind' => 'click'
-				]);
-			}
-			else
-			{
-				$check->text($value['check']);
-			}
+	// 		$check = $table->cell();
+	// 		if ($value['check'] === 'pending')
+	// 		{
+	// 			$check->append('a', ['允许',
+	// 				'href' => "?control/comment,hash:{$value['hash']},field:check,value:allow",
+	// 				'data-method' => 'patch',
+	// 				'data-bind' => 'click'
+	// 			]);
+	// 			$check->append('span', ' | ');
+	// 			$check->append('a', ['拒绝',
+	// 				'href' => "?control/comment,hash:{$value['hash']},field:check,value:deny",
+	// 				'data-method' => 'patch',
+	// 				'data-bind' => 'click'
+	// 			]);
+	// 		}
+	// 		else
+	// 		{
+	// 			$check->text($value['check']);
+	// 		}
 
-			$table->row();
-			$contents = $table->cell(['colspan' => 9])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap:break-word']);
-			if ($value['type'] !== 'video' && $value['title'])
-			{
-				$contents->text($value['title']);
-				$contents->text("\n");
-			}
-			if ($value['content'])
-			{
-				$contents->text("\t{$value['content']}");
-			}
+	// 		$table->row();
+	// 		$contents = $table->cell(['colspan' => 9])->append('pre', ['style' => 'width:50rem;margin:0;line-height:1.4rem;white-space:pre-wrap;word-wrap:break-word']);
+	// 		if ($value['type'] !== 'video' && $value['title'])
+	// 		{
+	// 			$contents->text($value['title']);
+	// 			$contents->text("\n");
+	// 		}
+	// 		if ($value['content'])
+	// 		{
+	// 			$contents->text("\t{$value['content']}");
+	// 		}
 
-			if ($value['images'])
-			{
-				$table->row();
-				$image = $table->cell(['colspan' => 9])->append('div', ['style' => 'display:flex;gap:.4rem;width:53rem;flex-wrap: wrap;']);
-				foreach ($this->webapp->mysql->images('WHERE hash IN(?S)', str_split($value['images'], 12)) as $img)
-				{
-					$cover = $image->append('div', [
-						'class' => 'cover',
-						'style' => 'width:10rem;height:10rem;display:inline-block'
-					]);
-					if ($img['sync'] === 'finished')
-					{
-						$cover->append('img', [
-							'loading' => 'lazy',
-							'src' => sprintf('?/imgs/%s/%s?mask0000000000', date('ym', $img['mtime']), $img['hash'])
-						]);
-					}
-					else
-					{
-						$cover->text('pending');
-					}
-				}
-			}
-		});
-		$table->fieldset('删除', 'HASH', '用户ID', '发布时间', '数量', '观看', '类型', '排序', '审核');
-		$table->header('评论 %s 项', $table->count());
-		$table->paging($this->webapp->at(['page' => '']));
-		$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment_class"']);
-		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
-			->select(['' => '全部分类'] + $this->webapp->select_topics())
-			->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
-		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
-			->select(['' => '全部类型'] + array_slice(base::comment_type, 1))
-			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'padding:.1rem'])->selected($type);
-		$table->bar->append('span', ['style' => 'margin-left:.6rem'])
-			->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
-			->setattr(['onchange' => 'g({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
+	// 		if ($value['images'])
+	// 		{
+	// 			$table->row();
+	// 			$image = $table->cell(['colspan' => 9])->append('div', ['style' => 'display:flex;gap:.4rem;width:53rem;flex-wrap: wrap;']);
+	// 			foreach ($this->webapp->mysql->images('WHERE hash IN(?S)', str_split($value['images'], 12)) as $img)
+	// 			{
+	// 				$cover = $image->append('div', [
+	// 					'class' => 'cover',
+	// 					'style' => 'width:10rem;height:10rem;display:inline-block'
+	// 				]);
+	// 				if ($img['sync'] === 'finished')
+	// 				{
+	// 					$cover->append('img', [
+	// 						'loading' => 'lazy',
+	// 						'src' => sprintf('?/imgs/%s/%s?mask0000000000', date('ym', $img['mtime']), $img['hash'])
+	// 					]);
+	// 				}
+	// 				else
+	// 				{
+	// 					$cover->text('pending');
+	// 				}
+	// 			}
+	// 		}
+	// 	});
+	// 	$table->fieldset('删除', 'HASH', '用户ID', '发布时间', '数量', '观看', '类型', '排序', '审核');
+	// 	$table->header('评论 %s 项', $table->count());
+	// 	$table->paging($this->webapp->at(['page' => '']));
+	// 	$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment_class"']);
+	// 	$table->bar->append('span', ['style' => 'margin-left:.6rem'])
+	// 		->select(['' => '全部分类'] + $this->webapp->select_topics())
+	// 		->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
+	// 	$table->bar->append('span', ['style' => 'margin-left:.6rem'])
+	// 		->select(['' => '全部类型'] + array_slice(base::comment_type, 1))
+	// 		->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'padding:.1rem'])->selected($type);
+	// 	$table->bar->append('span', ['style' => 'margin-left:.6rem'])
+	// 		->select(['' => '全部状态', 'pending' => '等待审核', 'allow' => '通过审核', 'deny' => '未通过'])
+	// 		->setattr(['onchange' => 'g({check:this.value||null})', 'style' => 'padding:.1rem'])->selected($check);
 
-		$table->bar->append('button', ['删除该分类和话题以及所有帖子和评论',
-			'style' => 'margin-left:.6rem',
-			'data-src' => "?control/comment,hash:{$phash}",
-			'data-method' => 'delete',
-			'data-dialog' => '删除后不可恢复',
-			'data-bind' => 'click'
-		]);
-		$table->bar->append('button', ['辅助UP主发布评论',
-			'style' => 'margin-left:.6rem',
-			'onclick' => 'location.href="?control/comment"'
-		]);
-	}
-	function post_comments(string $type)
-	{
-		$search = $this->webapp->request_content();
-		if ($type === 'reply')
-		{
-			$this->json(['comments' => []]);
-			return;
-		}
-		$this->json(['comments' => $type === 'video'
-			? $this->webapp->mysql->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 10', "%{$search}%")
-				->column('name', 'hash')
-			: $this->webapp->mysql->comments('WHERE type=?s AND `check`="allow" AND title LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 10', $type, "%{$search}%")
-				->column('title', 'hash')]);
-	}
-	function form_comment(webapp_html $html = NULL):webapp_form
-	{
-		$form = new webapp_form($html ?? $this->webapp);
+	// 	$table->bar->append('button', ['删除该分类和话题以及所有帖子和评论',
+	// 		'style' => 'margin-left:.6rem',
+	// 		'data-src' => "?control/comment,hash:{$phash}",
+	// 		'data-method' => 'delete',
+	// 		'data-dialog' => '删除后不可恢复',
+	// 		'data-bind' => 'click'
+	// 	]);
+	// 	$table->bar->append('button', ['辅助UP主发布评论',
+	// 		'style' => 'margin-left:.6rem',
+	// 		'onclick' => 'location.href="?control/comment"'
+	// 	]);
+	// }
+	// function post_comments(string $type)
+	// {
+	// 	$search = $this->webapp->request_content();
+	// 	if ($type === 'reply')
+	// 	{
+	// 		$this->json(['comments' => []]);
+	// 		return;
+	// 	}
+	// 	$this->json(['comments' => $type === 'video'
+	// 		? $this->webapp->mysql->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 10', "%{$search}%")
+	// 			->column('name', 'hash')
+	// 		: $this->webapp->mysql->comments('WHERE type=?s AND `check`="allow" AND title LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 10', $type, "%{$search}%")
+	// 			->column('title', 'hash')]);
+	// }
+	// function form_comment(webapp_html $html = NULL):webapp_form
+	// {
+	// 	$form = new webapp_form($html ?? $this->webapp);
 
-		$form->fieldset('用户ID');
+	// 	$form->fieldset('用户ID');
 		
-		$form->field('userid', 'text', ['maxlength' => 10, 'oninput' => 'localStorage.setItem("comment_userid",this.value)', 'required' => NULL]);
-		$form->fieldset->append('script')->cdata('document.querySelector("form.webapp>fieldset>input[name=userid]").value=localStorage.getItem("comment_userid")');
+	// 	$form->field('userid', 'text', ['maxlength' => 10, 'oninput' => 'localStorage.setItem("comment_userid",this.value)', 'required' => NULL]);
+	// 	$form->fieldset->append('script')->cdata('document.querySelector("form.webapp>fieldset>input[name=userid]").value=localStorage.getItem("comment_userid")');
 
-		$form->fieldset('类型 / 搜索');
-		$form->field('type', 'select', ['options' => ['reply' => '请选择类型'] + base::comment_type,
-			'onchange' => 'this.nextElementSibling.dataset.type=this.value;search_comment(this.nextElementSibling,this.parentElement.nextElementSibling)',
-			'required' => NULL]);
-		$form->field('phash', 'search', [
-			'data-type' => 'reply',
-			'data-action' => '?control/comments',
-			'placeholder' => '选择左边类型后输入关键字进行搜索选择',
-			'oninput' => 'search_comment(this,this.parentElement.nextElementSibling)',
-			'style' => 'width:24rem']);
-		$form->fieldset()->setattr('class', 'search_comment');
+	// 	$form->fieldset('类型 / 搜索');
+	// 	$form->field('type', 'select', ['options' => ['reply' => '请选择类型'] + base::comment_type,
+	// 		'onchange' => 'this.nextElementSibling.dataset.type=this.value;search_comment(this.nextElementSibling,this.parentElement.nextElementSibling)',
+	// 		'required' => NULL]);
+	// 	$form->field('phash', 'search', [
+	// 		'data-type' => 'reply',
+	// 		'data-action' => '?control/comments',
+	// 		'placeholder' => '选择左边类型后输入关键字进行搜索选择',
+	// 		'oninput' => 'search_comment(this,this.parentElement.nextElementSibling)',
+	// 		'style' => 'width:24rem']);
+	// 	$form->fieldset()->setattr('class', 'search_comment');
 
-		$form->fieldset('标题');
-		$form->field('title', 'text', ['placeholder' => '话题和评论必须要一个标题', 'style' => 'width:31rem']);
+	// 	$form->fieldset('标题');
+	// 	$form->field('title', 'text', ['placeholder' => '话题和评论必须要一个标题', 'style' => 'width:31rem']);
 
-		$form->fieldset('内容');
-		$form->field('content', 'textarea', ['rows' => 10, 'cols' => 50, 'required' => NULL]);
+	// 	$form->fieldset('内容');
+	// 	$form->field('content', 'textarea', ['rows' => 10, 'cols' => 50, 'required' => NULL]);
 
-		$form->fieldset('图片');
-		$form->field('images', 'textarea', ['rows' => 4, 'cols' => 36,
-			'placeholder' => '图片最多不超过10个','readonly' => NULL]);
-		$form->fieldset->append('label', '添加图片')->append('input', [
-			'type' => 'file',
-			'accept' => 'image/*',
-			'style' => 'display:none',
-			'data-uploadurl' => '?uploadimage',
-			'onchange' => 'upload_image(this,admin_comment_image)'
-		]);
-		$form->fieldset('视频');
-		$form->field('video', 'search', [
-			'data-action' => '?control/videos',
-			'placeholder' => '输入视频关键字进行搜索选择，勾选最多不超过100个视频',
-			'oninput' => 'search_videos(this,this.parentElement.nextElementSibling.firstElementChild)',
-			'style' => 'width:32rem']);
-		$form->fieldset()->setattr([
-			'class' => 'search_comment',
-			'style' => 'height:20rem'
-		])->append('ul');
+	// 	$form->fieldset('图片');
+	// 	$form->field('images', 'textarea', ['rows' => 4, 'cols' => 36,
+	// 		'placeholder' => '图片最多不超过10个','readonly' => NULL]);
+	// 	$form->fieldset->append('label', '添加图片')->append('input', [
+	// 		'type' => 'file',
+	// 		'accept' => 'image/*',
+	// 		'style' => 'display:none',
+	// 		'data-uploadurl' => '?uploadimage',
+	// 		'onchange' => 'upload_image(this,admin_comment_image)'
+	// 	]);
+	// 	$form->fieldset('视频');
+	// 	$form->field('video', 'search', [
+	// 		'data-action' => '?control/videos',
+	// 		'placeholder' => '输入视频关键字进行搜索选择，勾选最多不超过100个视频',
+	// 		'oninput' => 'search_videos(this,this.parentElement.nextElementSibling.firstElementChild)',
+	// 		'style' => 'width:32rem']);
+	// 	$form->fieldset()->setattr([
+	// 		'class' => 'search_comment',
+	// 		'style' => 'height:20rem'
+	// 	])->append('ul');
 
 
-		$form->fieldset();
-		$form->button('提交', 'submit');
+	// 	$form->fieldset();
+	// 	$form->button('提交', 'submit');
 
-		$form->xml['onsubmit'] = 'return admin_comment(this)';
-		return $form;
-	}
-	function post_videos(string $userid)
-	{
-		$search = $this->webapp->request_content();
-		$this->json(['videos' => $this->webapp->mysql
-			//->videos('WHERE userid=?s AND sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', $userid, "%{$search}%")
-			->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', "%{$search}%")
-			->column('name', 'hash')]);
-	}
-	function get_comment(string $hash = NULL)
-	{
-		$form = $this->form_comment($this->main);
-		if ($hash && $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->fetch($comment))
-		{
-			$form->echo($comment);
-		}
-	}
-	function post_comment(string $hash = NULL)
-	{
-		$error = '无效内容！';
-		while ($this->form_comment()->fetch($comment))
-		{
-			$user = $this->webapp->user(trim($comment['userid']));
-			if ($user->id === NULL)
-			{
-				$error = '用户不存在！';
-				break;
-			}
-			if ($comment['type'] === 'video')
-			{
-				if ($this->webapp->user($comment['userid'])->comment_video($comment['phash'], $comment['content']) === FALSE)
-				{
-					$error = '视频评论失败！';
-					break;
-				}
-			}
-			else
-			{
-				if (empty($comment['images']))
-				{
-					$comment['images'] = NULL;
-				}
-				if (empty($comment['videos'] = join($_POST['videos'] ?? [])))
-				{
-					$comment['videos'] = NULL;
-				}
-				$type = match ($comment['type'])
-				{
-					'class' => 'topic',
-					'topic' => 'post',
-					default => 'reply'
-				};
-				if ($type === 'reply' || $user['uid'] === 0)
-				{
-					$error = '用户必须是UP主！';
-					break;
-				}
-				[$images, $videos] = match ($type)
-				{
-					'topic', 'post' => [$comment['images'], $comment['videos']],
-					default => [NULL, NULL]
-				};
-				if ($hash)
-				{
-					if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->update([
-						'ctime' => $this->webapp->time,
-						'title' => $comment['title'],
-						'content' => $comment['content'],
-						'images' => $images]) === FALSE) {
-						$error = '修改评论失败！';
-						break;
-					}
-				}
-				else
-				{
-					if ($user->comment($comment['phash'], $comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE)
-					{
-						$error = '发布评论失败！';
-						break;
-					}
-				}
-			}
-			return $this->goto('/comments');
-		}
-		$this->dialog($error);
-	}
+	// 	$form->xml['onsubmit'] = 'return admin_comment(this)';
+	// 	return $form;
+	// }
+	// function post_videos(string $userid)
+	// {
+	// 	$search = $this->webapp->request_content();
+	// 	$this->json(['videos' => $this->webapp->mysql
+	// 		//->videos('WHERE userid=?s AND sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', $userid, "%{$search}%")
+	// 		->videos('WHERE sync="allow" AND name LIKE ?s ORDER BY mtime DESC,hash ASC LIMIT 20', "%{$search}%")
+	// 		->column('name', 'hash')]);
+	// }
+	// function get_comment(string $hash = NULL)
+	// {
+	// 	$form = $this->form_comment($this->main);
+	// 	if ($hash && $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->fetch($comment))
+	// 	{
+	// 		$form->echo($comment);
+	// 	}
+	// }
+	// function post_comment(string $hash = NULL)
+	// {
+	// 	$error = '无效内容！';
+	// 	while ($this->form_comment()->fetch($comment))
+	// 	{
+	// 		$user = $this->webapp->user(trim($comment['userid']));
+	// 		if ($user->id === NULL)
+	// 		{
+	// 			$error = '用户不存在！';
+	// 			break;
+	// 		}
+	// 		if ($comment['type'] === 'video')
+	// 		{
+	// 			if ($this->webapp->user($comment['userid'])->comment_video($comment['phash'], $comment['content']) === FALSE)
+	// 			{
+	// 				$error = '视频评论失败！';
+	// 				break;
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			if (empty($comment['images']))
+	// 			{
+	// 				$comment['images'] = NULL;
+	// 			}
+	// 			if (empty($comment['videos'] = join($_POST['videos'] ?? [])))
+	// 			{
+	// 				$comment['videos'] = NULL;
+	// 			}
+	// 			$type = match ($comment['type'])
+	// 			{
+	// 				'class' => 'topic',
+	// 				'topic' => 'post',
+	// 				default => 'reply'
+	// 			};
+	// 			if ($type === 'reply' || $user['uid'] === 0)
+	// 			{
+	// 				$error = '用户必须是UP主！';
+	// 				break;
+	// 			}
+	// 			[$images, $videos] = match ($type)
+	// 			{
+	// 				'topic', 'post' => [$comment['images'], $comment['videos']],
+	// 				default => [NULL, NULL]
+	// 			};
+	// 			if ($hash)
+	// 			{
+	// 				if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->update([
+	// 					'ctime' => $this->webapp->time,
+	// 					'title' => $comment['title'],
+	// 					'content' => $comment['content'],
+	// 					'images' => $images]) === FALSE) {
+	// 					$error = '修改评论失败！';
+	// 					break;
+	// 				}
+	// 			}
+	// 			else
+	// 			{
+	// 				if ($user->comment($comment['phash'], $comment['content'], $type, $comment['title'], $images, $videos, TRUE) === FALSE)
+	// 				{
+	// 					$error = '发布评论失败！';
+	// 					break;
+	// 				}
+	// 			}
+	// 		}
+	// 		return $this->goto('/comments');
+	// 	}
+	// 	$this->dialog($error);
+	// }
 
-	function form_comment_class(webapp_html $html = NULL):webapp_form
-	{
-		$form = new webapp_form($html ?? $this->webapp);
-		$form->fieldset('标题 / 排序（越大越靠前）');
-		$form->field('title', 'text', ['maxlength' => 128, 'required' => NULL]);
-		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
-		$form->button('提交', 'submit');
-		return $form;
-	}
-	function get_comment_class()
-	{
-		$this->form_comment_class($this->main);
-	}
-	function post_comment_class()
-	{
-		if ($this->form_comment_class()->fetch($data)
-			&& $this->webapp->mysql->comments->insert([
-				'hash' => $this->webapp->random_hash(FALSE),
-				'mtime' => $this->webapp->time,
-				'ctime' => $this->webapp->time,
-				'type' => 'topic',
-				'check' => 'allow',
-				'count' => 0,
-				'content' => ''] + $data)) {
-			$this->webapp->response_location('?control/comments');
-			return;
-		}
-		$this->main->append('h4', '话题发布失败！');
-	}
-	function delete_comment(string $hash)
-	{
-		if ($this->admin && $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
-		{
-			$count_topic = 0;
-			$count_post = 0;
-			$count_reply = 0;
-			foreach ($this->webapp->mysql->comments('WHERE phash=?s', $hash)->column('hash') as $topic_hash)
-			{
-				if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $topic_hash)->delete() === 1)
-				{
-					++$count_topic;
-					foreach ($this->webapp->mysql->comments('WHERE phash=?s', $topic_hash)->column('hash') as $post_hash)
-					{
-						if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $topic_hash)->delete() === 1)
-						{
-							++$count_post;
-							$count_reply += $this->webapp->mysql->comments('WHERE phash=?s', $post_hash)->delete();
-						}
-					}
-				}
-			}
-			$this->dialog("删除 {$count_topic} 个话题。\n删除 {$count_post} 个帖子。\n删除 {$count_reply} 个评论。");
-			$this->goto();
-			return;
-		}
-		$this->dialog('需要超级管理员权限或者删除失败！');
-	}
-	function delete_comment_simple(string $hash)
-	{
-		if ($this->webapp->mysql->comments('WHERE hash=?s AND type IN("post","reply") LIMIT 1', $hash)->delete() === 1)
-		{
-			$this->webapp->mysql->comments('WHERE phash=?s', $hash)->delete();
-			$this->goto();
-			return;
-		}
-		$this->dialog('只能删除帖子或者回复！');
-	}
-	function patch_comment(string $hash, string $field = NULL, string $value = NULL)
-	{
-		if ($input = $this->webapp->request_content())
-		{
-			$field = array_key_first($input);
-			$value = $input[$field];
-		}
-		if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->update('?a=?s', $field, $value) === 1)
-		{
-			$this->goto();
-			return;
-		}
-		$this->dialog('操作失败！');
-	}
+	// function form_comment_class(webapp_html $html = NULL):webapp_form
+	// {
+	// 	$form = new webapp_form($html ?? $this->webapp);
+	// 	$form->fieldset('标题 / 排序（越大越靠前）');
+	// 	$form->field('title', 'text', ['maxlength' => 128, 'required' => NULL]);
+	// 	$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
+	// 	$form->button('提交', 'submit');
+	// 	return $form;
+	// }
+	// function get_comment_class()
+	// {
+	// 	$this->form_comment_class($this->main);
+	// }
+	// function post_comment_class()
+	// {
+	// 	if ($this->form_comment_class()->fetch($data)
+	// 		&& $this->webapp->mysql->comments->insert([
+	// 			'hash' => $this->webapp->random_hash(FALSE),
+	// 			'mtime' => $this->webapp->time,
+	// 			'ctime' => $this->webapp->time,
+	// 			'type' => 'topic',
+	// 			'check' => 'allow',
+	// 			'count' => 0,
+	// 			'content' => ''] + $data)) {
+	// 		$this->webapp->response_location('?control/comments');
+	// 		return;
+	// 	}
+	// 	$this->main->append('h4', '话题发布失败！');
+	// }
+	// function delete_comment(string $hash)
+	// {
+	// 	if ($this->admin && $this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->delete() === 1)
+	// 	{
+	// 		$count_topic = 0;
+	// 		$count_post = 0;
+	// 		$count_reply = 0;
+	// 		foreach ($this->webapp->mysql->comments('WHERE phash=?s', $hash)->column('hash') as $topic_hash)
+	// 		{
+	// 			if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $topic_hash)->delete() === 1)
+	// 			{
+	// 				++$count_topic;
+	// 				foreach ($this->webapp->mysql->comments('WHERE phash=?s', $topic_hash)->column('hash') as $post_hash)
+	// 				{
+	// 					if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $topic_hash)->delete() === 1)
+	// 					{
+	// 						++$count_post;
+	// 						$count_reply += $this->webapp->mysql->comments('WHERE phash=?s', $post_hash)->delete();
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 		$this->dialog("删除 {$count_topic} 个话题。\n删除 {$count_post} 个帖子。\n删除 {$count_reply} 个评论。");
+	// 		$this->goto();
+	// 		return;
+	// 	}
+	// 	$this->dialog('需要超级管理员权限或者删除失败！');
+	// }
+	// function delete_comment_simple(string $hash)
+	// {
+	// 	if ($this->webapp->mysql->comments('WHERE hash=?s AND type IN("post","reply") LIMIT 1', $hash)->delete() === 1)
+	// 	{
+	// 		$this->webapp->mysql->comments('WHERE phash=?s', $hash)->delete();
+	// 		$this->goto();
+	// 		return;
+	// 	}
+	// 	$this->dialog('只能删除帖子或者回复！');
+	// }
+	// function patch_comment(string $hash, string $field = NULL, string $value = NULL)
+	// {
+	// 	if ($input = $this->webapp->request_content())
+	// 	{
+	// 		$field = array_key_first($input);
+	// 		$value = $input[$field];
+	// 	}
+	// 	if ($this->webapp->mysql->comments('WHERE hash=?s LIMIT 1', $hash)->update('?a=?s', $field, $value) === 1)
+	// 	{
+	// 		$this->goto();
+	// 		return;
+	// 	}
+	// 	$this->dialog('操作失败！');
+	// }
 	function get_channels(int $page = 1)
 	{
 		$conds = [[]];
