@@ -3,6 +3,7 @@ class webapp_router_home extends webapp_echo_masker
 {
 	private readonly bool $free;
 	private readonly user $user;
+	private readonly array $tags;
 	protected array $allow = ['get_splashscreen', 'post_create_account'];
 	function __construct(webapp $webapp)
 	{
@@ -163,13 +164,30 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			foreach ($videos as $video)
 			{
-				$figure = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"])->append('figure', ['data-require' => match (intval($video['require'])) {
+				$content = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
+				$figure = $content->append('figure', [
+					'data-label' => '测试',
+					'data-require' => match (intval($video['require'])) {
 					-1 => '会员',
 					0 => '免费',
 					default => "{$video['require']} 金币"
 				}]);
 				$figure->append('img', ['loading' => 'lazy', 'src' => $video['poster']]);
-				$figure->append('figcaption', webapp_html::charsafe($video['name']));
+				$figure->append('figcaption', $video['duration']);
+
+				$content->append('strong', webapp_html::charsafe($video['name']));
+				if (isset($this->tags) && $video['tags'])
+				{
+					$mark = $content->append('div')->append('mark');
+					foreach (array_reverse(explode(',', $video['tags'])) as $tag)
+					{
+						if (isset($this->tags[$tag]))
+						{
+							$mark->append('span', "#{$this->tags[$tag]}");
+						}
+						
+					}
+				}
 			}
 		}
 		return $element;
@@ -199,7 +217,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->webapp->redis->flushall();
 		$this->aside['class'] = 'classify';
 		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
-		foreach ($classify = $this->webapp->fetch_tags() as $hash => $name)
+		foreach ($classify = $this->webapp->fetch_tags(0) as $hash => $name)
 		{
 			$node = $this->aside->append('a', [$name, 'href' => "?home/home,type:{$hash}"]);
 			if ($hash === $type)
@@ -220,7 +238,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_search();
 		$this->set_footer_menu();
 		$this->add_slideshows_ads($this->main, 1);
-		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
+		$this->tags = $this->webapp->fetch_tags(NULL);
 		foreach ($this->webapp->fetch_subjects(isset($classify[$type]) ? $type : NULL) as $subject)
 		{
 			$this->add_video_lists($this->main, $subject['videos'], $subject['style'], $subject['name'],
@@ -231,15 +249,15 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($page > 0)
 		{
+			$this->tags = $this->webapp->fetch_tags(NULL);
 			$this->add_video_lists($this->template(), $this->webapp->fetch_subject($hash, $page));
 			return;
 		}
-		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
 		$this->add_slideshows_ads($this->main, 1);
 		if ($subject = $this->webapp->fetch_subject($hash))
 		{
 			$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
-			$this->add_video_lists($this->main, "?home/subject,hash:{$hash},page:", $subject['style']);
+			$this->add_video_lists($this->main, "?home/subject,hash:{$hash},page:");
 		}
 	}
 	// function get_search(string $word = NULL, string $tags = NULL, int $page = 0)
@@ -266,38 +284,31 @@ class webapp_router_home extends webapp_echo_masker
 
 		$this->set_header_search();
 		$this->set_footer_menu();
-		$this->aside['style'] = 'position:sticky;top:0;z-index:1';
+		//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
+		$this->aside['class'] = 'watch';
 		$this->aside->append('webapp-video', [
 			'data-poster' => $video['poster'],
 			'data-m3u8' => $video['m3u8'],
 			'oncanplay' => 'masker.canplay(this)',
-
-			'class' => 'v',
 			//'autoheight' => NULL,
 			//'autoplay' => NULL,
 			'controls' => NULL,
 			// 'muted' => NULL
 		]);
-		$this->main['style'] = 'padding: 0 var(--webapp-gapitem);';
+
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', $video['name']);
 		// // $statistics = $node->append('div', ['class' => 'statistics']);
 		// // $statistics->append('mark', sprintf('%s 次观看, %s', number_format($video['view']), date('Y-m-d', $video['ptime'])));
+		$this->tags = $this->webapp->fetch_tags(NULL);
 		if ($video['tags'])
 		{
-			$type = strstr($video['tags'], ',', TRUE);
-			$types = $this->webapp->fetch_tags();
 			$taginfo = $videoinfo->append('mark');
-			if (isset($types[$type]))
-			{
-				$taginfo->append('a', [$types[$type], 'href' => "?home/search,tag:{$type}"]);
-			}
-			$tags = $this->webapp->fetch_tags($type);
 			foreach (explode(',', $video['tags']) as $tag)
 			{
-				if (isset($tags[$tag]))
+				if (isset($this->tags[$tag]))
 				{
-					$taginfo->append('a', [$tags[$tag], 'href' => "?home/search,tag:{$tag}"]);
+					$taginfo->append('a', [$this->tags[$tag], 'href' => "?home/search,tag:{$tag}"]);
 				}
 			}
 		}
@@ -307,6 +318,8 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($page)
 		{
+			
+			
 			$this->json([
 				[ 'poster' => '?/2309/1N1VGT0V6UCT/cover?MASK1695742222', 'm3u8' => '?/2309/1N1VGT0V6UCT/play?mask1670409186' ],
 				[ 'poster' => '?/2308/V9CUN2SBDION/cover?MASK1695742222', 'm3u8' => '?/2308/V9CUN2SBDION/play?mask1670409186' ],

@@ -355,11 +355,11 @@ class base extends webapp
 	function get_subject_fetch()
 	{
 		if (PHP_SAPI !== 'cli') return 404;
-		function words(string $haystack, array $needles):bool
+		function detect(string $haystack, array $needles, callable $method):bool
 		{
 			foreach ($needles as $needle)
 			{
-				if (str_contains($haystack, $needle)) return TRUE;
+				if ($method($haystack, $needle)) return TRUE;
 			}
 			return FALSE;
 		}
@@ -378,8 +378,11 @@ class base extends webapp
 			{
 				match ($data['fetch_method'])
 				{
-					'tags' => $video['tags'] && array_intersect(explode(',', $video['tags']), $data['fetch_values']),
-					'words' => words($video['name'], $data['fetch_values']),
+					'intersect' => $video['tags'] && array_intersect(explode(',', $video['tags']), $data['fetch_values']),
+					'union' => count(array_intersect($data['fetch_values'], explode(',', $video['tags']))) === count($data['fetch_values']),
+					'starts' => detect($video['name'], $data['fetch_values'], str_starts_with(...)),
+					'ends' => detect($video['name'], $data['fetch_values'], str_ends_with(...)),
+					'contains' => detect($video['name'], $data['fetch_values'], str_contains(...)),
 					'uploader' => in_array($video['userid'], $data['fetch_values'], TRUE),
 					default => FALSE
 				} && $vsubjects[] = $hash;
@@ -716,20 +719,61 @@ class base extends webapp
 		$hash && $this->redis->del("ad:{$hash}");
 		return $this->redis->del("ad:{$seat}") === 1;
 	}
+	const tags_level = [
+		0 => '分类',
+		1 => '全局',
+		2 => '待定',
+		3 => '扩展',
+		4 => '附有特征',
+		5 => '角色类型',
+		6 => '人体特征',
+		7 => '地点位置',
+		8 => '衣着服饰',
+		9 => '其他杂项',
+		10 => '传媒频道',
+		11 => '明星作者',
+		12 => '临时添加'
+	];
 	//获取所有分类或标签
-	function fetch_tags(string $type = NULL):array
+	function fetch_tags(?int $level, bool $detailed = FALSE):array
 	{
-		if ($this->redis->exists('tags'))
+		if ($this->redis->exists('tags') === 0)
 		{
-			return $this->redis->hGetAll($type ? "tags:{$type}" : 'tags');
+			$tags = [];
+			foreach (self::tags_level as $i => $name)
+			{
+				$tags += $values = $this->mysql->tags('WHERE level=?i ORDER BY sort DESC, time DESC', $i)->column('name', 'hash');
+				$this->redis->hMSet("tags:{$i}", $values);
+			}
+			$this->redis->hMSet('tags', $tags);
 		}
-		$classify = $this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC, ctime DESC')->column('name', 'hash');
-		foreach ($classify as $hash => $name)
+		if (isset(self::tags_level[$level]))
 		{
-			$this->redis->hMSet("tags:{$hash}", $this->mysql->tags('WHERE phash=?s ORDER BY sort DESC, ctime DESC', $hash)->column('name', 'hash'));
+			$tags = $this->redis->hGetAll("tags:{$level}");
+			if ($detailed === FALSE)
+			{
+				foreach ($tags as &$tag)
+				{
+					$tag = strstr($tag, ',', TRUE);
+				}
+			}
+			return $tags;
 		}
-		$this->redis->hMSet('tags', $classify);
-		return $type ? $this->redis->hGetAll("tags:{$type}") : $classify;
+		if ($detailed)
+		{
+			$tags = [];
+			foreach (self::tags_level as $level => $name)
+			{
+				$tags[$level] = $this->redis->hGetAll("tags:{$level}");
+			}
+			return $tags;
+		}
+		$tags = $this->redis->hGetAll('tags');
+		foreach ($tags as &$tag)
+		{
+			$tag = strstr($tag, ',', TRUE);
+		}
+		return $tags;
 	}
 	//清除所有分类和标签
 	function clear_tags():bool
@@ -784,7 +828,7 @@ class base extends webapp
 		}
 		else
 		{
-			foreach ($this->fetch_tags() as $hash => $name)
+			foreach ($this->fetch_tags(0) as $hash => $name)
 			{
 				$videos = [];
 				$subject = [
@@ -913,7 +957,26 @@ class base extends webapp
 		}
 		return $this->fetch_random_videos($video['type']);
 	}
+	function fetch_short_videos(int $page, int $size = 10)
+	{
+		$videos = [];
+		$start = max(0, ($page - 1) * $size);
+		$end = $start + $size - 1;
+		if ($this->redis->exists($key = "short:videos"))
+		{
 
+		}
+		$keys = [];
+		foreach ($this->mysql->videos('WHERE type="v" AND sync="allow" AND ptime<?i', $this->time) as $video)
+		{
+			$keys[] = "video:{$video['hash']}";
+			$video = $this->fetch_video($video['hash'], $video);
+			if ($index >= $start && $index <= $end)
+			{
+				$videos[] = $video;
+			}
+		}
+	}
 
 
 	//专题HASH拉取视频

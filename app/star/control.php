@@ -304,13 +304,13 @@ class webapp_router_control extends webapp_echo_masker
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
-		$form->fieldset('标签名称 / 归属分类 / 排序（越大越靠前）');
-		$form->field('name', 'text', ['required' => NULL]);
-		$form->field('phash', 'select', ['options' => ['' => '分类', ...$this->tag_types()]]);
+		$form->fieldset('分类 / 标签名称（用 "," 间隔） / 排序（越大越靠前）');
+		$form->field('level', 'select', ['options' => base::tags_level, 'required' => NULL]);
+		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 
+		$form->fieldset();
 		$form->button('提交', 'submit');
-
 		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
@@ -331,29 +331,28 @@ class webapp_router_control extends webapp_echo_masker
 				$conds[] = "%{$search}%";
 			}
 		}
-		if ($phash = $this->webapp->query['phash'] ?? '')
+		if (strlen($level = $this->webapp->query['level'] ?? ''))
 		{
-			$conds[0][] = 'phash=?s';
-			$conds[] = $phash;
+			$conds[0][] = 'level=?i';
+			$conds[] = $level;
 		}
-		$conds[0] = sprintf('%sORDER BY phash ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$conds[0] = sprintf('%sORDER BY level ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
 
-		$tag_types = $this->tag_types();
-		$table = $this->main->table($this->webapp->mysql->tags(...$conds)->paging($page), function($table, $value, $types)
+		$table = $this->main->table($this->webapp->mysql->tags(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
 			$table->cell()->append('a', ['删除', 'href' => "?control/tag,hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
-			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
-			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
+			$table->cell(date('Y-m-d\\TH:i:s', $value['time']));
 			$table->cell($value['hash']);
-			$table->cell($types[$value['phash']] ?? '分类');
+			$table->cell(number_format($value['click']));
+			$table->cell(base::tags_level[$value['level']]);
 			$table->cell($value['sort']);
 			$table->cell()->append('a', [$value['name'], 'href' => "?control/tag,hash:{$value['hash']}"]);
 			
-		}, $tag_types);
+		});
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('删除', '创建时间', '修改时间', 'HASH', '级别', '排序', '名称');
-		$table->header('标签 %d 项', $table->count());
+		$table->fieldset('删除', '创建时间', 'HASH', '点击', '类型', '排序', '名称');
+		$table->header('找到 %d 项', $table->count());
 		$table->bar->append('button', ['添加标签或分类', 'onclick' => 'location.href="?control/tag"']);
 
 		$table->bar->append('input', [
@@ -364,8 +363,8 @@ class webapp_router_control extends webapp_echo_masker
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
 		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
-			->select(['' => '全部标签'] + $tag_types)
-			->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
+			->select(['' => '全部类型'] + base::tags_level)
+			->setattr(['onchange' => 'g({level:this.value||null})', 'style' => 'padding:.1rem'])->selected($level);
 	}
 	function get_tag(string $hash = NULL)
 	{
@@ -380,9 +379,8 @@ class webapp_router_control extends webapp_echo_masker
 	{
 		if ($this->form_tag()->fetch($tag) && $this->webapp->mysql->tags->insert([
 				'hash' => substr($this->webapp->random_hash(TRUE), -4),
-				'phash' => strlen($tag['phash']) === 4 ? $tag['phash'] : NULL,
-				'mtime' => $this->webapp->time,
-				'ctime' => $this->webapp->time] + $tag)) {
+				'time' => $this->webapp->time,
+				'click' => 0] + $tag)) {
 			$this->goto('/tags');
 		}
 		else
@@ -392,16 +390,15 @@ class webapp_router_control extends webapp_echo_masker
 	}
 	function delete_tag(string $hash)
 	{
-		$this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->delete() === 1
+		$this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->delete() === 1 && $this->webapp->clear_tags()
 			? $this->goto('/tags')
 			: $this->dialog('标签删除失败！');
 	}
 	function patch_tag(string $hash)
 	{
 		if ($this->form_tag()->fetch($tag)
-			&& $this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->update([
-				'phash' => strlen($tag['phash']) === 4 ? $tag['phash'] : NULL,
-				'ctime' => $this->webapp->time] + $tag)) {
+			&& $this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->update($tag)) {
+			$this->webapp->clear_tags();
 			$this->goto('/tags');
 		}
 		else
@@ -412,41 +409,40 @@ class webapp_router_control extends webapp_echo_masker
 
 
 	//========专题========
-	function subject_styles():array
-	{
-		return [
-			1 => '1 全大图',
-			2 => '2 全小图',
-			3 => '3 一大两小',
-			4 => '4 一大三竖版右侧封面',
-			5 => '5 竖版右侧封面',
-			7 => '7 个人（没用）'
-		];
-	}
-	function subject_fetch_methods():array
-	{
-		return [
-			'tags' => '分类（标签HASH交集）',
-			'words' => '关键词（标题包含关键词）',
-			'uploader' => 'UP主（用户ID并集）'
-		];
-	}
+	const subject_styles = [
+		1 => '1 全大图',
+		2 => '2 全小图',
+		3 => '3 一大两小',
+		4 => '4 一大三竖版右侧封面',
+		5 => '5 竖版右侧封面',
+		6 => '6 单排滑动',
+
+		7 => '7 个人（没用）'
+	];
+	const subject_fetch_methods = [
+		'intersect' => '标签HASH交集',
+		'union' => '标签HASH并集',
+		'starts' => '标题开始关键词',
+		'ends' => '标题结尾关键词',
+		'contains' => '标题包含关键词',
+		'uploader' => 'UP主（用户ID并集）'
+	];
 	function form_subject(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
 		$form->fieldset('专题分类 / 排序（越大越靠前）');
 
-		$form->field('type', 'select', ['options' => $this->tag_types(), 'required' => NULL]);
+		$form->field('type', 'select', ['options' => $this->webapp->fetch_tags(0), 'required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 
 		$form->fieldset('专题名称 / 展示样式');
 		$form->field('name', 'text', ['required' => NULL]);
-		$form->field('style', 'select', ['options' => $this->subject_styles(), 'required' => NULL]);
+		$form->field('style', 'select', ['options' => self::subject_styles, 'required' => NULL]);
 
 		$form->fieldset('数据来源');
-		$form->field('fetch_method', 'select', ['options' => $this->subject_fetch_methods()]);
-		$form->field('fetch_values', 'text', ['placeholder' => '多个值请用 "," 间隔', 'required' => NULL]);
+		$form->field('fetch_method', 'select', ['options' => self::subject_fetch_methods]);
+		$form->field('fetch_values', 'text', ['placeholder' => '多个值请用 "," 间隔', 'style' => 'width:21rem', 'required' => NULL]);
 
 		$form->fieldset('专题影片');
 		$form->field('videos', 'textarea', [
@@ -465,19 +461,17 @@ class webapp_router_control extends webapp_echo_masker
 	function get_subjects(int $page = 1)
 	{
 		$conds = [[]];
-		if ($tagid = $this->webapp->query['tagid'] ?? '')
+		if ($type = $this->webapp->query['type'] ?? '')
 		{
-			$conds[0][] = 'tagid=?s';
-			$conds[] = $tagid;
+			$conds[0][] = 'type=?s';
+			$conds[] = $type;
 		}
 
 		$conds[0] = sprintf('%sORDER BY type ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$tag_types = $this->tag_types();
-		$subject_styles = $this->subject_styles();
-		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $tags, $styles)
+		$classify = $this->webapp->fetch_tags(0);
+		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $classify)
 		{
 			$table->row();
-
 			$table->cell()->append('a', ['删除',
 				'href' => "?control/subject,hash:{$value['hash']}",
 				'data-method' => 'delete',
@@ -487,23 +481,21 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
 			$table->cell($value['hash']);
 			$table->cell($value['sort']);
-			$table->cell($tags[$value['type']]);
+			$table->cell($classify[$value['type']]);
 			$table->cell()->append('a', [$value['name'], 'href' => "?control/subject,hash:{$value['hash']}"]);
-			$table->cell($styles[$value['style']] ?? $value['style']);
-
+			$table->cell(self::subject_styles[$value['style']] ?? $value['style']);
 			$table->cell()->append('a', ["{$value['fetch_method']}({$value['fetch_values']})",
 				'href' => "?control/videos,subject:{$value['hash']}"]);
 
-		}, $tag_types, $subject_styles);
+		}, $classify);
 		$table->paging($this->webapp->at(['page' => '']));
 
-		$table->fieldset('删除', '创建时间', '修改时间', 'HASH', '排序', '标签', '名称', '展示样式', '数据来源');
-		$table->header('专题 %d 项', $table->count());
+		$table->fieldset('删除', '创建时间', '修改时间', 'HASH', '排序', '分类', '名称', '展示样式', '数据来源');
+		$table->header('找到 %d 项', $table->count());
 		$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
-
 		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
-			->select(['' => '全部分类', ...$this->webapp->mysql->tags('WHERE phash IS NULL')->column('name', 'hash')])
-			->setattr(['onchange' => 'g({tagid:this.value||null})', 'style' => 'padding:.1rem'])->selected($tagid);
+			->select(['' => '全部分类', ...$classify])
+			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'padding:.1rem'])->selected($type);
 	}
 	function get_subject(string $hash = NULL)
 	{
@@ -1063,9 +1055,9 @@ class webapp_router_control extends webapp_echo_masker
 			'placeholder' => '请输入视频HASH、标签HASH、关键字按【Enter】进行搜索。',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
-		$table->bar->select(['' => '全部分类'] + $this->tag_types())
-			->setattr(['onchange' => 'g({tag:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-			->selected($tag);
+		// $table->bar->select(['' => '全部分类'] + $this->tag_types())
+		// 	->setattr(['onchange' => 'g({tag:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+		// 	->selected($tag);
 		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
 			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
