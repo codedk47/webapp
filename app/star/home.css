@@ -1,4 +1,5 @@
 :root {
+/*
 	--webapp-background: white;
 	--webapp-foreground: black;
 	--webapp-gap: 1rem;
@@ -12,7 +13,25 @@
 	--webapp-hint: silver;
 	--webapp-edge: #1b1f23;
 	--webapp-primary: #28a745;
-	--webapp-danger: #cb2431;
+	--webapp-danger: #cb2431; 
+ */
+	--webapp-hue: 0;
+	--webapp-saturation: 100%;
+	--webapp-color: var(--webapp-hue) var(--webapp-saturation);
+	--webapp-background: hsl(var(--webapp-color) 7%);
+	--webapp-foreground: hsl(var(--webapp-color) 100%);
+
+	--webapp-anchor: hsl(var(--webapp-color) 96%);
+	--webapp-button: hsl(var(--webapp-color) 20%);
+	--webapp-hover: hsl(var(--webapp-color) 80%);
+	--webapp-hint: hsl(var(--webapp-color) 20%);
+	--webapp-edge: hsl(var(--webapp-color) 0%);
+	--webapp-primary: 40, 167, 69;
+	--webapp-danger: 203, 36, 49;
+
+	--webapp-gap: 1rem;
+	--webapp-gapitem: .4rem;
+	--webapp-gapradius: .4rem;
 
 	--webapp-font-large: 1.4rem;
 	--webapp-font-medium: 1.2rem;
@@ -31,7 +50,7 @@ html,body{
 	height: 100%;
 }
 a{
-	color: var(--webapp-foreground);
+	color: var(--webapp-anchor);
 	text-decoration: none;
 }
 a.arrow{
@@ -65,15 +84,40 @@ body>div.splashscreen:first-child>header:not(:empty){
 }
 /* login */
 form.login{
-	width: 60%;
+	max-width: 720px;
+	padding: var(--webapp-gap);
 	margin: auto;
 }
 form.login>fieldset{
 	border: none;
-
+	display: flex;
+	flex-direction: column;
 }
-form.login>fieldset>button{
-	width: 100%;
+form.login>fieldset>button,
+form.login>fieldset>label.button{
+
+	display: block;
+	text-align: center;
+}
+form.login>fieldset:first-child{
+	flex-direction: row;
+	align-items: center;
+}
+form.login>fieldset:first-child>img{
+	width: 5rem;
+	height: 5rem;
+	object-fit: cover;
+}
+form.login>fieldset:first-child>strong{
+	flex-grow: 1;
+	font-size: 4rem;
+	text-align: center;
+	white-space: nowrap;
+}
+form.login>fieldset:last-child{
+	color: var(--webapp-hover);
+	font-size: var(--webapp-font-small);
+	text-align: center;
 }
 
 /* header */
@@ -132,7 +176,7 @@ aside.classify>a.selected::before{
 	left: 1rem;
 	right: 1rem;
 	bottom: .2rem;
-	border-bottom: .2rem solid var(--webapp-foreground);
+	border-bottom: .2rem solid var(--webapp-anchor);
 }
 aside.watch{
 	position: sticky;
@@ -153,7 +197,7 @@ main>blockquote[data-lazy]{
 }
 
 /* footer */
-footer{
+body>div:first-child>footer{
 	position: fixed;
 	left: 0;
 	right: 0;
@@ -161,12 +205,12 @@ footer{
 	z-index: 9;
 	background-color: var(--webapp-background);
 }
-footer.nav{
+body>div:first-child>footer.nav{
 	display: flex;
 	justify-content: center;
 	box-shadow: 0 .2rem .6rem var(--webapp-edge);
 }
-footer.nav>a{
+body>div:first-child>footer.nav>a{
 	padding: var(--webapp-gap) 0;
 	flex-grow: 1;
 	text-align: center;
@@ -194,11 +238,12 @@ div[class|=grid]>a>figure{
 	margin: 0;
 	position: relative;
 	overflow: hidden;
+	color: var(--webapp-foreground);
 	font-size: var(--webapp-font-small);
-	text-shadow: 1px 1px 0 var(--webapp-foreground);
+	background-color: var(--webapp-hint);
 	padding-bottom: 56.25%;
 	border-radius: var(--webapp-gapradius);
-	box-shadow: 0 0 .2rem var(--webapp-hint);
+	box-shadow: 0 0 .2rem var(--webapp-edge);
 	/*
 	19:6= 56.25%
 	4:3	= 75%
@@ -209,14 +254,14 @@ div[class|=grid]>a>figure{
 div[class|=grid]>a>figure[data-label]::before{
 	content: attr(data-label);
 	position: absolute;
-	top: -2.1rem;
+	top: -2.15rem;
 	left: -2.1rem;
 	width: 4rem;
 	z-index: 1;
 	padding-top: 3rem;
 	padding-bottom: .1rem;
-	color: var(--webapp-background);
-	background-color: var(--webapp-danger);
+	
+	background-color: var(--webapp-hint);
 	transform: rotate(-45deg);
 	text-align: center;
 }
@@ -226,9 +271,7 @@ div[class|=grid]>a>figure[data-require]::after{
 	top: 0;
 	right: 0;
 	padding: .2rem var(--webapp-gapitem);
-	color: var(--webapp-background);
-	background-color: var(--webapp-danger);
-
+	background-color: var(--webapp-hint);
 }
 div[class|=grid]>a>figure>img{
 	position: absolute;
@@ -243,9 +286,7 @@ div[class|=grid]>a>figure>figcaption{
 	right: 0;
 	bottom: 0;
 	padding: 0 var(--webapp-gapitem);
-	color: var(--webapp-background);
-	background-color: var(--webapp-danger);
-
+	background-color: var(--webapp-hint);
 	white-space: nowrap;
 }
 div[class|=grid]>a>strong{
@@ -263,7 +304,7 @@ div[class|=grid]>a>div{
 div[class|=grid]>a>div>mark{
 	position: absolute;
 	inset: 0;
-	color: var(--webapp-anchor);
+	color: var(--webapp-hover);
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -322,13 +363,8 @@ div[class|=grid][class*=-icon]{
 }
 div[class|=grid][class*=-icon]>a>figure{
 	padding-bottom: 100%;
-	border-radius: var(--webapp-gapradius);
-	
 }
-div[class|=grid][class*=-icon]>a>figure>img{
-	box-shadow: 0 0 .2rem var(--webapp-edge);
-}
-div[class|=grid][class*=-icon]>a>figure>figcaption{
+div[class|=grid][class*=-icon]>a>strong{
 	text-align: center;
 }
 /* @media screen and (min-width: 720px) {
@@ -358,8 +394,8 @@ div.videoinfo>mark{
 }
 div.videoinfo>mark>a{
 	padding: .2rem var(--webapp-gapitem);
-	color: var(--webapp-background);
-	background-color: var(--webapp-danger);
+	color: var(--webapp-foreground);
+	background-color: var(--webapp-hint);
 	border-radius: var(--webapp-gapradius);
 	font-size: var(--webapp-font-small);
 }
@@ -420,33 +456,91 @@ div.short>footer{
 
 
 div.my{
-	height: 50%;
+
 	background: linear-gradient(to bottom, var(--webapp-primary) 10%, white);
 }
 div.my>aside{
 	height: 4rem;
 }
-div.my>main{
+/* div.my>main>ul{
 	margin: 0 var(--webapp-gap);
 	border-radius: var(--webapp-gapradius);
-	background-color: var(--webapp-background);
+	background-color: rgb(var(--webapp-background));
 	height: 30rem;
+} */
+
+div.listmenu{
+	margin: var(--webapp-gap);
+	padding: 1px;
+	display: flex;
+	flex-direction: column;
+	background-color: var(--webapp-foreground);
+	border-radius: var(--webapp-gapradius);
+	box-shadow: 0 0 .2rem var(--webapp-hint);
+}
+div.listmenu>a{
+	color: var(--webapp-background);
+	padding: var(--webapp-gap);
+}
+div.listmenu>a::after{
+	content: attr(data-right);
+	color: var(--webapp-anchor);
+	float: right;
+}
+div.listmenu>a:not(:first-child){
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-
-
-button,label.button{
+button,
+label.button{
 	font: var(--webapp-font-medium) var(--webapp-font-sans-serif);
 	color: var(--webapp-foreground);
 	padding: .25rem 1rem;
 	border: 1px solid rgba(27, 31, 35, 0.2);
 	white-space: nowrap;
-	background-color: #eff3f6;
-	background-image: linear-gradient(-180deg, #fafbfc 0%, #eff3f6 90%);
+	background-color: var(--webapp-button);
+	background-image: linear-gradient(-180deg, hsl(var(--webapp-color), 30%) 0%, hsl(var(--webapp-color), 20%) 90%);
+	border-radius: var(--webapp-gap);
 }
 
+dialog{
+	outline: none;
+	display: flex;
+	border: 1px solid var(--webapp-edge);
+	padding: 0;
+	flex-direction: column;
+	border-radius: var(--webapp-gapradius);
+	box-shadow: 0 0 .2rem var(--webapp-edge);
+	overflow: hidden;
+}
+dialog::backdrop {
+	background: rgba(0, 0, 0, 0.4);
+	backdrop-filter: blur(.4rem);
+}
+dialog>strong{
+	padding: var(--webapp-gapitem) var(--webapp-gap);
+	text-align: center;
+	font-size: var(--webapp-font-medium);
+	background-image: linear-gradient(-180deg, #fafbfc 0%, #eff3f6 90%);
+}
+dialog>pre{
+	margin: 0;
+	padding: var(--webapp-gap);
+	font-family: var(--webapp-font-sans-serif);
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
+dialog>a,
+dialog>a>img{
+	width: 100%;
+	display: block;
+}
 
-
+webapp-videos>div>webapp-video>strong{
+	position: absolute;
+	left: 10%;
+	bottom: 10%;
+}
 webapp-slideshows{
 	box-shadow: 0 0 .2rem var(--webapp-hint);
 	border-radius: var(--webapp-gapradius);

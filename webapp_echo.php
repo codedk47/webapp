@@ -424,6 +424,7 @@ class webapp_echo_masker extends webapp_echo_html
 	}
 	function init()
 	{
+		//$this->title('Initializing');
 		return 200;
 	}
 	function json(array|object $data):webapp_echo_json

@@ -388,27 +388,27 @@ class user extends ArrayObject
 		$created = FALSE;
 		do
 		{
-			$did = isset($user['did']) ? substr(md5($user['did']), -16) : $webapp->did;
+			$did = isset($user['did']) && strlen($user['did']) === 16 ? $user['did'] : NULL;
 			if ($did && $webapp->mysql->users('WHERE did=?s LIMIT 1', $did)->fetch($userdata))
 			{
 				break;
 			}
-			$tid = $user['tid'] ?? NULL;
+			$tid = isset($user['tid']) ?? NULL;
 			if ($tid && $webapp->mysql->users('WHERE tid=?s LIMIT 1', $tid)->fetch($userdata))
 			{
 				break;
 			}
-			$cid = $user['cid'] ?? $webapp->cid;
+			$id = $webapp->random_time33();
 			$device = $user['device'] ?? $webapp->request_device();
-			$nickname = $user['nickname'] ?? NULL;
-			$user = [
+			if ($webapp->mysql->users->insert($userdata = [
+				'id' => $webapp->time33hash($id, TRUE),
 				'date' => date('Y-m-d', $webapp->time),
 				'ctime' => $webapp->time,
 				'mtime' => $webapp->time,
 				'login' => 0,
 				'watch' => 0,
 				'lasttime' => $webapp->time,
-				'lastip' => $webapp->iphex($webapp->ip),
+				'lastip' => $webapp->iphex($webapp->request_ip(TRUE)),
 				'device' => match (1) {
 					preg_match('/pad/i', $device) => 'pad',
 					preg_match('/iphone/i', $device) => 'ios',
@@ -418,11 +418,12 @@ class user extends ArrayObject
 				'expire' => $webapp->time,
 				'coin' => 0,
 				'ticket' => 0,
-				'fid' => random_int(1, 8),
-				'uid' => $user['uid'] ?? 0,
-				'cid' => $cid,
+				'fid' => 1,
+				'uid' => 0,
+				'cid' => $webapp->cid($user['cid'] ?? NULL),
 				'did' => $did,
 				'tid' => $tid,
+				'nickname' => $webapp->time33hash($id),
 				'gender' => 'none',
 				'descinfo' => '',
 				'historys' => '',
@@ -430,26 +431,9 @@ class user extends ArrayObject
 				'followed_ids' => '',
 				'follower_num' => 0,
 				'video_num' => 0
-			];
-			$i = 0;
-			do
-			{
-				$id = $webapp->random_time33();
-				$user['id'] = $webapp->time33hash($id, TRUE);
-				// if ($user['device'] === 'pc' || $user['device'] === 'pad')
-				// {
-				// 	$user['nickname'] = "游客 - {$user['nickname']}";
-				// 	$userdata = $user;
-				// 	break;
-				// }
-				$user['nickname'] = $nickname ?? $webapp->time33hash($id);
-				if ($webapp->mysql->users->insert($user))
-				{
-					$userdata = $user;
-					$created = TRUE;
-					break;
-				}
-			} while ($webapp->mysql->errno === 1062 && ++$i < 3);
+			])) {
+				$created = TRUE;
+			}
 		} while (FALSE);
 		return new static($webapp, $userdata);
 	}

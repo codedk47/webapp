@@ -398,21 +398,23 @@ class base extends webapp
 	}
 	//======================以上为内部功能======================
 	//======================以下为扩展功能======================
-	function ua():string
+	const cid = '0000';
+	// function ua():string
+	// {
+	// 	return $this->request_device();
+	// }
+	// function ip():string
+	// {
+	// 	return $this->request_ip(TRUE);
+	// }
+	// function did():?string
+	// {
+	// 	return preg_match('/DID\/(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
+	// }
+	function cid(?string $cid):string
 	{
-		return $this->request_device();
-	}
-	function ip():string
-	{
-		return $this->request_ip(TRUE);
-	}
-	function did():?string
-	{
-		return preg_match('/DID\/(\w{16})/', $this->ua, $pattern) ? $pattern[1] : NULL;
-	}
-	function cid():string
-	{
-		return preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000';
+		return $cid && $this->mysql->channels('WHERE hash=?s LIMIT 1', $user['cid'])->fetch() ? $user['cid'] : self::cid;
+		// return preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000';
 		// return is_string($cid = $this->request_cookie('cid') ?? $this->query['cid'] ?? NULL)
 		// 	&& preg_match('/^\w{4,}/', $cid) ? substr($cid, 0, 4)
 		// 	: (preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000');
@@ -535,10 +537,10 @@ class base extends webapp
 		}
 		return TRUE;
 	}
-	function user_sync(string $id)
-	{
-		$this->webapp->remote($this->webapp['app_sync_call'], 'sync_user', [$id]);
-	}
+	// function user_sync(string $id)
+	// {
+	// 	$this->webapp->remote($this->webapp['app_sync_call'], 'sync_user', [$id]);
+	// }
 	//创建用户
 	function user_create(array $user):user
 	{
@@ -549,6 +551,26 @@ class base extends webapp
 			'ios' => 'signup_ios',
 			default => 'signup'
 		});
+		return $user;
+	}
+	function fetch_user(string $id):array
+	{
+		if (empty($user = $this->redis->hGetAll($key = "user:{$id}")))
+		{
+			if ($this->mysql->users('WHERE id=?s LIMIT 1', $id)->fetch($user)
+				&& $this->redis->hMSet($key, $user)
+				&& $this->redis->expireAt($key, mktime(23, 59, $this->random_int(1, 59)))) {
+				$this->recordlog($user['cid'], match ($user['device'])
+				{
+					'android' => 'signin_android',
+					'ios' => 'signin_ios',
+					default => 'signin'
+				});
+				$this->mysql->users('WHERE id=?s LIMIT 1', $user['id'])
+					->update('`login`=`login`+1,lasttime=?i,lastip=?s',
+					$this->time, $this->iphex($this->request_ip(TRUE)));
+			}
+		}
 		return $user;
 	}
 	//Reids 覆盖此方法获取用户并且缓存
@@ -964,10 +986,17 @@ class base extends webapp
 		$end = $start + $size - 1;
 		if ($this->redis->exists($key = "short:videos"))
 		{
-
+			foreach ($this->redis->lRange($key, $start, $end) as $hash)
+			{
+				if ($video = $this->redis->hGetAll($hash))
+				{
+					$videos[] = $video;
+				}
+			}
+			return $videos;
 		}
 		$keys = [];
-		foreach ($this->mysql->videos('WHERE type="v" AND sync="allow" AND ptime<?i', $this->time) as $video)
+		foreach ($this->mysql->videos('WHERE type="v" AND sync="allow" AND ptime<?i', $this->time) as $index => $video)
 		{
 			$keys[] = "video:{$video['hash']}";
 			$video = $this->fetch_video($video['hash'], $video);
@@ -976,6 +1005,8 @@ class base extends webapp
 				$videos[] = $video;
 			}
 		}
+		$this->redis->rPush($key, ...$keys);
+		return $videos;
 	}
 
 

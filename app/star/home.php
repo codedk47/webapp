@@ -11,13 +11,13 @@ class webapp_router_home extends webapp_echo_masker
 		unset($this->xml->body->div['class']);
 		$this->free = $webapp['app_free'];
 		$this->footer[0] = NULL;
-		$this->title('Star');
 		if ($this->initiated)
 		{
 			return;
 		}
+		$this->title($webapp['app_name']);
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
-		$this->link_resources($webapp['app_resorigins']);
+		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/home.css?' . $webapp->random_hash(TRUE);
 		$this->script(['src' => '/webapp/app/star/home.js']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js']);
@@ -29,23 +29,36 @@ class webapp_router_home extends webapp_echo_masker
 	
 	function authorization($uid, $pwd):array
 	{
-		$this->user = $this->webapp->user($uid);
-		return ['asd', '123'];
-		return $this->user->id ? [$this->user->id, $this->user['cid']] : [];
+		$user = $this->webapp->fetch_user($uid);
+		return $user ? [$user['id'], $user['cid']] : [];
 	}
 	function form_login(webapp_html $node = NULL)
 	{
 		$form = new webapp_form($node ?? $this->webapp, '?home/create_account');
-		//$form->field('did');
+		$form->fieldset->append('img', ['src' => '/webapp/app/star/static/logo.png']);
+		$form->fieldset->append('strong', $this->webapp['app_name']);
 		$form->fieldset();
 		$form->fieldset->append('label', ['恢复我的凭证', 'class' => 'button'])->append('input', [
 			'type' => 'file',
-			'accept' => 'image/*',
+			'accept' => 'image/png',
 			'style' => 'display:none',
 			'onchange' => 'masker.revert_account(this)'
 		]);
 		$form->fieldset();
-		$form->button('创建新的账号', 'submit');
+		$form->button('我已满18周岁', 'submit');
+		$form->fieldset()->text('禁止未满18周岁的用户注册登录使用');
+		$form->field('cid');
+		$form->field('did');
+		$form->field('tid');
+		if ($form->echo)
+		{
+			$ua =  $this->webapp->request_device();
+			$did = $this->webapp->query['did'] ?? NULL;
+			$form->echo([
+				'cid' => preg_match('/CID\/(\w{4})/', $ua, $pattern) ? $pattern[1] : (string)$this->webapp->redis->get("cid:{$did}"),
+				'did' => preg_match('/DID\/(\w{16})/', $ua, $pattern) ? $pattern[1] : $did,
+				'tid' => NULL]);
+		}
 		$form->xml['onsubmit'] = 'return masker.create_account(this)';
 		return $form;
 	}
@@ -57,11 +70,13 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function post_create_account()
 	{
+		$data = ['token' => NULL];
 		if ($this->form_login()->fetch($login))
 		{
-			$this->json($login);
+			$user = $this->webapp->user_create($login);
+			$data['token'] = (string)$user;
 		}
-		
+		$this->json($data);
 	}
 	function set_header_index():webapp_html
 	{
@@ -78,12 +93,9 @@ class webapp_router_home extends webapp_echo_masker
 
 		return $this->header;
 	}
-	function set_header_title(string $name, string $goback = NULL):webapp_html
+	function set_header_title(string $name, string $goback = 'javascript:history.back();'):webapp_html
 	{
-		if ($goback)
-		{
-			$this->header->append('a', ['href' => $goback, 'class' => 'arrow']);
-		}
+		$this->header->append('a', ['href' => $goback, 'class' => 'arrow']);
 		$this->header->append('strong', $name);
 		return $this->header;
 	}
@@ -97,7 +109,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->footer->append('a', ['首页', 'href' => '?home/home']);
 		$this->footer->append('a', ['抖音', 'href' => '?home/short']);
 		//$this->footer->append('a', ['游戏', 'href' => '?home/game']);
-		$this->footer->append('a', ['剧集', 'href' => '?home/series']);
+		$this->footer->append('a', ['剧场', 'href' => '?home/series']);
 		$this->footer->append('a', ['我的', 'href' => '?home/my']);
 		return $this->footer;
 	}
@@ -125,13 +137,14 @@ class webapp_router_home extends webapp_echo_masker
 
 			$element = $node->append('div', ['class' => 'grid-icon']);
 
-			$ads = [...$ads, ...$ads, ...$ads, ...$ads];
-	
+
 			foreach ($ads as $ad)
 			{
-				$a = $element->append('a', ['href' => $ad['support']])->append('figure');
-				$a->append('img', ['src' => $ad['picture']]);
-				$a->append('figcaption', $ad['name']);
+				$anchor = $element->append('a', ['href' => $ad['support']]);
+				$anchor->append('figure')->append('img', ['src' => $ad['picture']]);
+				$anchor->append('strong', $ad['name']);
+
+				//$a->append('figcaption', $ad['name']);
 				//$element->append('a', ['href' => $ad['support']])->append('img');
 			}
 			return $element;
@@ -165,21 +178,35 @@ class webapp_router_home extends webapp_echo_masker
 			foreach ($videos as $video)
 			{
 				$content = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
-				$figure = $content->append('figure', [
-					'data-label' => '测试',
-					'data-require' => match (intval($video['require'])) {
-					-1 => '会员',
-					0 => '免费',
-					default => "{$video['require']} 金币"
-				}]);
+				$tags = $video['tags'] ? explode(',', $video['tags']) : [];
+				$attributes = [];
+				if (in_array('_2OO', $tags, TRUE))
+				{
+					$attributes['data-label'] = '推荐';
+				}
+				if (in_array('liP_', $tags, TRUE))
+				{
+					$attributes['data-require'] = '中文字幕';
+				}
+				// if ($this->free === FALSE)
+				// {
+				// 	$attributes['data-require'] = match (intval($video['require']))
+				// 	{
+				// 		-1 => '会员',
+				// 		0 => '免费',
+				// 		default => "{$video['require']} 金币"
+				// 	};
+				// }
+
+				$figure = $content->append('figure', $attributes);
 				$figure->append('img', ['loading' => 'lazy', 'src' => $video['poster']]);
 				$figure->append('figcaption', $video['duration']);
 
 				$content->append('strong', webapp_html::charsafe($video['name']));
-				if (isset($this->tags) && $video['tags'])
+				if (isset($this->tags) && $tags)
 				{
 					$mark = $content->append('div')->append('mark');
-					foreach (array_reverse(explode(',', $video['tags'])) as $tag)
+					foreach (array_reverse($tags) as $tag)
 					{
 						if (isset($this->tags[$tag]))
 						{
@@ -212,9 +239,25 @@ class webapp_router_home extends webapp_echo_masker
 			'data-autoskip' => TRUE
 		]);
 	}
+	function get_init()
+	{
+		$data = ['notice' => NULL, 'popup' => NULL];
+		$configs = $this->webapp->fetch_configs();
+		if ($configs['notice_title'])
+		{
+			$data['notice'] = ['title' => $configs['notice_title'], 'content' => $configs['notice_content']];
+		}
+		if ($ads = $this->webapp->fetch_ads(0))
+		{
+			$ad = $this->webapp->random_weights($ads);
+			$data['popup'] = ['title' => $ad['name'], 'picture' => $ad['picture'], 'support' => $ad['support']];
+		}
+		$this->json($data);
+	}
 	function get_home(string $type = NULL)
 	{
-		$this->webapp->redis->flushall();
+
+		//$this->webapp->redis->flushall();
 		$this->aside['class'] = 'classify';
 		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
 		foreach ($classify = $this->webapp->fetch_tags(0) as $hash => $name)
@@ -238,6 +281,10 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_search();
 		$this->set_footer_menu();
 		$this->add_slideshows_ads($this->main, 1);
+		if (isset($classify[$type]) === FALSE)
+		{
+			$this->add_nav_ads($this->main, 9, '福利导航');
+		}
 		$this->tags = $this->webapp->fetch_tags(NULL);
 		foreach ($this->webapp->fetch_subjects(isset($classify[$type]) ? $type : NULL) as $subject)
 		{
@@ -318,16 +365,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($page)
 		{
-			
-			
-			$this->json([
-				[ 'poster' => '?/2309/1N1VGT0V6UCT/cover?MASK1695742222', 'm3u8' => '?/2309/1N1VGT0V6UCT/play?mask1670409186' ],
-				[ 'poster' => '?/2308/V9CUN2SBDION/cover?MASK1695742222', 'm3u8' => '?/2308/V9CUN2SBDION/play?mask1670409186' ],
-				[ 'poster' => '?/2309/OKD6KOT82RBP/cover?MASK1695742222', 'm3u8' => '?/2309/OKD6KOT82RBP/play?mask1670409186' ],
-				[ 'poster' => '?/2309/OIM8UP1HL9FD/cover?MASK1695742222', 'm3u8' => '?/2309/OIM8UP1HL9FD/play?mask1670409186' ],
-				[ 'poster' => '?/2309/SEJFF8KRES9L/cover?MASK1695742222', 'm3u8' => '?/2309/SEJFF8KRES9L/play?mask1670409186' ],
-				[ 'poster' => '?/2309/IA9RL8VDDI2J/cover?MASK1695742222', 'm3u8' => '?/2309/IA9RL8VDDI2J/play?mask1670409186' ],
-			]);
+			$this->json($this->webapp->fetch_short_videos($page, 1));
 			return;
 		}
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
@@ -336,7 +374,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->body->div['class'] = 'short';
 		$this->header->append('a', ['href' => 'javascript:history.back();', 'class' => 'arrow']);
 		$this->header->append('strong', '短视频');
-		$this->main->append('webapp-videos', [
+		$video = $this->main->append('webapp-videos', [
 			'onchange' => 'masker.shortchanged(this)',
 			'data-fetch' => '?home/short,page:',
 			'data-page' => 1,
@@ -353,6 +391,8 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_series()
 	{
+
+
 		$this->add_nav_ads($this->main, 1, 'asdawd');
 		$this->set_footer_menu();
 	}
@@ -368,35 +408,32 @@ class webapp_router_home extends webapp_echo_masker
 
 	function get_my()
 	{
-
-		$this->webapp->redis->hMSet('A', ['a' => 1, 'b' => [1,2,3]]);
-
-		print_r($this->webapp->redis->hGetAll('A'));
-		return;
-
-
-
-
-		print_r($this->webapp->fetch_subjects('tAF9'));
-
-
-		return;
 		$this->xml->body->div['class'] = 'my';
+		$this->set_header_search();
+		//$this->aside->
 
-		print_r( $this->webapp->fetch_video('MDSE00000036') );
-
-		//$this->mysql->configs->column('value', 'key')
-
-
-		// var_dump($this->webapp->redis->hmset );
-		// var_dump( $this->webapp->redis->hmset('dasd', [
-		// 	'asd' => 123,
-		// 	'dweawe' => 4654
-		// ]) );
 		
-		//var_dump( $this->webapp->redis->exists('dasd') );
 
+
+		$anchors = $this->main->append('div', ['class' => 'listmenu']);
+		$anchors->append('a', ['商务洽谈', 'href' => 'https://t.me/hhuli2020', 'target' => '_blank', 'data-right' => 'Telegram']);
+		$anchors->append('a', ['官方交流', 'href' => 'https://t.me/+g2CzDwRoHItlODk1', 'target' => '_blank', 'data-right' => 'Telegram']);
+		$configs = $this->webapp->fetch_configs();
+		$anchors->append('a', ['分享链接', 'href' => $configs['down_page'], 'data-right' => '>>',
+			'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>alert("分享失败！"))']);
+		$anchors->append('a', ['我的收藏', 'href' => 'javascript:;', 'data-right' => '>>']);
+		$anchors->append('a', ['观影历史', 'href' => '?home/my-watch', 'data-right' => '>>']);
+		$anchors->append('a', ['问题反馈', 'href' => '?home/my-report', 'data-right' => '>>']);
+		$this->set_footer_menu();
+	}
+	function get_my_report()
+	{
+		$this->set_header_title('问题反馈');
 
 		$this->set_footer_menu();
+	}
+	function get_my_watch()
+	{
+
 	}
 }

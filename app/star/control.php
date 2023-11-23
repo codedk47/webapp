@@ -15,28 +15,32 @@ class webapp_router_control extends webapp_echo_masker
 		}
 
 		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
-		$this->link_resources($webapp['app_resorigins']);
+		$this->link_resources($webapp['app_resources']);
 		$this->script(['src' => '/webapp/app/star/base.js']);
 		$this->nav([
 			['数据', '?control/home'],
+			['配置', '?control/configs'],
+			['广告', '?control/ads'],
+			['渠道', '?control/channels'],
 			['分类 & 标签', '?control/tags'],
 			['专题', '?control/subjects'],
 			//['上传账号', '?control/uploaders'],
 			['用户', '?control/users'],
-			
 			['视频', '?control/videos'],
-			['产品', '?control/prods'],
-			['广告', '?control/ads'],
+			//['产品', '?control/prods'],
+			
 			['记录', [
+				['问题汇报', '?control/reports'],
 				['上传的图片', '?control/images'],
 				['购买影片', '?control/record-video'],
 				['余额提现', '?control/record-exchange-balance'],
 				['游戏提现', '?control/record-exchange-game'],
 				['充值', '?control/record-recharge']
 			]],
-			['评论', '?control/comments'],
-			['渠道', '?control/channels'],
-			['配置', '?control/configs'],
+			//['评论', '?control/comments'],
+			
+			
+			
 			['注销登录', "javascript:masker.authorization(null).then(()=>location.replace(location.href));", 'style' => 'color:maroon']
 		]);
 	}
@@ -295,6 +299,177 @@ class webapp_router_control extends webapp_echo_masker
 		]);
 	}
 
+	//========广告========
+	function ad_seats():array
+	{
+		return [
+			0 => '开屏广告',
+			1 => '首页轮播',
+
+			
+			2 => '中间轮播',
+			3 => '游戏轮播',
+			4 => '社区轮播',
+			5 => '个人中心',
+			6 => '弹窗广告',
+
+			9 => '导航图标'
+			//255 => '待定分类'
+		];
+	}
+	function form_ad(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+		$form->fieldset->append('div', [
+			'class' => 'cover',
+			'style' => 'width:32rem;height:18rem;background-size:contain'
+		]);
+
+		$form->fieldset('广告图片 / 过期时间');
+		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
+		$form->field('expire', 'date', ['value' => date('Y-m-t')], fn($i,$v) => $i ? strtotime($v) : date('Y-m-d', $v) );
+
+		$form->fieldset('展示位置 / 权重（越大越几率越大） / 名称');
+		$form->field('seat', 'select', ['options' => $this->ad_seats(), 'required' => NULL]);
+		$form->field('weight', 'number', ['min' => 0, 'max' => 255, 'value' => 1, 'required' => NULL]);
+		$form->field('name', 'text');
+
+		$form->fieldset('行为URL');
+		$form->field('acturl', 'text', [
+			'placeholder' => 'javascript 或者 url',
+			'value' => 'javascript:;',
+			'maxlength' => 255,
+			'style' => 'width:40rem',
+			'required' => NULL
+		]);
+
+		$form->fieldset();
+		$form->button('提交', 'submit');
+
+		return $form;
+	}
+	function get_ads(int $page = 1)
+	{
+		$conds = [[]];
+		if (strlen($seat = $this->webapp->query['seat'] ?? ''))
+		{
+			$conds[0][] = 'seat=?i';
+			$conds[] = $seat;
+		}
+		if ($display = $this->webapp->query['display'] ?? '')
+		{
+			$conds[0][] = 'display=?s';
+			$conds[] = $display;
+		}
+		$conds[0] = sprintf('%sORDER BY seat ASC,weight DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats)
+		{
+			$table->row()['style'] = 'background-color:var(--webapp-hint)';
+			$table->cell()->append('a', ['删除下面广告', 'href' => '#']);
+			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?control/ad-update,hash:{$value['hash']}"]);
+
+			$table->row();
+			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])
+				->append('img', ['loading' => 'lazy', 'src' => $value['change'] === 'sync'
+					? '/webapp/res/ps/loading.svg'
+					: "?/news/{$value['hash']}?mask{$value['ctime']}"]);
+
+			$table->row();
+			$table->cell('HASH');
+			$table->cell($value['hash']);
+			$table->cell('创建时间');
+			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
+			$table->cell('修改时间');
+			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
+
+			$table->row();
+			$table->cell('位置');
+			$table->cell($seats[$value['seat']]);
+			$table->cell('展示权重');
+			$table->cell($value['weight']);
+			$table->cell('过期时间');
+			$table->cell([date('Y-m-d\\TH:i:s', $value['expire']),
+				'style' => $value['expire'] > $this->webapp->time ? 'color:green' : 'color:red']);
+
+			$table->row();
+			$table->cell('名称');
+			$table->cell($value['name']);
+			$table->cell('展示次数');
+			$table->cell(number_format($value['view']));
+			$table->cell('点击次数');
+			$table->cell(number_format($value['click']));
+
+			$table->row();
+			$table->cell('URL');
+			$table->cell(['colspan' => 5])->append('a', [$value['acturl'], 'href' => $value['acturl']]);
+
+
+
+		}, $seats = $this->ad_seats());
+		$table->paging($this->webapp->at(['page' => '']));
+		$table->fieldset('封面', '字段', '信息');
+		$table->header('广告 %d 项', $table->count());
+		unset($table->xml->tbody->tr[0]);
+
+		$table->bar->append('button', ['添加广告', 'onclick' => 'location.href="?control/ad-insert"']);
+		$table->bar->select(['' => '所有位置'] + $seats)
+			->setattr(['onchange' => 'g({seat:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($seat);
+		// $table->bar->select(['' => '所有展示'] + $displays)
+		// 	->setattr(['onchange' => 'g({display:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+		// 	->selected($display);
+	}
+	function get_ad_insert()
+	{
+		$this->form_ad($this->main);
+	}
+	function post_ad_insert()
+	{
+		$hash = $this->webapp->random_hash(FALSE);
+		if (count($uploadedfile = $this->webapp->request_uploadedfile('ad'))
+			&& $this->form_ad()->fetch($ad) && $this->webapp->mysql->ads->insert([
+				'hash' => $hash,
+				'mtime' => $this->webapp->time,
+				'ctime' => $this->webapp->time,
+				'change' => 'sync'] + $ad)
+			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
+			$this->webapp->response_location('?control/ads');
+		}
+		else
+		{
+			$this->main->append('h4', '广告插入失败！');
+		}
+	}
+	function get_ad_update(string $hash)
+	{
+		if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->fetch($ad))
+		{
+			$form = $this->form_ad($this->main);
+			$form->xml->fieldset->div->append('img', ['src' => "?/news/{$ad['hash']}?mask{$ad['ctime']}"]);
+			//$form->xml->fieldset->div['data-cover'] = "/news/{$ad['hash']}?{$ad['ctime']}";
+			$form->echo($ad);
+		}
+	}
+	function post_ad_update(string $hash)
+	{
+		if ($this->form_ad()->fetch($ad))
+		{
+			if (count($uploadedfile = $this->webapp->request_uploadedfile('ad'))
+				&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
+				$ad['change'] = 'sync';
+			}
+			else
+			{
+				$ad['ctime'] = $this->webapp->time;
+			}
+			if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
+			{
+				$this->webapp->response_location('?control/ads');
+			}
+			return 200;
+		}
+		$this->main->append('h4', '广告更新失败！');
+	}
 	//========标签========
 	function tag_types():array
 	{
@@ -1290,172 +1465,6 @@ class webapp_router_control extends webapp_echo_masker
 	}
 
 
-	//========广告========
-	function ad_seats():array
-	{
-		return [
-			0 => '开屏广告',
-			1 => '首页轮播',
-
-			
-			2 => '中间轮播',
-			3 => '游戏轮播',
-			4 => '社区轮播',
-			5 => '个人中心',
-			6 => '弹窗广告'
-			//255 => '待定分类'
-		];
-	}
-	function form_ad(webapp_html $html = NULL):webapp_form
-	{
-		$form = new webapp_form($html ?? $this->webapp);
-		$form->fieldset->append('div', [
-			'class' => 'cover',
-			'style' => 'width:32rem;height:18rem;background-size:contain'
-		]);
-
-		$form->fieldset('广告图片 / 过期时间');
-		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
-		$form->field('expire', 'date', ['value' => date('Y-m-t')], fn($i,$v) => $i ? strtotime($v) : date('Y-m-d', $v) );
-
-		$form->fieldset('展示位置 / 权重（越大越几率越大） / 名称');
-		$form->field('seat', 'select', ['options' => $this->ad_seats(), 'required' => NULL]);
-		$form->field('weight', 'number', ['min' => 0, 'max' => 255, 'value' => 1, 'required' => NULL]);
-		$form->field('name', 'text');
-
-		$form->fieldset('行为URL');
-		$form->field('acturl', 'text', [
-			'placeholder' => 'javascript 或者 url',
-			'value' => 'javascript:;',
-			'maxlength' => 255,
-			'style' => 'width:40rem',
-			'required' => NULL
-		]);
-
-		$form->fieldset();
-		$form->button('提交', 'submit');
-
-		return $form;
-	}
-	function get_ads(int $page = 1)
-	{
-		$conds = [[]];
-		if (strlen($seat = $this->webapp->query['seat'] ?? ''))
-		{
-			$conds[0][] = 'seat=?i';
-			$conds[] = $seat;
-		}
-		if ($display = $this->webapp->query['display'] ?? '')
-		{
-			$conds[0][] = 'display=?s';
-			$conds[] = $display;
-		}
-		$conds[0] = sprintf('%sORDER BY seat ASC,weight DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats)
-		{
-			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell('封面');
-			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?control/ad-update,hash:{$value['hash']}"]);
-
-			$table->row();
-			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])
-				->append('img', ['loading' => 'lazy', 'src' => $value['change'] === 'sync'
-					? '/webapp/res/ps/loading.svg'
-					: "?/news/{$value['hash']}?mask{$value['ctime']}"]);
-
-			$table->row();
-			$table->cell('HASH');
-			$table->cell($value['hash']);
-			$table->cell('创建时间');
-			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
-			$table->cell('修改时间');
-			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
-
-			$table->row();
-			$table->cell('位置');
-			$table->cell($seats[$value['seat']]);
-			$table->cell('展示权重');
-			$table->cell($value['weight']);
-			$table->cell('过期时间');
-			$table->cell(date('Y-m-d\\TH:i:s', $value['expire']));
-
-			$table->row();
-			$table->cell('名称');
-			$table->cell([$value['name'], 'colspan' => 3]);
-			$table->cell('点击次数');
-			$table->cell(number_format($value['click']));
-
-			$table->row();
-			$table->cell('URL');
-			$table->cell(['colspan' => 5])->append('a', [$value['acturl'], 'href' => $value['acturl']]);
-
-
-
-		}, $seats = $this->ad_seats());
-		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('封面', '字段', '信息');
-		$table->header('广告 %d 项', $table->count());
-		unset($table->xml->tbody->tr[0]);
-
-		$table->bar->append('button', ['添加广告', 'onclick' => 'location.href="?control/ad-insert"']);
-		$table->bar->select(['' => '所有位置'] + $seats)
-			->setattr(['onchange' => 'g({seat:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-			->selected($seat);
-		// $table->bar->select(['' => '所有展示'] + $displays)
-		// 	->setattr(['onchange' => 'g({display:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-		// 	->selected($display);
-	}
-	function get_ad_insert()
-	{
-		$this->form_ad($this->main);
-	}
-	function post_ad_insert()
-	{
-		$hash = $this->webapp->random_hash(FALSE);
-		if (count($uploadedfile = $this->webapp->request_uploadedfile('ad'))
-			&& $this->form_ad()->fetch($ad) && $this->webapp->mysql->ads->insert([
-				'hash' => $hash,
-				'mtime' => $this->webapp->time,
-				'ctime' => $this->webapp->time,
-				'change' => 'sync'] + $ad)
-			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
-			$this->webapp->response_location('?control/ads');
-		}
-		else
-		{
-			$this->main->append('h4', '广告插入失败！');
-		}
-	}
-	function get_ad_update(string $hash)
-	{
-		if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->fetch($ad))
-		{
-			$form = $this->form_ad($this->main);
-			$form->xml->fieldset->div->append('img', ['src' => "?/news/{$ad['hash']}?mask{$ad['ctime']}"]);
-			//$form->xml->fieldset->div['data-cover'] = "/news/{$ad['hash']}?{$ad['ctime']}";
-			$form->echo($ad);
-		}
-	}
-	function post_ad_update(string $hash)
-	{
-		if ($this->form_ad()->fetch($ad))
-		{
-			if (count($uploadedfile = $this->webapp->request_uploadedfile('ad'))
-				&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
-				$ad['change'] = 'sync';
-			}
-			else
-			{
-				$ad['ctime'] = $this->webapp->time;
-			}
-			if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
-			{
-				$this->webapp->response_location('?control/ads');
-			}
-			return 200;
-		}
-		$this->main->append('h4', '广告更新失败！');
-	}
 
 	// //话题 & 评论
 	// function get_comments(string $search = NULL, string $phash = NULL, int $page = 1)

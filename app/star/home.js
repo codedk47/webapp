@@ -23,6 +23,37 @@ masker.viewport = (function()
 		}));
 	};
 }());
+masker.dialog = (context, title, url) => new Promise(resolve =>
+{
+	const dialog = document.createElement('dialog');
+	if (context instanceof HTMLElement)
+	{
+		dialog.appendChild(context);
+	}
+	else
+	{
+		dialog.appendChild(document.createElement('strong')).textContent = title;
+		if (typeof url === 'string')
+		{
+			const anchor = document.createElement('a'), image = anchor.appendChild(new Image);
+			anchor.onclick = () => location.href = anchor.href;
+			anchor.href = url;
+			image.fetchpriority = 'high';
+			image.src = context;
+			dialog.appendChild(anchor);
+		}
+		else
+		{
+			dialog.appendChild(document.createElement('pre')).textContent = context;
+		}
+		const strong = document.createElement('strong');
+		strong.textContent = '关 闭';
+		strong.onclick = () => resolve(document.body.removeChild(dialog));
+		dialog.appendChild(strong);
+		dialog.onclick = event => event.target === dialog && strong.onclick();
+	}
+	document.body.appendChild(dialog).showModal();
+});
 masker.then(() =>
 {
 	document.querySelectorAll('blockquote[data-lazy]').forEach(element => masker.viewport(element).then(function lazy(element)
@@ -43,10 +74,11 @@ masker.then(() =>
 		});
 	}));
 });
-masker.init(() =>
+masker.init(() => fetch('?home/init').then(response => response.json()).then(data =>
 {
-	console.log(123)
-});
+	data.popup && masker.dialog(data.popup.picture, data.popup.title, data.popup.support);
+	data.notice && masker.dialog(data.notice.content, data.notice.title);
+}));
 masker.splashscreen = () =>
 {
 	const header = document.querySelector('header'), duration = document.body.dataset.duration * 1;
@@ -84,10 +116,9 @@ masker.create_account = form =>
 	if (form.style.pointerEvents !== 'none')
 	{
 		form.style.pointerEvents = 'none';
-		masker(form.action, {method: 'POST', body: new FormData(form)}).then(response => response.json()).then(json =>
+		masker(form.action, {method: 'POST', body: new FormData(form)}).then(response => response.json()).then(data =>
 		{
-			json.token = 'Is-tV4Pao1rehhGxG1R2Ju4dDMsrgQwB8T1FHdP1uW9FnEX28NSM1DcO3GPipdKl03O';
-			masker.authorization(json.token).then(() => location.replace(location.href));
+			data.token ? masker.authorization(data.token).then(() => location.replace(location.href)) : alert('服务器繁忙，请稍后重试！');
 		}).finally(() => form.style.pointerEvents = null);
 	}
 	return false;
@@ -100,5 +131,9 @@ masker.canplay = video =>
 };
 masker.shortchanged = videos =>
 {
-	console.log(videos);
+	const strong = videos.active.querySelector('strong') || videos.active.appendChild(document.createElement('strong'));
+	strong.textContent = videos.current.name;
+
+	console.log(videos.active, videos.current);
 }
+
