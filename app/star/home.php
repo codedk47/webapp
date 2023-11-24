@@ -37,8 +37,8 @@ class webapp_router_home extends webapp_echo_masker
 		$form = new webapp_form($node ?? $this->webapp, '?home/create_account');
 		$form->fieldset->append('img', ['src' => '/webapp/app/star/static/logo.png']);
 		$form->fieldset->append('strong', $this->webapp['app_name']);
-		$form->fieldset();
-		$form->button('扫码凭证登录');
+		// $form->fieldset();
+		// $form->button('扫码凭证登录');
 		$form->fieldset();
 		$form->fieldset->append('label', ['使用凭证登录', 'class' => 'button'])->append('input', [
 			'type' => 'file',
@@ -427,14 +427,13 @@ class webapp_router_home extends webapp_echo_masker
 		$first->append('q', [$this->webapp['app_foreverdomain'], 'style' => 'color:var(--webapp-foreground)']);
 		$first->text('回家不迷路！');
 		$node->append('li', '保存凭证后，可以通过凭证找回账号！');
-		if ($this->user['did'] || 1)
+		if ($this->user['did'])
 		{
 			$logout = $node->append('li');
 			$logout->text('您有还可以');
 			$logout->append('a', ['注销',
-				'href' => 'javascript:;',
+				'href' => "?home/home,did:{$this->user['did']}",
 				'onclick' => 'return masker.delete_account(this)',
-				'data-did' => $this->user['did'],
 				'style' => 'margin: 0 .4rem']);
 			$logout->text('您的账号。');
 		}

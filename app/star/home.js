@@ -132,7 +132,7 @@ masker.create_account = form =>
 };
 masker.delete_account = anchor =>
 {
-	masker.authorization(null).then(() => location.reload());
+	masker.authorization(null).then(() => location.href = anchor.href);
 	return false;
 };
 
