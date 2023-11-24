@@ -17,15 +17,17 @@
  */
 	--webapp-hue: 0;
 	--webapp-saturation: 100%;
-	--webapp-color: var(--webapp-hue) var(--webapp-saturation);
-	--webapp-background: hsl(var(--webapp-color) 7%);
-	--webapp-foreground: hsl(var(--webapp-color) 100%);
+	--webapp-color: var(--webapp-hue), var(--webapp-saturation);
+	--webapp-background: hsl(var(--webapp-color), 7%);
+	--webapp-foreground: hsl(var(--webapp-color), 100%);
+	--webapp-concavity: linear-gradient(-180deg, hsl(var(--webapp-color), 30%) 0%, hsl(var(--webapp-color), 20%) 90%);
+	/* --webapp-convex: ; */
 
-	--webapp-anchor: hsl(var(--webapp-color) 96%);
-	--webapp-button: hsl(var(--webapp-color) 20%);
-	--webapp-hover: hsl(var(--webapp-color) 80%);
-	--webapp-hint: hsl(var(--webapp-color) 20%);
-	--webapp-edge: hsl(var(--webapp-color) 0%);
+	--webapp-anchor: hsl(var(--webapp-color), 96%);
+	--webapp-button: hsl(var(--webapp-color), 20%);
+	--webapp-hover: hsl(var(--webapp-color), 80%);
+	--webapp-hint: hsl(var(--webapp-color), 20%);
+	--webapp-edge: hsl(var(--webapp-color), 0%);
 	--webapp-primary: 40, 167, 69;
 	--webapp-danger: 203, 36, 49;
 
@@ -66,33 +68,43 @@ a.arrow::before{
 	border-top-width: 0;
 	border-right-width: 0;
 }
-body>div:first-child{
+/* body>div:first-child{
 	border: 1px solid red;
 	box-sizing: border-box;
-}
+} */
 /* splashscreen */
 body>div.splashscreen:first-child>header:not(:empty){
 	position: fixed;
 	top: var(--webapp-gap);
 	right: var(--webapp-gap);
-	color: var(--webapp-background);
+	color: var(--webapp-foreground);
 	padding: var(--webapp-gapitem) var(--webapp-gap);
 	font: var(--webapp-font-medium) var(--webapp-font-monospace);
 	border-radius: var(--webapp-gapradius);
 	background-color: rgba(0, 0, 0, .6);
 	box-shadow: 0 .1rem .6rem rgb(27, 31, 35);
 }
+form>fieldset{
+	border: none;
+	display: flex;
+	flex-direction: column;
+	
+}
+form>fieldset>textarea{
+	outline: none;
+	padding: var(--webapp-gapitem);
+	font-family: var(--webapp-font-sans-serif);
+	font-size: var(--webapp-font-normal);
+	border-radius: var(--webapp-gapradius);
+}
+
 /* login */
 form.login{
 	max-width: 720px;
 	padding: var(--webapp-gap);
 	margin: auto;
 }
-form.login>fieldset{
-	border: none;
-	display: flex;
-	flex-direction: column;
-}
+
 form.login>fieldset>button,
 form.login>fieldset>label.button{
 
@@ -204,6 +216,7 @@ body>div:first-child>footer{
 	bottom: 0;
 	z-index: 9;
 	background-color: var(--webapp-background);
+	background-image: var(--webapp-concavity);
 }
 body>div:first-child>footer.nav{
 	display: flex;
@@ -244,6 +257,7 @@ div[class|=grid]>a>figure{
 	padding-bottom: 56.25%;
 	border-radius: var(--webapp-gapradius);
 	box-shadow: 0 0 .2rem var(--webapp-edge);
+	text-shadow: 1px 1px 1px var(--webapp-background);
 	/*
 	19:6= 56.25%
 	4:3	= 75%
@@ -260,7 +274,6 @@ div[class|=grid]>a>figure[data-label]::before{
 	z-index: 1;
 	padding-top: 3rem;
 	padding-bottom: .1rem;
-	
 	background-color: var(--webapp-hint);
 	transform: rotate(-45deg);
 	text-align: center;
@@ -271,7 +284,9 @@ div[class|=grid]>a>figure[data-require]::after{
 	top: 0;
 	right: 0;
 	padding: .2rem var(--webapp-gapitem);
-	background-color: var(--webapp-hint);
+	/* background-color: var(--webapp-hint); */
+	background-color: hsl(var(--webapp-color), 7%, .6);
+	border-end-start-radius: var(--webapp-gapradius);
 }
 div[class|=grid]>a>figure>img{
 	position: absolute;
@@ -286,8 +301,10 @@ div[class|=grid]>a>figure>figcaption{
 	right: 0;
 	bottom: 0;
 	padding: 0 var(--webapp-gapitem);
-	background-color: var(--webapp-hint);
 	white-space: nowrap;
+	/* background-color: var(--webapp-hint); */
+	background-color: hsl(var(--webapp-color), 7%, .6);
+	border-start-start-radius: var(--webapp-gapradius);
 }
 div[class|=grid]>a>strong{
 	display: block;
@@ -455,12 +472,49 @@ div.short>footer{
 
 
 
-div.my{
 
-	background: linear-gradient(to bottom, var(--webapp-primary) 10%, white);
-}
 div.my>aside{
-	height: 4rem;
+	display: flex;
+	gap: var(--webapp-gap);
+	padding: 0 var(--webapp-gap);
+	padding-top: var(--webapp-gapitem);
+	justify-content: space-between;
+}
+div.my>aside>img{
+	width: 100px;
+	height: 100px;
+	padding: var(--webapp-gapitem);
+	background-color: var(--webapp-foreground);
+	border-radius: var(--webapp-gapradius);
+}
+div.my>aside>div{
+	display: flex;
+	gap: var(--webapp-gapitem);
+	flex-direction: column;
+	flex-grow: 1;
+}
+div.my>aside>div>a{
+	display: block;
+	overflow: hidden;
+	color: var(--webapp-background);
+	border: 1px solid var(--webapp-edge);
+	line-height: 2rem;
+	white-space: nowrap;
+	border-radius: var(--webapp-gapradius);
+	background-color: var(--webapp-foreground);
+	padding-right: var(--webapp-gap);
+}
+div.my>aside>div>a::before{
+	content: attr(data-label);
+	display: inline-block;
+	color: var(--webapp-foreground);
+	padding-left: var(--webapp-gapitem);
+	margin-right: var(--webapp-gapitem);
+	background-image: var(--webapp-concavity);
+}
+
+div.my>main>ul{
+	color: var(--webapp-hover);
 }
 /* div.my>main>ul{
 	margin: 0 var(--webapp-gap);
@@ -484,7 +538,7 @@ div.listmenu>a{
 }
 div.listmenu>a::after{
 	content: attr(data-right);
-	color: var(--webapp-anchor);
+	color: var(--webapp-button);
 	float: right;
 }
 div.listmenu>a:not(:first-child){
@@ -499,7 +553,7 @@ label.button{
 	border: 1px solid rgba(27, 31, 35, 0.2);
 	white-space: nowrap;
 	background-color: var(--webapp-button);
-	background-image: linear-gradient(-180deg, hsl(var(--webapp-color), 30%) 0%, hsl(var(--webapp-color), 20%) 90%);
+	background-image: var(--webapp-concavity);
 	border-radius: var(--webapp-gap);
 }
 
@@ -511,17 +565,17 @@ dialog{
 	flex-direction: column;
 	border-radius: var(--webapp-gapradius);
 	box-shadow: 0 0 .2rem var(--webapp-edge);
-	overflow: hidden;
 }
 dialog::backdrop {
 	background: rgba(0, 0, 0, 0.4);
 	backdrop-filter: blur(.4rem);
 }
 dialog>strong{
+	color: var(--webapp-foreground);
 	padding: var(--webapp-gapitem) var(--webapp-gap);
 	text-align: center;
 	font-size: var(--webapp-font-medium);
-	background-image: linear-gradient(-180deg, #fafbfc 0%, #eff3f6 90%);
+	background-image: var(--webapp-concavity);
 }
 dialog>pre{
 	margin: 0;
@@ -542,9 +596,12 @@ webapp-videos>div>webapp-video>strong{
 	bottom: 10%;
 }
 webapp-slideshows{
-	box-shadow: 0 0 .2rem var(--webapp-hint);
+	box-shadow: 0 0 .2rem var(--webapp-edge);
 	border-radius: var(--webapp-gapradius);
 	padding-bottom: 46%;
 	height: 0;
 	margin: var(--webapp-gapitem);
+}
+iframe{
+	z-index: 10;
 }

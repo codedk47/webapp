@@ -388,16 +388,18 @@ class user extends ArrayObject
 		$created = FALSE;
 		do
 		{
-			$did = isset($user['did']) && strlen($user['did']) === 16 ? $user['did'] : NULL;
-			if ($did && $webapp->mysql->users('WHERE did=?s LIMIT 1', $did)->fetch($userdata))
-			{
+			if (isset($user['did'])
+				&& is_string($did = $user['did'])
+				&& strlen($did) === 16
+				&& $webapp->mysql->users('WHERE did=?s LIMIT 1', $did)->fetch($userdata)) {
 				break;
-			}
-			$tid = isset($user['tid']) ?? NULL;
-			if ($tid && $webapp->mysql->users('WHERE tid=?s LIMIT 1', $tid)->fetch($userdata))
-			{
+			} else $did = NULL;
+			if (isset($user['tid'])
+				&& is_string($tid = $user['tid'])
+				&& preg_match('/^\d{8,16}$/', $tid)
+				&& $webapp->mysql->users('WHERE tid=?s LIMIT 1', $tid)->fetch($userdata)) {
 				break;
-			}
+			} else $tid = NULL;
 			$id = $webapp->random_time33();
 			$device = $user['device'] ?? $webapp->request_device();
 			if ($webapp->mysql->users->insert($userdata = [

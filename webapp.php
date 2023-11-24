@@ -1090,16 +1090,17 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return 404;
 	}
-	function get_qrcode(string $encode)
+	function get_qrcode(string $encode, string $type = NULL)
 	{
 		if ($this['qrcode_echo'] && is_string($decode = $this->decrypt($encode)) && strlen($decode) < $this['qrcode_maxdata'])
 		{
-			if ($this->nonematch($decode, TRUE))
+			if ($this->nonematch($decode . $type, TRUE))
 			{
 				$draw = static::qrcode($decode, $this['qrcode_ecc']);
-				$this->app('webapp_echo_svg')->xml->qrcode($draw, $this['qrcode_size']);
-				//$this->response_content_type('image/png');
-				//webapp_image::qrcode($draw, $this['qrcode_size'])->png($this->buffer);
+				in_array($type, ['png', 'jpeg'], TRUE)
+					? $this->response_content_type("image/{$type}")
+						|| webapp_image::qrcode($draw, $this['qrcode_size'])->{$type}($this->buffer)
+					: $this->app('webapp_echo_svg')->xml->qrcode($draw, $this['qrcode_size']);
 				return;
 			}
 			return 304;

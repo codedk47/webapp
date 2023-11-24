@@ -74,11 +74,21 @@ masker.then(() =>
 		});
 	}));
 });
-masker.init(() => fetch('?home/init').then(response => response.json()).then(data =>
+masker.init(() => fetch('?home/init').then(response => response.json())).then(data =>
 {
-	data.popup && masker.dialog(data.popup.picture, data.popup.title, data.popup.support);
-	data.notice && masker.dialog(data.notice.content, data.notice.title);
-}));
+	requestAnimationFrame(function closed()
+	{
+		if (document.querySelector('iframe'))
+		{
+			requestAnimationFrame(closed);
+		}
+		else
+		{
+			data.popup && masker.dialog(data.popup.picture, data.popup.title, data.popup.support);
+			data.notice && masker.dialog(data.notice.content, data.notice.title);
+		}
+	});
+});
 masker.splashscreen = () =>
 {
 	const header = document.querySelector('header'), duration = document.body.dataset.duration * 1;
@@ -98,7 +108,6 @@ masker.splashscreen = () =>
 		}
 	}, 1000, duration);
 };
-
 masker.revert_account = input =>
 {
 	if (input.files.length)
@@ -110,20 +119,22 @@ masker.revert_account = input =>
 		});
 	}
 };
-
 masker.create_account = form =>
 {
 	if (form.style.pointerEvents !== 'none')
 	{
 		form.style.pointerEvents = 'none';
-		masker(form.action, {method: 'POST', body: new FormData(form)}).then(response => response.json()).then(data =>
-		{
-			data.token ? masker.authorization(data.token).then(() => location.replace(location.href)) : alert('服务器繁忙，请稍后重试！');
-		}).finally(() => form.style.pointerEvents = null);
+		masker(form.action, {method: 'POST', body: new FormData(form)}).then(response => response.json()).then(data => data.token
+			? masker.authorization(data.token).then(() => location.replace(location.href))
+			: alert('服务器繁忙，请稍后重试！')).finally(() => form.style.pointerEvents = null);
 	}
 	return false;
 };
-
+masker.delete_account = anchor =>
+{
+	masker.authorization(null).then(() => location.reload());
+	return false;
+};
 
 masker.canplay = video =>
 {
@@ -136,4 +147,11 @@ masker.shortchanged = videos =>
 
 	console.log(videos.active, videos.current);
 }
-
+masker.report = form =>
+{
+	masker(form.action, {method: form.method.toUpperCase(), body: new FormData(form)}).then(response => response.json()).then(data =>
+	{
+		console.log(data);
+	});
+	return false;
+};

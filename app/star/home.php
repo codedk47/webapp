@@ -4,7 +4,7 @@ class webapp_router_home extends webapp_echo_masker
 	private readonly bool $free;
 	private readonly user $user;
 	private readonly array $tags;
-	protected array $allow = ['get_splashscreen', 'post_create_account'];
+	protected array $allow = ['get_splashscreen', 'post_create_account', 'get_init'];
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -29,16 +29,18 @@ class webapp_router_home extends webapp_echo_masker
 	
 	function authorization($uid, $pwd):array
 	{
-		$user = $this->webapp->fetch_user($uid);
-		return $user ? [$user['id'], $user['cid']] : [];
+		$this->user = new user($this->webapp, $this->webapp->fetch_user($uid));
+		return $this->user->id ? [$this->user['id'], $this->user['cid']] : [];
 	}
-	function form_login(webapp_html $node = NULL)
+	function form_login(webapp_html $node = NULL):webapp_form
 	{
 		$form = new webapp_form($node ?? $this->webapp, '?home/create_account');
 		$form->fieldset->append('img', ['src' => '/webapp/app/star/static/logo.png']);
 		$form->fieldset->append('strong', $this->webapp['app_name']);
 		$form->fieldset();
-		$form->fieldset->append('label', ['恢复我的凭证', 'class' => 'button'])->append('input', [
+		$form->button('扫码凭证登录');
+		$form->fieldset();
+		$form->fieldset->append('label', ['使用凭证登录', 'class' => 'button'])->append('input', [
 			'type' => 'file',
 			'accept' => 'image/png',
 			'style' => 'display:none',
@@ -46,13 +48,13 @@ class webapp_router_home extends webapp_echo_masker
 		]);
 		$form->fieldset();
 		$form->button('我已满18周岁', 'submit');
-		$form->fieldset()->text('禁止未满18周岁的用户注册登录使用');
+		$form->fieldset()->text('警告：禁止未满18周岁的用户登录使用！');
 		$form->field('cid');
 		$form->field('did');
 		$form->field('tid');
 		if ($form->echo)
 		{
-			$ua =  $this->webapp->request_device();
+			$ua = $this->webapp->request_device();
 			$did = $this->webapp->query['did'] ?? NULL;
 			$form->echo([
 				'cid' => preg_match('/CID\/(\w{4})/', $ua, $pattern) ? $pattern[1] : (string)$this->webapp->redis->get("cid:{$did}"),
@@ -71,9 +73,9 @@ class webapp_router_home extends webapp_echo_masker
 	function post_create_account()
 	{
 		$data = ['token' => NULL];
-		if ($this->form_login()->fetch($login))
+		if ($this->form_login()->fetch($data['login']))
 		{
-			$user = $this->webapp->user_create($login);
+			$user = $this->webapp->user_create($data['login']);
 			$data['token'] = (string)$user;
 		}
 		$this->json($data);
@@ -109,18 +111,18 @@ class webapp_router_home extends webapp_echo_masker
 		$this->footer->append('a', ['首页', 'href' => '?home/home']);
 		$this->footer->append('a', ['抖音', 'href' => '?home/short']);
 		//$this->footer->append('a', ['游戏', 'href' => '?home/game']);
-		$this->footer->append('a', ['剧场', 'href' => '?home/series']);
+		$this->footer->append('a', ['剧场', 'href' => '?home/home,type:K3yp']);
 		$this->footer->append('a', ['我的', 'href' => '?home/my']);
 		return $this->footer;
 	}
 
 
-	function add_slideshows_ads(webapp_html $node, int $seat):?webapp_html
+	function add_slideshows_ads(webapp_html $node, int $seat, int $duration = 5):?webapp_html
 	{
 		if ($ads = $this->webapp->fetch_ads($seat))
 		{
-			$element = $node->append('webapp-slideshows');
-			$element->cdata(json_encode($ads));
+			$element = $node->append('webapp-slideshows', ['data-duration' => $duration]);
+			$element->cdata(json_encode($ads, JSON_UNESCAPED_UNICODE));
 			return $element;
 		}
 		return NULL;
@@ -186,7 +188,7 @@ class webapp_router_home extends webapp_echo_masker
 				}
 				if (in_array('liP_', $tags, TRUE))
 				{
-					$attributes['data-require'] = '中文字幕';
+					$attributes['data-require'] = '中文';
 				}
 				// if ($this->free === FALSE)
 				// {
@@ -222,8 +224,8 @@ class webapp_router_home extends webapp_echo_masker
 
 	function get_splashscreen()
 	{
-		$this->script('postMessage("close")');
-		return 200;
+		// $this->script('postMessage("close")');
+		// return 200;
 		if (empty($ads = $this->webapp->fetch_ads(0)))
 		{
 			$this->script('postMessage("close")');
@@ -254,9 +256,8 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		$this->json($data);
 	}
-	function get_home(string $type = NULL)
+	function get_home(string $type = 'DQFQ')
 	{
-
 		//$this->webapp->redis->flushall();
 		$this->aside['class'] = 'classify';
 		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
@@ -389,13 +390,6 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->set_footer_menu();
 	}
-	function get_series()
-	{
-
-
-		$this->add_nav_ads($this->main, 1, 'asdawd');
-		$this->set_footer_menu();
-	}
 
 	function get_prods()
 	{
@@ -409,31 +403,83 @@ class webapp_router_home extends webapp_echo_masker
 	function get_my()
 	{
 		$this->xml->body->div['class'] = 'my';
-		$this->set_header_search();
-		//$this->aside->
+		$this->set_header_title('个人中心');
 
-		
-
+		$this->aside->append('img', ['src' => $qrurl = '?qrcode/' . $this->webapp->encrypt($this->user)]);
+		$info = $this->aside->append('div');
+		$info->append('a', [$this->user->id, 'href' => 'javascript:;', 'data-label' => '账号：']);
+		$info->append('a', [$this->user['nickname'], 'href' => 'javascript:;', 'data-label' => '名称：']);
+		$info->append('a', ['点击下载保存凭证', 'href' => "{$qrurl},type:png", 'download' => "{$this->user->id}.png", 'data-label' => '凭证：']);
 
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
-		$anchors->append('a', ['商务洽谈', 'href' => 'https://t.me/hhuli2020', 'target' => '_blank', 'data-right' => 'Telegram']);
-		$anchors->append('a', ['官方交流', 'href' => 'https://t.me/+g2CzDwRoHItlODk1', 'target' => '_blank', 'data-right' => 'Telegram']);
+		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => '💬']);
+		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => '💬']);
 		$configs = $this->webapp->fetch_configs();
 		$anchors->append('a', ['分享链接', 'href' => $configs['down_page'], 'data-right' => '>>',
-			'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>alert("分享失败！"))']);
-		$anchors->append('a', ['我的收藏', 'href' => 'javascript:;', 'data-right' => '>>']);
-		$anchors->append('a', ['观影历史', 'href' => '?home/my-watch', 'data-right' => '>>']);
+			'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>location.href=this.href)']);
+		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorite', 'data-right' => '>>']);
+		$anchors->append('a', ['观影记录', 'href' => '?home/my-watch', 'data-right' => '>>']);
 		$anchors->append('a', ['问题反馈', 'href' => '?home/my-report', 'data-right' => '>>']);
+		//$anchors->append('a', ['注销账号', 'href' => 'javascript:;', 'onclick' => 'return masker.delete_account(this)', 'data-right' => '退出']);
+		$node = $this->main->append('ul');
+		$first = $node->append('li');
+		$first->text('请记住本站回家域名');
+		$first->append('q', [$this->webapp['app_foreverdomain'], 'style' => 'color:var(--webapp-foreground)']);
+		$first->text('回家不迷路！');
+		$node->append('li', '保存凭证后，可以通过凭证找回账号！');
+		if ($this->user['did'] || 1)
+		{
+			$logout = $node->append('li');
+			$logout->text('您有还可以');
+			$logout->append('a', ['注销',
+				'href' => 'javascript:;',
+				'onclick' => 'return masker.delete_account(this)',
+				'data-did' => $this->user['did'],
+				'style' => 'margin: 0 .4rem']);
+			$logout->text('您的账号。');
+		}
 		$this->set_footer_menu();
+	}
+	function form_report(webapp_html $node = NULL):webapp_form
+	{
+		$form = new webapp_form($node ?? $this->webapp);
+
+		$form->fieldset();
+		$form->field('report', 'textarea', [
+			'placeholder' => '请尽可能详细的描述您当前遇到的问题，以便我们可以进行及时有效的处理。',
+			'spellcheck' => 'false',
+			'rows' => 12
+		]);
+		$form->fieldset();
+		$form->button('提交问题', 'submit');
+		$form->xml['onsubmit'] = 'return masker.report(this)';
+		return $form;
+	}
+	function post_my_report()
+	{
+		$data = [];
+		if ($this->form_report()->fetch($report))
+		{
+
+			print_r($report);
+		}
+		$this->json($data);
 	}
 	function get_my_report()
 	{
 		$this->set_header_title('问题反馈');
+		$this->form_report($this->aside);
 
 		$this->set_footer_menu();
 	}
 	function get_my_watch()
 	{
-
+		$this->set_header_title('观影记录');
+		$this->set_footer_menu();
+	}
+	function get_my_favorite()
+	{
+		$this->set_header_title('收藏记录');
+		$this->set_footer_menu();
 	}
 }
