@@ -127,7 +127,7 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return NULL;
 	}
-	function add_nav_ads(webapp_html $node, int $seat, string $title = NULL)
+	function add_nav_ads(webapp_html $node, int $seat, string $title = NULL):?webapp_html
 	{
 		if ($ads = $this->webapp->fetch_ads($seat))
 		{
@@ -256,7 +256,7 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		$this->json($data);
 	}
-	function get_home(string $type = 'DQFQ')
+	function get_home(string $type = NULL)
 	{
 		//$this->webapp->redis->flushall();
 		$this->aside['class'] = 'classify';
