@@ -54,6 +54,32 @@ masker.dialog = (context, title, url) => new Promise(resolve =>
 	}
 	document.body.appendChild(dialog).showModal();
 });
+masker.json = (element, callback) => masker(...element instanceof HTMLFormElement
+	? [element.action, {method: element.method.toUpperCase(), body: new FormData(element)}]
+	: [element instanceof HTMLAnchorElement ? element.href : element]).then(response => response.json()).then(callback || (async data => {
+	console.log(data);
+	if (data.hasOwnProperty('dialog'))
+	{
+		await masker.dialog(data.dialog, '对话框');
+	}
+	if (typeof data.goto === 'string')
+	{
+		location.href = data.goto;
+	}
+	if (typeof data.reload === 'number')
+	{
+		setTimeout(() => location.reload(), data.reload * 1000);
+	}
+}));
+masker.submit = form =>
+{
+	if (form.style.pointerEvents !== 'none')
+	{
+		form.style.pointerEvents = 'none';
+		masker.json(form).finally(() => form.style.pointerEvents = null);
+	}
+	return false;
+};
 masker.then(() =>
 {
 	document.querySelectorAll('blockquote[data-lazy]').forEach(element => masker.viewport(element).then(function lazy(element)
@@ -74,7 +100,7 @@ masker.then(() =>
 		});
 	}));
 });
-masker.init(() => fetch('?home/init').then(response => response.json())).then(data =>
+masker.init(() => masker.json('?home/init', data =>
 {
 	requestAnimationFrame(function closed()
 	{
@@ -88,7 +114,7 @@ masker.init(() => fetch('?home/init').then(response => response.json())).then(da
 			data.notice && masker.dialog(data.notice.content, data.notice.title);
 		}
 	});
-});
+}));
 masker.splashscreen = () =>
 {
 	const header = document.querySelector('header'), duration = document.body.dataset.duration * 1;
@@ -124,7 +150,7 @@ masker.create_account = form =>
 	if (form.style.pointerEvents !== 'none')
 	{
 		form.style.pointerEvents = 'none';
-		masker(form.action, {method: 'POST', body: new FormData(form)}).then(response => response.json()).then(data => data.token
+		masker.json(form, data => data.token
 			? masker.authorization(data.token).then(() => location.replace(location.href))
 			: alert('服务器繁忙，请稍后重试！')).finally(() => form.style.pointerEvents = null);
 	}
@@ -147,11 +173,3 @@ masker.shortchanged = videos =>
 
 	console.log(videos.active, videos.current);
 }
-masker.report = form =>
-{
-	masker(form.action, {method: form.method.toUpperCase(), body: new FormData(form)}).then(response => response.json()).then(data =>
-	{
-		console.log(data);
-	});
-	return false;
-};

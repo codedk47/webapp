@@ -82,7 +82,7 @@ body>div.splashscreen:first-child>header:not(:empty){
 	font: var(--webapp-font-medium) var(--webapp-font-monospace);
 	border-radius: var(--webapp-gapradius);
 	background-color: rgba(0, 0, 0, .6);
-	box-shadow: 0 .1rem .6rem rgb(27, 31, 35);
+	box-shadow: 0 .1rem .6rem var(--webapp-edge);
 }
 form>fieldset{
 	border: none;

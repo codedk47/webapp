@@ -12,6 +12,16 @@ class user extends ArrayObject
 	{
 		return $this->id ? $this->webapp->signature($this->id, $this['cid']) : '';
 	}
+	function report(string $question):bool
+	{
+		return $this->id && $this->webapp->mysql->reports->insert([
+			'hash' => $this->webapp->random_hash(TRUE),
+			'time' => $this->webapp->time,
+			'userid' => $this->id,
+			'clientip' => $this->webapp->iphex($this->webapp->request_ip(TRUE)),
+			'question' => $question
+		]);
+	}
 	//操作记录
 	private function record(string $type, array $data, bool $result = FALSE):array
 	{

@@ -232,10 +232,17 @@ class webapp_router_home extends webapp_echo_masker
 			return 200;
 		}
 		$ad = $this->webapp->random_weights($ads);
+		// foreach ($ads as $ad)
+		// {
+		// 	if($ad['hash'] === 'NS1HM8DBP86K')
+		// 	{
+		// 		break;
+		// 	}
+		// }
 		$this->script('masker.then(masker.splashscreen)');
 		$this->xml->body->div['class'] = 'splashscreen';
 		$this->xml->body->setattr([
-			'style' => "background: white url({$ad['picture']}) center/cover no-repeat",
+			'style' => "background: url({$ad['picture']}) center / cover no-repeat var(--webapp-background)",
 			'data-support' => $ad['support'],
 			'data-duration' => 5,
 			'data-autoskip' => TRUE
@@ -444,23 +451,24 @@ class webapp_router_home extends webapp_echo_masker
 		$form = new webapp_form($node ?? $this->webapp);
 
 		$form->fieldset();
-		$form->field('report', 'textarea', [
+		$form->field('question', 'textarea', [
 			'placeholder' => '请尽可能详细的描述您当前遇到的问题，以便我们可以进行及时有效的处理。',
 			'spellcheck' => 'false',
-			'rows' => 12
+			'rows' => 12,
+			'require' => NULL
 		]);
 		$form->fieldset();
 		$form->button('提交问题', 'submit');
-		$form->xml['onsubmit'] = 'return masker.report(this)';
+		$form->xml['onsubmit'] = 'return masker.submit(this)';
 		return $form;
 	}
 	function post_my_report()
 	{
-		$data = [];
-		if ($this->form_report()->fetch($report))
+		$data = ['dialog' => '反馈失败，请稍后重试！'];
+		if ($this->form_report()->fetch($report) && $this->user->report($report['question']))
 		{
-
-			print_r($report);
+			$data['dialog'] = '我们会尽快处理您反馈的问题！';
+			$data['reload'] = 0;
 		}
 		$this->json($data);
 	}

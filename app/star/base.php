@@ -413,36 +413,26 @@ class base extends webapp
 	// }
 	function cid(?string $cid):string
 	{
-		return $cid && $this->mysql->channels('WHERE hash=?s LIMIT 1', $user['cid'])->fetch() ? $user['cid'] : self::cid;
-		// return preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000';
-		// return is_string($cid = $this->request_cookie('cid') ?? $this->query['cid'] ?? NULL)
-		// 	&& preg_match('/^\w{4,}/', $cid) ? substr($cid, 0, 4)
-		// 	: (preg_match('/CID\/(\w{4})/', $this->ua, $pattern) ? $pattern[1] : '0000');
+		return $cid && $this->mysql->channels('WHERE hash=?s LIMIT 1', $cid)->fetch() ? $cid : self::cid;
 	}
-	function channel(?string $id, string $sid = '0000'):bool
-	{
-		return $id && ($id === $sid || $this->mysql->channels('WHERE hash=?s LIMIT 1', $id)->fetch());
-	}
+	// function channel(?string $id, string $sid = '0000'):bool
+	// {
+	// 	return $id && ($id === $sid || $this->mysql->channels('WHERE hash=?s LIMIT 1', $id)->fetch());
+	// }
 	//IP记录
-	function everydayip(string $iphex = NULL):bool
-	{
-		$date = date('Y-m-d');
-		$iphex ??= $this->request_ip(TRUE);
-		return $this->mysql->everydayip('WHERE ip=?s LIMIT 1', $iphex)->fetch($ip)
-			? ($ip['date'] === $date ? FALSE : $this->mysql->everydayip('WHERE ip=?s LIMIT 1', $iphex)->update('date=?s', $date) === 1)
-			: $this->mysql->everydayip->insert(['ip' => $iphex, 'date' => $date]);
-	}
+	// function denyip():bool
+	// {
+	// 	return FALSE;
+	// }
 	//记录日志
 	function recordlog(string $cid, string $field, int $value = 1, int $nowtime = NULL):bool
 	{
-		preg_match('/^\w{4}$/', $cid) || $cid = '0000';
+		preg_match('/^\w{4}$/', $cid) || $cid = self::cid;
 		$ciddate = $cid . date('Ymd', $nowtime);
 		$values = match (TRUE)
 		{
 			$field === 'dpv' => ['dpv' => $value],
 			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
-			//in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => $this->everydayip() ? ['dpv' => $value, $field => $value] : [],
-
 
 			$field === 'dpc' => ['dpc' => $value],
 			in_array($field, ['dpc_ios', 'dpc_android'], TRUE) => ['dpc' => $value, $field => $value],
