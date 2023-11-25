@@ -267,15 +267,15 @@ div[class|=grid]>a>figure{
 }
 div[class|=grid]>a>figure[data-label]::before{
 	content: attr(data-label);
+	transform: rotate(-45deg);
 	position: absolute;
-	top: -2.15rem;
-	left: -2.1rem;
-	width: 4rem;
+	top: -2.2rem;
+	left: -2.2rem;
+	width: 4.1rem;
 	z-index: 1;
 	padding-top: 3rem;
 	padding-bottom: .1rem;
 	background-color: var(--webapp-hint);
-	transform: rotate(-45deg);
 	text-align: center;
 }
 div[class|=grid]>a>figure[data-require]::after{
