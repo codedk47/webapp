@@ -431,7 +431,7 @@ class webapp_router_home extends webapp_echo_masker
 		$node = $this->main->append('ul');
 		$first = $node->append('li');
 		$first->text('请记住本站回家域名');
-		$first->append('q', [$this->webapp['app_foreverdomain'], 'style' => 'color:var(--webapp-foreground)']);
+		$first->append('q', [$this->webapp['app_website'], 'style' => 'color:var(--webapp-foreground)']);
 		$first->text('回家不迷路！');
 		$node->append('li', '保存凭证后，可以通过凭证找回账号！');
 		if ($this->user['did'])
