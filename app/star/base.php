@@ -531,6 +531,17 @@ class base extends webapp
 	// {
 	// 	$this->webapp->remote($this->webapp['app_sync_call'], 'sync_user', [$id]);
 	// }
+	function redis_did_save_cid(?string &$cid):string
+	{
+		$did = 'iOS_' . $this->random_hash(FALSE);
+		$this->redis->set("did:{$did}", $cid = $this->cid($cid), 1);
+		return $did;
+	}
+	function redis_did_read_cid(string $did):string
+	{
+		$cid = $this->redis->get("did:{$did}");
+		return is_string($cid) ? $cid : self::cid;
+	}
 	//创建用户
 	function user_create(array $user):user
 	{

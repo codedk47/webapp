@@ -421,6 +421,7 @@ class webapp_router_home extends webapp_echo_masker
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
 		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => '💬']);
 		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => '💬']);
+		$anchors->append('a', ['邀请代码', 'href' => '#', 'data-right' => '>>']);
 		$configs = $this->webapp->fetch_configs();
 		$anchors->append('a', ['分享链接', 'href' => $configs['down_page'], 'data-right' => '>>',
 			'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>location.href=this.href)']);
@@ -449,13 +450,13 @@ class webapp_router_home extends webapp_echo_masker
 	function form_report(webapp_html $node = NULL):webapp_form
 	{
 		$form = new webapp_form($node ?? $this->webapp);
-
 		$form->fieldset();
 		$form->field('question', 'textarea', [
 			'placeholder' => '请尽可能详细的描述您当前遇到的问题，以便我们可以进行及时有效的处理。',
 			'spellcheck' => 'false',
+			'maxlength' => 200,
 			'rows' => 12,
-			'require' => NULL
+			'required' => NULL
 		]);
 		$form->fieldset();
 		$form->button('提交问题', 'submit');
@@ -476,6 +477,10 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->set_header_title('问题反馈');
 		$this->form_report($this->aside);
+
+		$a = $this->webapp->redis_did_save_cid('0000');
+		sleep(2);
+		$this->webapp->redis_did_read_cid($a);
 
 		$this->set_footer_menu();
 	}

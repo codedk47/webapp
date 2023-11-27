@@ -1,7 +1,6 @@
 <?php
 class webapp_router_packer
 {
-	const cid = '0000';
 	private readonly bool $mobile;
 	private readonly string $type, $cid;
 	function __construct(private readonly webapp $webapp)
@@ -19,10 +18,7 @@ class webapp_router_packer
 			$this->type = 'desktop';
 		}
 	}
-	function channel(?string $id):bool
-	{
-		return $this->webapp->channel($id, self::cid);
-	}
+
 	function iphone_webcilp(?string $cid):int
 	{
 		// $iphone_webcilp = [
@@ -38,21 +34,9 @@ class webapp_router_packer
 		// 	]
 		// ];
 		$iphone_webcilp = $this->webapp['iphone_webcilp'];
-		$random = $this->webapp->random_hash(FALSE);
-		if ($this->channel($cid))
-		{
-			//这里也许需要在 REDIS 保存渠道码
-			$redis = new Redis();
-			$redis->pconnect(
-				$this->webapp['redis_config'][0]['host'],
-				$this->webapp['redis_config'][0]['port'],
-				2
-			);
-			$redis->select($this->webapp['redis_config'][0]['db_index']);
-			$redis->set("channel:random:{$random}", $cid, 300);
-			$this->webapp->recordlog($cid, 'dpc_ios');
-		}
-		$routers = array_map(fn($origin) => "{$origin}/CID/{$random}", $iphone_webcilp['routers']);
+		$random = $this->webapp->redis_did_save_cid($cid);
+		$this->webapp->recordlog($cid, 'dpc_ios');
+		$routers = array_map(fn($origin) => "{$origin}/{$random}", $iphone_webcilp['routers']);
 		$this->webapp->echo(webapp_echo_xml::mobileconfig([
 			'PayloadContent' => [[
 				'Icon' => $iphone_webcilp['icon'],
@@ -155,42 +139,139 @@ class webapp_router_packer
 	}
 	function get_home(string $cid = NULL)
 	{
-		if (is_string($cid))
-		{
-			$cid = trim($cid, "/ \t\n\r\0\x0B");
-		}
-		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, match ($this->type)
+		$this->webapp->recordlog($cid = $this->webapp->cid($cid), match ($this->type)
 		{
 			'android' => 'dpv_android',
 			'iphone' => 'dpv_ios',
 			default => 'dpv'
 		});
-		//var_dump($this->mobile, $this->type);
-		$dl = $this->webapp->request_entry() . '' . $this->webapp->at(['cid' => $cid], '?packer/dl');
 		$html = new webapp_echo_html($this->webapp);
-		$html->loadHTMLFile("{$this->webapp['android_apk']['prepare_directory']}/../rstar.html");
-		$html->script("function reloadlog(log){return fetch('?packer/recordlog,cid:{$cid},log:'+log)}function ipc(anchor){open(anchor);location.href='/webapp/res/embedded.mobileprovision';return false;}");
+		unset($html->xml->head->link);
+		$html->footer[0] = NULL;
+		$html->xml->body->div['class'] = 'packer';
+		$html->xml->head->append('style')->cdata(<<<'CSS'
+html,body,div.packer,main{
+	margin:0;
+	padding:0;
+	height:100%;
+}
+div.packer{
+	display: flex;
+	flex-direction: column;
+	background-color: #940000;
+}
+header{
+	position: absolute;
+}
+main{
+	position: relative;
+	flex-grow: 1;
+}
+main>img{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+footer{
+	text-align: center;
+}
+footer>a{
+	display: block;
+	text-align: center;
+}
+footer>div{
+	display: flex;
+	justify-content: space-between;
+	color: white;
+	font-size: .8rem;
+}
+footer>div>a{
+	display: block;
+	width: 100px;
+	flex-shrink: 0;
+}
+footer>div>a>img{
+	width: 100%;
+}
+
+/* footer>img{
+	display: block;
+	width: 100%;
+} */
+CSS);
+$html->script(<<<'JS'
+async function masker(resource)
+{
+	const
+	response = await fetch(resource),
+	reader = response.body.getReader(),
+	key = new Uint8Array(8),
+	buffer = [];
+	for (let read, len = 0, offset = 0;;)
+	{
+		read = await reader.read();
+		if (read.done)
+		{
+			break;
+		}
+		if (len < 8)
+		{
+			let i = 0;
+			while (i < read.value.length)
+			{
+				key[len++] = read.value[i++];
+				if (len > 7) break;
+			}
+			if (len < 8) continue;
+			read.value = read.value.slice(i);
+		}
+		for (let i = 0; i < read.value.length; ++i)
+		{
+			read.value[i] = read.value[i] ^ key[offset++ % 8];
+		}
+		buffer[buffer.length] = read.value;
+	}
+	return URL.createObjectURL(new Blob(buffer));
+}
+
+const
+device = /android|iphone/i.exec(navigator.userAgent),
+mobile = Boolean(device),
+type = mobile ? device[0].toLowerCase() : 'desktop',
+bg = masker(`/star/packer/${mobile ? 'mobile' : 'desktop'}`);
+addEventListener('DOMContentLoaded', () =>
+{
+	bg.then(blob => document.querySelector('main').appendChild(new Image).src = blob);
+	if (mobile)
+	{
+
+	}
+	else
+	{
+	}
+});
+function dl(anchor)
+{
+	if (type === 'iphone')
+	{
+		open(anchor);
+		location.href = '/webapp/res/embedded.mobileprovision';
+		return false;
+	}
+	return true;
+}
+JS);
+		$dl = $this->webapp->request_entry() . $this->webapp->at(['cid' => $cid], '?packer/dl');
 		if ($this->mobile)
 		{
-			//$binary = bin2hex(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../mobile.png"));
-			$html->xml->body['style'] = "background-position: center 6rem;background-color: #1f1d1f";
-			$html->xml->body->header['class'] = 'mobile';
-			$html->xml->body->a['style'] = 'position:fixed;top:1.3rem;right:1rem';
-			$html->xml->body->div[0]['style'] = 'display:block';
-			$html->xml->body->div[0]->main->a->setattr($this->type === 'iphone'
-				? ['iOS 下载', 'href' => $dl, 'class' => 'iphone', 'onclick' => 'return iphone(this.href)']
-				: ['Android 下载', 'href' => $dl, 'class' => 'android']);
+			$html->footer->append('a', ['href' => $dl, 'target' => '_blank', 'onclick' => 'return dl(this)'])
+				->append('img', ['src' => "/star/packer/dl-{$this->type}.png"]);
+			$div = $html->footer->append('div');
+			$div->append('span', '安装说明：本APP含有成人内容，容易被杀毒软件误判为恶意软件，H狐狸TV保证无毒和恶意程序，请放心使用');
+			$div->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])->append('img', ['src' => '/star/packer/tg.png']);
+			// $html->footer->append('img', ['src' => "/star/packer/tip-android.jpg"]);
+			// $html->footer->append('img', ['src' => "/star/packer/tip-iphone.jpg"]);
 		}
-		else
-		{
-			//$binary = bin2hex(file_get_contents("{$this->webapp['android_apk']['prepare_directory']}/../desktop.png"));
-			//$html->xml->body['style'] = "background-image: url(data:image/png;base64,{$base64bg})";
-			$html->xml->body->header['class'] = 'desktop';
-			$html->xml->body->div[1]['style'] = 'display:block';
-			$html->xml->xpath('//div[@class="qrcode"]')[0]['style'] = "background-image:url({$dl})";
-			$html->xml->xpath('//div[@data-tg]')[0]->dom()->appendChild($html->xml->body->a->dom());
-		}
-		//$html->script("var bg='{$binary}'");
 		$this->webapp->echo($html);
 	}
 	//nginx not allow patch
@@ -209,9 +290,9 @@ class webapp_router_packer
 		{
 			case 'android': return $this->android_apk($cid);
 			case 'iphone': return $this->iphone_webcilp($cid);
-			default: $this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, 'dpc');
+			default: $this->webapp->recordlog($this->webapp->cid($cid), 'dpc');
 		}
-		$redirect = $this->webapp->request_entry() . '' . $this->webapp->at([], '?packer/home');
+		$redirect = $this->webapp->request_entry() . $this->webapp->at([], '?packer/home');
 		$svg = new webapp_echo_svg($this->webapp);
 		$svg->xml->qrcode(webapp::qrcode($redirect, $this->webapp['qrcode_ecc']), $this->webapp['qrcode_size']);
 		$this->webapp->echo($svg);

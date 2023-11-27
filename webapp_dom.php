@@ -374,6 +374,10 @@ class webapp_html extends webapp_xml
 	{
 		return $this->append('template')->iter($struct)->setattr(is_array($attr) ? $attr : ['id' => $attr]);
 	}
+	// function img(string $src):webapp_html
+	// {
+	// 	return $this->append('img', ['src' => $src]);
+	// }
 	function progress(float $value = 0, float $max = 1):static
 	{
 		return $this->append('progress', ['value' => $value, 'max' => $max]);
