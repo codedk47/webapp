@@ -31,6 +31,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function authorization($uid, $pwd):array
 	{
+		$this->webapp->redis->flushall();
 		$this->user = new user($this->webapp, $this->webapp->fetch_user($uid));
 		return $this->user->id ? [$this->user['id'], $this->user['cid']] : [];
 	}
@@ -267,7 +268,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_home(string $type = NULL)
 	{
-		//$this->webapp->redis->flushall();
+		
 		$this->aside['class'] = 'classify';
 		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
 		foreach ($classify = $this->webapp->fetch_tags(0) as $hash => $name)
