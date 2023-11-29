@@ -26,10 +26,8 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function init()
 	{
-		$this->main->text('正在启动 JavaScript 加密服务，防止泄露个人隐私，请稍等。。。');
+		$this->main->text('正在启动加密服务，防止泄露个人隐私，请稍等。。。');
 	}
-
-	
 	function authorization($uid, $pwd):array
 	{
 		$this->user = new user($this->webapp, $this->webapp->fetch_user($uid));
