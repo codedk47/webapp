@@ -31,7 +31,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function authorization($uid, $pwd):array
 	{
-		$this->webapp->redis->flushall();
+		//$this->webapp->redis->flushall();
 		$this->user = new user($this->webapp, $this->webapp->fetch_user($uid));
 		return $this->user->id ? [$this->user['id'], $this->user['cid']] : [];
 	}
