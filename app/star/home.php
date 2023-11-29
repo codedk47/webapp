@@ -317,17 +317,17 @@ class webapp_router_home extends webapp_echo_masker
 			$this->add_video_lists($this->main, "?home/subject,hash:{$hash},page:");
 		}
 	}
-	// function get_search(string $word = NULL, string $tags = NULL, int $page = 0)
-	// {
-	// 	if ($page > 0)
-	// 	{
-	// 		$this->add_video_lists($this->template(), $this->webapp->data_search_video($word, $tags, $page));
-	// 		return;
-	// 	}
-	// 	$this->set_header_search();
-	// 	$this->add_slideshows_ads($this->main, 1);
-	// 	$this->add_video_lists($this->main, "?home/search,word:{$word},tags:{$tags},page:", 2);
-	// }
+	function get_search(string $word = NULL, string $tags = NULL, int $page = 0)
+	{
+		// if ($page > 0)
+		// {
+		// 	$this->add_video_lists($this->template(), $this->webapp->data_search_video($word, $tags, $page));
+		// 	return;
+		// }
+		$this->set_header_search();
+		// $this->add_slideshows_ads($this->main, 1);
+		// $this->add_video_lists($this->main, "?home/search,word:{$word},tags:{$tags},page:", 2);
+	}
 
 	function get_watch(string $hash)
 	{
@@ -337,6 +337,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			return 404;
 		}
+		$this->user->watch($hash);
 
 
 		$this->set_header_search();
@@ -449,6 +450,11 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		$this->set_footer_menu();
 	}
+	function get_my_clear(string $action)
+	{
+		$this->user->clear($action);
+		$this->json(['reload' => 0]);
+	}
 	function form_report(webapp_html $node = NULL):webapp_form
 	{
 		$form = new webapp_form($node ?? $this->webapp);
@@ -480,17 +486,21 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_title('问题反馈');
 		$this->form_report($this->aside);
 
-		$a = $this->webapp->redis_did_save_cid('0000');
-		sleep(2);
-		$this->webapp->redis_did_read_cid($a);
+
 
 		$this->set_footer_menu();
 	}
 	function get_my_watch()
 	{
 		$this->set_header_title('观影记录');
+		$this->add_video_lists($this->main, $this->user->historys(), 1,
+			'#最多保留50个记录', 'javascript:masker.clear("historys");', '清除所有观影记录');
 		$this->set_footer_menu();
 	}
+
+
+
+
 	function get_my_favorite()
 	{
 		$this->set_header_title('收藏记录');

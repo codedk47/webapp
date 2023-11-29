@@ -75,6 +75,12 @@ class user extends ArrayObject
 			? sprintf('WHERE id=?s %s LIMIT 1', array_shift($conds))
 			: 'WHERE id=?s LIMIT 1', $this->id, ...$conds]);
 	}
+	function update(string $field, string $value):bool
+	{
+		return $this->id
+			&& isset($this[$field])
+			&& $this->webapp->redis->hSet("user:{$this->id}", $field, $value) === 0;
+	}
 	//余额提现
 	function exchange(array $transfer):array
 	{
@@ -83,12 +89,6 @@ class user extends ArrayObject
 			return $this->cond()->update('balance=balance-?i', $transfer['fee']) === 1
 				&& ($record = $this->record('exchange', ['vtid' => 'user_exchange'] + $transfer));
 		}, $transfer) ? $record : [];
-	}
-	//观看影片
-	function watch(string $hash):bool
-	{
-		return $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`view`=`view`+1') === 1
-			&& $this->cond()->update('`watch`=`watch`+1') === 1;
 	}
 	//头像地址
 	function fid():string
@@ -146,32 +146,47 @@ class user extends ArrayObject
 		}
 		return FALSE;
 	}
-	//用户观看历史记录最多50个
-	function historys():array
+	//观看行为
+	function watch(string $hash):bool
 	{
-		return $this->id && $this['historys'] ? str_split($this['historys'], 12) : [];
-	}
-	//用户增加历史记录
-	function history(string $hash):bool
-	{
-		if ($this->id && strlen($hash) === 12 && trim($hash, webapp::key) === '')
+		if ($this->id && $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('view=view+1') === 1)
 		{
-			$historys = $this->historys();
+			$historys = $this['historys'] ? str_split($this['historys'], 12) : [];
 			if (is_int($index = array_search($hash, $historys, TRUE)))
 			{
 				array_splice($historys, $index, 1);
 			}
-			$historys[] = $hash;
-			$historys = join(array_slice($historys, -50));
-			if ($this->cond()->update('ctime=?i,historys=?s', $this->webapp->time, $historys) === 1)
-			{
-				$this->webapp->mysql->videos('WHERE hash=?s LIMIT 1')->update('view=view+1');
-				$this['historys'] = $historys;
-				return TRUE;
-			}
+			array_unshift($historys, $hash);
+			$historys = join(array_slice($historys, 0, 50));
+			return $this->cond()->update('watch=watch+1,historys=?s', $historys) === 1
+				&& $this->update('historys', $this['historys'] = $historys);
 		}
 		return FALSE;
 	}
+	//清除
+	function clear(string $action):bool
+	{
+		return match ($action)
+		{
+			'historys' => $this->cond()->update('historys=""') === 1
+				&& $this->update('historys', $this['historys'] = ''),
+			default => FALSE
+		};
+	}
+	//观看记录
+	function historys():array
+	{
+		$videos = [];
+		foreach (str_split($this['historys'], 12) as $hash)
+		{
+			if ($video = $this->webapp->fetch_video($hash))
+			{
+				$videos[] = $video;
+			}
+		}
+		return $videos;
+	}
+
 	//用户收藏的视频最多50个
 	function favorites():array
 	{
