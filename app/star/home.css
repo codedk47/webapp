@@ -517,6 +517,49 @@ div.my>aside>div>a::before{
 div.my>main>ul{
 	color: var(--webapp-hover);
 }
+main.myshare{
+	display: flex;
+	flex-direction: column;
+	margin: var(--webapp-gap);
+}
+main.myshare>div{
+	text-indent: 2rem;
+}
+main.myshare>figure{
+	margin: var(--webapp-gap) auto;
+	padding: var(--webapp-gap);
+	background-color: var(--webapp-foreground);
+	width: 18rem;
+	height: 18rem;
+	border-radius: var(--webapp-gapradius);
+	box-shadow: 0 0 .2rem var(--webapp-edge);
+}
+main.myshare>figure>img{
+	width: 100%;
+	height: 100%;
+}
+main.myshare>a{
+	text-align: center;
+	margin-top: var(--webapp-gap);
+}
+main.myshare>mark{
+	display: flex;
+	gap: var(--webapp-gapitem);
+	padding: var(--webapp-gapitem) 0;
+	width: 20rem;
+	margin: auto;
+	color: var(--webapp-foreground);
+	justify-content: center;
+	font-size: var(--webapp-font-large);
+	font-family: var(--webapp-font-monospace);
+	font-weight: bold;
+	background-color: var(--webapp-button);
+}
+main.myshare>mark::before{
+	content: attr(data-iid);
+}
+
+
 /* div.my>main>ul{
 	margin: 0 var(--webapp-gap);
 	border-radius: var(--webapp-gapradius);
@@ -546,8 +589,7 @@ div.listmenu>a:not(:first-child){
 	border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-button,
-label.button{
+button,.button{
 	font: var(--webapp-font-medium) var(--webapp-font-sans-serif);
 	color: var(--webapp-foreground);
 	padding: .25rem 1rem;

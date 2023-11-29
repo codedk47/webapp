@@ -430,10 +430,11 @@ class user extends ArrayObject
 			if ($webapp->mysql->users->insert($userdata = [
 				'id' => $webapp->time33hash($id, TRUE),
 				'date' => date('Y-m-d', $webapp->time),
-				'ctime' => $webapp->time,
 				'mtime' => $webapp->time,
+				'ctime' => $webapp->time,
 				'login' => 0,
 				'watch' => 0,
+				'share' => 0,
 				'lasttime' => $webapp->time,
 				'lastip' => $webapp->iphex($webapp->request_ip(TRUE)),
 				'device' => match (1) {
@@ -448,6 +449,7 @@ class user extends ArrayObject
 				'fid' => 1,
 				'uid' => 0,
 				'cid' => $webapp->cid($user['cid'] ?? NULL),
+				'iid' => NULL,
 				'did' => $did,
 				'tid' => $tid,
 				'nickname' => $webapp->time33hash($id),

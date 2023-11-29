@@ -417,17 +417,18 @@ class webapp_router_home extends webapp_echo_masker
 
 		$this->aside->append('img', ['src' => $qrurl = '?qrcode/' . $this->webapp->encrypt($this->user)]);
 		$info = $this->aside->append('div');
-		$info->append('a', [$this->user->id, 'href' => 'javascript:;', 'data-label' => '账号：']);
-		$info->append('a', [$this->user['nickname'], 'href' => 'javascript:;', 'data-label' => '名称：']);
+		$info->append('a', [$this->user->id, 'href' => 'javascript:;', 'data-label' => '账号：',
+			'onclick' => 'navigator.clipboard.writeText(this.textContent).then(()=>alert("复制成功！"))']);
+		$info->append('a', [$this->user['nickname'], 'href' => 'javascript:;', 'data-label' => '花名：',
+			'onclick' => 'return masker.nickname(this)']);
 		$info->append('a', ['点击下载保存凭证', 'href' => "{$qrurl},type:png", 'download' => "{$this->user->id}.png", 'data-label' => '凭证：']);
 
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
 		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => '💬']);
 		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => '💬']);
 		$anchors->append('a', ['邀请代码', 'href' => '#', 'data-right' => '>>']);
-		$configs = $this->webapp->fetch_configs();
-		$anchors->append('a', ['分享链接', 'href' => $configs['down_page'], 'data-right' => '>>',
-			'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>location.href=this.href)']);
+		
+		$anchors->append('a', ['分享链接，双方获得奖励', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
 		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorite', 'data-right' => '>>']);
 		$anchors->append('a', ['观影记录', 'href' => '?home/my-watch', 'data-right' => '>>']);
 		$anchors->append('a', ['问题反馈', 'href' => '?home/my-report', 'data-right' => '>>']);
@@ -455,6 +456,38 @@ class webapp_router_home extends webapp_echo_masker
 		$this->user->clear($action);
 		$this->json(['reload' => 0]);
 	}
+	//分享链接
+	function get_my_shareurl()
+	{
+
+		$this->set_header_title('分享链接');
+		//$configs = $this->webapp->fetch_configs()['down_page'];
+
+		
+
+		$dl = $this->webapp->fetch_configs()['down_page'];
+
+		$this->main['class'] = 'myshare';
+		$this->main->append('div', '请保存截图或者使用对方手机扫以下二维码，下载安装后进入个人中心，输入以下邀请代码后，双双获得奖励！');
+		$this->main->append('figure')->append('img', ['src' => sprintf('?qrcode/%s', $this->webapp->encrypt($dl))]);
+
+		
+		$mark = $this->main->append('mark', ['data-iid' => '邀请码：']);
+		foreach (str_split($this->webapp->time33hash($this->webapp->hashtime33($this->user->id), FALSE), 4) as $a)
+		{
+			$mark->append('span', $a);
+		}
+		$this->main->append('a', ['复制二维码地址', 'href' => $dl, 'class' => 'button',
+			'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>location.href=this.href)']);
+		$dl = $this->main->append('dl');
+		$dl->append('dt', '奖励规则：');
+		$dl->append('dd', '被邀请人获得每日影片观看 +10 次。');
+		$dl->append('dd', '邀请他人一次，每日影片观看 +10 次。');
+		$dl->append('dd', '邀请他人二次，每日影片观看 +20 次。');
+		$dl->append('dd', '邀请他人三次及以上，无限观看影片。');
+	}
+
+
 	function form_report(webapp_html $node = NULL):webapp_form
 	{
 		$form = new webapp_form($node ?? $this->webapp);

@@ -174,3 +174,8 @@ masker.shortchanged = videos =>
 	console.log(videos.active, videos.current);
 }
 masker.clear = action => confirm("清除后不可恢复！") && masker.json(`?home/my-clear,action:${action}`);
+masker.nickname = anchor => {
+
+	prompt('请输入花名：', anchor.textContent);
+	return false;
+}
