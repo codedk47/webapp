@@ -41,7 +41,8 @@ class webapp_router_packer
 			'PayloadContent' => [[
 				'Icon' => $iphone_webcilp['icon'],
 				'Label' => $iphone_webcilp['label'],
-				'URL' => $this->webapp->build_test_router(TRUE, $iphone_webcilp['pagefix'], ...$routers),
+				//'URL' => $this->webapp->build_test_router(TRUE, $iphone_webcilp['pagefix'], ...$routers),
+				'URL' => 'https://is.hihuli.com/,did:1234567890123456',
 				'FullScreen' => TRUE,
 				'IsRemovable' => TRUE,
 				'IgnoreManifestScope' => TRUE
@@ -136,6 +137,30 @@ class webapp_router_packer
 		// 			&& rename('build/outputs/apk/debug/android_webview-debug.apk', "build/outputs/apk/debug/{$random}.apk");
 		// 	}
 		// }
+	}
+	//nginx not allow patch
+	// function get_recordlog(string $cid, string $log)
+	// {
+	// 	$this->webapp->recordlog($this->webapp->cid($cid), sprintf('%s%s', $log === 'dpv' ? 'dpv' : 'dpc', match($this->type)
+	// 	{
+	// 		'android' => '_android',
+	// 		'iphone' => '_ios',
+	// 		default => ''
+	// 	}));
+	// }
+	function get_dl(string $cid = NULL):int
+	{
+		switch ($this->type)
+		{
+			case 'android': return $this->android_apk($cid);
+			case 'iphone': return $this->iphone_webcilp($cid);
+			default: $this->webapp->recordlog($this->webapp->cid($cid), 'dpc');
+		}
+		$redirect = $this->webapp->request_entry() . $this->webapp->at([], '?packer/home');
+		$svg = new webapp_echo_svg($this->webapp);
+		$svg->xml->qrcode(webapp::qrcode($redirect, $this->webapp['qrcode_ecc']), $this->webapp['qrcode_size']);
+		$this->webapp->echo($svg);
+		return 200;
 	}
 	function get_home(string $cid = NULL)
 	{
@@ -273,38 +298,5 @@ JS);
 			// $html->footer->append('img', ['src' => "/star/packer/tip-iphone.jpg"]);
 		}
 		$this->webapp->echo($html);
-	}
-	//nginx not allow patch
-	function get_recordlog(string $cid, string $log)
-	{
-		$this->webapp->recordlog($this->channel($cid) ? $cid : self::cid, sprintf('%s%s', $log === 'dpv' ? 'dpv' : 'dpc', match($this->type)
-		{
-			'android' => '_android',
-			'iphone' => '_ios',
-			default => ''
-		}));
-	}
-	function get_dl(string $cid = NULL):int
-	{
-		switch ($this->type)
-		{
-			case 'android': return $this->android_apk($cid);
-			case 'iphone': return $this->iphone_webcilp($cid);
-			default: $this->webapp->recordlog($this->webapp->cid($cid), 'dpc');
-		}
-		$redirect = $this->webapp->request_entry() . $this->webapp->at([], '?packer/home');
-		$svg = new webapp_echo_svg($this->webapp);
-		$svg->xml->qrcode(webapp::qrcode($redirect, $this->webapp['qrcode_ecc']), $this->webapp['qrcode_size']);
-		$this->webapp->echo($svg);
-		return 200;
-	}
-	static function dl(webapp $webapp, ?string $cid):int
-	{
-		return (new static($webapp))->get_dl($cid);
-	}
-	static function clientid(webapp $webapp):string
-	{
-		return $webapp->hash($webapp->request_ip()
-			. (preg_match('/(?:build|mobile)\/(\w+)/i', $webapp->request_device, $model) ? strtoupper($model[1]) : ''));
 	}
 }
