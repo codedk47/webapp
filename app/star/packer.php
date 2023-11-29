@@ -56,6 +56,8 @@ class webapp_router_packer
 	}
 	function android_apk(?string $cid):int
 	{
+		$this->webapp->response_location('/hhuli.apk');
+		return 302;
 		// $android_apk = [
 		// 	'prepare_directory' => 'D:/apks',
 		// 	'replace_interval' => 0,
@@ -103,17 +105,9 @@ class webapp_router_packer
 			|| webapp::lib('apkpacker/apkpacker.php')("{$android_apk['prepare_directory']}/{$currentapk}", $cid, $packcid))) {
 			$this->webapp->recordlog($cid, 'dpc_android');
 			$currentapk ="{$currentfix}/{$cid}.{$android_apk['packer_suffix']}";
-
-
-			// $redis = new Redis();
-			// $redis->pconnect(
-			// 	$this->webapp['redis_config'][0]['host'],
-			// 	$this->webapp['redis_config'][0]['port'],
-			// 	2
-			// );
-			// $redis->select($this->webapp['redis_config'][0]['db_index']);
-			// $redis->set('channel:random:' . self::clientid($this->webapp), $cid, 300);
 		}
+		
+		
 		$this->webapp->response_location("{$android_apk['download_path']}/{$currentapk}");
 		return 302;
 	}
@@ -172,6 +166,7 @@ class webapp_router_packer
 		});
 		$html = new webapp_echo_html($this->webapp);
 		unset($html->xml->head->link);
+		$html->title('H狐狸');
 		$html->footer[0] = NULL;
 		$html->xml->body->div['class'] = 'packer';
 		$html->xml->head->append('style')->cdata(<<<'CSS'
@@ -187,6 +182,23 @@ div.packer{
 }
 header{
 	position: absolute;
+	right: 0;
+	bottom: 0;
+	z-index: 1;
+}
+aside:not(:empty){
+	position: absolute;
+	right: 1rem;
+	top: 42%;
+	width: 17%;
+	max-width: 11rem;
+	z-index: 1;
+	background-color: white;
+	border: .4rem solid white;
+}
+aside>img{
+	display: block;
+	width: 100%;
 }
 main{
 	position: relative;
@@ -218,11 +230,6 @@ footer>div>a{
 footer>div>a>img{
 	width: 100%;
 }
-
-/* footer>img{
-	display: block;
-	width: 100%;
-} */
 CSS);
 $html->script(<<<'JS'
 async function masker(resource)
@@ -296,6 +303,12 @@ JS);
 			$div->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])->append('img', ['src' => '/star/packer/tg.png']);
 			// $html->footer->append('img', ['src' => "/star/packer/tip-android.jpg"]);
 			// $html->footer->append('img', ['src' => "/star/packer/tip-iphone.jpg"]);
+		}
+		else
+		{
+			$encrypt = $this->webapp->encrypt($dl);
+			$html->aside->append('img', ['src' => "?qrcode/{$encrypt}"]);
+			$html->header->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])->append('img', ['src' => '/star/packer/tg.png']);
 		}
 		$this->webapp->echo($html);
 	}
