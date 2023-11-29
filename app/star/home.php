@@ -422,7 +422,7 @@ class webapp_router_home extends webapp_echo_masker
 			'onclick' => 'navigator.clipboard.writeText(this.textContent).then(()=>alert("复制成功！"))']);
 		$info->append('a', [$this->user['nickname'], 'href' => 'javascript:;', 'data-label' => '花名：',
 			'onclick' => 'return masker.nickname(this)']);
-		$info->append('a', ['点击下载保存凭证', 'href' => "{$qrurl},type:png", 'download' => "{$this->user->id}.png", 'data-label' => '凭证：']);
+		$info->append('a', ['点击下载保存凭证', 'href' => "{$qrurl},type:png,filename:{$this->user->id}.png", 'target' => '_blank', 'data-label' => '凭证：']);
 
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
 		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => '💬']);
