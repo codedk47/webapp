@@ -8,7 +8,6 @@ class webapp_router_home extends webapp_echo_masker
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
-		$this->meta(['name' => 'apple-mobile-web-app-status-bar-style', 'content' => 'black']);
 		unset($this->xml->body->div['class']);
 		$this->free = $webapp['app_free'];
 		$this->footer[0] = NULL;
@@ -28,7 +27,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function init()
 	{
-		$this->main->text('正在启动加密服务，防止泄露个人隐私，请稍等。。。');
+		$this->main->text('加密中，防止泄露隐私，请稍等。。。');
 	}
 	function authorization($uid, $pwd):array
 	{
