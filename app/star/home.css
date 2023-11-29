@@ -68,11 +68,11 @@ a.arrow::before{
 	border-top-width: 0;
 	border-right-width: 0;
 }
-body>div:first-child{
+/* body>div:first-child{
 	width: 100%;
 	border: 1px solid red;
 	box-sizing: border-box;
-}
+} */
 /* splashscreen */
 body>div.splashscreen:first-child>header:not(:empty){
 	position: fixed;
