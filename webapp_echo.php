@@ -372,7 +372,6 @@ class webapp_echo_masker extends webapp_echo_html
 			// $this->aside->append('textarea', [join(array_map(fn($k, $v) =>
 			// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
 			// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
-			$this->main->text('Enable JavaScript and cookies to continue');
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			if (method_exists($this, 'get_splashscreen'))
 			{
@@ -424,7 +423,8 @@ class webapp_echo_masker extends webapp_echo_html
 	}
 	function init()
 	{
-		//$this->title('Initializing');
+		$this->title('Initializing');
+		$this->main->text('Enable JavaScript and cookies to continue');
 		return 200;
 	}
 	function json(array|object $data):webapp_echo_json
