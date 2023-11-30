@@ -229,22 +229,69 @@ main>blockquote[data-lazy]{
 	text-align: center;
 }
 
+main.myshare{
+	display: flex;
+	flex-direction: column;
+	margin: var(--webapp-gap);
+}
+main.myshare>div{
+	text-indent: 2rem;
+}
+main.myshare>figure{
+	margin: var(--webapp-gap) auto;
+	padding: var(--webapp-gap);
+	background-color: var(--webapp-foreground);
+	width: 18rem;
+	height: 18rem;
+	border-radius: var(--webapp-gapradius);
+	box-shadow: 0 0 .2rem var(--webapp-edge);
+}
+main.myshare>figure>img{
+	width: 100%;
+	height: 100%;
+}
+main.myshare>a{
+	text-align: center;
+	margin-top: var(--webapp-gap);
+}
+main.myshare>mark{
+	display: flex;
+	gap: var(--webapp-gapitem);
+	padding: var(--webapp-gapitem) 0;
+	width: 20rem;
+	margin: auto;
+	color: var(--webapp-foreground);
+	justify-content: center;
+	font-size: var(--webapp-font-large);
+	font-family: var(--webapp-font-monospace);
+	font-weight: bold;
+	background-color: var(--webapp-button);
+}
+main.myshare>mark::before{
+	content: attr(data-iid);
+}
+
+
 /* footer */
-body>div:first-child>footer{
-	position: fixed;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	z-index: 9;
+footer{
+	display: flex;
+	justify-content: center;
+}
+footer.nav{
+	box-shadow: 0 .2rem .6rem var(--webapp-edge);
 	background-color: var(--webapp-background);
 	background-image: var(--webapp-concavity);
 }
-body>div:first-child>footer.nav{
-	display: flex;
-	justify-content: center;
-	box-shadow: 0 .2rem .6rem var(--webapp-edge);
+@media (orientation: portrait) {
+	footer.nav{
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 9;
+	}
 }
-body>div:first-child>footer.nav>a{
+footer.nav>a{
 	padding: var(--webapp-gap) 0;
 	flex-grow: 1;
 	text-align: center;
@@ -253,7 +300,7 @@ body>div:first-child>footer.nav>a{
 }
 
 
-
+/* extends */
 div.titles{
 	display: flex;
 	justify-content: space-between;
@@ -539,47 +586,7 @@ div.my>aside>div>a::before{
 div.my>main>ul{
 	color: var(--webapp-hover);
 }
-main.myshare{
-	display: flex;
-	flex-direction: column;
-	margin: var(--webapp-gap);
-}
-main.myshare>div{
-	text-indent: 2rem;
-}
-main.myshare>figure{
-	margin: var(--webapp-gap) auto;
-	padding: var(--webapp-gap);
-	background-color: var(--webapp-foreground);
-	width: 18rem;
-	height: 18rem;
-	border-radius: var(--webapp-gapradius);
-	box-shadow: 0 0 .2rem var(--webapp-edge);
-}
-main.myshare>figure>img{
-	width: 100%;
-	height: 100%;
-}
-main.myshare>a{
-	text-align: center;
-	margin-top: var(--webapp-gap);
-}
-main.myshare>mark{
-	display: flex;
-	gap: var(--webapp-gapitem);
-	padding: var(--webapp-gapitem) 0;
-	width: 20rem;
-	margin: auto;
-	color: var(--webapp-foreground);
-	justify-content: center;
-	font-size: var(--webapp-font-large);
-	font-family: var(--webapp-font-monospace);
-	font-weight: bold;
-	background-color: var(--webapp-button);
-}
-main.myshare>mark::before{
-	content: attr(data-iid);
-}
+
 
 
 /* div.my>main>ul{
