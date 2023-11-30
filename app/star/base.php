@@ -742,6 +742,10 @@ class base extends webapp
 		$hash && $this->redis->del("ad:{$hash}");
 		return $this->redis->del("ad:{$seat}") === 1;
 	}
+	function incr(string $table, string $field, int $value)
+	{
+
+	}
 	const tags_level = [
 		0 => '分类',
 		1 => '全局',

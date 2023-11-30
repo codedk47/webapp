@@ -1,5 +1,5 @@
 <?php
-class user extends ArrayObject
+class user extends ArrayObject implements Countable
 {
 	public readonly ?string $id;
 	function __construct(private readonly webapp $webapp, array $user)
@@ -143,6 +143,63 @@ class user extends ArrayObject
 		{
 			$this['tid'] = $tid;
 			return TRUE;
+		}
+		return FALSE;
+	}
+	//每日试看次数
+	function count(int $increment = 0):int
+	{
+		if ($this->id)
+		{
+			$count = $this['iid'] ? 20 : 10;
+			$count = match (intval($this['share']))
+			{
+				0 => $count,
+				1 => $count + 10,
+				2 => $count + 20,
+				default => -1
+			};
+			if ($count === -1)
+			{
+				return $count;
+			}
+			$this->webapp->redis->hExists($key = "user:{$this->id}", 'count')
+				? $this->webapp->redis->hIncrBy($key, 'count', $increment)
+				: $this->webapp->redis->hSet($key, 'count', $count + $increment);
+			return $this->webapp->redis->hGet($key, 'count');
+		}
+		return 0;
+	}
+	//邀请码
+	function invite(string $code, ?string &$error):bool
+	{
+		$error = '邀请码无效！';
+		while ($this->id && strlen($code) === 12 && trim($code, webapp::key) === '')
+		{
+			if ($this['iid'])
+			{
+				$error = '已被邀请！';
+				break;
+			}
+			$id = $this->webapp->time33hash($this->webapp->hashtime33($code), TRUE);
+			if ($this->id === $id)
+			{
+				$error = '哟~不能这样玩哦！';
+				break;
+			}
+			if ($this->webapp->mysql->sync(fn() => $this->cond('AND iid IS NULL')->update('iid=?s', $id) === 1
+				&& $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update('share=share+1') === 1)) {
+				$this->count(+10);
+				$this->webapp->redis->hSet("user:{$this->id}", 'iid', $this['iid'] = $id);
+				if ($this->webapp->redis->exists($target = "user:{$id}"))
+				{
+					$this->webapp->redis->hIncrBy($target, 'share', 1);
+				}
+				$error = '领取成功！';
+				return TRUE;
+			}
+			$error = '领取失败！请稍后重试。';
+			break;
 		}
 		return FALSE;
 	}

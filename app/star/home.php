@@ -334,26 +334,59 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js']);
-		if (empty($video = $this->webapp->fetch_video($hash)))
-		{
-			return 404;
-		}
-		$this->user->watch($hash);
-
-
 		$this->set_header_search();
 		$this->set_footer_menu();
-		//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
 		$this->aside['class'] = 'watch';
-		$this->aside->append('webapp-video', [
+		if (empty($video = $this->webapp->fetch_video($hash)))
+		{
+			$this->aside->append('strong', '您所观看的影片不见啦 :(');
+			return 404;
+		}
+		$this->aside['data-type'] .= $video['type'];
+		// if (1)
+		// {
+		// 	$strong = $this->aside->append('strong')->append('span');
+		// 	$strong->text('每日观影剩余次数已耗尽，请点击');
+		// 	$strong->append('q', ['style' => 'margin:0 var(--webapp-gap)'])->append('a', ['分享链接', 'href' => '?home/my-shareurl']);
+		// 	$strong->text('获得更多次数！');
+		// 	return 401;
+		// }
+		
+
+
+
+
+		// $this->user->watch($hash);
+
+		// return;
+		// if (in_array(str_split($this->user['favorites'], 12)))
+		// {
+		// 	$this->user->count(-1);
+		// }
+
+
+		//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
+		
+		$watch = $this->aside->append('webapp-video', [
 			'data-poster' => $video['poster'],
 			'data-m3u8' => $video['m3u8'],
 			'oncanplay' => 'masker.canplay(this)',
 			//'autoheight' => NULL,
 			//'autoplay' => NULL,
-			'controls' => NULL,
-			// 'muted' => NULL
+			// 'muted' => NULL,
+			'controls' => NULL
 		]);
+		if ($ad = $this->webapp->random_weights($this->webapp->fetch_ads(2)))
+		{
+			$watch->append('a', ['href' => $ad['support'], 'onclick' => 'console.log(123)'])
+				->append('img', ['src' => $ad['picture'], 'onload' => 'this.parentNode.parentNode.splashscreen(5)']);
+		}
+		else
+		{
+			$watch->setattr('autoplay');
+		}
+
+
 
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', $video['name']);
@@ -425,11 +458,13 @@ class webapp_router_home extends webapp_echo_masker
 		$info->append('a', ['点击下载保存凭证', 'href' => "{$qrurl},type:png,filename:{$this->user->id}.png", 'target' => '_blank', 'data-label' => '凭证：']);
 
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
+		$anchors->append('a', ['每日观影剩余次数', 'href' => 'javascript:;', 'data-right' => sprintf('%d 次', count($this->user))]);
 		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => '💬']);
 		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => '💬']);
-		$anchors->append('a', ['邀请代码', 'href' => '#', 'data-right' => '>>']);
-		
+
+		$anchors->append('a', ['输入邀请码', 'href' => '#', 'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
 		$anchors->append('a', ['分享链接，双方获得奖励', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
+
 		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorite', 'data-right' => '>>']);
 		$anchors->append('a', ['观影记录', 'href' => '?home/my-watch', 'data-right' => '>>']);
 		$anchors->append('a', ['问题反馈', 'href' => '?home/my-report', 'data-right' => '>>']);
@@ -460,6 +495,12 @@ class webapp_router_home extends webapp_echo_masker
 	//分享链接
 	function get_my_shareurl()
 	{
+		// var_dump( $this->user->invite('JGGCV5K2FLPQ', $error), $error, $this->user->count() );
+
+
+
+		// return;
+
 
 		$this->set_header_title('分享链接');
 		//$configs = $this->webapp->fetch_configs()['down_page'];

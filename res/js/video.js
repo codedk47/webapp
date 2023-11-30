@@ -7,7 +7,27 @@ webapp-video{
 webapp-video>video{
 	display: block;
 	object-fit: cover;
-	
+}
+webapp-video>a{
+	position: absolute;
+	inset: 0;
+	background-color: black;
+}
+webapp-video>a>img{
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+webapp-video>mark{
+	position: absolute;
+	right: .4rem;
+	bottom: .4rem;
+	border: 1px solid white;
+	color: white;
+	background-color: rgba(0, 0, 0, .8);
+	font-family: consolas, monospace;
+	padding: .4rem 1rem;
+	border-radius: .4rem;
 }
 /*
 webapp-video>div.control{
@@ -190,6 +210,31 @@ customElements.define('webapp-video', class extends HTMLElement
 			}
 		});
 	}
+	splashscreen(duration, autoskip)
+	{
+		if (this.querySelector('mark')) return;
+		const skip = this.appendChild(document.createElement('mark')), timer = () =>
+		{
+			if (duration > 0)
+			{
+				skip.textContent = `${String(duration--).padStart(2, 0)} s`;
+				setTimeout(timer, 1000);
+			}
+			else
+			{
+				skip.textContent = 'Skip';
+				skip.onclick = () =>
+				{
+					while (this.lastChild !== this.#video)
+					{
+						this.removeChild(this.lastChild);
+					}
+					this.play();
+				};
+			}
+		};
+		timer();
+	}
 	connectedCallback()
 	{
 		this.#video.loop = this.hasAttribute('loop');
@@ -198,7 +243,10 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.controls = this.hasAttribute('controls');
 		this.appendChild(this.#video);
 
-		
+		// if ('splashscreen' in this.dataset)
+		// {
+
+		// }
 		if ('poster' in this.dataset)
 		{
 			this.poster(this.dataset.poster);

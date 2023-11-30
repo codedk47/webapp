@@ -176,7 +176,6 @@ aside.classify{
 	background-color: var(--webapp-background);
 	/* box-shadow: 0 .2rem .6rem rgb(27, 31, 35); */
 }
-
 aside.classify>a{
 	position: relative;
 	padding: var(--webapp-gapitem) var(--webapp-gap);
@@ -191,18 +190,39 @@ aside.classify>a.selected::before{
 	bottom: .2rem;
 	border-bottom: .2rem solid var(--webapp-anchor);
 }
+
 aside.watch{
-	position: sticky;
-	top: 0;
-	z-index: 9;
+	position: relative;
 	padding-bottom: 56.25%;
+	background-color: var(--webapp-edge);
+}
+/* landscape = viewport 处于横向，即宽度大于高度。 */
+/* portrait = viewport 处于纵向，即高度大于等于宽度。 */
+@media (orientation: portrait) {
+	aside.watch[data-type=h]{
+		position: sticky;
+		top: 0;
+		z-index: 9;
+	}
 }
 aside.watch>webapp-video{
 	position: absolute;
 	inset: 0;
 }
-/* main */
+aside.watch>strong{
+	position: absolute;
+	inset: 0;
+	margin: 0 var(--webapp-gap);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+aside.watch>strong>span{
+	text-indent: 2rem;
+}
 
+
+/* main */
 main>blockquote[data-lazy]{
 	margin: 0;
 	padding: var(--webapp-gap);
@@ -260,10 +280,12 @@ div[class|=grid]>a>figure{
 	box-shadow: 0 0 .2rem var(--webapp-edge);
 	text-shadow: 1px 1px 1px var(--webapp-background);
 	/*
-	19:6= 56.25%
 	4:3	= 75%
 	3:2	= 66.66%
 	8:5	= 62.5%
+	2:1	= 50%
+	16:9= 56.25%
+	21:9= 42.86%
 	*/
 }
 div[class|=grid]>a>figure[data-label]::before{
@@ -641,7 +663,7 @@ webapp-videos>div>webapp-video>strong{
 webapp-slideshows{
 	box-shadow: 0 0 .2rem var(--webapp-edge);
 	border-radius: var(--webapp-gapradius);
-	padding-bottom: 46%;
+	padding-bottom: 42.86%;
 	height: 0;
 	margin: var(--webapp-gapitem);
 }
