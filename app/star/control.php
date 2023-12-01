@@ -303,18 +303,18 @@ class webapp_router_control extends webapp_echo_masker
 	function ad_seats():array
 	{
 		return [
-			0 => '开屏广告',
-			1 => '首页轮播 21:9',
-			2 => '播放视频 16:9',
+			0 => '开屏广告（全屏幕）',
+			1 => '首次弹窗（半屏幕）',
+			2 => '首页轮播 21:9',
+			3 => '播放视频 16:9',
+			4 => '滑动视频（全屏幕）',
 			
-			// 2 => '中间轮播',
 			// 3 => '游戏轮播',
 			// 4 => '社区轮播',
 			// 5 => '个人中心',
 			// 6 => '弹窗广告',
 
 			9 => '导航图标 1:1'
-			//255 => '待定分类'
 		];
 	}
 	function form_ad(webapp_html $html = NULL):webapp_form

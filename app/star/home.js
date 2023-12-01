@@ -57,7 +57,10 @@ masker.dialog = (context, title, url) => new Promise(resolve =>
 masker.json = (element, callback) => masker(...element instanceof HTMLFormElement
 	? [element.action, {method: element.method.toUpperCase(), body: new FormData(element)}]
 	: [element instanceof HTMLAnchorElement ? element.href : element]).then(response => response.json()).then(callback || (async data => {
-	console.log(data);
+	if (Array.isArray(data.errors) && data.errors.length)
+	{
+		await masker.dialog(data.errors.join('\n'), '错误信息');
+	}
 	if (data.hasOwnProperty('dialog'))
 	{
 		await masker.dialog(data.dialog, '对话框');
@@ -172,7 +175,17 @@ masker.shortchanged = videos =>
 	strong.textContent = videos.current.name;
 
 	console.log(videos.active, videos.current);
-}
+};
+//masker.confirm = element => new Promise(resolve => confirm("清除后不可恢复！"));
+masker.prompt = element => new Promise(resolve =>
+{
+	const value = prompt(element.textContent);
+	value === null || resolve(value);
+});
+masker.invite = anchor => masker.prompt(anchor).then(value =>
+{
+	masker.json(anchor.href + value.toUpperCase().replace(/[^\w]/g, ''));
+});
 masker.clear = action => confirm("清除后不可恢复！") && masker.json(`?home/my-clear,action:${action}`);
 masker.nickname = anchor => {
 

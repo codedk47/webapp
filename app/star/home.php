@@ -376,7 +376,7 @@ class webapp_router_home extends webapp_echo_masker
 			//'muted' => NULL,
 			'controls' => NULL
 		]);
-		if ($ad = $this->webapp->random_weights($this->webapp->fetch_ads(2)))
+		if ($ad = $this->webapp->random_weights($this->webapp->fetch_ads(3)))
 		{
 			$watch->append('a', ['href' => $ad['support'], 'onclick' => 'console.log(123)'])
 				->append('img', ['src' => $ad['picture'], 'onload' => 'this.parentNode.parentNode.splashscreen(5)']);
@@ -462,7 +462,10 @@ class webapp_router_home extends webapp_echo_masker
 		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => '💬']);
 		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => '💬']);
 
-		$anchors->append('a', ['输入邀请码', 'href' => '#', 'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
+		$anchors->append('a', ['输入邀请码',
+			'href' => '?home/my-invite,code:',
+			'onclick' => 'return !masker.invite(this)',
+			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
 		$anchors->append('a', ['分享链接，双方获得奖励', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
 
 		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorite', 'data-right' => '>>']);
@@ -491,6 +494,13 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->user->clear($action);
 		$this->json(['reload' => 0]);
+	}
+	//邀请代码
+	function get_my_invite(string $code)
+	{
+		$this->json($this->user->invite($code, $error)
+			? ['dialog' => '邀请成功！', 'reload' => 0]
+			: ['errors' => [$error]]);
 	}
 	//分享链接
 	function get_my_shareurl()
