@@ -176,17 +176,20 @@ masker.shortchanged = videos =>
 
 	console.log(videos.active, videos.current);
 };
-//masker.confirm = element => new Promise(resolve => confirm("清除后不可恢复！"));
-masker.prompt = element => new Promise(resolve =>
-{
-	const value = prompt(element.textContent);
-	value === null || resolve(value);
-});
-masker.invite = anchor => masker.prompt(anchor).then(value =>
-{
-	masker.json(anchor.href + value.toUpperCase().replace(/[^\w]/g, ''));
-});
-masker.clear = action => confirm("清除后不可恢复！") && masker.json(`?home/my-clear,action:${action}`);
+masker.confirm = (content, context) => new Promise((resolve, reject) => confirm(content) ? resolve(context) : reject(context));
+masker.prompt = (title, value) => new Promise((resolve, reject) => (value = prompt(title, value)) === null ? reject() : resolve(value));
+masker.clear = action => masker.confirm('清除后不可恢复！').then(() => masker.json(`?home/my-clear,action:${action}`));
+masker.change = (element, field, value) => masker.prompt(title, value).then(value => {
+
+	masker.json()
+
+})
+
+
+
+
+masker.invite = anchor => masker.prompt(anchor).then(value => masker.json(anchor.href + value));
+
 masker.nickname = anchor => {
 
 	prompt('请输入花名：', anchor.textContent);

@@ -369,15 +369,23 @@ class webapp_echo_masker extends webapp_echo_html
 		if ($this->initiated = $webapp->request_header('Service-Worker') !== 'masker')
 		{
 			unset($this->xml->head->link);
-			// $this->aside->append('textarea', [join(array_map(fn($k, $v) =>
-			// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
-			// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
-			$this->sw['data-reload'] = "?{$webapp['request_query']}";
-			if (method_exists($this, 'get_splashscreen'))
+			if (preg_match('/iphone os (\d+)/i', $webapp->request_device(), $iphone) && $iphone[1] < 15)
 			{
-				$this->sw['data-splashscreen'] = sprintf('?%s/splashscreen', substr(static::class, strlen($webapp['app_router'])));
+				unset($this->xml->head->script);
+				$webapp->break($this->init(...), FALSE);
 			}
-			$webapp->break($this->init(...));
+			else
+			{
+				// $this->aside->append('textarea', [join(array_map(fn($k, $v) =>
+				// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
+				// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
+				$this->sw['data-reload'] = "?{$webapp['request_query']}";
+				if (method_exists($this, 'get_splashscreen'))
+				{
+					$this->sw['data-splashscreen'] = sprintf('?%s/splashscreen', substr(static::class, strlen($webapp['app_router'])));
+				}
+				$webapp->break($this->init(...), TRUE);
+			}
 		}
 		else
 		{
@@ -421,10 +429,12 @@ class webapp_echo_masker extends webapp_echo_html
 				? substr($this->document->saveHTML($this->template), 10, -11)
 				: $this->document->saveHTML($this->document)));
 	}
-	function init()
+	function init(bool $success)
 	{
 		$this->title('Initializing');
-		$this->main->text('Enable JavaScript and cookies to continue');
+		$this->main->text($success
+			? 'Enable JavaScript and cookies to continue'
+			: 'Please upgrade system or device to continue');
 		return 200;
 	}
 	function json(array|object $data):webapp_echo_json

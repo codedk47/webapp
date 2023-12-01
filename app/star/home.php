@@ -19,15 +19,17 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/home.css?' . $webapp->random_hash(TRUE);
-		$this->script(['src' => '/webapp/app/star/home.js?v=2']);
+		$this->script(['src' => '/webapp/app/star/home.js?v=1']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js']);
 		
 		//$this->footer->text('asd');
 
 	}
-	function init()
+	function init(bool $success)
 	{
-		$this->main->text('加密中，防止泄露隐私，请稍等。。。');
+		$this->main->text($success
+			? '加密中，防止泄露隐私，请稍等。。。'
+			: '您的iOS版本过低，请更新后继续访问。。。');
 	}
 	function authorization($uid, $pwd):array
 	{
@@ -464,7 +466,7 @@ class webapp_router_home extends webapp_echo_masker
 
 		$anchors->append('a', ['输入邀请码',
 			'href' => '?home/my-invite,code:',
-			'onclick' => 'return !masker.invite(this)',
+			'onclick' => 'return !masker.prompt(this.textContent).then(value => masker.json(this.href + value))',
 			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
 		$anchors->append('a', ['分享链接，双方获得奖励', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
 
@@ -498,7 +500,7 @@ class webapp_router_home extends webapp_echo_masker
 	//邀请代码
 	function get_my_invite(string $code)
 	{
-		$this->json($this->user->invite($code, $error)
+		$this->json($this->user->invite(preg_replace('/[^0-9A-Z]+/', '', strtoupper($code)), $error)
 			? ['dialog' => '邀请成功！', 'reload' => 0]
 			: ['errors' => [$error]]);
 	}
