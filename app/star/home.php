@@ -345,6 +345,11 @@ class webapp_router_home extends webapp_echo_masker
 			return 404;
 		}
 		$this->aside['data-type'] .= $video['type'];
+
+		
+
+
+
 		// if (1)
 		// {
 		// 	$strong = $this->aside->append('strong')->append('span');
@@ -406,6 +411,20 @@ class webapp_router_home extends webapp_echo_masker
 				}
 			}
 		}
+		$videomenu = $videoinfo->append('div');
+		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
+		$anchor->svg(['fill' => 'white', 'viewBox' => '0 0 24 24'])->icon()->star();
+		$anchor->append('span', '收藏');
+
+		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
+		$anchor->svg(['fill' => 'white', 'viewBox' => '0 0 24 24'])->icon()->star();
+		$anchor->append('span', '20K');
+
+		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
+		$anchor->svg(['fill' => 'white', 'viewBox' => '0 0 24 24'])->icon()->star();
+		$anchor->append('span', '点赞');
+
+
 		$this->add_video_lists($this->main, $this->webapp->fetch_like_videos($video), 2, '可能喜欢', 'javascript:alert(1);', '换一换');
 	}
 	function get_short(int $page = 0)
