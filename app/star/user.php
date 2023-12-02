@@ -208,6 +208,10 @@ class user extends ArrayObject implements Countable
 	{
 		if ($this->id && $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('view=view+1') === 1)
 		{
+			if ($this->webapp->redis->exists($key = "video:{$hash}"))
+			{
+				$this->webapp->redis->hIncrBy($key, 'view', 1);
+			}
 			$historys = $this['historys'] ? str_split($this['historys'], 12) : [];
 			if (is_int($index = array_search($hash, $historys, TRUE)))
 			{
@@ -248,6 +252,10 @@ class user extends ArrayObject implements Countable
 	function favorites():array
 	{
 		return $this->id && $this['favorites'] ? str_split($this['favorites'], 12) : [];
+	}
+	function favorite_has(string $hash):bool
+	{
+		return in_array($hash, $this->favorites(), TRUE);
 	}
 	//用户收藏视频 -1取消 0无操作 +1收藏
 	function favorite(string $hash):int

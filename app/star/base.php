@@ -542,6 +542,10 @@ class base extends webapp
 		$cid = $this->redis->get("did:{$did}");
 		return is_string($cid) ? $cid : self::cid;
 	}
+	// function short_number(int $value):string
+	// {
+
+	// }
 	//创建用户
 	function user_create(array $user):user
 	{
@@ -574,41 +578,21 @@ class base extends webapp
 		}
 		return $user;
 	}
-	//Reids 覆盖此方法获取用户并且缓存
-	function user_fetch(string $id):array
-	{
-		if ($this->mysql->users('WHERE id=?s LIMIT 1', $id)->fetch($user))
-		{
-			$this->recordlog($user['cid'], match ($user['device'])
-			{
-				'android' => 'signin_android',
-				'ios' => 'signin_ios',
-				default => 'signin'
-			});
-			$this->mysql->users('WHERE id=?s LIMIT 1', $user['id'])->update(
-				'`login`=`login`+1,lasttime=?i,lastip=?s',
-				$this->time,
-				$this->iphex($this->ip));
-			return $user;
-		}
-		return [];
-	}
 	//用户模型
-	//'FABqsZrf0g'
 	function user(string $id = NULL):user
 	{
 		return $id ? user::from_id($this, $id) : new user($this,
 			$this->authorize($this->request_authorization($type), $this->user_fetch(...)));
 	}
 	//游戏
-	function game():game
-	{
-		return new game(...$this['game']);
-	}
-	function game_balance():int
-	{
-		return $this->game->balance();
-	}
+	// function game():game
+	// {
+	// 	return new game(...$this['game']);
+	// }
+	// function game_balance():int
+	// {
+	// 	return $this->game->balance();
+	// }
 	private function game_exchange(bool $result, array $record):bool
 	{
 		return $result

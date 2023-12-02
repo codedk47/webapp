@@ -1118,6 +1118,38 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return 304;
 	}
+	function get_icons()
+	{
+		$this->app('webapp_echo_html')->title('Icons');
+		$this->app->xml->head->append('style')->cdata(<<<'CSS'
+main{
+	display: flex;
+	gap: .4rem;
+	flex-wrap: wrap;
+}
+main>a{
+	
+	display: flex;
+	align-items: center;
+}
+main>a:hover{
+	background-color: whitesmoke;
+}
+main>a>svg{
+	padding: .6rem;
+}
+main>a>span{
+	padding-right: .6rem;
+}
+CSS);
+		foreach (array_keys(webapp_svg::icons) as $name)
+		{
+			$anchor = $this->app->main->append('a', ['href' => 'javascript:;']);
+			$anchor->svg()->icon($name);
+			$anchor->append('span', $name);
+		}
+		$this->app->main['onclick'] = 'if(event.target instanceof HTMLSpanElement)navigator.clipboard.writeText(event.target.textContent)';
+	}
 	function get_manifests()
 	{
 		if ($this['manifests'])

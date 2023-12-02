@@ -363,7 +363,7 @@ class webapp_router_home extends webapp_echo_masker
 
 
 
-		// $this->user->watch($hash);
+		$this->user->watch($hash);
 
 		// return;
 		// if (in_array(str_split($this->user['favorites'], 12)))
@@ -386,7 +386,8 @@ class webapp_router_home extends webapp_echo_masker
 		if ($ad = $this->webapp->random_weights($this->webapp->fetch_ads(3)))
 		{
 			$watch->append('a', ['href' => $ad['support'], 'onclick' => 'console.log(123)'])
-				->append('img', ['src' => $ad['picture'], 'onload' => 'this.parentNode.parentNode.splashscreen(5)']);
+				->append('img', ['src' => $ad['picture'], 'onload' => 'this.parentNode.parentNode.splashscreen(5)',
+					'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)']);
 		}
 		else
 		{
@@ -412,17 +413,22 @@ class webapp_router_home extends webapp_echo_masker
 			}
 		}
 		$videomenu = $videoinfo->append('div');
-		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
-		$anchor->svg(['fill' => 'white', 'viewBox' => '0 0 24 24'])->icon()->star();
-		$anchor->append('span', '收藏');
+
+		
+
+		$anchor = $videomenu->append('a', ['href' => "?home/my-favorite,hash:{$hash}", 'onclick' => 'return false']);
+		[$icon, $name] = $this->user->favorite_has($hash) ? ['star-fill', '已收藏'] : ['star', '收藏'];
+		$anchor->svg(['fill' => 'white'])->icon($icon);
+		$anchor->append('span', $name);
+
 
 		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
-		$anchor->svg(['fill' => 'white', 'viewBox' => '0 0 24 24'])->icon()->star();
-		$anchor->append('span', '20K');
+		$anchor->svg(['fill' => 'white'])->icon('eye');
+		$anchor->append('span', $video['view']);
 
 		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
-		$anchor->svg(['fill' => 'white', 'viewBox' => '0 0 24 24'])->icon()->star();
-		$anchor->append('span', '点赞');
+		$anchor->svg(['fill' => 'white'])->icon('thumbsup');
+		$anchor->append('span', $video['like']);
 
 
 		$this->add_video_lists($this->main, $this->webapp->fetch_like_videos($video), 2, '可能喜欢', 'javascript:alert(1);', '换一换');
@@ -607,7 +613,7 @@ class webapp_router_home extends webapp_echo_masker
 
 
 
-	function get_my_favorite()
+	function get_my_favorite(string $hash = NULL)
 	{
 		$this->set_header_title('收藏记录');
 		$this->set_footer_menu();
