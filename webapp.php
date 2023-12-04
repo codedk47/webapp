@@ -724,9 +724,9 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			?? $this->io->request_header('Host')
 			?? $this['app_hostname'];
 	}
-	function request_origin():string
+	function request_origin(string $path = NULL):string
 	{
-		return sprintf('%s://%s', $this->request_scheme(), $this->request_host());
+		return sprintf('%s://%s', $this->request_scheme(), $this->request_host(), $path);
 	}
 	function request_entry():string
 	{

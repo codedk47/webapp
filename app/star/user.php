@@ -77,9 +77,7 @@ class user extends ArrayObject implements Countable
 	}
 	function update(string $field, string $value):bool
 	{
-		return $this->id
-			&& isset($this[$field])
-			&& $this->webapp->redis->hSet("user:{$this->id}", $field, $value) === 0;
+		return isset($this[$field]) && $this->webapp->redis->hSet("user:{$this->id}", $field, $value) === 0;
 	}
 	//余额提现
 	function exchange(array $transfer):array
@@ -229,8 +227,8 @@ class user extends ArrayObject implements Countable
 	{
 		return match ($action)
 		{
-			'historys' => $this->cond()->update('historys=""') === 1
-				&& $this->update('historys', $this['historys'] = ''),
+			'historys' => $this->cond()->update('historys=""') === 1 && $this->update('historys', $this['historys'] = ''),
+			'favorites' => $this->cond()->update('favorites=""') === 1 && $this->update('favorites', $this['favorites'] = ''),
 			default => FALSE
 		};
 	}
@@ -249,9 +247,22 @@ class user extends ArrayObject implements Countable
 	}
 
 	//用户收藏的视频最多50个
-	function favorites():array
+	function favorites(bool $video = FALSE):array
 	{
-		return $this->id && $this['favorites'] ? str_split($this['favorites'], 12) : [];
+		$favorites = $this->id && $this['favorites'] ? str_split($this['favorites'], 12) : [];
+		if ($video)
+		{
+			$videos = [];
+			foreach ($favorites as $hash)
+			{
+				if ($video = $this->webapp->fetch_video($hash))
+				{
+					$videos[] = $video;
+				}
+			}
+			return $videos;
+		}
+		return $favorites;
 	}
 	function favorite_has(string $hash):bool
 	{
@@ -260,9 +271,9 @@ class user extends ArrayObject implements Countable
 	//用户收藏视频 -1取消 0无操作 +1收藏
 	function favorite(string $hash):int
 	{
+		$result = 0;
 		if ($this->id && strlen($hash) === 12 && trim($hash, webapp::key) === '')
 		{
-			$result = 0;
 			$favorites = $this->favorites();
 			if (is_int($index = array_search($hash, $favorites, TRUE)))
 			{
@@ -272,19 +283,16 @@ class user extends ArrayObject implements Countable
 			else
 			{
 				++$result;
-				$favorites[] = $hash;
+				array_unshift($favorites, $hash);
 			}
-			if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`view`=`view`+1,`like`=`like`+?i', $result) === 1)
+			//$this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`like`=`like`+?i', $result);
+			$favorites = join(array_slice($favorites, -50));
+			if ($this->cond()->update('favorites=?s', $favorites) === 1)
 			{
-				$favorites = join(array_slice($favorites, -50));
-				if ($this->cond()->update('ctime=?i,favorites=?s', $this->webapp->time, $favorites) === 1)
-				{
-					$this['favorites'] = $favorites;
-					return $result;
-				}
+				$this->update('favorites', $this['favorites'] = $favorites);
 			}
 		}
-		return 0;
+		return $result;
 	}
 	//用户上传的视频（只返回HASH）
 	function videos(string $type, string $sync, int $page, int $size = 10):array
@@ -478,18 +486,20 @@ class user extends ArrayObject implements Countable
 		$created = FALSE;
 		do
 		{
-			if (isset($user['did'])
-				&& is_string($did = $user['did'])
-				&& strlen($did) === 16
-				&& $webapp->mysql->users('WHERE did=?s LIMIT 1', $did)->fetch($userdata)) {
+			$did = isset($user['did'])
+				&& is_string($user['did'])
+				&& strlen($user['did']) === 16 ? $user['did'] : NULL;
+			if ($did && $webapp->mysql->users('WHERE did=?s LIMIT 1', $did)->fetch($userdata))
+			{
 				break;
-			} else $did = NULL;
-			if (isset($user['tid'])
-				&& is_string($tid = $user['tid'])
-				&& preg_match('/^\d{8,16}$/', $tid)
-				&& $webapp->mysql->users('WHERE tid=?s LIMIT 1', $tid)->fetch($userdata)) {
+			};
+			$tid = isset($user['tid'])
+				&& is_string($user['tid'])
+				&& preg_match('/^\d{8,16}$/', $user['tid']) ? $user['tid'] : NULL;
+			if ($tid && $webapp->mysql->users('WHERE tid=?s LIMIT 1', $tid)->fetch($userdata))
+			{
 				break;
-			} else $tid = NULL;
+			};
 			$id = $webapp->random_time33();
 			$device = $user['device'] ?? $webapp->request_device();
 			if ($webapp->mysql->users->insert($userdata = [

@@ -184,7 +184,30 @@ masker.change = (element, field, value) => masker.prompt(title, value).then(valu
 	masker.json()
 
 })
-
+masker.favorite = anchor =>
+{
+	anchor.onclick = () => false;
+	masker.json(anchor.href, data =>
+	{
+		if (data.result)
+		{
+			const childs = anchor.childNodes;
+			if (data.result > 0)
+			{
+				childs[0].style = 'display:none';
+				childs[1].style = 'display:block';
+				childs[2].textContent = '已收藏';
+			}
+			else
+			{
+				childs[0].style = 'display:block';
+				childs[1].style = 'display:none';
+				childs[2].textContent = '收藏';
+			}
+		}
+	}).finally(() => anchor.onclick = () => masker.favorite(anchor));
+	return false;
+}
 
 
 

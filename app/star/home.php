@@ -416,10 +416,24 @@ class webapp_router_home extends webapp_echo_masker
 
 		
 
-		$anchor = $videomenu->append('a', ['href' => "?home/my-favorite,hash:{$hash}", 'onclick' => 'return false']);
-		[$icon, $name] = $this->user->favorite_has($hash) ? ['star-fill', '已收藏'] : ['star', '收藏'];
-		$anchor->svg(['fill' => 'white'])->icon($icon);
-		$anchor->append('span', $name);
+		$anchor = $videomenu->append('a', ['href' => "?home/my-favorites,hash:{$hash}", 'onclick' => 'return masker.favorite(this)']);
+		$anchor->svg(['fill' => 'white'])->icon('star');
+		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('star-fill');
+		$anchor->append('span', '收藏');
+		if ($this->user->favorite_has($hash))
+		{
+			$anchor->svg[0]['style'] = 'display:none';
+			$anchor->svg[1]['style'] = 'display:block';
+			$anchor->span[0] = '已收藏';
+		}
+		
+
+		// [$icon, $name] = $this->user->favorite_has($hash) ? ['star-fill', '已收藏'] : ['star', '收藏'];
+
+
+
+		// $anchor->svg(['fill' => 'white'])->icon($icon);
+		// $anchor->append('span', $name);
 
 
 		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
@@ -495,8 +509,8 @@ class webapp_router_home extends webapp_echo_masker
 			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
 		$anchors->append('a', ['分享链接，双方获得奖励', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
 
-		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorite', 'data-right' => '>>']);
-		$anchors->append('a', ['观影记录', 'href' => '?home/my-watch', 'data-right' => '>>']);
+		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorites', 'data-right' => count($this->user->favorites())]);
+		$anchors->append('a', ['历史记录', 'href' => '?home/my-historys', 'data-right' => count($this->user->historys())]);
 		$anchors->append('a', ['问题反馈', 'href' => '?home/my-report', 'data-right' => '>>']);
 		//$anchors->append('a', ['注销账号', 'href' => 'javascript:;', 'onclick' => 'return masker.delete_account(this)', 'data-right' => '退出']);
 		$node = $this->main->append('ul');
@@ -519,8 +533,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_my_clear(string $action)
 	{
-		$this->user->clear($action);
-		$this->json(['reload' => 0]);
+		$this->json(['result' => $this->user->clear($action), 'reload' => 0]);
 	}
 	//邀请代码
 	function get_my_invite(string $code)
@@ -602,20 +615,29 @@ class webapp_router_home extends webapp_echo_masker
 
 		$this->set_footer_menu();
 	}
-	function get_my_watch()
+	function get_my_historys()
 	{
 		$this->set_header_title('观影记录');
-		$this->add_video_lists($this->main, $this->user->historys(), 1,
-			'#最多保留50个记录', 'javascript:masker.clear("historys");', '清除所有观影记录');
 		$this->set_footer_menu();
+		$this->add_video_lists($this->main,
+			$videos = $this->user->historys(),
+			count($videos) % 2 ? 3 : 2,
+			'#最多保留50个记录',
+			'javascript:masker.clear("historys");', '清除所有观影记录');
 	}
-
-
-
-
-	function get_my_favorite(string $hash = NULL)
+	function get_my_favorites(string $hash = NULL)
 	{
+		if ($hash)
+		{
+			$this->json(['result' => $this->user->favorite($hash)]);
+			return;
+		}
 		$this->set_header_title('收藏记录');
 		$this->set_footer_menu();
+		$this->add_video_lists($this->main,
+			$videos = $this->user->favorites(TRUE),
+			count($videos) % 2 ? 3 : 2,
+			'#最多保留50个记录',
+			'javascript:masker.clear("favorites");', '清除所有收藏记录');
 	}
 }
