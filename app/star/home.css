@@ -367,6 +367,7 @@ div[class|=grid]>a>strong{
 	overflow: hidden;
 	line-height: calc(var(--webapp-font-normal) * 1.5);
 	max-height: calc(var(--webapp-font-normal) * 3);
+	font-size: var(--webapp-font-small);
 	word-break: break-all;
 	font-weight: lighter;
 }
