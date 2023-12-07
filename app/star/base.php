@@ -534,7 +534,7 @@ class base extends webapp
 	function redis_did_save_cid(?string &$cid):string
 	{
 		$did = 'iOS_' . $this->random_hash(FALSE);
-		$this->redis->set("did:{$did}", $cid = $this->cid($cid), 1);
+		$this->redis->set("did:{$did}", $cid = $this->cid($cid), 180);
 		return $did;
 	}
 	function redis_did_read_cid(string $did):string

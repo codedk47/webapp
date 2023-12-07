@@ -516,6 +516,18 @@ div.short>main{
 div.short>main>webapp-videos{
 	height: 100%;
 }
+div.short>main>webapp-videos>div>webapp-video{
+	display: flex;
+	flex-direction: column;
+}
+div.short>main>webapp-videos>div>webapp-video>video{
+	height: 0;
+	flex-grow: 1;
+}
+div.short>main>webapp-videos>div>webapp-video>div>mark>a{
+	background-color: transparent;
+}
+
 div.short>footer{
 	position: relative;
 }

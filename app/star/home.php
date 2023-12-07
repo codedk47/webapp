@@ -451,7 +451,37 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($page)
 		{
-			$this->json($this->webapp->fetch_short_videos($page, 1));
+			$tags = $this->webapp->fetch_tags(NULL);
+			$videos = [];
+			foreach ($this->webapp->mysql->videos('WHERE type="v" LIMIT 10') as $video)
+			{
+				$ym = date('ym', $video['mtime']);
+				$tagdata = [];
+				foreach ($video['tags'] ? explode(',', $video['tags']) : [] as $taghash)
+				{
+					if (isset($tags[$taghash]))
+					{
+						$tagdata[$taghash] = $tags[$taghash];
+					}
+				}
+				$videos[] = [
+					'hash' => $video['hash'],
+					'type' => $video['type'],
+					'm3u8' => "?/{$ym}/{$video['hash']}/play?mask{$video['ctime']}",
+					'poster' => "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}",
+					'preview' => $video['preview'],
+					'require' => $video['require'],
+					'view' => $video['view'],
+					'like' => $video['like'],
+					'tags' => $tagdata,
+					'subjects' => $video['subjects'],
+					'name' => $video['name']
+				];
+			}
+			$this->json($videos);
+
+
+			//$this->json($this->webapp->fetch_short_videos($page, 1));
 			return;
 		}
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
@@ -469,6 +499,8 @@ class webapp_router_home extends webapp_echo_masker
 			// 'muted' => NULL
 		]);
 
+
+		$this->footer->setattr('style', 'height:1rem');
 		//$this->set_footer_menu();
 	}
 	function get_game()

@@ -171,8 +171,33 @@ masker.canplay = video =>
 };
 masker.shortchanged = videos =>
 {
-	const strong = videos.active.querySelector('strong') || videos.active.appendChild(document.createElement('strong'));
+	const
+		video = videos.active.video,
+		div = videos.active.querySelector('div') || videos.active.appendChild(document.createElement('div')),
+		strong = div.querySelector('strong') || div.appendChild(document.createElement('strong')),
+		mark = div.querySelector('mark') || div.appendChild(document.createElement('mark'));
+
+
+	video.removeAttribute('height');
+	div.className = 'videoinfo';
+	
+
 	strong.textContent = videos.current.name;
+	mark.innerHTML = '';
+	for (const [taghash, tagname] of Object.entries(videos.current.tags))
+	{
+		const anchor = mark.appendChild(document.createElement('a'));
+		anchor.href = `?home/asd,tag:${taghash}`;
+		anchor.textContent = `#${tagname}`;
+	}
+
+
+
+	//div.textContent = '123123';
+
+
+	//const strong = videos.active.querySelector('strong') || videos.active.appendChild(document.createElement('strong'));
+	//strong.textContent = videos.current.name;
 
 	console.log(videos.active, videos.current);
 };

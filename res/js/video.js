@@ -120,6 +120,10 @@ customElements.define('webapp-video', class extends HTMLElement
 				: data => console.error(data);
 		}
 	}
+	get video()
+	{
+		return this.#video;
+	}
 	get paused()
 	{
 		return this.#video.paused;
@@ -237,6 +241,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	connectedCallback()
 	{
+		if (this.#video.isConnected) return;
 		this.#video.loop = this.hasAttribute('loop');
 		this.#video.muted = this.hasAttribute('muted');
 		this.#video.autoplay = this.hasAttribute('autoplay');
@@ -477,6 +482,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 	}
 	connectedCallback()
 	{
+		if (this.#slide.isConnected) return;
 		this.#page = parseInt(this.dataset.page, 10);
 		this.#videos.forEach(video =>
 		{
