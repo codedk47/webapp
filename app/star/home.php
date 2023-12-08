@@ -453,7 +453,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$tags = $this->webapp->fetch_tags(NULL);
 			$videos = [];
-			foreach ($this->webapp->mysql->videos('WHERE type="v" LIMIT 10') as $video)
+			foreach ($this->webapp->mysql->videos('WHERE type="v" ORDER BY RAND() LIMIT 10') as $video)
 			{
 				$ym = date('ym', $video['mtime']);
 				$tagdata = [];
@@ -473,6 +473,8 @@ class webapp_router_home extends webapp_echo_masker
 					'require' => $video['require'],
 					'view' => $video['view'],
 					'like' => $video['like'],
+					'favorited' => random_int(0, 1),
+					'liked' => random_int(0, 1),
 					'tags' => $tagdata,
 					'subjects' => $video['subjects'],
 					'name' => $video['name']
@@ -490,15 +492,28 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->body->div['class'] = 'short';
 		$this->header->append('a', ['href' => 'javascript:history.back();', 'class' => 'arrow']);
 		$this->header->append('strong', '短视频');
-		$video = $this->main->append('webapp-videos', [
+		$template = $this->main->append('webapp-videos', [
 			'onchange' => 'masker.shortchanged(this)',
 			'data-fetch' => '?home/short,page:',
 			'data-page' => 1,
 			//'autoplay' => NULL,
 			'controls' => NULL,
 			// 'muted' => NULL
-		]);
+		])->append('template');
 
+		$videoinfo = $template->append('div', ['class' => 'videoinfo']);
+		$videoinfo->append('strong');
+		$videoinfo->append('mark');
+
+		$videolink = $template->append('div', ['class' => 'videolink']);
+		$videolink->append('img');
+		$anchor = $videolink->append('a', ['data-field' => 'favorited', 'data-label' => '收藏']);
+		$anchor->svg(['fill' => 'white'])->icon('star', 32);
+		$anchor->svg(['fill' => 'white'])->icon('star-fill', 32);
+
+		$anchor = $videolink->append('a', ['data-field' => 'liked', 'data-label' => '喜欢']);
+		$anchor->svg(['fill' => 'white'])->icon('heart', 32);
+		$anchor->svg(['fill' => 'white'])->icon('heart-fill', 32);
 
 		$this->footer->setattr('style', 'height:1rem');
 		//$this->set_footer_menu();

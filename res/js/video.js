@@ -317,8 +317,8 @@ customElements.define('webapp-videos', class extends HTMLElement
 				: [position.top, position.start - position.move, this.#slide.style.top === position.top];
 			if (clicked)
 			{
-				console.log('clicked');
-				if (this.#active)
+				//console.log(offset);
+				if (this.#active && this.#active.video === offset.target)
 				{
 					this.#active.pp();
 				}

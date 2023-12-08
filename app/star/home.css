@@ -508,6 +508,11 @@ div.short>header>a::before{
 }
 div.short>header,
 div.short>footer{
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 1;
 	background-color: transparent;
 }
 div.short>main{
@@ -524,13 +529,61 @@ div.short>main>webapp-videos>div>webapp-video>video{
 	height: 0;
 	flex-grow: 1;
 }
-div.short>main>webapp-videos>div>webapp-video>div>mark>a{
-	background-color: transparent;
+div.short>main>webapp-videos>div>webapp-video>div.videoinfo{
+	position: absolute;
+	left: 0;
+	right: 6rem;
+	bottom: 4rem;
+	display: inline-block;
+	text-shadow: 1px 1px 1px var(--webapp-edge);
 }
-
+div.short>main>webapp-videos>div>webapp-video>div.videoinfo>a{
+	white-space: nowrap;
+	margin-left: var(--webapp-gapitem);
+}
+div.short>main>webapp-videos>div>webapp-video>div.videoinfo>strong{
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+div.short>main>webapp-videos>div>webapp-video>div.videoinfo>mark{
+	width: 100%;
+	overflow: hidden;
+	flex-wrap: nowrap;
+}
+div.short>main>webapp-videos>div>webapp-video>div.videoinfo>mark>a{
+	white-space: nowrap;
+	background-color: transparent;
+	margin-left: var(--webapp-gap);
+}
+div.videolink{
+	position: absolute;
+	right: 1rem;
+	bottom: 4rem;
+	display: flex;
+	gap: var(--webapp-gap);
+	flex-direction: column;
+}
+div.videolink>img{
+	width: 32px;
+	height: 32px;
+	object-fit: cover;
+	border: 1px solid var(--webapp-foreground);
+	border-radius: 50%;
+}
+div.videolink>a{
+	display: flex;
+	flex-direction: column;
+	text-shadow: 1px 1px 1px var(--webapp-edge);
+}
+div.videolink>a::after{
+	content: attr(data-label);
+	color: var(--webapp-foreground);
+}
 div.short>footer{
 	position: relative;
 }
+
 
 
 /* 

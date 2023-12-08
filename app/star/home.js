@@ -171,18 +171,49 @@ masker.canplay = video =>
 };
 masker.shortchanged = videos =>
 {
-	const
-		video = videos.active.video,
-		div = videos.active.querySelector('div') || videos.active.appendChild(document.createElement('div')),
-		strong = div.querySelector('strong') || div.appendChild(document.createElement('strong')),
-		mark = div.querySelector('mark') || div.appendChild(document.createElement('mark'));
+	if (videos.active.querySelector('div.videoinfo') === null)
+	{
+		videos.active.appendChild(videos.querySelector('template').content.cloneNode(true));
+		videos.active.querySelectorAll('div.videolink>a').forEach(element =>
+		{
+			element.onclick = event =>
+			{
+				event.stopPropagation();
+				event.preventDefault();
+				console.log(element);
+			};
+		});
+		videos.active.video.removeAttribute('height');
+	}
+	const videoinfo = videos.active.querySelector('div.videoinfo');
+	videoinfo.innerHTML = videos.current.name;
+	for (const [taghash, tagname] of Object.entries(videos.current.tags))
+	{
+		const anchor = videoinfo.appendChild(document.createElement('a'));
+		anchor.href = `?home/asd,tag:${taghash}`;
+		anchor.textContent = `#${tagname}`;
+	}
 
+	videos.active.querySelector('div.videolink>img').src = videos.current.poster;
+	videos.active.querySelectorAll('div.videolink>a').forEach(element =>
+	{
+		element.dataset.video = videos.current.hash;
+		if (videos.current[element.dataset.field])
+		{
+			element.childNodes[0].style.display = 'none';
+			element.childNodes[1].style.display = 'block';
+		}
+		else
+		{
+			element.childNodes[0].style.display = 'block';
+			element.childNodes[1].style.display = 'none';
+		}
 
-	video.removeAttribute('height');
-	div.className = 'videoinfo';
-	
+	});
+	return;
 
-	strong.textContent = videos.current.name;
+	videos.active.querySelector('div.videoinfo>strong').textContent = videos.current.name;
+	const mark = videos.active.querySelector('div.videoinfo>mark');
 	mark.innerHTML = '';
 	for (const [taghash, tagname] of Object.entries(videos.current.tags))
 	{
@@ -190,16 +221,6 @@ masker.shortchanged = videos =>
 		anchor.href = `?home/asd,tag:${taghash}`;
 		anchor.textContent = `#${tagname}`;
 	}
-
-
-
-	//div.textContent = '123123';
-
-
-	//const strong = videos.active.querySelector('strong') || videos.active.appendChild(document.createElement('strong'));
-	//strong.textContent = videos.current.name;
-
-	console.log(videos.active, videos.current);
 };
 masker.confirm = (content, context) => new Promise((resolve, reject) => confirm(content) ? resolve(context) : reject(context));
 masker.prompt = (title, value) => new Promise((resolve, reject) => (value = prompt(title, value)) === null ? reject() : resolve(value));
