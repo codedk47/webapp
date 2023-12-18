@@ -643,7 +643,7 @@ class webapp_router_control extends webapp_echo_masker
 		}
 
 		$conds[0] = sprintf('%sORDER BY type ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$classify = $this->webapp->fetch_tags->column($field, 'hash');
+		$classify = $this->webapp->fetch_tags->column('shortname', 'hash');
 		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $classify)
 		{
 			$table->row();
