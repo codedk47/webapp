@@ -608,7 +608,7 @@ class webapp_router_control extends webapp_echo_masker
 
 		$form->fieldset('专题分类 / 排序（越大越靠前）');
 
-		$form->field('type', 'select', ['options' => $this->webapp->fetch_tags(0), 'required' => NULL]);
+		$form->field('type', 'select', ['options' => $this->webapp->fetch_tags->column('shortname', 'hash'), 'required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 
 		$form->fieldset('专题名称 / 展示样式');
