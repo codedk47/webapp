@@ -3,9 +3,9 @@ declare(strict_types=1);
 require 'webapp_client.php';
 require 'webapp_dom.php';
 require 'webapp_echo.php';
-require 'webapp_image.php';
-require 'webapp_mysql.php';
-require 'webapp_redis.php';
+class_exists('GdImage') && require 'webapp_image.php';
+class_exists('mysqli') && require 'webapp_mysql.php';
+class_exists('Redis') && require 'webapp_redis.php';
 interface webapp_io
 {
 	function request_ip():string;
@@ -394,6 +394,8 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			'mysql_database'	=> 'webapp',
 			'mysql_maptable'	=> 'webapp_maptable_',
 			'mysql_charset'		=> 'utf8mb4',
+			//Redis
+			
 			//Captcha
 			'captcha_length'	=> 4,
 			'captcha_expire'	=> 99,
@@ -700,8 +702,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function redis():webapp_redis
 	{
-
-		return new webapp_redis('127.0.0.1', 6379);
+		return $this(new webapp_redis($this));
 	}
 
 

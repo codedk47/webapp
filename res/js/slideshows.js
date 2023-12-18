@@ -62,6 +62,7 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 		});
 		this.#slide.addEventListener('touchmove', event =>
 		{
+			event.preventDefault();
 			if (transitioning) return;
 			position.move = event.clientX || event.touches[0].clientX;
 			this.#slide.style.left = `${position.offset + position.move - position.start}px`;

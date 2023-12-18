@@ -246,7 +246,7 @@ class user extends ArrayObject implements Countable
 		return $videos;
 	}
 
-	//用户收藏的视频最多50个
+	//收藏视频列表最多50个（是否详细）
 	function favorites(bool $video = FALSE):array
 	{
 		$favorites = $this->id && $this['favorites'] ? str_split($this['favorites'], 12) : [];
@@ -264,11 +264,12 @@ class user extends ArrayObject implements Countable
 		}
 		return $favorites;
 	}
-	function favorite_has(string $hash):bool
+	//是否已收藏
+	function favorited(string $hash):bool
 	{
 		return in_array($hash, $this->favorites(), TRUE);
 	}
-	//用户收藏视频 -1取消 0无操作 +1收藏
+	//收藏视频结果 -1取消 0无操作 +1收藏
 	function favorite(string $hash):int
 	{
 		$result = 0;

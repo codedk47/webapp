@@ -214,6 +214,11 @@ customElements.define('webapp-video', class extends HTMLElement
 			}
 		});
 	}
+	watchlog(url)
+	{
+		//记录观看日志
+		return navigator.sendBeacon(url);
+	}
 	splashscreen(duration, autoskip)
 	{
 		if (this.querySelector('mark')) return;

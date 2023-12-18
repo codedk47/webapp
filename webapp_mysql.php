@@ -373,7 +373,7 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		$cond = $this->cond;
 		return intval(($this->mysql)('SELECT SQL_NO_CACHE COUNT(1) FROM ?a?? LIMIT 1', $this->tablename, (string)$this)->value());
 	}
-	function getIterator():webapp_mysql
+	function getIterator():webapp_mysql|Traversable
 	{
 		return ($this->mysql)('SELECT ?? FROM ?a??', $this->fields, $this->tablename, (string)$this);
 	}

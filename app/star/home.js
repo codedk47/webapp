@@ -171,6 +171,7 @@ masker.canplay = video =>
 };
 masker.shortchanged = videos =>
 {
+	console.log( videos.active.watchlog(`?home/view,hash:${videos.current.hash}`) );
 	if (videos.active.querySelector('div.videoinfo') === null)
 	{
 		videos.active.appendChild(videos.querySelector('template').content.cloneNode(true));
@@ -180,7 +181,11 @@ masker.shortchanged = videos =>
 			{
 				event.stopPropagation();
 				event.preventDefault();
-				console.log(element);
+				switch (element.dataset.field)
+				{
+					case 'favorited': return masker.favorite(element);
+					case 'liked': return;
+				}
 			};
 		});
 		videos.active.video.removeAttribute('height');
@@ -193,11 +198,10 @@ masker.shortchanged = videos =>
 		anchor.href = `?home/asd,tag:${taghash}`;
 		anchor.textContent = `#${tagname}`;
 	}
-
 	videos.active.querySelector('div.videolink>img').src = videos.current.poster;
 	videos.active.querySelectorAll('div.videolink>a').forEach(element =>
 	{
-		element.dataset.video = videos.current.hash;
+		element.dataset.hash = videos.current.hash;
 		if (videos.current[element.dataset.field])
 		{
 			element.childNodes[0].style.display = 'none';
@@ -208,7 +212,6 @@ masker.shortchanged = videos =>
 			element.childNodes[0].style.display = 'block';
 			element.childNodes[1].style.display = 'none';
 		}
-
 	});
 	return;
 
@@ -233,7 +236,7 @@ masker.change = (element, field, value) => masker.prompt(title, value).then(valu
 masker.favorite = anchor =>
 {
 	anchor.onclick = () => false;
-	masker.json(anchor.href, data =>
+	masker.json(`${anchor.href},hash:${anchor.dataset.hash}`, data =>
 	{
 		if (data.result)
 		{
@@ -242,13 +245,19 @@ masker.favorite = anchor =>
 			{
 				childs[0].style = 'display:none';
 				childs[1].style = 'display:block';
-				childs[2].textContent = '已收藏';
+				if (childs[2])
+				{
+					childs[2].textContent = '已收藏';
+				}
 			}
 			else
 			{
 				childs[0].style = 'display:block';
 				childs[1].style = 'display:none';
-				childs[2].textContent = '收藏';
+				if (childs[2])
+				{
+					childs[2].textContent = '收藏';
+				}
 			}
 		}
 	}).finally(() => anchor.onclick = () => masker.favorite(anchor));

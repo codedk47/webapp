@@ -124,7 +124,7 @@ class webapp_router_home extends webapp_echo_masker
 
 	function add_slideshows_ads(webapp_html $node, int $seat, int $duration = 5):?webapp_html
 	{
-		if ($ads = $this->webapp->fetch_ads($seat))
+		if ($ads = $this->webapp->fetch_ads->by('seat', $seat)->all())
 		{
 			$element = $node->append('webapp-slideshows', ['data-duration' => $duration]);
 			$element->cdata(json_encode($ads, JSON_UNESCAPED_UNICODE));
@@ -134,7 +134,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function add_nav_ads(webapp_html $node, int $seat, string $title = NULL):?webapp_html
 	{
-		if ($ads = $this->webapp->fetch_ads($seat))
+		if ($ads = $this->webapp->fetch_ads->by('seat', $seat)->all())
 		{
 			if ($title)
 			{
@@ -158,7 +158,10 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return NULL;
 	}
-
+	function set_tags(string $field = 'shortname'):void
+	{
+		$this->tags = $this->webapp->fetch_tags->column($field, 'hash');
+	}
 	function add_video_lists(webapp_html $node,
 		iterable|string $videos,
 		int $display = 0,
@@ -231,12 +234,12 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		// $this->script('postMessage("close")');
 		// return 200;
-		if (empty($ads = $this->webapp->fetch_ads(0)))
+		
+		if (empty($ad = $this->webapp->fetch_ads->by('seat', 0)->weight()))
 		{
 			$this->script('postMessage("close")');
 			return 200;
 		}
-		$ad = $this->webapp->random_weights($ads);
 		// foreach ($ads as $ad)
 		// {
 		// 	if($ad['hash'] === 'NS1HM8DBP86K')
@@ -244,6 +247,7 @@ class webapp_router_home extends webapp_echo_masker
 		// 		break;
 		// 	}
 		// }
+
 		$this->script('masker.then(masker.splashscreen)');
 		$this->xml->body->div['class'] = 'splashscreen';
 		$this->xml->body->setattr([
@@ -261,19 +265,18 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$data['notice'] = ['title' => $configs['notice_title'], 'content' => $configs['notice_content']];
 		}
-		if ($ads = $this->webapp->fetch_ads(0))
+		if ($ad = $this->webapp->fetch_ads->by('seat', 0)->weight())
 		{
-			$ad = $this->webapp->random_weights($ads);
 			$data['popup'] = ['title' => $ad['name'], 'picture' => $ad['picture'], 'support' => $ad['support']];
 		}
 		$this->json($data);
 	}
-	function get_home(string $type = NULL)
+	function get_home(string $type = '')
 	{
-		
 		$this->aside['class'] = 'classify';
 		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
-		foreach ($classify = $this->webapp->fetch_tags(0) as $hash => $name)
+		$classify = $this->webapp->fetch_tags->by('level', 0)->column('shortname', 'hash');
+		foreach ($classify as $hash => $name)
 		{
 			$node = $this->aside->append('a', [$name, 'href' => "?home/home,type:{$hash}"]);
 			if ($hash === $type)
@@ -298,38 +301,63 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$this->add_nav_ads($this->main, 9, '福利导航');
 		}
-		$this->tags = $this->webapp->fetch_tags(NULL);
-		foreach ($this->webapp->fetch_subjects(isset($classify[$type]) ? $type : NULL) as $subject)
+		$this->set_tags();
+		if ($this->webapp->fetch_subjects->unique('type', $type))
 		{
-			$this->add_video_lists($this->main, $subject['videos'], $subject['style'], $subject['name'],
-				isset($classify[$type]) ? "?home/subject,hash:{$subject['hash']}" : "?home/home,type:{$subject['hash']}");
+			foreach ($this->webapp->fetch_subjects->by('type', $type) as $subject)
+			{
+				$this->add_video_lists($this->main, $this->webapp->fetch_videos->iter(...explode(',',
+					$subject['videos'])), $subject['style'], $subject['name'], "?home/subject,hash:{$subject['hash']}");
+			}
+		}
+		else
+		{
+			foreach ($classify as $hash => $name)
+			{
+				$this->add_video_lists($this->main, $this->webapp->fetch_videos
+					->eval('WHERE sync="allow" AND type="h" AND FIND_IN_SET(?s,tags) ORDER BY ctime DESC', $hash)
+					->of(8, 3600), 0, "最新{$name}", "?home/home,type:{$hash}");
+			}
 		}
 	}
 	function get_subject(string $hash, int $page = 0)
 	{
+		$this->set_tags();
 		if ($page > 0)
 		{
-			$this->tags = $this->webapp->fetch_tags(NULL);
-			$this->add_video_lists($this->template(), $this->webapp->fetch_subject($hash, $page));
+			$this->add_video_lists($this->template(), $this->webapp->fetch_videos->in($hash, 'subjects')->paging($page));
 			return;
 		}
 		$this->add_slideshows_ads($this->main, 1);
-		if ($subject = $this->webapp->fetch_subject($hash))
+		if (is_array($subject = $this->webapp->fetch_subjects[$hash]))
 		{
 			$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
 			$this->add_video_lists($this->main, "?home/subject,hash:{$hash},page:");
 		}
 	}
-	function get_search(string $word = NULL, string $tags = NULL, int $page = 0)
+	function get_search(string $word = '', int $page = 0)
 	{
-		// if ($page > 0)
-		// {
-		// 	$this->add_video_lists($this->template(), $this->webapp->data_search_video($word, $tags, $page));
-		// 	return;
-		// }
+		$this->set_tags();
+		if ($word = trim($word))
+		{
+			$word = urldecode($word);
+		}
+		if ($page > 0)
+		{
+			$this->add_video_lists($this->template(), $this->webapp->fetch_videos
+				->eval('WHERE type="h" AND name LIKE ?s', "%{$word}%")->paging($page));
+			return;
+		}
 		$this->set_header_search();
-		// $this->add_slideshows_ads($this->main, 1);
-		// $this->add_video_lists($this->main, "?home/search,word:{$word},tags:{$tags},page:", 2);
+		$this->add_slideshows_ads($this->main, 1);
+		if ($word)
+		{
+			$this->add_video_lists($this->main, "?home/search,word:{$word},page:", 2);
+		}
+		else
+		{
+
+		}
 	}
 
 	function get_watch(string $hash)
@@ -339,7 +367,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_search();
 		$this->set_footer_menu();
 		$this->aside['class'] = 'watch';
-		if (empty($video = $this->webapp->fetch_video($hash)))
+		if (empty($video = $this->webapp->fetch_videos[$hash]))
 		{
 			$this->aside->append('strong', '您所观看的影片不见啦 :(');
 			return 404;
@@ -383,7 +411,7 @@ class webapp_router_home extends webapp_echo_masker
 			//'muted' => NULL,
 			'controls' => NULL
 		]);
-		if ($ad = $this->webapp->random_weights($this->webapp->fetch_ads(3)))
+		if ($ad = $this->webapp->fetch_ads->by('seat', 3)->weight())
 		{
 			$watch->append('a', ['href' => $ad['support'], 'onclick' => 'console.log(123)'])
 				->append('img', ['src' => $ad['picture'], 'onload' => 'this.parentNode.parentNode.splashscreen(5)',
@@ -394,13 +422,10 @@ class webapp_router_home extends webapp_echo_masker
 			$watch->setattr('autoplay');
 		}
 
-
-
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', $video['name']);
-		// // $statistics = $node->append('div', ['class' => 'statistics']);
-		// // $statistics->append('mark', sprintf('%s 次观看, %s', number_format($video['view']), date('Y-m-d', $video['ptime'])));
-		$this->tags = $this->webapp->fetch_tags(NULL);
+
+		$this->set_tags();
 		if ($video['tags'])
 		{
 			$taginfo = $videoinfo->append('mark');
@@ -416,11 +441,11 @@ class webapp_router_home extends webapp_echo_masker
 
 		
 
-		$anchor = $videomenu->append('a', ['href' => "?home/my-favorites,hash:{$hash}", 'onclick' => 'return masker.favorite(this)']);
+		$anchor = $videomenu->append('a', ['href' => '?home/my-favorites', 'onclick' => 'return masker.favorite(this)', 'data-hash' => $hash]);
 		$anchor->svg(['fill' => 'white'])->icon('star');
 		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('star-fill');
 		$anchor->append('span', '收藏');
-		if ($this->user->favorite_has($hash))
+		if ($this->user->favorited($hash))
 		{
 			$anchor->svg[0]['style'] = 'display:none';
 			$anchor->svg[1]['style'] = 'display:block';
@@ -444,41 +469,29 @@ class webapp_router_home extends webapp_echo_masker
 		$anchor->svg(['fill' => 'white'])->icon('thumbsup');
 		$anchor->append('span', $video['like']);
 
-
-		$this->add_video_lists($this->main, $this->webapp->fetch_like_videos($video), 2, '可能喜欢', 'javascript:alert(1);', '换一换');
+		
+		$this->add_video_lists($this->main, $this->webapp->fetch_like_videos($video), 2, '可能喜欢');
 	}
 	function get_short(int $page = 0)
 	{
 		if ($page)
 		{
-			$tags = $this->webapp->fetch_tags(NULL);
+			$this->set_tags();
 			$videos = [];
-			foreach ($this->webapp->mysql->videos('WHERE type="v" ORDER BY RAND() LIMIT 10') as $video)
+			foreach ($this->webapp->fetch_videos->by('type', 'v')->random(10) as $video)
 			{
-				$ym = date('ym', $video['mtime']);
 				$tagdata = [];
 				foreach ($video['tags'] ? explode(',', $video['tags']) : [] as $taghash)
 				{
-					if (isset($tags[$taghash]))
+					if (isset($this->tags[$taghash]))
 					{
-						$tagdata[$taghash] = $tags[$taghash];
+						$tagdata[$taghash] = $this->tags[$taghash];
 					}
 				}
-				$videos[] = [
-					'hash' => $video['hash'],
-					'type' => $video['type'],
-					'm3u8' => "?/{$ym}/{$video['hash']}/play?mask{$video['ctime']}",
-					'poster' => "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}",
-					'preview' => $video['preview'],
-					'require' => $video['require'],
-					'view' => $video['view'],
-					'like' => $video['like'],
-					'favorited' => random_int(0, 1),
-					'liked' => random_int(0, 1),
-					'tags' => $tagdata,
-					'subjects' => $video['subjects'],
-					'name' => $video['name']
-				];
+				$video['tags'] = $tagdata;
+				$video['favorited'] = $this->user->favorited($video['hash']);
+				$video['liked'] = random_int(0, 1);
+				$videos[] = $video;
 			}
 			$this->json($videos);
 
@@ -507,7 +520,7 @@ class webapp_router_home extends webapp_echo_masker
 
 		$videolink = $template->append('div', ['class' => 'videolink']);
 		$videolink->append('img');
-		$anchor = $videolink->append('a', ['data-field' => 'favorited', 'data-label' => '收藏']);
+		$anchor = $videolink->append('a', ['href' => '?home/my-favorites', 'data-field' => 'favorited', 'data-label' => '收藏']);
 		$anchor->svg(['fill' => 'white'])->icon('star', 32);
 		$anchor->svg(['fill' => 'white'])->icon('star-fill', 32);
 
@@ -518,20 +531,14 @@ class webapp_router_home extends webapp_echo_masker
 		$this->footer->setattr('style', 'height:1rem');
 		//$this->set_footer_menu();
 	}
-	function get_game()
+	function post_view(string $hash)
 	{
-		$this->set_footer_menu();
+		$this->json(['result' => $this->user->watch($hash)]);
 	}
-
-	function get_prods()
+	function get_like(string $hash)
 	{
-
+		$this->json(['result' => $this->user->watch($hash)]);
 	}
-	function get_top_up(string $type)
-	{
-
-	}
-
 	function get_my()
 	{
 		$this->xml->body->div['class'] = 'my';

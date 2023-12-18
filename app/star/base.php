@@ -354,7 +354,79 @@ class base extends webapp
 	//本地命令行运行专题获取更新
 	function get_subject_fetch()
 	{
-		if (PHP_SAPI !== 'cli') return 404;
+		//if (PHP_SAPI !== 'cli') return 404;
+		$redis = $this->redis();
+		$redis->select(1);
+		$redis->table('videos', function($nowtime)
+		{
+			$update = FALSE;
+			foreach ($this('ORDER BY ctime DESC') as $data)
+			{
+				$ym = date('ym', $data['mtime']);
+				$newdata = [
+					'hash' => $data['hash'],
+					'type' => $data['type'],
+					'm3u8' => "?/{$ym}/{$data['hash']}/play?mask{$data['ctime']}",
+					'poster' => "?/{$ym}/{$data['hash']}/cover?mask{$data['ctime']}",
+					'duration' => base::format_duration($data['duration']),
+					'preview' => $data['preview'],
+					'require' => $data['require'],
+					'view' => $data['view'],
+					'like' => $data['like'],
+					'tags' => $data['tags'],
+					'subjects' => $data['subjects'],
+					'name' => $data['name']
+				];
+				if (array_diff($newdata, $this[$data['hash']] ?? []))
+				{
+					$update = TRUE;
+					if ($data['sync'] === 'allow' && $data['ptime'] < $nowtime)
+					{
+						echo "UPDATE {$data['hash']}\n";
+						$this[$data['hash']] = $newdata;
+					}
+					else
+					{
+						echo "DELETE {$data['hash']}\n";
+						unset($this[$data['hash']]);
+					}
+					continue;
+				}
+				break;
+			}
+			var_dump( $this->updatable() );
+			// if ($update)
+			// {
+			// 	var_dump( $this->updatable() );
+			// }
+
+			
+
+
+		}, $this->time());
+		$this->redis->table('subjects', function($webapp)
+		{
+			//if ($this->writable)
+			//{
+				foreach ($this('ORDER BY sort DESC, ctime DESC') as $data)
+				{
+					$this[$data['hash']] = [
+						'hash' => $data['hash'],
+						'type' => $data['type'],
+						'name' => $data['name'],
+						'style' => $data['style'],
+						'videos' => preg_match('/^\d{1,2}$/', $data['videos']) ? join(',', $webapp->mysql
+							->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY mtime DESC LIMIT ?i',
+								$data['hash'], $data['videos'])->column('hash')) : $data['videos']
+					];
+				}
+			//}
+			return 'hash';
+		}, $this);
+
+
+
+		return;
 		function detect(string $haystack, array $needles, callable $method):bool
 		{
 			foreach ($needles as $needle)
@@ -671,18 +743,42 @@ class base extends webapp
 	//获取配置
 	function fetch_configs(string $key = NULL):array|string
 	{
-		$this->redis->exists('configs')
-			|| $this->redis->hMSet('configs', $this->mysql->configs->column('value', 'key'));
-		return $key === NULL ? $this->redis->hGetAll('configs') : (string)$this->redis->hGet('configs', $key);
+		$configs = $this->redis->assoc('configs');
+		return $key === NULL ? $configs : $configs[$key] ?? NULL;
 	}
 	//清除配置
 	function clear_configs():bool
 	{
-		return $this->redis->del('configs') === 1;
+		return $this->redis->clear('configs');
 	}
 	//获取指定广告（位置）
-	function fetch_ads(int $seat):array
+	function fetch_ads():webapp_redis_table
 	{
+		return $this->redis->table('ads', function($nowtime)
+		{
+			if ($this->writable)
+			{
+				foreach ($this('WHERE expire>?i ORDER BY weight DESC', $nowtime) as $ad)
+				{
+					$this[$ad['hash']] = [
+						'hash' => $ad['hash'],
+						'view' => $ad['view'],
+						'click' => $ad['click'],
+						'seat' => $ad['seat'],
+						'weight' => $ad['weight'],
+						'picture' => "?/news/{$ad['hash']}?mask{$ad['ctime']}",
+						'support' => $ad['acturl'],
+						'name' => $ad['name']
+					];
+					//$this->redis->expireAt($hash, $ad['expire']);
+				}
+			}
+			return 'hash';
+		}, 1);
+
+
+
+
 		$ads = [];
 		if ($this->redis->exists($key = "ad:{$seat}"))
 		{
@@ -746,54 +842,99 @@ class base extends webapp
 		12 => '临时添加'
 	];
 	//获取所有分类或标签
-	function fetch_tags(?int $level, bool $detailed = FALSE):array
+	function fetch_tags():webapp_redis_table
 	{
-		if ($this->redis->exists('tags') === 0)
+		return $this->redis->table('tags', function()
 		{
-			$tags = [];
-			foreach (self::tags_level as $i => $name)
+			if ($this->writable)
 			{
-				$tags += $values = $this->mysql->tags('WHERE level=?i ORDER BY sort DESC, time DESC', $i)->column('name', 'hash');
-				$this->redis->hMSet("tags:{$i}", $values);
-			}
-			$this->redis->hMSet('tags', $tags);
-		}
-		if (isset(self::tags_level[$level]))
-		{
-			$tags = $this->redis->hGetAll("tags:{$level}");
-			if ($detailed === FALSE)
-			{
-				foreach ($tags as &$tag)
+				foreach ($this('ORDER BY sort DESC, time DESC') as $tag)
 				{
-					$tag = strstr($tag, ',', TRUE);
+					$this[$tag['hash']] = [
+						'hash' => $tag['hash'],
+						'click' => $tag['click'],
+						'level' => $tag['level'],
+						'name' => $tag['name'],
+						'shortname' => strstr($tag['name'], ',', TRUE)
+					];
 				}
 			}
-			return $tags;
-		}
-		if ($detailed)
-		{
-			$tags = [];
-			foreach (self::tags_level as $level => $name)
-			{
-				$tags[$level] = $this->redis->hGetAll("tags:{$level}");
-			}
-			return $tags;
-		}
-		$tags = $this->redis->hGetAll('tags');
-		foreach ($tags as &$tag)
-		{
-			$tag = strstr($tag, ',', TRUE);
-		}
-		return $tags;
+			return 'hash';
+		});
+		// return [];
+		// if ($this->redis->exists('tags') === 0)
+		// {
+		// 	$tags = [];
+		// 	foreach (self::tags_level as $i => $name)
+		// 	{
+		// 		$tags += $values = $this->mysql->tags('WHERE level=?i ORDER BY sort DESC, time DESC', $i)->column('name', 'hash');
+		// 		$this->redis->hMSet("tags:{$i}", $values);
+		// 	}
+		// 	$this->redis->hMSet('tags', $tags);
+		// }
+		// if (isset(self::tags_level[$level]))
+		// {
+		// 	$tags = $this->redis->hGetAll("tags:{$level}");
+		// 	if ($detailed === FALSE)
+		// 	{
+		// 		foreach ($tags as &$tag)
+		// 		{
+		// 			$tag = strstr($tag, ',', TRUE);
+		// 		}
+		// 	}
+		// 	return $tags;
+		// }
+		// if ($detailed)
+		// {
+		// 	$tags = [];
+		// 	foreach (self::tags_level as $level => $name)
+		// 	{
+		// 		$tags[$level] = $this->redis->hGetAll("tags:{$level}");
+		// 	}
+		// 	return $tags;
+		// }
+		// $tags = $this->redis->hGetAll('tags');
+		// foreach ($tags as &$tag)
+		// {
+		// 	$tag = strstr($tag, ',', TRUE);
+		// }
+		// return $tags;
 	}
 	//清除所有分类和标签
 	function clear_tags():bool
 	{
 		return $this->redis->del('tags') === 1;
 	}
-	//拉取专题（分类）
-	function fetch_subjects(?string $type):array
+	//获取专题分类
+	function fetch_subjects():webapp_redis_table
 	{
+		// return new class($this->mysql) extends webapp_mysql_table
+		// {
+		// 	protected string $tablename = 'subjects';
+		// 	public ?string $primary = 'hash';
+		// 	function getIterator():Traversable
+		// 	{
+		// 		foreach (parent::getIterator() as $data)
+		// 		{
+		// 			yield [
+		// 				'hash' => $data['hash'],
+		// 				'name' => $data['name'],
+		// 				'style' => $data['style'],
+		// 				'videos' => ''];
+		// 		}
+		// 	}
+		// };
+
+
+
+
+
+		return $this->redis->table('subjects', fn() => 'hash');
+
+
+
+
+
 		$subjects = [];
 		if ($this->redis->exists($key = "subjects:{$type}"))
 		{
@@ -899,6 +1040,12 @@ class base extends webapp
 		}
 		return $this->redis->hGetAll("subject:{$hash}");
 	}
+	function fetch_videos():webapp_redis_table
+	{
+		$redis = $this->redis();
+		$redis->select(1);
+		return $redis->table('videos', fn() => 'hash');
+	}
 	function fetch_video(string $hash, ?array $update = NULL):array
 	{
 		$key = "video:{$hash}";
@@ -924,49 +1071,13 @@ class base extends webapp
 		}
 		return $this->redis->hGetAll($key);
 	}
-	function fetch_random_videos(string $type):array
+	function fetch_random_videos(string $type, int $limit = 20):iterable
 	{
-		return [];
+		return $this->fetch_videos->by('type', $type)->random($limit);
 	}
-	function fetch_like_videos(array $video):array
+	function fetch_like_videos(array $video, int $limit = 20):iterable
 	{
-		if ($tags = $video['tags'] ? explode(',', $video['tags']) : [])
-		{
-			$cond = ['WHERE type=?s AND sync="allow" AND FIND_IN_SET(?s,tags)', $video['type'], array_shift($tags)];
-			if ($tags)
-			{
-				$like = [];
-				foreach ($tags as $tag)
-				{
-					$like[] = 'FIND_IN_SET(?s,tags)';
-					$cond[] = $tag;
-				}
-				$cond[0] .= ' AND (' . join(' OR ', $like) . ')';
-			}
-			$cond = $this->mysql->format(...$cond);
-			$videos = [];
-			if ($this->redis->exists($key = sprintf('like:%s:videos', $this->hash($cond, TRUE))))
-			{
-				foreach ($this->redis->hGetAll($key) as $hash)
-				{
-					if ($video = $this->redis->hGetAll($hash))
-					{
-						$videos[] = $video;
-					}
-				}
-				return $videos;
-			}
-			$keys = [];
-			foreach ($this->mysql->videos("{$cond} AND hash!=?s ORDER BY `view` ASC, `like` DESC LIMIT 20", $video['hash']) as $video)
-			{
-				$keys[] = "video:{$video['hash']}";
-				$videos[] = $this->fetch_video($video['hash'], $video);
-			}
-			$this->redis->hMSet($key, $keys);
-			$this->redis->expire($key, 300);
-			return $videos;
-		}
-		return $this->fetch_random_videos($video['type']);
+		return $this->fetch_videos->by('type', $video['type'])->random($limit);
 	}
 	function fetch_short_videos(int $page, int $size = 10)
 	{
@@ -1040,20 +1151,20 @@ class base extends webapp
 	// 	}
 	// }
 	//获取所有视频
-	function fetch_videos(string $hash, bool $update = FALSE):iterable
-	{
+	// function fetch_videos(string $hash, bool $update = FALSE):iterable
+	// {
 
 
-		foreach ($this->mysql->videos('WHERE ptime<?i ORDER BY ctime DESC', $this->time()) as $video)
-		{
-			$ym = date('ym', $video['mtime']);
-			$video['cover'] = "/{$ym}/{$video['hash']}/cover?{$video['ctime']}";
-			$video['playm3u8'] = "/{$ym}/{$video['hash']}/play";
-			$video['comment'] = 0;
-			$video['share'] = 0;
-			yield $video;
-		}
-	}
+	// 	foreach ($this->mysql->videos('WHERE ptime<?i ORDER BY ctime DESC', $this->time()) as $video)
+	// 	{
+	// 		$ym = date('ym', $video['mtime']);
+	// 		$video['cover'] = "/{$ym}/{$video['hash']}/cover?{$video['ctime']}";
+	// 		$video['playm3u8'] = "/{$ym}/{$video['hash']}/play";
+	// 		$video['comment'] = 0;
+	// 		$video['share'] = 0;
+	// 		yield $video;
+	// 	}
+	// }
 
 
 	//获取有产品（分类）
