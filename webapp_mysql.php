@@ -485,12 +485,12 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		$this->fields = $this->mysql->format('?A', $fields);
 		return $this;
 	}
-	function paging(int $index, int $rows = 21):static
+	function paging(int $index, int $rows = 21, bool $overflow = FALSE):static
 	{
 		$fields = $this->fields;
 		$this->paging['count'] = $this->count($this->paging['cond']);
-		$this->paging['max'] = ceil($this->paging['count'] / $rows);
-		$this->paging['index'] = max(1, min($index, $this->paging['max']));
+		$this->paging['max'] = ceil($this->paging['count'] / $rows = abs($rows));
+		$this->paging['index'] = max(1, $overflow ? $index : min($index, $this->paging['max']));
 		$this->paging['skip'] = ($this->paging['index'] - 1) * $rows;
 		$this->paging['rows'] = $rows;
 		$this->fields = $fields;

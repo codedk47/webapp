@@ -219,19 +219,19 @@ customElements.define('webapp-video', class extends HTMLElement
 		//记录观看日志
 		return navigator.sendBeacon(url);
 	}
-	splashscreen(duration, autoskip)
+	splashscreen(element)
 	{
 		if (this.querySelector('mark')) return;
 		const skip = this.appendChild(document.createElement('mark')), timer = () =>
 		{
-			if (duration > 0)
+			if (element.dataset.duration > 0)
 			{
-				skip.textContent = `${String(duration--).padStart(2, 0)} s`;
+				skip.textContent = `${element.dataset.duration--} ${element.dataset.unit}`;
 				setTimeout(timer, 1000);
 			}
 			else
 			{
-				skip.textContent = 'Skip';
+				skip.textContent = element.dataset.skip || 'Skip';
 				skip.onclick = () =>
 				{
 					while (this.lastChild !== this.#video)

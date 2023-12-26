@@ -232,37 +232,18 @@ class user extends ArrayObject implements Countable
 			default => FALSE
 		};
 	}
-	//观看记录
-	function historys():array
+	//观看记录（是否详细）
+	function historys(bool $detail = FALSE):array
 	{
-		$videos = [];
-		foreach (str_split($this['historys'], 12) as $hash)
-		{
-			if ($video = $this->webapp->fetch_video($hash))
-			{
-				$videos[] = $video;
-			}
-		}
-		return $videos;
+		$keys = $this['historys'] ? str_split($this['historys'], 12) : [];
+		return $detail ? iterator_to_array($this->webapp->fetch_videos->iter(...$keys)) : $keys;
 	}
 
 	//收藏视频列表最多50个（是否详细）
-	function favorites(bool $video = FALSE):array
+	function favorites(bool $detail = FALSE):array
 	{
-		$favorites = $this->id && $this['favorites'] ? str_split($this['favorites'], 12) : [];
-		if ($video)
-		{
-			$videos = [];
-			foreach ($favorites as $hash)
-			{
-				if ($video = $this->webapp->fetch_video($hash))
-				{
-					$videos[] = $video;
-				}
-			}
-			return $videos;
-		}
-		return $favorites;
+		$keys = $this->id && $this['favorites'] ? str_split($this['favorites'], 12) : [];
+		return $detail ? iterator_to_array($this->webapp->fetch_videos->iter(...$keys)) : $keys;
 	}
 	//是否已收藏
 	function favorited(string $hash):bool

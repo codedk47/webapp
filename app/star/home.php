@@ -124,7 +124,7 @@ class webapp_router_home extends webapp_echo_masker
 
 	function add_slideshows_ads(webapp_html $node, int $seat, int $duration = 5):?webapp_html
 	{
-		if ($ads = $this->webapp->fetch_ads->by('seat', $seat)->all())
+		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
 			$element = $node->append('webapp-slideshows', ['data-duration' => $duration]);
 			$element->cdata(json_encode($ads, JSON_UNESCAPED_UNICODE));
@@ -134,7 +134,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function add_nav_ads(webapp_html $node, int $seat, string $title = NULL):?webapp_html
 	{
-		if ($ads = $this->webapp->fetch_ads->by('seat', $seat)->all())
+		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
 			if ($title)
 			{
@@ -157,10 +157,6 @@ class webapp_router_home extends webapp_echo_masker
 			return $element;
 		}
 		return NULL;
-	}
-	function set_tags(string $field = 'shortname'):void
-	{
-		$this->tags = $this->webapp->fetch_tags->column($field, 'hash');
 	}
 	function add_video_lists(webapp_html $node,
 		iterable|string $videos,
@@ -235,7 +231,7 @@ class webapp_router_home extends webapp_echo_masker
 		// $this->script('postMessage("close")');
 		// return 200;
 		
-		if (empty($ad = $this->webapp->fetch_ads->by('seat', 0)->weight()))
+		if (empty($ad = $this->webapp->fetch_ads->rand(0)))
 		{
 			$this->script('postMessage("close")');
 			return 200;
@@ -265,7 +261,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$data['notice'] = ['title' => $configs['notice_title'], 'content' => $configs['notice_content']];
 		}
-		if ($ad = $this->webapp->fetch_ads->by('seat', 0)->weight())
+		if ($ad = $this->webapp->fetch_ads->rand(0))
 		{
 			$data['popup'] = ['title' => $ad['name'], 'picture' => $ad['picture'], 'support' => $ad['support']];
 		}
@@ -275,7 +271,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->aside['class'] = 'classify';
 		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
-		$classify = $this->webapp->fetch_tags->by('level', 0)->column('shortname', 'hash');
+		$classify = $this->webapp->fetch_tags->classify();
 		foreach ($classify as $hash => $name)
 		{
 			$node = $this->aside->append('a', [$name, 'href' => "?home/home,type:{$hash}"]);
@@ -301,13 +297,13 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$this->add_nav_ads($this->main, 9, '福利导航');
 		}
-		$this->set_tags();
-		if ($this->webapp->fetch_subjects->unique('type', $type))
+		$this->tags = $this->webapp->fetch_tags->shortname();
+		if ($subjects = $this->webapp->fetch_subjects->classify($type))
 		{
-			foreach ($this->webapp->fetch_subjects->by('type', $type) as $subject)
+			foreach ($subjects as $subject)
 			{
-				$this->add_video_lists($this->main, $this->webapp->fetch_videos->iter(...explode(',',
-					$subject['videos'])), $subject['style'], $subject['name'], "?home/subject,hash:{$subject['hash']}");
+				$this->add_video_lists($this->main, $this->webapp->fetch_videos->iter(...str_split($subject['videos'], 12)),
+					$subject['style'], $subject['name'], "?home/subject,hash:{$subject['hash']}");
 			}
 		}
 		else
@@ -315,17 +311,16 @@ class webapp_router_home extends webapp_echo_masker
 			foreach ($classify as $hash => $name)
 			{
 				$this->add_video_lists($this->main, $this->webapp->fetch_videos
-					->eval('WHERE sync="allow" AND type="h" AND FIND_IN_SET(?s,tags) ORDER BY ctime DESC', $hash)
-					->of(8, 3600), 0, "最新{$name}", "?home/home,type:{$hash}");
+					->with('type="h" AND FIND_IN_SET(?s,tags)', $hash)->show(8), 0, "最新{$name}", "?home/home,type:{$hash}");
 			}
 		}
 	}
 	function get_subject(string $hash, int $page = 0)
 	{
-		$this->set_tags();
-		if ($page > 0)
+		$this->tags = $this->webapp->fetch_tags->shortname();
+		if ($page)
 		{
-			$this->add_video_lists($this->template(), $this->webapp->fetch_videos->in($hash, 'subjects')->paging($page));
+			$this->add_video_lists($this->template(), $this->webapp->fetch_subjects->videos($hash, $page));
 			return;
 		}
 		$this->add_slideshows_ads($this->main, 1);
@@ -337,27 +332,29 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_search(string $word = '', int $page = 0)
 	{
-		$this->set_tags();
-		if ($word = trim($word))
+		
+		if ($word = trim(urldecode($word)))
 		{
-			$word = urldecode($word);
-		}
-		if ($page > 0)
-		{
-			$this->add_video_lists($this->template(), $this->webapp->fetch_videos
-				->eval('WHERE type="h" AND name LIKE ?s', "%{$word}%")->paging($page));
+			$cond = ['name LIKE ?s', "%{$word}%"];
+			if ($tags = $this->webapp->fetch_tags->like($word))
+			{
+				$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+				$cond[] = $tag = current($tags);
+			}
+			if ($page)
+			{
+				$this->add_video_lists($this->template(), $this->webapp->fetch_videos->with(...$cond)->paging($page));
+				return;
+			}
+			$this->set_header_search();
+			$this->add_slideshows_ads($this->main, 1);
+			$this->add_video_lists($this->main, "?home/search,word:{$word},page:", 2);
 			return;
 		}
 		$this->set_header_search();
 		$this->add_slideshows_ads($this->main, 1);
-		if ($word)
-		{
-			$this->add_video_lists($this->main, "?home/search,word:{$word},page:", 2);
-		}
-		else
-		{
 
-		}
+
 	}
 
 	function get_watch(string $hash)
@@ -376,7 +373,7 @@ class webapp_router_home extends webapp_echo_masker
 
 		
 
-
+	
 
 		// if (1)
 		// {
@@ -411,11 +408,18 @@ class webapp_router_home extends webapp_echo_masker
 			//'muted' => NULL,
 			'controls' => NULL
 		]);
-		if ($ad = $this->webapp->fetch_ads->by('seat', 3)->weight())
+		
+		if ($ad = $this->webapp->fetch_ads->rand(3))
 		{
-			$watch->append('a', ['href' => $ad['support'], 'onclick' => 'console.log(123)'])
-				->append('img', ['src' => $ad['picture'], 'onload' => 'this.parentNode.parentNode.splashscreen(5)',
-					'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)']);
+			$watch->append('a', ['href' => $ad['support'],
+				'data-duration' => 5,
+				'data-unit' => '秒',
+				'data-skip' => '跳过',
+				'onclick' => 'console.log(123)'
+			])->append('img', ['src' => $ad['picture'],
+				'onload' => 'this.parentNode.parentNode.splashscreen(this.parentNode)',
+				'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)'
+			]);
 		}
 		else
 		{
@@ -425,7 +429,7 @@ class webapp_router_home extends webapp_echo_masker
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', $video['name']);
 
-		$this->set_tags();
+		$this->tags = $this->webapp->fetch_tags->shortname();
 		if ($video['tags'])
 		{
 			$taginfo = $videoinfo->append('mark');
@@ -470,22 +474,23 @@ class webapp_router_home extends webapp_echo_masker
 		$anchor->append('span', $video['like']);
 
 		
-		$this->add_video_lists($this->main, $this->webapp->fetch_like_videos($video), 2, '可能喜欢');
+		$this->add_video_lists($this->main, $this->webapp->fetch_videos->similar($hash), 2, '可能喜欢');
 	}
 	function get_short(int $page = 0)
 	{
 		if ($page)
 		{
-			$this->set_tags();
 			$videos = [];
-			foreach ($this->webapp->fetch_videos->by('type', 'v')->random(10) as $video)
+			$tags = $this->webapp->fetch_tags->shortname();
+			foreach ($this->webapp->fetch_videos->with('type="v"')->random(20) as $video)
+			//foreach ($this->webapp->fetch_videos->with('type="v"')->paging($page, 6) as $video)
 			{
 				$tagdata = [];
 				foreach ($video['tags'] ? explode(',', $video['tags']) : [] as $taghash)
 				{
-					if (isset($this->tags[$taghash]))
+					if (isset($tags[$taghash]))
 					{
-						$tagdata[$taghash] = $this->tags[$taghash];
+						$tagdata[$taghash] = $tags[$taghash];
 					}
 				}
 				$video['tags'] = $tagdata;
@@ -494,9 +499,6 @@ class webapp_router_home extends webapp_echo_masker
 				$videos[] = $video;
 			}
 			$this->json($videos);
-
-
-			//$this->json($this->webapp->fetch_short_videos($page, 1));
 			return;
 		}
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
@@ -674,7 +676,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_title('观影记录');
 		$this->set_footer_menu();
 		$this->add_video_lists($this->main,
-			$videos = $this->user->historys(),
+			$videos = $this->user->historys(TRUE),
 			count($videos) % 2 ? 3 : 2,
 			'#最多保留50个记录',
 			'javascript:masker.clear("historys");', '清除所有观影记录');
