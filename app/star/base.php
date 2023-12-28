@@ -354,9 +354,7 @@ class base extends webapp
 	//本地命令行运行专题获取更新
 	function get_subject_fetch()
 	{
-		//if (PHP_SAPI !== 'cli') return 404;
-		var_dump( $this->fetch_videos->cache()->cacheable() );
-		return;
+		if (PHP_SAPI !== 'cli') return 404;
 		function detect(string $haystack, array $needles, callable $method):bool
 		{
 			foreach ($needles as $needle)
@@ -373,29 +371,50 @@ class base extends webapp
 				'fetch_values' => $subject['fetch_values'] ? explode(',', $subject['fetch_values']) : []
 			];
 		}
-		foreach ($this->mysql->videos('WHERE sync="allow" AND type="h"') as $video)
+		$updatable = FALSE;
+		foreach ($this->mysql->videos('WHERE sync="allow" AND type="h" AND ptime<?i', $this->time) as $video)
 		{
-			$vsubjects = [];
-			foreach ($subjects as $hash => $data)
+			$values = [];
+			foreach ($subjects as $hash => $subject)
 			{
-				match ($data['fetch_method'])
+				match ($subject['fetch_method'])
 				{
-					'intersect' => $video['tags'] && array_intersect(explode(',', $video['tags']), $data['fetch_values']),
-					'union' => count(array_intersect($data['fetch_values'], explode(',', $video['tags']))) === count($data['fetch_values']),
-					'starts' => detect($video['name'], $data['fetch_values'], str_starts_with(...)),
-					'ends' => detect($video['name'], $data['fetch_values'], str_ends_with(...)),
-					'contains' => detect($video['name'], $data['fetch_values'], str_contains(...)),
-					'uploader' => in_array($video['userid'], $data['fetch_values'], TRUE),
+					'intersect' => $video['tags'] && array_intersect(explode(',', $video['tags']), $subject['fetch_values']),
+					'union' => count(array_intersect($subject['fetch_values'], explode(',', $video['tags']))) === count($subject['fetch_values']),
+					'starts' => detect($video['name'], $subject['fetch_values'], str_starts_with(...)),
+					'ends' => detect($video['name'], $subject['fetch_values'], str_ends_with(...)),
+					'contains' => detect($video['name'], $subject['fetch_values'], str_contains(...)),
+					'uploader' => in_array($video['userid'], $subject['fetch_values'], TRUE),
 					default => FALSE
-				} && $vsubjects[] = $hash;
+				} && $values[] = $hash;
 			}
-			$vsubject = join(',', $vsubjects);
-			if ($video['subjects'] !== $vsubject)
+			$values = join(',', $values);
+			if ($video['subjects'] !== $values)
 			{
+				$updatable = TRUE;
 				$success = $this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])
-					->update('subjects=?s', $vsubject) === 1 ? 'OK' : 'NO';
-				echo "{$video['hash']} -> [{$video['subjects']}] >> [{$vsubject}] {$success}\n";
+					->update('subjects=?s', $values) === 1 ? 'OK' : 'NO';
+				echo "{$video['hash']} -> [{$video['subjects']}] >> [{$values}] {$success}\n";
 			}
+		}
+		
+		$videos = $this->fetch_videos->cache();
+		$subjects = $this->fetch_subjects->cache();
+		if ($videos->time())
+		{
+			if ($updatable)
+			{
+				$videos->flush()->cacheable();
+				$subjects->flush()->cacheable();
+			}
+			// $updatable
+			// 	? $videos->flush()->cacheable()
+			// 	: $videos->refresh()->cacheable();
+		}
+		else
+		{
+			$videos->flush()->cacheable();
+			$subjects->flush()->cacheable();
 		}
 	}
 	//======================以上为内部功能======================
@@ -690,7 +709,7 @@ class base extends webapp
 			function __construct(webapp_redis|webapp_redis_table $context, ...$commands)
 			{
 				parent::__construct($context, ...$commands);
-				$this->before || $this->cache()->cacheable();
+				$this->root === $this && $this->cache()->cacheable();
 			}
 			function format(array $data):array
 			{
@@ -740,7 +759,7 @@ class base extends webapp
 			function __construct(webapp_redis|webapp_redis_table $context, ...$commands)
 			{
 				parent::__construct($context, ...$commands);
-				$this->before || $this->cache()->cacheable();
+				$this->root === $this && $this->cache()->cacheable();
 			}
 			function format(array $tag):array
 			{
@@ -751,23 +770,23 @@ class base extends webapp
 					'name' => $tag['name'],
 					'shortname' => strstr($tag['name'], ',', TRUE)
 				];
-            }
+			}
 			function classify():array
 			{
-				return $this->with('level=0')->column('shortname', $this->primary);
+				return $this->root->with('level=0')->column('shortname', $this->primary);
 			}
 			function shortname():array
 			{
-				if ($this->cacheable())
+				if ($this->root->cacheable())
 				{
-					if ($this->alloc($key, 'shortname'))
+					if ($this->root->alloc($key, 'shortname'))
 					{
-						$this->redis->hMSet($key, $data = $this->column('shortname', $this->primary));
+						$this->redis->hMSet($key, $data = $this->root->column('shortname', $this->primary));
 						return $data;
 					}
 					return $this->redis->hGetAll($key);
 				}
-				return $this->column('shortname', $this->primary);
+				return $this->root->column('shortname', $this->primary);
 			}
 			function like(string $word):array
 			{
@@ -794,17 +813,12 @@ class base extends webapp
 
         };
 	}
-	//获取专题分类
+	//获取专题
 	function fetch_subjects():webapp_redis_table
 	{
 		return new class($this->redis, 'ORDER BY sort DESC') extends webapp_redis_table
 		{
 			protected string $tablename = 'subjects', $primary = 'hash';
-			function __construct(webapp_redis|webapp_redis_table $context, ...$commands)
-			{
-				parent::__construct($context, ...$commands);
-				$this->before || $this->cache()->cacheable();
-			}
 			function format(array $data):array
 			{
 				return [
@@ -817,8 +831,8 @@ class base extends webapp
 			}
 			function classify(string $type):array
 			{
-				return in_array($type, $this->unique('type'), TRUE)
-					? $this->with('type=?s', $type)->cache()->values() : [];
+				return in_array($type, $this->root->unique('type'), TRUE)
+					? $this->root->with('type=?s', $type)->cache()->values() : [];
 			}
 			function videos(string $subject, int $page):iterable
 			{
@@ -827,44 +841,12 @@ class base extends webapp
 			}
 		};
 	}
-	function fetch_subject(string $hash, int $page = 0, $size = 20):array
-	{
-		if ($page)
-		{
-			$videos = [];
-			$start = max(0, ($page - 1) * $size);
-			$end = $start + $size - 1;
-			if ($this->redis->exists($key = "subjectvideos:{$hash}"))
-			{
-				foreach ($this->redis->lRange($key, $start, $end) as $hash)
-				{
-					if ($video = $this->redis->hGetAll($hash))
-					{
-						$videos[] = $video;
-					}
-				}
-				return $videos;
-			}
-			$keys = [];
-			foreach ($this->mysql->videos('WHERE FIND_IN_SET(?s,subjects) ORDER BY sort DESC, ptime DESC', $hash) as $index => $video)
-			{
-				$keys[] = "video:{$video['hash']}";
-				$video = $this->fetch_video($video['hash'], $video);
-				if ($index >= $start && $index <= $end)
-				{
-					$videos[] = $video;
-				}
-			}
-			$this->redis->rPush($key, ...$keys);
-			return $videos;
-		}
-		return $this->redis->hGetAll("subject:{$hash}");
-	}
+	//获取影片
 	function fetch_videos():webapp_redis_table
 	{
 		$redis = $this->redis();
 		$redis->select(1);
-		return new class($redis, 'sync="allow" ORDER BY sort DESC, ctime DESC') extends webapp_redis_table
+		return new class($redis, 'sync="allow" AND ptime<?i ORDER BY sort DESC, ctime DESC', $this->time) extends webapp_redis_table
 		{
 			protected string $tablename = 'videos', $primary = 'hash';
 			function format(array $data):array
@@ -872,6 +854,7 @@ class base extends webapp
 				$ym = date('ym', $data['mtime']);
 				return [
 					'hash' => $data['hash'],
+					'time' => $data['ptime'],
 					'type' => $data['type'],
 					'm3u8' => "?/{$ym}/{$data['hash']}/play?mask{$data['ctime']}",
 					'poster' => "?/{$ym}/{$data['hash']}/cover?mask{$data['ctime']}",

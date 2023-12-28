@@ -17,7 +17,7 @@
 	--webapp-concavity: linear-gradient(-180deg, hsl(var(--webapp-color), 30%) 0%, var(--webapp-button) 90%);
 
 	--webapp-gap: 1rem;
-	--webapp-gapitem: .4rem;
+	--webapp-gapitem: .6rem;
 	--webapp-gaplittle: .2rem;
 	--webapp-gapradius: .4rem;
 
@@ -291,6 +291,13 @@ div.titles{
 	display: flex;
 	justify-content: space-between;
 	padding: 0 var(--webapp-gapitem);
+}
+div.titles>a{
+	padding: .2rem var(--webapp-gapitem);
+	color: var(--webapp-foreground);
+	background-color: var(--webapp-button);
+	border-radius: var(--webapp-gapradius);
+	font-size: var(--webapp-font-small);
 }
 div[class|=grid]{
 	display: grid;

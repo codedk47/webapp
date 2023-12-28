@@ -311,7 +311,7 @@ class webapp_router_home extends webapp_echo_masker
 			foreach ($classify as $hash => $name)
 			{
 				$this->add_video_lists($this->main, $this->webapp->fetch_videos
-					->with('type="h" AND FIND_IN_SET(?s,tags)', $hash)->show(8), 0, "最新{$name}", "?home/home,type:{$hash}");
+					->with('type="h" AND FIND_IN_SET(?s,tags)', $hash)->show(5), 3, "最新{$name}", "?home/home,type:{$hash}");
 			}
 		}
 	}
@@ -437,7 +437,7 @@ class webapp_router_home extends webapp_echo_masker
 			{
 				if (isset($this->tags[$tag]))
 				{
-					$taginfo->append('a', [$this->tags[$tag], 'href' => "?home/search,tag:{$tag}"]);
+					$taginfo->append('a', [$this->tags[$tag], 'href' => '?home/search,word:' . urlencode($this->tags[$tag])]);
 				}
 			}
 		}

@@ -38,7 +38,7 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 {
 	public readonly webapp $webapp;
 	public readonly webapp_redis $redis;
-	public readonly ?webapp_redis_table $before;
+	public readonly webapp_redis_table $root;
 	public readonly string $cond, $sort, $key;
 	private bool $cache;
 	protected string $tablename = '', $primary = '';
@@ -49,7 +49,7 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 		$cond = '';
 		$sort = NULL;
 		$save = TRUE;
-		if ($command = current($commands))
+		if ($command = $commands[0] ?? '')
 		{
 			if (is_int($pos = stripos($command, 'ORDER BY ')))
 			{
@@ -58,22 +58,45 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 			}
 			$cond = ($save = count($commands) === 1) ? current($commands) : $this->webapp->mysql->format(...$commands);
 		}
-		[$this->redis, $this->before, $this->cond, $this->sort] = $context instanceof webapp_redis
-			? [$context, NULL, $cond ? "WHERE {$cond}" : '', $sort ?? '']
-			: [$context->redis, $context, $cond
-				? ($context->cond ? "{$context->cond} AND {$cond}" : "WHERE {$cond}")
-				: $context->cond , $sort ?? $context->sort];
-		if ($this->cache = $this->redis->sIsMember($this->tablename,
-			$this->key = "{$this->tablename}." . $this->webapp->hash((string)$this, TRUE))) {
-			$this->before
-				&& ($time = $this->before->time()) !== $this->time()
-				&& $this->flush()->alloc($key, 'time')
-				&& $this->redis->set($key, $time);
+		if ($context instanceof webapp_redis)
+		{
+			[$this->redis, $this->root, $this->cond, $this->sort] = [$context, $this, $cond ? "WHERE {$cond}" : '', $sort ?? ''];
+			$this->cache = $this->redis->sIsMember($this->tablename, $this->key = "{$this->tablename}." . $this->webapp->hash($command, TRUE));
 		}
 		else
 		{
-			$save && $this->before && $this->cache();
+			[$this->redis, $this->root, $this->cond, $this->sort] = [$context->redis, $context->root,
+				$cond ? ($context->cond ? "{$context->cond} AND {$cond}" : "WHERE {$cond}") : $context->cond, $sort ?? $context->sort];
+			if ($this->cache = $this->redis->sIsMember($this->tablename, $this->key = "{$this->tablename}." . $this->webapp->hash((string)$this, TRUE)))
+			{
+				($time = $this->root->time()) !== $this->time()
+					&& $this->flush()->alloc($key, 'time')
+					&& $this->redis->set($key, $time);
+			}
+			else
+			{
+				$save && $this->cache();
+			}
 		}
+
+
+
+		// [$this->redis, $this->root, $this->cond, $this->sort] = $context instanceof webapp_redis
+		// 	? [$context, $this, $cond ? "WHERE {$cond}" : '', $sort ?? '']
+		// 	: [$context->redis, $context->root, $cond
+		// 		? ($context->cond ? "{$context->cond} AND {$cond}" : "WHERE {$cond}")
+		// 		: $context->cond, $sort ?? $context->sort];
+		// if ($this->cache = $this->redis->sIsMember($this->tablename,
+		// 	$this->key = "{$this->tablename}." . $this->webapp->hash($this->root === $this ? $command : (string)$this, TRUE))) {
+		// 	$this->root !== $this
+		// 		&& ($time = $this->root->time()) !== $this->time()
+		// 		&& $this->flush()->alloc($key, 'time')
+		// 		&& $this->redis->set($key, $time);
+		// }
+		// else
+		// {
+		// 	$save && $this->before && $this->cache();
+		// }
 	}
 
 	function __debugInfo():array
@@ -99,25 +122,9 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	}
 	function offsetSet(mixed $primary, mixed $value):void
 	{
-		// if ($this->redis->sAdd($this->key, $primary))
-		// {
-		// 	$this->redis->rPush("{$this->key}list", $primary);
-		// }
-		// if ($this->before === NULL)
-		// {
-		// 	$this->redis->hMSet("{$this->table}:{$primary}", $value);
-		// }
 	}
 	function offsetUnset(mixed $primary):void
 	{
-		// if ($this->redis->sRem($this->key, $primary))
-		// {
-		// 	$this->redis->lRem("{$this->key}list", $primary, 0);
-		// }
-		// if ($this->before === NULL)
-		// {
-		// 	$this->redis->del("{$this->table}:{$primary}");
-		// }
 	}
 	function count():int
 	{
@@ -162,34 +169,33 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	}
 	function flush():static
 	{
-		if ($this->before)
+		if ($this->cache)
 		{
-
-			
+			$this->redis->del($this->key, ...$this->redis->sMembers($this->key));
 		}
-		else
+		if ($this->root === $this)
 		{
-			foreach ($this->redis->sMembers($this->tablename) as $key)
+			if ($this->cacheable())
 			{
-				$this->redis->del(...$this->redis->sMembers($this->key));
-				var_dump('--', $this->redis->sMembers($set));
+				$this->alloc($key, 'time') && $this->redis->set($key, $this->webapp->time());
 			}
-			
-
+			else
+			{
+				foreach ($this->redis->sMembers($this->tablename) as $key)
+				{
+					$this->redis->del($key, ...$this->redis->sMembers($key));
+				}
+				$this->redis->del($this->tablename);
+			}
 		}
-		// if ($this->redis->sIsMember($this->tablename, $this->key))
-		// {
-		// 	$this->redis->del(...$this->redis->sMembers($this->key));
-		// 	$this->redis->sRem($this->tablename, $this->key);
-		// }
 		return $this;
 	}
 	function cache():static
 	{
 		if ($this->redis->sAdd($this->tablename, $this->key))
 		{
-			$this->before
-				&& ($time = $this->before->time())
+			$this->root !== $this
+				&& ($time = $this->root->time())
 				&& $this->alloc($key, 'time')
 				&& $this->redis->set($key, $time);
 		}
@@ -201,16 +207,14 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 		if ($this->alloc($set, 'set'))
 		{
 			$this->alloc($list, 'list');
-			if ($this->before) foreach ($this()->select($this->primary) as $data)
-			{
-				$this->redis->sAdd($set, $key = $data[$this->primary])
-					&& $this->redis->rPush($list, $key);
-			}
-			else foreach ($this() as $data)
+			if ($this->root === $this) foreach ($this() as $data)
 			{
 				$this->redis->sAdd($set, $key = $data[$this->primary])
 					&& $this->redis->hMSet("{$this->tablename}:{$key}", $this->format($data))
 					&& $this->redis->rPush($list, $key);
+			} else foreach ($this()->select($this->primary) as $data)
+			{
+				$this->redis->sAdd($set, $key = $data[$this->primary]) && $this->redis->rPush($list, $key);
 			}
 		}
 		else
@@ -218,6 +222,45 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 			$list = substr($set, 0, -4) . '.list';
 		}
 		return $this->cache;
+	}
+	function refresh():static
+	{
+		if ($this->cacheable(list:$list))
+		{
+			
+			print_r(array_diff($this()->select($this->primary)->column($this->primary), $this->keys()));
+
+
+			// foreach ($this()->select($this->primary) as $i => $data)
+			// {
+			// 	//var_dump($i);
+	
+			// 	if ($data[$this->primary] !== $this->redis->lIndex($list, $i))
+			// 	{
+			// 		//$this->flush();
+			// 		var_dump($i, $data[$this->primary], $this->redis->lIndex($list, $i));
+			// 		break;
+			// 	}
+				
+			// }
+			// if (array_diff($this()->select($this->primary)->column($this->primary), $this->keys()))
+			// {
+			// 	var_dump(1);
+			// 	$this->flush();
+			// }
+
+			// foreach ($this() as $data)
+			// {
+				
+			// 	if ($a = array_diff($this->format($data), $this[$data[$this->primary]] ?? []))
+			// 	{
+			// 		var_dump($a);
+			// 		$this->flush();
+			// 		break;
+			// 	}
+			// }
+		}
+		return $this;
 	}
 	function column(string $field, string $index = NULL):array
 	{
@@ -285,6 +328,7 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 		}
 		return $this->getIterator($length);
 	}
+
 	function unique(string $field):array
 	{
 		if ($this->cache)

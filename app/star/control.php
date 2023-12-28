@@ -565,7 +565,7 @@ class webapp_router_control extends webapp_echo_masker
 	}
 	function delete_tag(string $hash)
 	{
-		$this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->delete() === 1 && $this->webapp->clear_tags()
+		$this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->delete() === 1 && $this->webapp->fetch_tags->flush()
 			? $this->goto('/tags')
 			: $this->dialog('标签删除失败！');
 	}
@@ -573,7 +573,7 @@ class webapp_router_control extends webapp_echo_masker
 	{
 		if ($this->form_tag()->fetch($tag)
 			&& $this->webapp->mysql->tags('WHERE hash=?s LIMIT 1', $hash)->update($tag)) {
-			$this->webapp->clear_tags();
+			$this->webapp->fetch_tags->flush();
 			$this->goto('/tags');
 		}
 		else
@@ -608,7 +608,7 @@ class webapp_router_control extends webapp_echo_masker
 
 		$form->fieldset('专题分类 / 排序（越大越靠前）');
 
-		$form->field('type', 'select', ['options' => $this->webapp->fetch_tags->column('shortname', 'hash'), 'required' => NULL]);
+		$form->field('type', 'select', ['options' => $this->webapp->fetch_tags->classify(), 'required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 
 		$form->fieldset('专题名称 / 展示样式');
@@ -643,7 +643,7 @@ class webapp_router_control extends webapp_echo_masker
 		}
 
 		$conds[0] = sprintf('%sORDER BY type ASC,sort DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$classify = $this->webapp->fetch_tags->column('shortname', 'hash');
+		$classify = $this->webapp->fetch_tags->classify();
 		$table = $this->main->table($this->webapp->mysql->subjects(...$conds)->paging($page), function($table, $value, $classify)
 		{
 			$table->row();
@@ -687,7 +687,8 @@ class webapp_router_control extends webapp_echo_masker
 			'hash' => substr($this->webapp->random_hash(TRUE), -4),
 			'mtime' => $this->webapp->time,
 			'ctime' => $this->webapp->time] + $subject)) {
-			$this->goto('/subjects');
+			$this->webapp->fetch_subjects->flush();
+			$this->goto("/subjects,type:{$subject['type']}");
 		}
 		else
 		{
@@ -697,15 +698,15 @@ class webapp_router_control extends webapp_echo_masker
 	function delete_subject(string $hash)
 	{
 		$this->webapp->mysql->subjects('WHERE hash=?s LIMIT 1', $hash)->delete() === 1
-			? $this->goto('/subjects')
-			: $this->dialog('专题删除失败！');
+			&& $this->webapp->fetch_subjects->flush() ? $this->goto('/subjects') : $this->dialog('专题删除失败！');
 	}
 	function patch_subject(string $hash)
 	{
 		if ($this->form_subject()->fetch($subject)
 			&& $this->webapp->mysql->subjects('WHERE hash=?s LIMIT 1', $hash)->update([
 			'ctime' => $this->webapp->time] + $subject)) {
-			$this->goto('/subjects');
+			$this->webapp->fetch_subjects->flush();
+			$this->goto("/subjects,type:{$subject['type']}");
 		}
 		else
 		{
