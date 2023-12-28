@@ -87,16 +87,30 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function set_header_index():webapp_html
 	{
-		$this->header['class'] = 'index';
-		
-		return $this->header;
-	}
-	function set_header_search(string $goback = 'javascript:history.back();'):webapp_html
-	{
 		$this->header['class'] = 'search';
 		$this->header->append('a', ['href' => $goback, 'class' => 'arrow']);
 		$this->header->append('input', ['type' => 'search', 'placeholder' => '请输入关键词搜索', 'onkeypress' => 'if(event.keyCode===13)location.href=this.nextElementSibling.dataset.search+this.value']);
 		$this->header->append('button', ['搜索', 'onclick' => 'location.href=this.dataset.search+this.previousElementSibling.value', 'data-search' => '?home/search,word:']);
+
+		return $this->header;
+	}
+	function set_header_search(?string $goback = 'javascript:history.back();'):webapp_html
+	{
+		$this->header['class'] = 'search';
+		$this->header->append('a', $goback === NULL
+			? ['href' => 'javascript:location.reload();', 'class' => 'logo']
+			: ['href' => $goback, 'class' => 'arrow']);
+
+			
+		$search = $this->header->append('input', ['type' => 'search',
+			'placeholder' => '请输入关键词搜索',
+			'onkeypress' => 'if(event.keyCode===13)location.href=this.nextElementSibling.dataset.search+this.value']);
+		$goback
+			? $search->setattr(['autofocus' => NULL])
+			: $search->setattr(['onfocus' => 'this.value||location.assign("?home/search")']);
+		$this->header->append('button', ['搜索',
+			'onclick' => 'location.href=this.dataset.search+this.previousElementSibling.value',
+			'data-search' => '?home/search,word:']);
 
 		return $this->header;
 	}
@@ -225,6 +239,11 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return $element;
 	}
+	function add_scrolltop():void
+	{
+		$this->xml->body->append('a', ['href' => 'javascript:scrollTo({top:0,behavior:"smooth"});',
+			'class' => 'scrolltop'])->svg(['fill' => 'white'])->icon('move-to-top', 32);
+	}
 
 	function get_splashscreen()
 	{
@@ -290,8 +309,9 @@ class webapp_router_home extends webapp_echo_masker
 			'margin-bottom: 1rem',
 			'z-index: 1'
 		]));
-		$this->set_header_search();
+		$this->set_header_search(NULL);
 		$this->set_footer_menu();
+		$this->add_scrolltop();
 		$this->add_slideshows_ads($this->main, 1);
 		if (isset($classify[$type]) === FALSE)
 		{
@@ -354,6 +374,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_search();
 		$this->add_slideshows_ads($this->main, 1);
 
+		$this->main->append('h2', '这里准备做标签库（类似玩法选择）');
 
 	}
 
@@ -556,8 +577,8 @@ class webapp_router_home extends webapp_echo_masker
 
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
 		$anchors->append('a', ['每日观影剩余次数', 'href' => 'javascript:;', 'data-right' => sprintf('%d 次', count($this->user))]);
-		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => '💬']);
-		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => '💬']);
+		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => 'Telegram']);
+		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => 'Telegram']);
 
 		$anchors->append('a', ['输入邀请码',
 			'href' => '?home/my-invite,code:',

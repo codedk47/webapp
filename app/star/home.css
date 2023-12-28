@@ -6,9 +6,9 @@
 	--webapp-foreground: hsl(var(--webapp-color), 100%);
 	/* --webapp-convex: ; */
 
-	--webapp-anchor: hsl(var(--webapp-color), 96%);
+	--webapp-anchor: hsl(var(--webapp-color), 100%);
 	--webapp-button: hsl(var(--webapp-color), 20%);
-	--webapp-hover: hsl(var(--webapp-color), 80%);
+	--webapp-hover: hsl(var(--webapp-hue), 0%, 47%);
 	--webapp-hint: hsl(var(--webapp-color), 15%);
 	--webapp-edge: hsl(var(--webapp-color), 0%);
 	
@@ -17,7 +17,7 @@
 	--webapp-concavity: linear-gradient(-180deg, hsl(var(--webapp-color), 30%) 0%, var(--webapp-button) 90%);
 
 	--webapp-gap: 1rem;
-	--webapp-gapitem: .6rem;
+	--webapp-gapitem: .4rem;
 	--webapp-gaplittle: .2rem;
 	--webapp-gapradius: .4rem;
 
@@ -41,6 +41,14 @@ a{
 	color: var(--webapp-anchor);
 	text-decoration: none;
 }
+a.logo{
+	width: 4rem;
+	height: 2rem;
+	background-image: url(/star/logo.png);
+	background-position: center;
+	background-size: contain;
+	background-repeat: no-repeat;
+}
 a.arrow{
 	padding: var(--webapp-gapitem) var(--webapp-gap);
 }
@@ -53,6 +61,14 @@ a.arrow::before{
 	transform: rotate(45deg);
 	border-top-width: 0;
 	border-right-width: 0;
+}
+a.scrolltop{
+	position: fixed;
+	padding: var(--webapp-gapitem);
+	right: var(--webapp-gap);
+	bottom: calc(var(--webapp-gap) * 4);
+	background-color: hsl(var(--webapp-color), 10%, 70%);
+	border-radius: var(--webapp-gapradius);
 }
 /* body>div:first-child{
 	width: 100%;
@@ -148,7 +164,9 @@ header>button{
 	padding: 0 var(--webapp-gap);
 	border-radius: 0 var(--webapp-gapradius) var(--webapp-gapradius) 0;
 }
-
+header.search>input{
+	text-indent: var(--webapp-gapitem);
+}
 
 
 /* aside */
@@ -291,13 +309,17 @@ div.titles{
 	display: flex;
 	justify-content: space-between;
 	padding: 0 var(--webapp-gapitem);
+	padding-top: var(--webapp-gap);
+}
+div.titles>strong{
+	font-size: var(--webapp-font-medium);
+	font-weight: normal;
 }
 div.titles>a{
 	padding: .2rem var(--webapp-gapitem);
 	color: var(--webapp-foreground);
 	background-color: var(--webapp-button);
 	border-radius: var(--webapp-gapradius);
-	font-size: var(--webapp-font-small);
 }
 div[class|=grid]{
 	display: grid;
