@@ -800,17 +800,20 @@ class base extends webapp
 				}
 				return $likes;
 			}
-			// function level(bool $fullname = FALSE)
-			// {
-			// 	foreach (base::tags_level as $level => $describe)
-			// 	{
-			// 		$this->with('')
-			// 	}
-
-
-
-			// }
-
+			function levels(bool $fullname = FALSE, array $not = []):array
+			{
+				$levels = [];
+				foreach (base::tags_level as $level => $describe)
+				{
+					if (in_array($level, $not, TRUE))
+					{
+						continue;
+					}
+					$levels[$describe] = $this->root->with('level=?s', $level)->cache()
+						->column($fullname ? 'name' : 'shortname', $this->primary);
+				}
+				return $levels;
+			}
         };
 	}
 	//获取专题

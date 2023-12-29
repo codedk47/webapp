@@ -94,7 +94,7 @@ class webapp_router_home extends webapp_echo_masker
 
 		return $this->header;
 	}
-	function set_header_search(?string $goback = 'javascript:history.back();'):webapp_html
+	function set_header_search(?string $goback = 'javascript:history.back();', string $word = NULL):webapp_html
 	{
 		$this->header['class'] = 'search';
 		$this->header->append('a', $goback === NULL
@@ -106,7 +106,7 @@ class webapp_router_home extends webapp_echo_masker
 			'placeholder' => '请输入关键词搜索',
 			'onkeypress' => 'if(event.keyCode===13)location.href=this.nextElementSibling.dataset.search+this.value']);
 		$goback
-			? $search->setattr(['autofocus' => NULL])
+			? $search->setattr(['autofocus' => NULL, 'value' => $word])
 			: $search->setattr(['onfocus' => 'this.value||location.assign("?home/search")']);
 		$this->header->append('button', ['搜索',
 			'onclick' => 'location.href=this.dataset.search+this.previousElementSibling.value',
@@ -173,7 +173,7 @@ class webapp_router_home extends webapp_echo_masker
 		return NULL;
 	}
 	function add_video_lists(webapp_html $node,
-		iterable|string $videos,
+		string|iterable $videos,
 		int $display = 0,
 		string $title = NULL,
 		string $anchor = NULL,
@@ -188,14 +188,16 @@ class webapp_router_home extends webapp_echo_masker
 				$element->append('a', [$action, 'href' => $anchor]);
 			}
 		}
-		$element = $node->getName() === 'template' ? $node : $node->append('div', ['class' => "grid-t{$display}"]);
+		$pagination = $videos instanceof webapp_redis_table;
+		$element = $node->getName() === 'template' ? $node : $node->append('div', ['class' => $pagination ? 'grid' : "grid-t{$display}"]);
 		if (is_string($videos))
 		{
 			$node->append('blockquote', ['内容加载中...', 'data-lazy' => $videos, 'data-page' => 1]);
 		}
 		else
 		{
-			foreach ($videos as $video)
+			$size = 40;
+			foreach ($pagination ? $videos->paging($display, $size) : $videos as $video)
 			{
 				$content = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
 				$tags = $video['tags'] ? explode(',', $video['tags']) : [];
@@ -233,6 +235,40 @@ class webapp_router_home extends webapp_echo_masker
 							$mark->append('span', "#{$this->tags[$tag]}");
 						}
 						
+					}
+				}
+			}
+			if ($pagination && ($max = ceil($videos->count() / $size)) > 1)
+			{
+				$display = max(1, $display);
+				$url = $this->webapp->at(['page' => '']);
+				$page = $node->append('div', ['class' => 'page']);
+				$show = 4;
+				if ($max > $show)
+				{
+					$halved = intval($show * 0.5);
+					$offset = min($max, max($display, $halved) + $halved);
+					$ranges = range(max(1, $offset - $halved * 2 + 1), $offset);
+					$display > 1 && $page->append('a', ['首页', 'href' => "{$url}1"]);
+					foreach ($ranges as $index)
+					{
+						$curr = $page->append('a', [$index, 'href' => "{$url}{$index}"]);
+						if ($index == $display)
+						{
+							$curr['class'] = 'selected';
+						}
+					}
+					$display < $max && $page->append('a', ['最后', 'href' => $url . $max]);
+				}
+				else
+				{
+					for ($i = 1; $i <= $max; ++$i)
+					{
+						$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
+						if ($i === $display)
+						{
+							$curr['class'] = 'selected';
+						}
 					}
 				}
 			}
@@ -338,16 +374,16 @@ class webapp_router_home extends webapp_echo_masker
 	function get_subject(string $hash, int $page = 0)
 	{
 		$this->tags = $this->webapp->fetch_tags->shortname();
-		if ($page)
-		{
-			$this->add_video_lists($this->template(), $this->webapp->fetch_subjects->videos($hash, $page));
-			return;
-		}
+		// if ($page)
+		// {
+		// 	$this->add_video_lists($this->template(), $this->webapp->fetch_subjects->videos($hash, $page));
+		// 	return;
+		// }
 		$this->add_slideshows_ads($this->main, 1);
 		if (is_array($subject = $this->webapp->fetch_subjects[$hash]))
 		{
 			$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
-			$this->add_video_lists($this->main, "?home/subject,hash:{$hash},page:");
+			$this->add_video_lists($this->main, $this->webapp->fetch_videos->with('FIND_IN_SET(?s,subjects)', $hash), $page);
 		}
 	}
 	function get_search(string $word = '', int $page = 0)
@@ -358,24 +394,51 @@ class webapp_router_home extends webapp_echo_masker
 			$cond = ['name LIKE ?s', "%{$word}%"];
 			if ($tags = $this->webapp->fetch_tags->like($word))
 			{
-				$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+				$cond[0] .= ' OR FIND_IN_SET(?s,tags)';
 				$cond[] = $tag = current($tags);
 			}
-			if ($page)
-			{
-				$this->add_video_lists($this->template(), $this->webapp->fetch_videos->with(...$cond)->paging($page));
-				return;
-			}
-			$this->set_header_search();
+			// if ($page)
+			// {
+			// 	$this->add_video_lists($this->template(), $this->webapp->fetch_videos->with(...$cond)->paging($page));
+			// 	return;
+			// }
+			$this->set_header_search(word:$word);
 			$this->add_slideshows_ads($this->main, 1);
-			$this->add_video_lists($this->main, "?home/search,word:{$word},page:", 2);
+			$this->add_scrolltop();
+			$classify = $this->webapp->fetch_tags->classify();
+			foreach ($classify as $hash => $name)
+			{
+				$node = $this->aside->append('a', [$name, 'href' => "?home/home,type:{$hash}"]);
+				// if ($hash === $type)
+				// {
+				// 	unset($this->aside->a['class']);
+				// 	$node['class'] = 'selected';
+				// }
+			}
+			$this->aside['class'] = 'classify';
+			$result = $this->webapp->fetch_videos->with(...$cond);
+			if ($result->count())
+			{
+				$this->add_video_lists($this->main, $result, $page);
+			}
+			else
+			{
+				$this->main->append('blockquote', '404 很抱歉，没有找到相关内容');
+			}
 			return;
 		}
 		$this->set_header_search();
 		$this->add_slideshows_ads($this->main, 1);
-
-		$this->main->append('h2', '这里准备做标签库（类似玩法选择）');
-
+		foreach ($this->webapp->fetch_tags->levels(not:[0, 1, 2, 3, 12]) as $describe => $tags)
+		{
+			$node = $this->main->append('div', ['class' => 'videoinfo']);
+			$node->append('strong', $describe);
+			$mark = $node->append('mark');
+			foreach ($tags as $name)
+			{
+				$mark->append('a', [$name, 'href' => '/?home/search,word:' . urlencode($name)]);
+			}
+		}
 	}
 
 	function get_watch(string $hash)

@@ -227,12 +227,11 @@ aside.watch>strong>span{
 
 
 /* main */
-main>blockquote[data-lazy]{
+main>blockquote{
 	margin: 0;
 	padding: var(--webapp-gap);
 	text-align: center;
 }
-
 main.myshare{
 	display: flex;
 	flex-direction: column;
@@ -481,6 +480,21 @@ div[class|=grid][class*=-icon]>a>strong{
 		grid-column: 1 / 4;
 	}
 } */
+div.page{
+	display: flex;
+	gap: var(--webapp-gapitem);
+	padding: var(--webapp-gapitem);
+	justify-content: center;
+	padding-bottom: calc(var(--webapp-gap) * 2);
+}
+div.page>a{
+	padding: var(--webapp-gapitem) .6rem;
+	border-radius: var(--webapp-gapradius);
+}
+div.page>a.selected{
+	color: var(--webapp-foreground);
+	background-color: var(--webapp-button);
+}
 /* div.videoinfo */
 div.videoinfo{
 	display: flex;

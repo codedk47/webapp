@@ -300,7 +300,11 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 			yield $data[$this->primary] => $this->format($data);
 		}
 	}
+	function group(string $field)
+	{
 
+
+	}
 	function search(string $field, callable $detect)
 	{
 
