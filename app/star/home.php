@@ -120,6 +120,21 @@ class webapp_router_home extends webapp_echo_masker
 		$this->header->append('strong', $name);
 		return $this->header;
 	}
+	function set_aside_classify(string $url, string $selected = NULL):webapp_html
+	{
+		$this->aside['class'] = 'classify';
+		
+		foreach ($this->webapp->fetch_tags->classify() as $hash => $name)
+		{
+			$node = $this->aside->append('a', [$name, 'href' => $url . $hash]);
+			// if ($hash === $type)
+			// {
+			// 	unset($this->aside->a['class']);
+			// 	$node['class'] = 'selected';
+			// }
+		}
+		return $this->aside;
+	}
 
 
 
@@ -380,15 +395,16 @@ class webapp_router_home extends webapp_echo_masker
 		// 	return;
 		// }
 		$this->add_slideshows_ads($this->main, 1);
+		
 		if (is_array($subject = $this->webapp->fetch_subjects[$hash]))
 		{
 			$this->set_header_title($subject['name'], 'javascript:history.back();')['style'] = 'position:sticky;top:0;z-index:2;box-shadow: 0 0 .4rem var(--webapp-edge)';
 			$this->add_video_lists($this->main, $this->webapp->fetch_videos->with('FIND_IN_SET(?s,subjects)', $hash), $page);
+			$this->set_footer_menu();
 		}
 	}
 	function get_search(string $word = '', int $page = 0)
 	{
-		
 		if ($word = trim(urldecode($word)))
 		{
 			$cond = ['name LIKE ?s', "%{$word}%"];
@@ -403,28 +419,32 @@ class webapp_router_home extends webapp_echo_masker
 			// 	return;
 			// }
 			$this->set_header_search(word:$word);
+			$this->set_aside_classify($this->webapp->at(['type' => '']));
 			$this->add_slideshows_ads($this->main, 1);
-			$this->add_scrolltop();
-			$classify = $this->webapp->fetch_tags->classify();
-			foreach ($classify as $hash => $name)
-			{
-				$node = $this->aside->append('a', [$name, 'href' => "?home/home,type:{$hash}"]);
-				// if ($hash === $type)
-				// {
-				// 	unset($this->aside->a['class']);
-				// 	$node['class'] = 'selected';
-				// }
-			}
-			$this->aside['class'] = 'classify';
+		
+
 			$result = $this->webapp->fetch_videos->with(...$cond);
 			if ($result->count())
 			{
+				$this->tags = $this->webapp->fetch_tags->shortname();
+				$titles = $this->main->append('div', ['class' => 'titles']);
+				$titles->append('strong', '搜索结果');
+				$titles->select([
+					'' => '最新上传',
+					'view' => '最多观看',
+					'like' => '最多喜欢',
+					'favorite' => '最多收藏',
+					'issue' => '发行日期'
+				])->setattr(['style' => 'outline:none;border-radius:var(--webapp-gapradius);border: 1px solid var(--webapp-edge)']);
+
+
 				$this->add_video_lists($this->main, $result, $page);
 			}
 			else
 			{
 				$this->main->append('blockquote', '404 很抱歉，没有找到相关内容');
 			}
+			$this->set_footer_menu();
 			return;
 		}
 		$this->set_header_search();
