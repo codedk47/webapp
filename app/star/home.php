@@ -224,7 +224,7 @@ class webapp_router_home extends webapp_echo_masker
 				$figure->append('img', ['loading' => 'lazy', 'src' => $video['poster']]);
 				$figure->append('figcaption', $video['duration']);
 
-				$content->append('strong', webapp_html::charsafe($video['name']));
+				$content->append('strong', htmlentities($video['name']));
 				if (isset($this->tags) && $tags)
 				{
 					$mark = $content->append('div')->append('mark');
@@ -511,7 +511,7 @@ class webapp_router_home extends webapp_echo_masker
 		}
 
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
-		$videoinfo->append('strong', $video['name']);
+		$videoinfo->append('strong', htmlentities($video['name']));
 
 		$this->tags = $this->webapp->fetch_tags->shortname();
 		if ($video['tags'])
