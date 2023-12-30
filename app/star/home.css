@@ -62,19 +62,6 @@ a.arrow::before{
 	border-top-width: 0;
 	border-right-width: 0;
 }
-
-div.float{
-	position: fixed;
-	right: var(--webapp-gap);
-	bottom: calc(var(--webapp-gap) * 4);
-	display: flex;
-	flex-direction: column;
-	background-color: hsl(var(--webapp-color), 10%, 70%);
-	border-radius: var(--webapp-gapradius);
-}
-div.float>a{
-	padding: var(--webapp-gapitem);
-}
 /* body>div:first-child{
 	width: 100%;
 	border: 1px solid red;
@@ -500,6 +487,21 @@ div.page>a.selected{
 	color: var(--webapp-foreground);
 	background-color: var(--webapp-button);
 }
+
+/* div.float */
+div.float{
+	position: fixed;
+	right: var(--webapp-gap);
+	bottom: calc(var(--webapp-gap) * 4);
+	display: flex;
+	flex-direction: column;
+	background-color: hsl(var(--webapp-color), 10%, 70%);
+	border-radius: var(--webapp-gapradius);
+}
+div.float>a{
+	padding: var(--webapp-gapitem);
+}
+
 /* div.videoinfo */
 div.videoinfo{
 	display: flex;
