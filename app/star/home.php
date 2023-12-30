@@ -495,6 +495,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_ramdom(string $hash)
 	{
+		$this->tags = $this->webapp->fetch_tags->shortname();
 		$this->add_video_lists($this->template(), $this->webapp->fetch_videos->watch_random($hash));
 	}
 	function get_watch(string $hash)
