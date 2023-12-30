@@ -305,7 +305,7 @@ div.titles{
 	padding-top: var(--webapp-gap);
 }
 div.titles>strong{
-	font-size: var(--webapp-font-medium);
+	font-size: var(--webapp-font-large);
 	font-weight: normal;
 }
 div.titles>a{
