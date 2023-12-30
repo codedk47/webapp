@@ -814,7 +814,7 @@ class base extends webapp
 				}
 				return $levels;
 			}
-        };
+		};
 	}
 	//获取专题
 	function fetch_subjects():webapp_redis_table
@@ -867,14 +867,49 @@ class base extends webapp
 					'view' => $data['view'],
 					'like' => $data['like'],
 					'tags' => $data['tags'],
-					'name' => $data['name']
+					'name' => $data['name'],
+					'extdata' => $data['extdata']
 				];
 			}
-			function similar(string $hash):iterable
+			function similar(array|string $video):static
 			{
-				return is_array($video = $this[$hash])
-					? $this->with('type=?s', $video['type'])->random(20)
-					: new EmptyIterator;
+				if (is_array(is_string($video) ? $video = $this[$video] : $video))
+				{
+					$cond = ['type=?s', $video['type']];
+					if ($classify = array_intersect($this->webapp->fetch_tags->with('level=0')->keys(),
+						$video['tags'] ? explode(',', $video['tags']) : [])) {
+						$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+						$cond[] = current($classify);
+					}
+					return $this->root->with(...$cond)->cache();
+				}
+				return $this->root;
+			}
+			function watch_actress(array $video):iterable
+			{
+				$videos = $this->similar($video);
+				$extdata = $video['extdata'] ? json_decode($video['extdata'], TRUE) : [];
+				$count = 0;
+				if (isset($extdata['actress']))
+				{
+					$actress = $videos->with('FIND_IN_SET(?s,extdata->>\'$.actress\')', current(explode(',', $extdata['actress'], 2)));
+					$count = $actress->count();
+					foreach ($actress->random(10) as $video)
+					{
+						yield $video;
+					}
+				}
+				if ($count < 10)
+				{
+					foreach ($videos->random(10 - $count) as $video)
+					{
+						yield $video;
+					}
+				}
+			}
+			function watch_random(string $hash):iterable
+			{
+				return $this->similar($hash)->random(8);
 			}
 		};
 	}

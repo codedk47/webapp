@@ -62,11 +62,13 @@ a.arrow::before{
 	border-top-width: 0;
 	border-right-width: 0;
 }
-/* body>div:first-child{
-	width: 100%;
+body>div:first-child{
+	max-width: 760px;
+	margin: 0 auto;
+	/* width: 100%;
 	border: 1px solid red;
-	box-sizing: border-box;
-} */
+	box-sizing: border-box; */
+}
 /* splashscreen */
 body>div.splashscreen:first-child>header:not(:empty){
 	position: fixed;
@@ -533,6 +535,7 @@ div.videoinfo>mark>a{
 div.videoinfo>div{
 	display: flex;
 	gap: var(--webapp-gapitem);
+	flex-wrap: wrap;
 }
 div.videoinfo>div>a{
 	display: flex;
@@ -550,6 +553,23 @@ div.videoinfo>div>a>span{
 
 	padding: 0 var(--webapp-gapitem);
 	padding-right: var(--webapp-gap);
+}
+div.videoinfo>div.extinfo>mark[data-label]{
+	overflow: hidden;
+	color: var(--webapp-anchor);
+	border: 1px solid var(--webapp-edge);
+
+	border-radius: var(--webapp-gapradius);
+	background-color: var(--webapp-hint);
+	padding-right: var(--webapp-gap);
+	white-space: nowrap;
+}
+div.videoinfo>div.extinfo>mark[data-label]::before{
+	content: attr(data-label);
+	padding: var(--webapp-gapitem);
+	display: inline-block;
+	background-image: var(--webapp-concavity);
+	margin-right: var(--webapp-gapitem);
 }
 
 

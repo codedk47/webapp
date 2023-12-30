@@ -281,6 +281,7 @@ masker.favorite = anchor =>
 
 
 
+
 masker.invite = anchor => masker.prompt(anchor).then(value => masker.json(anchor.href + value));
 
 masker.nickname = anchor => {

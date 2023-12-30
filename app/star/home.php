@@ -200,6 +200,12 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return NULL;
 	}
+	function add_titles(string $strong = NULL):webapp_html
+	{
+		$titles = $this->main->append('div', ['class' => 'titles']);
+		$strong && $titles->append('strong', $strong);
+		return $titles;
+	}
 	function add_video_lists(webapp_html $node,
 		string|iterable $videos,
 		int $display = 0,
@@ -209,11 +215,10 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($title)
 		{
-			$element = $node->append('div', ['class' => 'titles']);
-			$element->append('strong', $title);
+			$titles = $this->add_titles($title);
 			if ($anchor)
 			{
-				$element->append('a', [$action, 'href' => $anchor]);
+				$titles->append('a', [$action, 'href' => $anchor]);
 			}
 		}
 		$pagination = $videos instanceof webapp_redis_table;
@@ -452,9 +457,7 @@ class webapp_router_home extends webapp_echo_masker
 			if ($result->count())
 			{
 				$this->tags = $this->webapp->fetch_tags->shortname();
-				$titles = $this->main->append('div', ['class' => 'titles']);
-				//$titles->append('strong', '搜索结果');
-
+				$titles = $this->add_titles();
 				$titles->select([
 					'' => '过滤：无',
 					'qk7U' => '单人作品',
@@ -469,7 +472,6 @@ class webapp_router_home extends webapp_echo_masker
 					'issue' => '发行日期'
 				])->setattr(['onchange' => 'masker.assign({sort:this.value||null})'])->selected($sort);
 				$this->add_video_lists($this->main, $result, $page);
-				
 			}
 			else
 			{
@@ -491,7 +493,10 @@ class webapp_router_home extends webapp_echo_masker
 			}
 		}
 	}
-
+	function get_ramdom(string $hash)
+	{
+		$this->add_video_lists($this->template(), $this->webapp->fetch_videos->watch_random($hash));
+	}
 	function get_watch(string $hash)
 	{
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
@@ -561,9 +566,38 @@ class webapp_router_home extends webapp_echo_masker
 			$watch->setattr('autoplay');
 		}
 
+		//影片信息（标题）
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', htmlentities($video['name']));
 
+
+
+		//影片信息（功能菜单）
+		$videomenu = $videoinfo->append('div', ['style' => 'justify-content:center;gap:calc(var(--webapp-gap)*4);margin:var(--webapp-gapitem) 0']);
+
+		$anchor = $videomenu->append('a', ['href' => '?home/my-favorites', 'onclick' => 'return masker.favorite(this)', 'data-hash' => $hash]);
+		$anchor->svg(['fill' => 'white'])->icon('star');
+		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('star-fill');
+		$anchor->append('span', '收藏');
+		if ($this->user->favorited($hash))
+		{
+			$anchor->svg[0]['style'] = 'display:none';
+			$anchor->svg[1]['style'] = 'display:block';
+			$anchor->span[0] = '已收藏';
+		}
+
+		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
+		$anchor->svg(['fill' => 'white'])->icon('heart');
+		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('heart');
+		$anchor->append('span', '喜欢');
+		if ($this->user->favorited($hash))
+		{
+			$anchor->svg[0]['style'] = 'display:none';
+			$anchor->svg[1]['style'] = 'display:block';
+			$anchor->span[0] = '已喜欢';
+		}
+
+		//影片信息（标签）
 		$this->tags = $this->webapp->fetch_tags->shortname();
 		if ($video['tags'])
 		{
@@ -576,41 +610,57 @@ class webapp_router_home extends webapp_echo_masker
 				}
 			}
 		}
-		$videomenu = $videoinfo->append('div');
 
-		
-
-		$anchor = $videomenu->append('a', ['href' => '?home/my-favorites', 'onclick' => 'return masker.favorite(this)', 'data-hash' => $hash]);
-		$anchor->svg(['fill' => 'white'])->icon('star');
-		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('star-fill');
-		$anchor->append('span', '收藏');
-		if ($this->user->favorited($hash))
+		//影片信息（扩展数据）
+		if ($video['extdata'])
 		{
-			$anchor->svg[0]['style'] = 'display:none';
-			$anchor->svg[1]['style'] = 'display:block';
-			$anchor->span[0] = '已收藏';
+			$extdata = json_decode($video['extdata'], TRUE);
+
+			isset($extdata['issue'])
+				&& $extdata['issue']
+				&& $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['issue'], 'data-label' => '发行日期']);
+
+			if ((isset($extdata['publisher']) && $extdata['publisher']) || (isset($extdata['director']) && $extdata['director']))
+			{
+				$extinfo = $videoinfo->append('div', ['class' => 'extinfo']);
+				$extdata['publisher'] && $extinfo->append('mark', [$extdata['publisher'], 'data-label' => '发行商']);
+				$extdata['director'] && $extinfo->append('mark', [$extdata['director'], 'data-label' => '导演']);
+			}
+			
+			isset($extdata['series'])
+				&& $extdata['series']
+				&& $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['series'], 'data-label' => '系列']);
+
+			isset($extdata['series'])
+				&& $extdata['series']
+				&& $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['actress'], 'data-label' => '女优']);
+
+
+			//print_r($extdata);
+			// $extinfo->append('mark', [$extdata['issue'], 'data-label' => '发行日期']);
+			
+			// $extinfo->append('mark', [$extdata['director'], 'data-label' => '导演']);
+			// $extinfo->append('mark', [$extdata['publisher'], 'data-label' => '发行商']);
+			// $extinfo->append('mark', [$extdata['series'], 'data-label' => '系列']);
+
+
+			
+			
+			// print_r($extdata);
+
 		}
-		
 
-		// [$icon, $name] = $this->user->favorite_has($hash) ? ['star-fill', '已收藏'] : ['star', '收藏'];
+		//关联影片
+		$this->add_video_lists($this->main, $this->webapp->fetch_videos->watch_actress($video), 2, '相关推荐');
 
+		$this->add_slideshows_ads($this->main, 1);
 
-
-		// $anchor->svg(['fill' => 'white'])->icon($icon);
-		// $anchor->append('span', $name);
-
-
-		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
-		$anchor->svg(['fill' => 'white'])->icon('eye');
-		$anchor->append('span', $video['view']);
-
-		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
-		$anchor->svg(['fill' => 'white'])->icon('thumbsup');
-		$anchor->append('span', $video['like']);
-
-		
-		$this->add_video_lists($this->main, $this->webapp->fetch_videos->similar($hash), 2, '可能喜欢');
+		$this->add_titles('随机推荐')->append('a', ['换一换', 'href' => "?home/ramdom,hash:{$video['hash']}",
+			'onclick' => 'return !fetch(this.href).then(response=>response.text()).then(content=>this.parentNode.nextElementSibling.innerHTML=content)']);
+		$this->add_video_lists($this->main, $this->webapp->fetch_videos->watch_random($video['hash']), 2);
 	}
+
+	
 	function get_short(int $page = 0)
 	{
 		if ($page)
