@@ -120,18 +120,21 @@ class webapp_router_home extends webapp_echo_masker
 		$this->header->append('strong', $name);
 		return $this->header;
 	}
-	function set_aside_classify(string $url, string $selected = NULL):webapp_html
+	function set_aside_classify(string $url, string $selected = NULL, string $insert = NULL):webapp_html
 	{
 		$this->aside['class'] = 'classify';
-		
+		if ($insert)
+		{
+			$this->aside->append('a', [$insert, 'href' => $url, 'class' => 'selected']);
+		}
 		foreach ($this->webapp->fetch_tags->classify() as $hash => $name)
 		{
 			$node = $this->aside->append('a', [$name, 'href' => $url . $hash]);
-			// if ($hash === $type)
-			// {
-			// 	unset($this->aside->a['class']);
-			// 	$node['class'] = 'selected';
-			// }
+			if ($hash === $selected)
+			{
+				unset($this->aside->a['class']);
+				$node['class'] = 'selected';
+			}
 		}
 		return $this->aside;
 	}
@@ -149,7 +152,17 @@ class webapp_router_home extends webapp_echo_masker
 		$this->footer->append('a', ['我的', 'href' => '?home/my']);
 		return $this->footer;
 	}
-
+	function set_float_button():webapp_html
+	{
+		$float = $this->xml->body->xpath('div[@class=float]')[0] ?? NULL;
+		if ($float === NULL)
+		{
+			$float = $this->xml->body->append('div', ['class' => 'float']);
+			$float->append('a', ['href' => 'javascript:scrollTo({top:0,behavior:"smooth"});'])->svg(['fill' => 'white'])->icon('move-to-top', 32);
+			$float->append('a', ['href' => '?home/search'])->svg(['fill' => 'white'])->icon('search', 32);
+		}
+		return $float;
+	}
 
 	function add_slideshows_ads(webapp_html $node, int $seat, int $duration = 5):?webapp_html
 	{
@@ -290,11 +303,6 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return $element;
 	}
-	function add_scrolltop():void
-	{
-		$this->xml->body->append('a', ['href' => 'javascript:scrollTo({top:0,behavior:"smooth"});',
-			'class' => 'scrolltop'])->svg(['fill' => 'white'])->icon('move-to-top', 32);
-	}
 
 	function get_splashscreen()
 	{
@@ -362,7 +370,7 @@ class webapp_router_home extends webapp_echo_masker
 		]));
 		$this->set_header_search(NULL);
 		$this->set_footer_menu();
-		$this->add_scrolltop();
+		$this->set_float_button();
 		$this->add_slideshows_ads($this->main, 1);
 		if (isset($classify[$type]) === FALSE)
 		{
@@ -403,8 +411,9 @@ class webapp_router_home extends webapp_echo_masker
 			$this->set_footer_menu();
 		}
 	}
-	function get_search(string $word = '', int $page = 0)
+	function get_search(string $word = '', int $page = 0, string $classify = '', string $sort = '')
 	{
+		
 		if ($word = trim(urldecode($word)))
 		{
 			$cond = ['name LIKE ?s', "%{$word}%"];
@@ -413,16 +422,27 @@ class webapp_router_home extends webapp_echo_masker
 				$cond[0] .= ' OR FIND_IN_SET(?s,tags)';
 				$cond[] = $tag = current($tags);
 			}
+			if ($classify)
+			{
+				$cond[0] = "({$cond[0]}) AND FIND_IN_SET(?s,tags)";
+				$cond[] = $classify;
+			}
+			$cond[0] .= match ($sort)
+			{
+				'view' => ' ORDER BY `view` DESC, hash ASC',
+				'like' => ' ORDER BY `like` DESC, hash ASC',
+				'favorite' => 'ORDER BY `favorite` DESC, hash ASC',
+				'issue' => 'ORDER BY extdata->\'$.issue\' DESC, hash ASC',
+				default => ''
+			};
 			// if ($page)
 			// {
 			// 	$this->add_video_lists($this->template(), $this->webapp->fetch_videos->with(...$cond)->paging($page));
 			// 	return;
 			// }
 			$this->set_header_search(word:$word);
-			$this->set_aside_classify($this->webapp->at(['type' => '']));
+			$this->set_aside_classify($this->webapp->at(['classify' => '']), $classify, '全部');
 			$this->add_slideshows_ads($this->main, 1);
-		
-
 			$result = $this->webapp->fetch_videos->with(...$cond);
 			if ($result->count())
 			{
@@ -435,9 +455,10 @@ class webapp_router_home extends webapp_echo_masker
 					'like' => '最多喜欢',
 					'favorite' => '最多收藏',
 					'issue' => '发行日期'
-				])->setattr(['style' => 'outline:none;border-radius:var(--webapp-gapradius);border: 1px solid var(--webapp-edge)']);
-
-
+				])->setattr([
+					'style' => 'outline:none;border-radius:var(--webapp-gapradius);border: 1px solid var(--webapp-edge)',
+					'onchange' => 'masker.assign({sort:this.value||null})'
+				])->selected($sort);
 				$this->add_video_lists($this->main, $result, $page);
 			}
 			else

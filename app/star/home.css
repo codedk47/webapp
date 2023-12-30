@@ -62,13 +62,18 @@ a.arrow::before{
 	border-top-width: 0;
 	border-right-width: 0;
 }
-a.scrolltop{
+
+div.float{
 	position: fixed;
-	padding: var(--webapp-gapitem);
 	right: var(--webapp-gap);
 	bottom: calc(var(--webapp-gap) * 4);
+	display: flex;
+	flex-direction: column;
 	background-color: hsl(var(--webapp-color), 10%, 70%);
 	border-radius: var(--webapp-gapradius);
+}
+div.float>a{
+	padding: var(--webapp-gapitem);
 }
 /* body>div:first-child{
 	width: 100%;
