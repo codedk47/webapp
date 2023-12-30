@@ -443,6 +443,7 @@ class webapp_router_home extends webapp_echo_masker
 			$this->set_header_search(word:$word);
 			$this->set_aside_classify($this->webapp->at(['classify' => '']), $classify, '全部');
 			$this->add_slideshows_ads($this->main, 1);
+			$this->set_float_button();
 			$result = $this->webapp->fetch_videos->with(...$cond);
 			if ($result->count())
 			{
@@ -460,6 +461,7 @@ class webapp_router_home extends webapp_echo_masker
 					'onchange' => 'masker.assign({sort:this.value||null})'
 				])->selected($sort);
 				$this->add_video_lists($this->main, $result, $page);
+				
 			}
 			else
 			{
