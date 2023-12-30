@@ -454,7 +454,7 @@ div[class|=grid][class*=-t6]{
 	transform-origin: center;
 }
 div[class|=grid][class*=-t6]>a{
-	width: 70%;
+	width: 80%;
 	flex-shrink: 0;
 }
 
