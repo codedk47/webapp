@@ -651,10 +651,10 @@ class webapp_router_home extends webapp_echo_masker
 		}
 
 		//关联影片
+		$this->add_slideshows_ads($this->main, 1);
 		$this->add_video_lists($this->main, $this->webapp->fetch_videos->watch_actress($video), 2, '相关推荐');
 
 		$this->add_slideshows_ads($this->main, 1);
-
 		$this->add_titles('随机推荐')->append('a', ['换一换', 'href' => "?home/ramdom,hash:{$video['hash']}",
 			'onclick' => 'return !fetch(this.href).then(response=>response.text()).then(content=>this.parentNode.nextElementSibling.innerHTML=content)']);
 		$this->add_video_lists($this->main, $this->webapp->fetch_videos->watch_random($video['hash']), 2);
