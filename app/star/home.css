@@ -312,6 +312,13 @@ div.titles>a{
 	background-color: var(--webapp-button);
 	border-radius: var(--webapp-gapradius);
 }
+div.titles>select{
+	outline: none;
+	padding: .2rem var(--webapp-gapitem);
+	border: 1px solid var(--webapp-edge);
+	border-radius: var(--webapp-gapradius);
+}
+
 div[class|=grid]{
 	display: grid;
 	padding: var(--webapp-gapitem);

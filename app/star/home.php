@@ -411,23 +411,27 @@ class webapp_router_home extends webapp_echo_masker
 			$this->set_footer_menu();
 		}
 	}
-	function get_search(string $word = '', int $page = 0, string $classify = '', string $sort = '')
+	function get_search(string $word = '', int $page = 0)
 	{
-		
 		if ($word = trim(urldecode($word)))
 		{
 			$cond = ['name LIKE ?s', "%{$word}%"];
 			if ($tags = $this->webapp->fetch_tags->like($word))
 			{
-				$cond[0] .= ' OR FIND_IN_SET(?s,tags)';
+				$cond[0] = "({$cond[0]} OR FIND_IN_SET(?s,tags))";
 				$cond[] = $tag = current($tags);
 			}
-			if ($classify)
+			if ($classify = $this->webapp->query['classify'] ?? '')
 			{
-				$cond[0] = "({$cond[0]}) AND FIND_IN_SET(?s,tags)";
+				$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
 				$cond[] = $classify;
 			}
-			$cond[0] .= match ($sort)
+			if ($tags = $this->webapp->query['tags'] ?? '')
+			{
+				$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
+				$cond[] = $tags;
+			}
+			$cond[0] .= match ($sort = $this->webapp->query['sort'] ?? '')
 			{
 				'view' => ' ORDER BY `view` DESC, hash ASC',
 				'like' => ' ORDER BY `like` DESC, hash ASC',
@@ -449,17 +453,21 @@ class webapp_router_home extends webapp_echo_masker
 			{
 				$this->tags = $this->webapp->fetch_tags->shortname();
 				$titles = $this->main->append('div', ['class' => 'titles']);
-				$titles->append('strong', '搜索结果');
+				//$titles->append('strong', '搜索结果');
+
+				$titles->select([
+					'' => '过滤：无',
+					'qk7U' => '单人作品',
+					'vbgd' => '多人作品',
+					'_2OO' => '精选推荐'
+				])->setattr(['onchange' => 'masker.assign({tags:this.value||null})'])->selected($tags);
 				$titles->select([
 					'' => '最新上传',
 					'view' => '最多观看',
 					'like' => '最多喜欢',
 					'favorite' => '最多收藏',
 					'issue' => '发行日期'
-				])->setattr([
-					'style' => 'outline:none;border-radius:var(--webapp-gapradius);border: 1px solid var(--webapp-edge)',
-					'onchange' => 'masker.assign({sort:this.value||null})'
-				])->selected($sort);
+				])->setattr(['onchange' => 'masker.assign({sort:this.value||null})'])->selected($sort);
 				$this->add_video_lists($this->main, $result, $page);
 				
 			}
