@@ -445,7 +445,7 @@ class webapp_router_home extends webapp_echo_masker
 			// 	return;
 			// }
 			$this->set_header_search(word:$word);
-			$this->set_aside_classify($this->webapp->at(['classify' => '']), $classify, '全部');
+			$this->set_aside_classify($this->webapp->at(['page' => NULL, 'classify' => '']), $classify, '全部');
 			$this->add_slideshows_ads($this->main, 1);
 			$this->set_float_button();
 			$result = $this->webapp->fetch_videos->with(...$cond);
