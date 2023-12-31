@@ -692,13 +692,14 @@ class base extends webapp
 	//获取配置
 	function fetch_configs(string $key = NULL):array|string
 	{
-		$configs = $this->redis->assoc('configs');
-		return $key === NULL ? $configs : $configs[$key] ?? NULL;
+		static $configs;
+		$configs ??= $this->redis->assoc('configs', 'key', 'value');
+		return $key === NULL ? $configs : $configs[$key] ?? '';
 	}
 	//清除配置
-	function clear_configs():bool
+	function clear_configs():void
 	{
-		return $this->redis->clear('configs');
+		$this->redis->clear('configs');
 	}
 	//获取指定广告（位置）
 	function fetch_ads():webapp_redis_table
@@ -777,21 +778,12 @@ class base extends webapp
 			}
 			function shortname():array
 			{
-				if ($this->root->cacheable())
-				{
-					if ($this->root->alloc($key, 'shortname'))
-					{
-						$this->redis->hMSet($key, $data = $this->root->column('shortname', $this->primary));
-						return $data;
-					}
-					return $this->redis->hGetAll($key);
-				}
 				return $this->root->column('shortname', $this->primary);
 			}
 			function like(string $word):array
 			{
 				$likes = [];
-				foreach ($this as $key => $value)
+				foreach ($this->root as $key => $value)
 				{
 					if (in_array($word, explode(',', $value['name']), TRUE))
 					{
@@ -831,11 +823,6 @@ class base extends webapp
 					'videos' => is_numeric($data['videos'])
 						? join($this->webapp->fetch_videos->with('FIND_IN_SET(?s,subjects)', $data['hash'])->keys(intval($data['videos'])))
 						: $data['videos']];
-			}
-			function classify(string $type):array
-			{
-				return in_array($type, $this->root->unique('type'), TRUE)
-					? $this->root->with('type=?s', $type)->cache()->values() : [];
 			}
 			function videos(string $subject, int $page):iterable
 			{

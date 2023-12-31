@@ -7,39 +7,43 @@ class webapp_redis extends Redis
 	{
 		$this->pconnect('127.0.0.1', $post = 6379);
 	}
-	function assoc(string $table, string $primary = 'key', string $field = 'value', ...$commands):array
+	function clear(string|webapp_redis_table $table = NULL):void
 	{
-		if ($this->type($key = "{$table}#assoc") === self::REDIS_HASH)
+		if ($table)
 		{
-			return $this->hGetAll($key);
+			if (is_string($table))
+			{
+				foreach ($this->sMembers($table) as $key)
+				{
+					$this->del($key, ...$this->sMembers($key));
+				}
+				$this->del($table);
+			}
+			else
+			{
+				$table->flush();
+			}
 		}
-		$this->hMSet($key, $data = $this->webapp->mysql->{$table}(...$commands)->column($field, $primary));
-		return $data;
+		else
+		{
+			$this->flushDb();
+		}
 	}
-	function clear(string $table):bool
+	function table(string $tablename, string $primary, ...$commands):webapp_redis_table
 	{
-		return $this->del("{$table}#assoc") === 1;
+		return webapp_redis_table::from($this, $tablename, $primary, ...$commands);
 	}
-
-
-	function table(string $name, string|callable $context = NULL, ...$params):webapp_redis_table
+	function assoc(string $tablename, string $primary, string $field, ...$commands)
 	{
-		return new webapp_redis_table($this, $name, $context, ...$params);
+		return $this->table($tablename, $primary, ...$commands)->column($field, $primary);
 	}
-
-
-	// function expire(string $key, int $value, bool $timestamp = FALSE)
-	// {
-	// 	$timestamp ? parent::expireAt() : parent::expire()
-	// }
-
 }
 abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Countable, Stringable
 {
 	public readonly webapp $webapp;
 	public readonly webapp_redis $redis;
 	public readonly webapp_redis_table $root;
-	public readonly string $cond, $sort, $key;
+	public readonly string $cond, $sort, $key, $value;
 	private bool $cache;
 	protected string $tablename = '', $primary = '';
 	abstract function format(array $data):array;
@@ -61,47 +65,52 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 		if ($context instanceof webapp_redis)
 		{
 			[$this->redis, $this->root, $this->cond, $this->sort] = [$context, $this, $cond ? "WHERE {$cond}" : '', $sort ?? ''];
-			$this->cache = $this->redis->sIsMember($this->tablename, $this->key = "{$this->tablename}." . $this->webapp->hash($command, TRUE));
+			$this->cache = $this->redis->sIsMember($this->tablename, $this->key = "{$this->tablename}." . $this->webapp->hash($this->value = $sort . $command, TRUE));
 		}
 		else
 		{
-			[$this->redis, $this->root, $this->cond, $this->sort] = [$context->redis, $context->root,
-				$cond ? ($context->cond ? "{$context->cond} AND {$cond}" : "WHERE {$cond}") : $context->cond, $sort ?? $context->sort];
-			if ($this->cache = $this->redis->sIsMember($this->tablename, $this->key = "{$this->tablename}." . $this->webapp->hash((string)$this, TRUE)))
+			[$this->redis, $this->root, $this->cond, $this->sort] = [$context->redis, $context->root, $cond
+				? ($context->cond ? "{$context->cond} AND {$cond}" : "WHERE {$cond}") : $context->cond, $sort ?? $context->sort];
+			if ($this->cache = $this->redis->sIsMember($this->tablename, $this->key = "{$this->tablename}." . $this->webapp->hash($this->value = $context->value . $sort . $cond, TRUE)))
 			{
-				($time = $this->root->time()) !== $this->time()
-					&& $this->flush()->alloc($key, 'time')
-					&& $this->redis->set($key, $time);
+				$this->root->time() === $this->time() || $this->flush();
 			}
 			else
 			{
 				$save && $this->cache();
 			}
 		}
-
-
-
-		// [$this->redis, $this->root, $this->cond, $this->sort] = $context instanceof webapp_redis
-		// 	? [$context, $this, $cond ? "WHERE {$cond}" : '', $sort ?? '']
-		// 	: [$context->redis, $context->root, $cond
-		// 		? ($context->cond ? "{$context->cond} AND {$cond}" : "WHERE {$cond}")
-		// 		: $context->cond, $sort ?? $context->sort];
-		// if ($this->cache = $this->redis->sIsMember($this->tablename,
-		// 	$this->key = "{$this->tablename}." . $this->webapp->hash($this->root === $this ? $command : (string)$this, TRUE))) {
-		// 	$this->root !== $this
-		// 		&& ($time = $this->root->time()) !== $this->time()
-		// 		&& $this->flush()->alloc($key, 'time')
-		// 		&& $this->redis->set($key, $time);
-		// }
-		// else
-		// {
-		// 	$save && $this->before && $this->cache();
-		// }
 	}
-
+	// function stacks(bool $detail = FALSE):array
+	// {
+	// 	$stacks = [];
+	// 	foreach ($this->redis->sMembers($this->tablename) as $key)
+	// 	{
+	// 		$stacks[$key] = [];
+	// 		foreach ($this->redis->sMembers($key) as $type)
+	// 		{
+	// 			$stacks[$key][$type] = match ($this->redis->type($type))
+	// 			{
+	// 				Redis::REDIS_STRING => $detail ? $this->redis->get($type) : 'String',
+	// 				Redis::REDIS_SET => $detail ? $this->redis->sMembers($type) : 'Set',
+	// 				Redis::REDIS_LIST => $detail ? $this->redis->lRange($type, 0, -1) : 'List',
+	// 				Redis::REDIS_ZSET => $detail ? $this->redis->zRange($type, 0, -1) : 'SortedSet',
+	// 				Redis::REDIS_HASH => $detail ? $this->redis->hGetAll($type, 0, -1) : 'Hash',
+	// 				#Redis::REDIS_NOT_FOUND,
+	// 				default => $detail ? NULL : 'Not Found'
+	// 			};
+	// 		}
+	// 	}
+	// 	return $stacks;
+	// }
 	function __debugInfo():array
 	{
-		return $this->redis->sMembers($this->key);
+		$debugs = [];
+		foreach ($this->redis->sMembers($this->tablename) as $key)
+		{
+			$debugs[$key] = $this->redis->sMembers($key);
+		}
+		return $debugs;
 	}
 	function __invoke(...$sort):webapp_mysql_table
 	{
@@ -158,6 +167,10 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 		if ($keyonly) foreach ($iter->select($this->primary) as $data) yield $data[$this->primary];
 		else foreach ($iter as $data) yield $data[$this->primary] => $this->format($data);
 	}
+	function eval(...$additional):webapp_mysql_table
+	{
+		return $this->webapp->mysql->{$this->tablename}(($this->cond ? "{$this->cond} AND " : 'WHERE ') . $this->webapp->mysql->format(...$additional));
+	}
 	function time():int
 	{
 		return intval($this->redis->get("{$this->key}.time"));
@@ -165,28 +178,19 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	function alloc(&$key, string $keyname, int $expire = NULL):bool
 	{
 		$key = "{$this->key}.{$keyname}";
-		return $this->cache && $this->redis->sAdd($this->key, $key) === 1;
+		return $this->cache && $this->redis->sAdd($this->key, $key);
 	}
 	function flush():static
 	{
 		if ($this->cache)
 		{
 			$this->redis->del($this->key, ...$this->redis->sMembers($this->key));
+			$this->redis->sRem($this->tablename, $this->key);
+			$this->root === $this ? $this->cache()->cacheable() : $this->cache();
 		}
-		if ($this->root === $this)
+		else
 		{
-			if ($this->cacheable())
-			{
-				$this->alloc($key, 'time') && $this->redis->set($key, $this->webapp->time());
-			}
-			else
-			{
-				foreach ($this->redis->sMembers($this->tablename) as $key)
-				{
-					$this->redis->del($key, ...$this->redis->sMembers($key));
-				}
-				$this->redis->del($this->tablename);
-			}
+			$this->root === $this && $this->redis->clear($this->tablename);
 		}
 		return $this;
 	}
@@ -194,8 +198,7 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	{
 		if ($this->redis->sAdd($this->tablename, $this->key))
 		{
-			$this->root !== $this
-				&& ($time = $this->root->time())
+			($time = $this->root->time())
 				&& $this->alloc($key, 'time')
 				&& $this->redis->set($key, $time);
 		}
@@ -264,7 +267,16 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	}
 	function column(string $field, string $index = NULL):array
 	{
-		return array_column(iterator_to_array($this, TRUE), $field, $index);
+		if ($this->cache)
+		{
+			if ($this->alloc($key, "column.{$field}{$index}"))
+			{
+				$this->redis->hMSet($key, $data = array_column(iterator_to_array($this, FALSE), $field, $index));
+				return $data;
+			}
+			return $this->redis->hGetAll($key);
+		}
+		return array_column(iterator_to_array($this, FALSE), $field, $index);
 	}
 	function keys(?int $offset = NULL, ?int $length = NULL):array
 	{
@@ -300,15 +312,12 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 			yield $data[$this->primary] => $this->format($data);
 		}
 	}
-	function group(string $field)
-	{
-
-
-	}
-	function search(string $field, callable $detect)
-	{
-
-	}
+	// function group(string $field)
+	// {
+	// }
+	// function each(callable $detect)
+	// {
+	// }
 	function show(int $length, int $expire = 600):iterable
 	{
 		if ($this->cache)
@@ -326,22 +335,11 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 			}
 			else
 			{
-				$offset = intval($this->redis->get($key));
+				$offset = max($this->redis->get($key), $length);
 			}
 			return $this->getIterator($offset - $length, $length);
 		}
 		return $this->getIterator($length);
-	}
-
-	function unique(string $field):array
-	{
-		if ($this->cache)
-		{
-			$this->alloc($key, "unique.{$field}")
-				&& $this->redis->sAdd($key, ...$this('GROUP BY ?a', $field)->column($field));
-			return $this->redis->sMembers($key);
-		}
-		return $this('GROUP BY ?a', $field)->column($field);
 	}
 	function iter(string ...$keys):iterable
 	{
@@ -357,37 +355,35 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	{
 		return new static($this, ...$commands);
 	}
-	function stacks(bool $detail = FALSE):array
+	function unique(string $field, string $content = NULL):array|bool
 	{
-		$stacks = [];
-		foreach ($this->redis->sMembers($this->tablename) as $key)
+		if ($this->cache)
 		{
-			$stacks[$key] = [];
-			foreach ($this->redis->sMembers($key) as $type)
-			{
-				$stacks[$key][$type] = match ($this->redis->type($type))
-				{
-					Redis::REDIS_STRING => $detail ? $this->redis->get($type) : 'String',
-					Redis::REDIS_SET => $detail ? $this->redis->sMembers($type) : 'Set',
-					Redis::REDIS_LIST => $detail ? $this->redis->lRange($type, 0, -1) : 'List',
-					Redis::REDIS_ZSET => $detail ? $this->redis->zRange($type, 0, -1) : 'SortedSet',
-					Redis::REDIS_HASH => $detail ? $this->redis->hGetAll($type, 0, -1) : 'Hash',
-					#Redis::REDIS_NOT_FOUND,
-					default => $detail ? NULL : 'Not Found'
-				};
-			}
+			$this->alloc($key, "unique.{$field}") && $this->redis->sAdd($key, ...$this('GROUP BY ?a', $field)->select($field)->column($field));
+			return $content === NULL ? $this->redis->sMembers($key) : $this->redis->sIsMember($key, $content);
 		}
-		return $stacks;
-	}
-	function primary(string $value)
-	{
-		$this->webapp->mysql->{$this->tablename}('WHERE ?a=?s LIMIT 1', $this->primary, $value);
+		return $content === NULL ? $this('GROUP BY ?a', $field)->select($field)->column($field) : $this->eval('?a=?s LIMIT 1', $field, $content)->fetch();
 	}
 	function increment(string $primary, string $field, int $number = 1):bool
 	{
-		return is_int($this->redis->hIncrBy("{$this->table}:{$primary}", $field, $number))
-			&& $this->primary($primary)->update('?a=?a+?i', $field, $field, $number) === 1;
-
+		return is_int($this->redis->hIncrBy("{$this->tablename}:{$primary}", $field, $number))
+			&& $this->eval('?a=?s LIMIT 1', $this->primary, $primary)->update('?a=?a+?i', $field, $field, $number) === 1;
+	}
+	static function from(webapp_redis|webapp_redis_table $context, string $table, string $primary, ...$commands)
+	{
+		return new class($context, $table, $primary, ...$commands) extends webapp_redis_table
+		{
+			function __construct(webapp_redis|webapp_redis_table $context,
+				protected string $tablename,
+				protected string $primary, ...$commands) {
+				parent::__construct($context, ...$commands);
+				$this->root === $this && $this->cache();
+			}
+			function format(array $data):array
+			{
+				return $data;
+			}
+		};
 	}
 }
 

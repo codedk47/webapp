@@ -382,9 +382,9 @@ class webapp_router_home extends webapp_echo_masker
 			$this->add_nav_ads($this->main, 9, '福利导航');
 		}
 		$this->tags = $this->webapp->fetch_tags->shortname();
-		if ($subjects = $this->webapp->fetch_subjects->classify($type))
+		if ($this->webapp->fetch_subjects->unique('type', $type))
 		{
-			foreach ($subjects as $subject)
+			foreach ($this->webapp->fetch_subjects->with('type=?s', $type)->cache() as $subject)
 			{
 				$this->add_video_lists($this->main, $this->webapp->fetch_videos->iter(...str_split($subject['videos'], 12)),
 					$subject['style'], $subject['name'], "?home/subject,hash:{$subject['hash']}");
@@ -395,7 +395,7 @@ class webapp_router_home extends webapp_echo_masker
 			foreach ($classify as $hash => $name)
 			{
 				$this->add_video_lists($this->main, $this->webapp->fetch_videos
-					->with('type="h" AND FIND_IN_SET(?s,tags)', $hash)->show(5), 3, "最新{$name}", "?home/home,type:{$hash}");
+					->with('type="h" AND FIND_IN_SET(?s,tags)', $hash)->cache()->show(5), 3, "最新{$name}", "?home/home,type:{$hash}");
 			}
 		}
 	}
