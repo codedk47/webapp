@@ -350,6 +350,10 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		$this->json($data);
 	}
+	function get_log()
+	{
+
+	}
 	function get_home(string $type = '')
 	{
 		$this->aside['class'] = 'classify';
@@ -635,20 +639,6 @@ class webapp_router_home extends webapp_echo_masker
 			isset($extdata['series'])
 				&& $extdata['series']
 				&& $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['actress'], 'data-label' => '女优']);
-
-
-			//print_r($extdata);
-			// $extinfo->append('mark', [$extdata['issue'], 'data-label' => '发行日期']);
-			
-			// $extinfo->append('mark', [$extdata['director'], 'data-label' => '导演']);
-			// $extinfo->append('mark', [$extdata['publisher'], 'data-label' => '发行商']);
-			// $extinfo->append('mark', [$extdata['series'], 'data-label' => '系列']);
-
-
-			
-			
-			// print_r($extdata);
-
 		}
 
 		//关联影片
@@ -668,7 +658,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$videos = [];
 			$tags = $this->webapp->fetch_tags->shortname();
-			foreach ($this->webapp->fetch_videos->with('type="v"')->random(20) as $video)
+			foreach ($this->webapp->fetch_videos->with('type="v"')->random(4) as $video)
 			//foreach ($this->webapp->fetch_videos->with('type="v"')->paging($page, 6) as $video)
 			{
 				$tagdata = [];
@@ -719,6 +709,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->footer->setattr('style', 'height:1rem');
 		//$this->set_footer_menu();
 	}
+
 	function post_view(string $hash)
 	{
 		$this->json(['result' => $this->user->watch($hash)]);

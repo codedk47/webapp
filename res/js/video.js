@@ -315,7 +315,6 @@ customElements.define('webapp-videos', class extends HTMLElement
 		});
 		this.#slide.addEventListener('touchend', this.#slider = offset =>
 		{
-			//console.log('touchend');
 			if (transitioning) return;
 			let [top, direction, clicked] = typeof offset === 'boolean'
 				? [this.#slide.style.top, offset ? -101 : 101, false]
@@ -329,9 +328,9 @@ customElements.define('webapp-videos', class extends HTMLElement
 				}
 				return;
 			}
+			beforeindex = currentindex;
 			if (Math.abs(direction) > 100)
 			{
-				beforeindex = currentindex;
 				if (direction < 0)
 				{
 					if (--currentindex < 0)
@@ -340,7 +339,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 					}
 					else
 					{
-						currentindex < 3 && this.fetch(true);
+						//currentindex < 3 && this.fetch(true);
 						this.#index = currentindex;
 						this.#before = this.#contents[beforeindex];
 						this.#current = this.#contents[currentindex];
@@ -351,7 +350,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 				}
 				else
 				{
-					//this.#contents.length - currentindex < 4 && this.fetch();
+					this.#contents.length - currentindex < 4 && this.fetch();
 					if (++currentindex < this.#contents.length)
 					{
 						this.#index = currentindex;
@@ -366,6 +365,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 						currentindex = beforeindex;
 					}
 				}
+				
 			}
 			if (this.#slide.style.top !== top)
 			{
@@ -418,41 +418,10 @@ customElements.define('webapp-videos', class extends HTMLElement
 			content.canplay = video.m3u8(content.m3u8, content.preview);
 		}
 	}
-	fetch(prev, index)
+	fetch()
 	{
-		// if ('fetch' in this.dataset && this.#fetch)
-		// {
-		// 	if (this.#page)
-		// 	{
-				
-		// 		fetch(`${this.dataset.fetch}${'page' in this.dataset ? this.dataset.page++ : ''}`)
-				
-		// 	}
-		// 	else
-		// 	{
-		// 		fetch(this.dataset.fetch)
-		// 	}
-
-
-
-		// 	// if (prev && this.#page < 1) return;
-		// 	// this.#page
-
-
-
-		// 	// console.log(`${this.dataset.fetch}${this.#page}`)
-
-
-
-		// 	// console.log(this.dataset.fetch, this.#page)
-		// }
-
-		// return;
 		if ('fetch' in this.dataset && this.#fetch)
 		{
-			//let page = 
-
-
 			this.#fetch = false;
 			//console.log('fetching...');
 			fetch(`${this.dataset.fetch}${'page' in this.dataset ? this.dataset.page++ : ''}`).then(response => response.json()).then(data =>

@@ -186,7 +186,7 @@ masker.canplay = video =>
 };
 masker.shortchanged = videos =>
 {
-	console.log( videos.active.watchlog(`?home/view,hash:${videos.current.hash}`) );
+	//console.log( videos.active.watchlog(`?home/view,hash:${videos.current.hash}`) );
 	if (videos.active.querySelector('div.videoinfo') === null)
 	{
 		videos.active.appendChild(videos.querySelector('template').content.cloneNode(true));
@@ -203,7 +203,7 @@ masker.shortchanged = videos =>
 				}
 			};
 		});
-		videos.active.video.removeAttribute('height');
+		//videos.active.video.removeAttribute('height');
 	}
 	const videoinfo = videos.active.querySelector('div.videoinfo');
 	videoinfo.innerHTML = videos.current.name;
