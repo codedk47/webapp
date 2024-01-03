@@ -585,11 +585,11 @@ div.short>header>a::before{
 }
 div.short>header,
 div.short>footer{
-	position: fixed;
+	/* position: fixed;
 	top: 0;
 	left: 0;
 	right: 0;
-	z-index: 1;
+	z-index: 1; */
 	background-color: transparent;
 }
 div.short>main{
