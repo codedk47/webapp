@@ -19,7 +19,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/home.css?' . $webapp->random_hash(TRUE);
-		$this->script(['src' => '/webapp/app/star/home.js?v=w']);
+		$this->script(['src' => '/webapp/app/star/home.js?v=e']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js']);
 		
 		//$this->footer->text('asd');
