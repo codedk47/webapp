@@ -211,8 +211,8 @@ masker.shortchanged = videos =>
 		//videos.active.video.removeAttribute('height');
 	}
 
-	alert(videos.active.firstElementChild.blur())
-	console.log( videos.active.firstElementChild.blur() );
+	
+	console.log( videos.active.focus() );
 	
 	const videoinfo = videos.active.querySelector('div.videoinfo');
 	videoinfo.innerHTML = videos.current.name;
