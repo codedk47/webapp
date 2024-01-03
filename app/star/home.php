@@ -659,7 +659,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$videos = [];
 			$tags = $this->webapp->fetch_tags->shortname();
-			foreach ($this->webapp->fetch_videos->with('type="v"')->random(4) as $video)
+			foreach ($this->webapp->fetch_videos->with('type="v"')->random(10) as $video)
 			//foreach ($this->webapp->fetch_videos->with('type="v"')->paging($page, 6) as $video)
 			{
 				$tagdata = [];
