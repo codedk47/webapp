@@ -691,7 +691,7 @@ class webapp_router_home extends webapp_echo_masker
 			'data-page' => 1,
 			//'autoplay' => NULL,
 			'controls' => NULL,
-			'muted' => NULL
+			//'muted' => NULL
 		])->append('template');
 
 		$videoinfo = $template->append('div', ['class' => 'videoinfo']);
