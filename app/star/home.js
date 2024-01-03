@@ -208,7 +208,11 @@ masker.shortchanged = videos =>
 	{
 		videos.active.appendChild(videos.querySelector('template').content.cloneNode(true));
 		//videos.active.querySelectorAll('div.videolink>a').forEach(element => element.onclick = () => masker.log(element));
-		videos.active.video.removeAttribute('height');
+		//videos.active.video.removeAttribute('height');
+		videos.active.firstElementChild.removeAttribute('controls');
+		videos.active.oncanplay = () =>{
+			videos.active.firstElementChild.controls = true;
+		}
 	}
 
 
