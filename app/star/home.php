@@ -680,7 +680,7 @@ class webapp_router_home extends webapp_echo_masker
 			return;
 		}
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
-		$this->script(['src' => '/webapp/res/js/video.js']);
+		$this->script(['src' => '/webapp/res/js/video.js?v=1']);
 		$this->meta(['name' => 'theme-color', 'content' => 'black']);
 		$this->xml->body->div['class'] = 'short';
 		$this->header->append('a', ['href' => 'javascript:history.back();', 'class' => 'arrow']);
