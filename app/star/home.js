@@ -211,9 +211,10 @@ masker.shortchanged = videos =>
 		//videos.active.video.removeAttribute('height');
 	}
 
-	
-	console.log( videos.active.focus() );
-	
+
+	videos.active.dispatchEvent(new Event('click'));
+	videos.active.dispatchEvent(new Event('touchend'));
+
 	const videoinfo = videos.active.querySelector('div.videoinfo');
 	videoinfo.innerHTML = videos.current.name;
 	for (const [taghash, tagname] of Object.entries(videos.current.tags))
