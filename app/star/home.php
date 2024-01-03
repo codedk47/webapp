@@ -350,9 +350,17 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		$this->json($data);
 	}
-	function get_log()
+	function post_log(string $type)
 	{
-
+		$content = $this->webapp->request_content('text/plain');
+		//file_put_contents('d:/log.txt', "{$type} = {$content}");
+		$this->json(['result' => match ($type)
+		{
+			'watch' => $this->user->watch($content),
+			'liked' => $this->user->like($content),
+			'favorited' => $this->user->favorite($content),
+			default => FALSE
+		}]);
 	}
 	function get_home(string $type = '')
 	{
@@ -515,33 +523,22 @@ class webapp_router_home extends webapp_echo_masker
 			return 404;
 		}
 		$this->aside['data-type'] .= $video['type'];
-
+		if ($this->user->count())
+		{
+			if ($this->user->watched($hash) === FALSE)
+			{
+				$this->user->watch($hash) && $this->user->count(-1);
+			}
+		}
+		else
+		{
+			$strong = $this->aside->append('strong')->append('span');
+			$strong->text('每日观影剩余次数已耗尽，请点击');
+			$strong->append('q', ['style' => 'margin:0 var(--webapp-gap)'])->append('a', ['分享链接', 'href' => '?home/my-shareurl']);
+			$strong->text('获得更多次数！');
+			return 401;
+		}
 		
-
-	
-
-		// if (1)
-		// {
-		// 	$strong = $this->aside->append('strong')->append('span');
-		// 	$strong->text('每日观影剩余次数已耗尽，请点击');
-		// 	$strong->append('q', ['style' => 'margin:0 var(--webapp-gap)'])->append('a', ['分享链接', 'href' => '?home/my-shareurl']);
-		// 	$strong->text('获得更多次数！');
-		// 	return 401;
-		// }
-		
-
-
-
-
-		$this->user->watch($hash);
-
-		// return;
-		// if (in_array(str_split($this->user['favorites'], 12)))
-		// {
-		// 	$this->user->count(-1);
-		// }
-
-
 		//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
 		
 		$watch = $this->aside->append('webapp-video', [
@@ -580,26 +577,30 @@ class webapp_router_home extends webapp_echo_masker
 		//影片信息（功能菜单）
 		$videomenu = $videoinfo->append('div', ['style' => 'justify-content:center;gap:calc(var(--webapp-gap)*4);margin:var(--webapp-gapitem) 0']);
 
-		$anchor = $videomenu->append('a', ['href' => '?home/my-favorites', 'onclick' => 'return masker.favorite(this)', 'data-hash' => $hash]);
-		$anchor->svg(['fill' => 'white'])->icon('star');
-		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('star-fill');
-		$anchor->append('span', '收藏');
-		if ($this->user->favorited($hash))
+		$anchor = $videomenu->append('a', ['href' => '?home/log,type:liked', 'onclick' => 'return masker.log(this)', 'data-body' => $hash, 'data-toggle' => '已喜欢']);
+		$anchor->svg(['fill' => 'white'])->icon('heart');
+		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('heart-fill');
+		$anchor->append('span', $anchor['data-value'] = '喜欢');
+		if ($this->user->liked($hash))
 		{
-			$anchor->svg[0]['style'] = 'display:none';
-			$anchor->svg[1]['style'] = 'display:block';
-			$anchor->span[0] = '已收藏';
+			[$anchor['data-value'], $anchor['data-toggle'], $anchor->svg[0]['style'], $anchor->svg[1]['style']] = [
+				$anchor->span[0] = (string)$anchor['data-toggle'],
+				(string)$anchor['data-value'],
+				(string)$anchor->svg[1]['style'],
+				(string)$anchor->svg[0]['style']];
 		}
 
-		$anchor = $videomenu->append('a', ['href' => 'javascript:alert(1);']);
-		$anchor->svg(['fill' => 'white'])->icon('heart');
-		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('heart');
-		$anchor->append('span', '喜欢');
+		$anchor = $videomenu->append('a', ['href' => '?home/log,type:favorited', 'onclick' => 'return masker.log(this)', 'data-body' => $hash, 'data-toggle' => '已收藏']);
+		$anchor->svg(['fill' => 'white'])->icon('star');
+		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('star-fill');
+		$anchor->append('span', $anchor['data-value'] = '收藏');
 		if ($this->user->favorited($hash))
 		{
-			$anchor->svg[0]['style'] = 'display:none';
-			$anchor->svg[1]['style'] = 'display:block';
-			$anchor->span[0] = '已喜欢';
+			[$anchor['data-value'], $anchor['data-toggle'], $anchor->svg[0]['style'], $anchor->svg[1]['style']] = [
+				$anchor->span[0] = (string)$anchor['data-toggle'],
+				(string)$anchor['data-value'],
+				(string)$anchor->svg[1]['style'],
+				(string)$anchor->svg[0]['style']];
 		}
 
 		//影片信息（标签）
@@ -670,8 +671,9 @@ class webapp_router_home extends webapp_echo_masker
 					}
 				}
 				$video['tags'] = $tagdata;
+				$video['watched'] = $this->user->watched($video['hash']);
+				$video['liked'] = $this->user->liked($video['hash']);
 				$video['favorited'] = $this->user->favorited($video['hash']);
-				$video['liked'] = random_int(0, 1);
 				$videos[] = $video;
 			}
 			$this->json($videos);
@@ -689,7 +691,7 @@ class webapp_router_home extends webapp_echo_masker
 			'data-page' => 1,
 			//'autoplay' => NULL,
 			'controls' => NULL,
-			// 'muted' => NULL
+			'muted' => NULL
 		])->append('template');
 
 		$videoinfo = $template->append('div', ['class' => 'videoinfo']);
@@ -698,26 +700,19 @@ class webapp_router_home extends webapp_echo_masker
 
 		$videolink = $template->append('div', ['class' => 'videolink']);
 		$videolink->append('img');
-		$anchor = $videolink->append('a', ['href' => '?home/my-favorites', 'data-field' => 'favorited', 'data-label' => '收藏']);
-		$anchor->svg(['fill' => 'white'])->icon('star', 32);
-		$anchor->svg(['fill' => 'white'])->icon('star-fill', 32);
 
-		$anchor = $videolink->append('a', ['data-field' => 'liked', 'data-label' => '喜欢']);
+		$anchor = $videolink->append('a', ['href' => '?home/log,type:liked', 'data-log' => 'liked', 'data-label' => '喜欢']);
 		$anchor->svg(['fill' => 'white'])->icon('heart', 32);
-		$anchor->svg(['fill' => 'white'])->icon('heart-fill', 32);
+		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('heart-fill', 32);
+
+		$anchor = $videolink->append('a', ['href' => '?home/log,type:favorited', 'data-log' => 'favorited', 'data-label' => '收藏']);
+		$anchor->svg(['fill' => 'white'])->icon('star', 32);
+		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('star-fill', 32);
 
 		$this->footer->setattr('style', 'height:1rem');
 		//$this->set_footer_menu();
 	}
 
-	function post_view(string $hash)
-	{
-		$this->json(['result' => $this->user->watch($hash)]);
-	}
-	function get_like(string $hash)
-	{
-		$this->json(['result' => $this->user->watch($hash)]);
-	}
 	function get_my()
 	{
 		$this->xml->body->div['class'] = 'my';
@@ -729,7 +724,7 @@ class webapp_router_home extends webapp_echo_masker
 			'onclick' => 'navigator.clipboard.writeText(this.textContent).then(()=>alert("复制成功！"))']);
 		$info->append('a', [$this->user['nickname'], 'href' => 'javascript:;', 'data-label' => '花名：',
 			'onclick' => 'return masker.nickname(this)']);
-		$info->append('a', ['点击下载保存凭证', 'href' => "{$qrurl},type:png,filename:{$this->user->id}.png", 'target' => '_blank', 'data-label' => '凭证：']);
+		$info->append('a', ['点击保存二维码', 'href' => "{$qrurl},type:png,filename:{$this->user->id}.png", 'target' => '_blank', 'data-label' => '凭证：']);
 
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
 		$anchors->append('a', ['每日观影剩余次数', 'href' => 'javascript:;', 'data-right' => sprintf('%d 次', count($this->user))]);
@@ -858,13 +853,8 @@ class webapp_router_home extends webapp_echo_masker
 			'#最多保留50个记录',
 			'javascript:masker.clear("historys");', '清除所有观影记录');
 	}
-	function get_my_favorites(string $hash = NULL)
+	function get_my_favorites()
 	{
-		if ($hash)
-		{
-			$this->json(['result' => $this->user->favorite($hash)]);
-			return;
-		}
 		$this->set_header_title('收藏记录');
 		$this->set_footer_menu();
 		$this->add_video_lists($this->main,

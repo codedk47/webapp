@@ -69,9 +69,9 @@ masker.dialog = (context, title, url) => new Promise(resolve =>
 	}
 	document.body.appendChild(dialog).showModal();
 });
-masker.json = (element, callback) => masker(...element instanceof HTMLFormElement
-	? [element.action, {method: element.method.toUpperCase(), body: new FormData(element)}]
-	: [element instanceof HTMLAnchorElement ? element.href : element]).then(response => response.json()).then(callback || (async data => {
+masker.json = (context, callback) => masker(...Array.isArray(context) ? context : (context instanceof HTMLFormElement
+	? [context.action, {method: context.method.toUpperCase(), body: new FormData(context)}]
+	: [context instanceof HTMLAnchorElement ? context.href : context])).then(response => response.json()).then(callback || (async data => {
 	if (Array.isArray(data.errors) && data.errors.length)
 	{
 		await masker.dialog(data.errors.join('\n'), '错误信息');
@@ -179,30 +179,35 @@ masker.delete_account = anchor =>
 	masker.authorization(null).then(() => location.href = anchor.href);
 	return false;
 };
-
+masker.log = (anchor, callback) =>
+{
+	anchor.onclick = () => false;
+	masker.json([anchor.href, {method: 'POST', body: anchor.dataset.body}], data =>
+	{
+		if (data.result)
+		{
+			const childs = anchor.childNodes;
+			[childs[0].style.display, childs[1].style.display] = [childs[1].style.display, childs[0].style.display];
+			if (anchor.dataset.toggle)
+			{
+				[anchor.dataset.value, anchor.dataset.toggle] = [childs[2].textContent = anchor.dataset.toggle, anchor.dataset.value];
+			}
+			callback && callback();
+		}
+	}).finally(() => anchor.onclick = () => masker.log(anchor, callback));
+	return false;
+};
 masker.canplay = video =>
 {
 	console.log(video);
 };
 masker.shortchanged = videos =>
 {
-	//console.log( videos.active.watchlog(`?home/view,hash:${videos.current.hash}`) );
+	videos.current.watched || masker.json(['?home/log,type:watch', {method: 'POST', body: videos.current.hash}]);
 	if (videos.active.querySelector('div.videoinfo') === null)
 	{
 		videos.active.appendChild(videos.querySelector('template').content.cloneNode(true));
-		videos.active.querySelectorAll('div.videolink>a').forEach(element =>
-		{
-			element.onclick = event =>
-			{
-				event.stopPropagation();
-				event.preventDefault();
-				switch (element.dataset.field)
-				{
-					case 'favorited': return masker.favorite(element);
-					case 'liked': return;
-				}
-			};
-		});
+		//videos.active.querySelectorAll('div.videolink>a').forEach(element => element.onclick = () => masker.log(element));
 		//videos.active.video.removeAttribute('height');
 	}
 	const videoinfo = videos.active.querySelector('div.videoinfo');
@@ -210,14 +215,15 @@ masker.shortchanged = videos =>
 	for (const [taghash, tagname] of Object.entries(videos.current.tags))
 	{
 		const anchor = videoinfo.appendChild(document.createElement('a'));
-		anchor.href = `?home/asd,tag:${taghash}`;
+		//anchor.href = `?home/asd,tag:${taghash}`;
 		anchor.textContent = `#${tagname}`;
 	}
 	videos.active.querySelector('div.videolink>img').src = videos.current.poster;
 	videos.active.querySelectorAll('div.videolink>a').forEach(element =>
 	{
-		element.dataset.hash = videos.current.hash;
-		if (videos.current[element.dataset.field])
+		element.dataset.body = videos.current.hash;
+		element.onclick = () => masker.log(element, () => videos.current[element.dataset.log] = !videos.current[element.dataset.log]);
+		if (videos.current[element.dataset.log])
 		{
 			element.childNodes[0].style.display = 'none';
 			element.childNodes[1].style.display = 'block';
@@ -228,17 +234,6 @@ masker.shortchanged = videos =>
 			element.childNodes[1].style.display = 'none';
 		}
 	});
-	return;
-
-	videos.active.querySelector('div.videoinfo>strong').textContent = videos.current.name;
-	const mark = videos.active.querySelector('div.videoinfo>mark');
-	mark.innerHTML = '';
-	for (const [taghash, tagname] of Object.entries(videos.current.tags))
-	{
-		const anchor = mark.appendChild(document.createElement('a'));
-		anchor.href = `?home/asd,tag:${taghash}`;
-		anchor.textContent = `#${tagname}`;
-	}
 };
 masker.confirm = (content, context) => new Promise((resolve, reject) => confirm(content) ? resolve(context) : reject(context));
 masker.prompt = (title, value) => new Promise((resolve, reject) => (value = prompt(title, value)) === null ? reject() : resolve(value));
@@ -248,36 +243,37 @@ masker.change = (element, field, value) => masker.prompt(title, value).then(valu
 	masker.json()
 
 })
-masker.favorite = anchor =>
-{
-	anchor.onclick = () => false;
-	masker.json(`${anchor.href},hash:${anchor.dataset.hash}`, data =>
-	{
-		if (data.result)
-		{
-			const childs = anchor.childNodes;
-			if (data.result > 0)
-			{
-				childs[0].style = 'display:none';
-				childs[1].style = 'display:block';
-				if (childs[2])
-				{
-					childs[2].textContent = '已收藏';
-				}
-			}
-			else
-			{
-				childs[0].style = 'display:block';
-				childs[1].style = 'display:none';
-				if (childs[2])
-				{
-					childs[2].textContent = '收藏';
-				}
-			}
-		}
-	}).finally(() => anchor.onclick = () => masker.favorite(anchor));
-	return false;
-}
+
+// masker.favorite = anchor =>
+// {
+// 	anchor.onclick = () => false;
+// 	masker.json(`${anchor.href},hash:${anchor.dataset.hash}`, data =>
+// 	{
+// 		if (data.result)
+// 		{
+// 			const childs = anchor.childNodes;
+// 			if (data.result > 0)
+// 			{
+// 				childs[0].style = 'display:none';
+// 				childs[1].style = 'display:block';
+// 				if (childs[2])
+// 				{
+// 					childs[2].textContent = '已收藏';
+// 				}
+// 			}
+// 			else
+// 			{
+// 				childs[0].style = 'display:block';
+// 				childs[1].style = 'display:none';
+// 				if (childs[2])
+// 				{
+// 					childs[2].textContent = '收藏';
+// 				}
+// 			}
+// 		}
+// 	}).finally(() => anchor.onclick = () => masker.favorite(anchor));
+// 	return false;
+// }
 
 
 

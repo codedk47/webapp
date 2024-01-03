@@ -214,11 +214,11 @@ customElements.define('webapp-video', class extends HTMLElement
 			}
 		});
 	}
-	watchlog(url)
-	{
-		//记录观看日志
-		return navigator.sendBeacon(url);
-	}
+	// log(callback)
+	// {
+	// 	//日志触发回调（类型）
+	// 	return typeof callback === 'string' ? navigator.sendBeacon(callback) : callback('watch');
+	// }
 	splashscreen(element)
 	{
 		if (this.querySelector('mark')) return;
@@ -322,7 +322,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 			if (clicked)
 			{
 				//console.log(offset);
-				if (this.#active && this.#active.video === offset.target)
+				if (this.#active && this.#active.video === offset.target && globalThis.MediaSource && globalThis.Hls)
 				{
 					this.#active.pp();
 				}
@@ -446,7 +446,6 @@ customElements.define('webapp-videos', class extends HTMLElement
 					});
 					this.#fetch = true;
 				}
-
 			});
 		}
 	}
@@ -465,7 +464,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 			video.setAttributeNode(document.createAttribute('controls'));
 
 			// this.hasAttribute('loop') && video.setAttributeNode(document.createAttribute('loop'));
-			// this.hasAttribute('muted') && video.setAttributeNode(document.createAttribute('muted'));
+			this.hasAttribute('muted') && video.setAttributeNode(document.createAttribute('muted'));
 			// this.hasAttribute('autoplay') && video.setAttributeNode(document.createAttribute('autoplay'));
 			// this.hasAttribute('controls') && video.setAttributeNode(document.createAttribute('controls'));
 

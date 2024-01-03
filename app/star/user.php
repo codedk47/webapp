@@ -222,6 +222,10 @@ class user extends ArrayObject implements Countable
 		}
 		return FALSE;
 	}
+	function watched(string $hash):bool
+	{
+		return $this['historys'] && in_array($hash, str_split($this['historys'], 12), TRUE);
+	}
 	//清除
 	function clear(string $action):bool
 	{
@@ -237,6 +241,15 @@ class user extends ArrayObject implements Countable
 	{
 		$keys = $this['historys'] ? str_split($this['historys'], 12) : [];
 		return $detail ? iterator_to_array($this->webapp->fetch_videos->iter(...$keys)) : $keys;
+	}
+
+	function like(string $hash):bool
+	{
+		return FALSE;
+	}
+	function liked(string $hash):bool
+	{
+		return FALSE;
 	}
 
 	//收藏视频列表最多50个（是否详细）
