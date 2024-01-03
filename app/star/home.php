@@ -670,11 +670,15 @@ class webapp_router_home extends webapp_echo_masker
 						$tagdata[$taghash] = $tags[$taghash];
 					}
 				}
-				$video['tags'] = $tagdata;
-				$video['watched'] = $this->user->watched($video['hash']);
-				$video['liked'] = $this->user->liked($video['hash']);
-				$video['favorited'] = $this->user->favorited($video['hash']);
-				$videos[] = $video;
+				$videos[] = [
+					'name' => $video['name'],
+					'm3u8' => $video['m3u8'],
+					'poster' => $video['poster'],
+					'watched' => $this->user->watched($video['hash']),
+					'liked' => $this->user->liked($video['hash']),
+					'favorited' => $this->user->favorited($video['hash']),
+					'tags' => $tagdata
+				];
 			}
 			$this->json($videos);
 			return;
