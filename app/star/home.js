@@ -210,8 +210,9 @@ masker.shortchanged = videos =>
 		//videos.active.querySelectorAll('div.videolink>a').forEach(element => element.onclick = () => masker.log(element));
 		//videos.active.video.removeAttribute('height');
 	}
-	
-	videos.active.firstElementChild.blur();
+
+	alert(videos.active.firstElementChild.blur())
+	console.log( videos.active.firstElementChild.blur() );
 	
 	const videoinfo = videos.active.querySelector('div.videoinfo');
 	videoinfo.innerHTML = videos.current.name;
