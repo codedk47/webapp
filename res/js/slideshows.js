@@ -140,13 +140,11 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 	connectedCallback()
 	{
 		this.appendChild(this.#slide);
-		requestAnimationFrame(() =>
+		if (this.dataset.contents)
 		{
-			alert(this.lastChild.textContent);
-			const contents = JSON.parse(this.lastChild.nodeValue);
-			//this.removeChild(this.lastChild);
-			Array.isArray(contents) && contents.forEach(content => this.addition(content));
+			JSON.parse(this.dataset.contents).forEach(content => this.addition(content));
 			setInterval(this.#slider, this.dataset.duration * 1000 || 4000, this.hasAttribute('reverse'));
-		});
+			this.removeAttribute('data-contents');
+		}
 	}
 });

@@ -20,7 +20,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/home.css?' . $webapp->random_hash(TRUE);
 		$this->script(['src' => '/webapp/app/star/home.js?v=r']);
-		$this->script(['src' => '/webapp/res/js/slideshows.js?v=2']);
+		$this->script(['src' => '/webapp/res/js/slideshows.js?v=q']);
 		
 		//$this->footer->text('asd');
 
@@ -168,9 +168,9 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
-			$element = $node->append('webapp-slideshows', ['data-duration' => $duration]);
-			$element->cdata(json_encode($ads, JSON_UNESCAPED_UNICODE));
-			return $element;
+			return $node->append('webapp-slideshows', [
+				'data-contents' => json_encode($ads, JSON_UNESCAPED_UNICODE),
+				'data-duration' => $duration]);
 		}
 		return NULL;
 	}
