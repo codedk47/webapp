@@ -606,7 +606,6 @@ div.short>main>webapp-videos>div>webapp-video>video{
 	height: 0;
 	flex-grow: 1;
 	object-fit: contain;
-	object-position: center top;
 }
 div.short>main>webapp-videos>div>webapp-video>div.videoinfo{
 	position: absolute;
@@ -826,3 +825,26 @@ webapp-slideshows{
 iframe{
 	z-index: 10;
 }
+
+
+  
+  /* Could Use thise as well for Individual Controls */
+  video::-webkit-media-controls-play-button {
+	display: none;
+  }
+/*   
+  video::-webkit-media-controls-volume-slider {
+	display: none;
+  }
+  
+  video::-webkit-media-controls-mute-button {
+	display: none;
+  }
+  
+  video::-webkit-media-controls-timeline {
+	display: none;
+  }
+  
+  video::-webkit-media-controls-current-time-display {
+	display: none;
+  } */
