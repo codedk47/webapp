@@ -296,11 +296,20 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	}
 	function random(int $length):iterable
 	{
-		if ($this->cacheable($set))
+		if ($this->cacheable($set, $list))
 		{
-			foreach ($this->redis->sRandMember($set, $length) as $key)
+			// foreach ($this->redis->sRandMember($set, $length) as $key)
+			// {
+			// 	if (is_array($value = $this[$key]))
+			// 	{
+			// 		yield $key => $value;
+			// 	}
+			// }
+			// Better random number provider
+			$count = $this->count();
+			foreach (unpack('N*', $this->webapp->random($length * 4)) as $i)
 			{
-				if (is_array($value = $this[$key]))
+				if (is_array($value = $this[$key = $this->redis->lindex($list, $i % $count)]))
 				{
 					yield $key => $value;
 				}
