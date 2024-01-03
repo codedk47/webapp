@@ -199,7 +199,7 @@ masker.log = (anchor, callback) =>
 };
 masker.canplay = video =>
 {
-	console.log(video);
+	video.firstElementChild.style.objectFit = video.height > video.width ? 'contain' : 'cover';
 };
 masker.shortchanged = videos =>
 {

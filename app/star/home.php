@@ -544,7 +544,7 @@ class webapp_router_home extends webapp_echo_masker
 		$watch = $this->aside->append('webapp-video', [
 			'data-poster' => $video['poster'],
 			'data-m3u8' => $video['m3u8'],
-			//'oncanplay' => 'masker.canplay(this)',
+			'oncanplay' => 'masker.canplay(this)',
 			//'autoheight' => NULL,
 			//'autoplay' => NULL,
 			//'muted' => NULL,
