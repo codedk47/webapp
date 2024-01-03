@@ -142,6 +142,7 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 		this.appendChild(this.#slide);
 		requestAnimationFrame(() =>
 		{
+			alert(this.lastChild.nodeValue);
 			const contents = JSON.parse(this.lastChild.nodeValue);
 			//this.removeChild(this.lastChild);
 			Array.isArray(contents) && contents.forEach(content => this.addition(content));
