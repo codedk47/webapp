@@ -327,7 +327,7 @@ class webapp_router_control extends webapp_echo_masker
 
 		$form->fieldset('广告图片 / 过期时间');
 		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
-		$form->field('expire', 'date', ['value' => date('Y-m-t')], fn($i,$v) => $i ? strtotime($v) : date('Y-m-d', $v) );
+		$form->field('expire', 'date', ['value' => date('Y-m-t')], fn($v, $i) => $i ? strtotime($v) : date('Y-m-d', $v));
 
 		$form->fieldset('展示位置 / 权重（越大越几率越大） / 名称');
 		$form->field('seat', 'select', ['options' => $this->ad_seats(), 'required' => NULL]);
@@ -362,10 +362,10 @@ class webapp_router_control extends webapp_echo_masker
 			$conds[] = $display;
 		}
 		$conds[0] = sprintf('%sORDER BY seat ASC,weight DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats)
+		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats, $seat)
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell()->append('a', ['删除下面广告', 'href' => '#']);
+			$table->cell()->append('a', ['删除下面广告', 'href' => "?control/ad,seat:{$seat},hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
 			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?control/ad-update,hash:{$value['hash']}"]);
 
 			$table->row();
@@ -384,7 +384,7 @@ class webapp_router_control extends webapp_echo_masker
 
 			$table->row();
 			$table->cell('位置');
-			$table->cell($seats[$value['seat']]);
+			$table->cell($seats[$value['seat']] ?? NULL);
 			$table->cell('展示权重');
 			$table->cell($value['weight']);
 			$table->cell('过期时间');
@@ -405,7 +405,7 @@ class webapp_router_control extends webapp_echo_masker
 
 
 
-		}, $seats = $this->ad_seats());
+		}, $seats = $this->ad_seats(), $seat);
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->fieldset('封面', '字段', '信息');
 		$table->header('广告 %d 项', $table->count());
@@ -433,12 +433,19 @@ class webapp_router_control extends webapp_echo_masker
 				'ctime' => $this->webapp->time,
 				'change' => 'sync'] + $ad)
 			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
+			$this->webapp->fetch_ads->flush();
 			$this->webapp->response_location('?control/ads');
 		}
 		else
 		{
 			$this->main->append('h4', '广告插入失败！');
 		}
+	}
+	function delete_ad(string $hash, string $seat = NULL)
+	{
+		$this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->delete() === 1 && $this->webapp->fetch_ads->flush()
+			? $this->goto("/ads,seat:{$seat}")
+			: $this->dialog('广告删除失败！');
 	}
 	function get_ad_update(string $hash)
 	{
@@ -464,6 +471,7 @@ class webapp_router_control extends webapp_echo_masker
 			}
 			if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
 			{
+				$this->webapp->fetch_ads->flush();
 				$this->webapp->response_location('?control/ads');
 			}
 			return 200;
@@ -556,6 +564,7 @@ class webapp_router_control extends webapp_echo_masker
 				'hash' => substr($this->webapp->random_hash(TRUE), -4),
 				'time' => $this->webapp->time,
 				'click' => 0] + $tag)) {
+			$this->webapp->fetch_tags->flush();
 			$this->goto('/tags');
 		}
 		else

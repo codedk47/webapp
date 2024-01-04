@@ -12,15 +12,31 @@ class user extends ArrayObject implements Countable
 	{
 		return $this->id ? $this->webapp->signature($this->id, $this['cid']) : '';
 	}
-	function report(string $question):bool
+	function report(string $question, &$error = NULL):bool
 	{
-		return $this->id && $this->webapp->mysql->reports->insert([
-			'hash' => $this->webapp->random_hash(TRUE),
-			'time' => $this->webapp->time,
-			'userid' => $this->id,
-			'clientip' => $this->webapp->iphex($this->webapp->request_ip(TRUE)),
-			'question' => $question
-		]);
+		$error = '反馈失败，请稍后重试！';
+		while ($this->id)
+		{
+			if ($this->webapp->mysql->reports('WHERE date=?s AND userid=?s AND promise="pending"',
+				$date = date('Y-m-d', $this->webapp->time), $this->id)->fetch()) {
+				$error = '您有待解决中的问题，请等待客服回复！';
+				break;
+			}
+			if ($this->webapp->mysql->reports->insert([
+				'hash' => $this->webapp->random_hash(TRUE),
+				'time' => $this->webapp->time,
+				'date' => $date,
+				'userid' => $this->id,
+				'clientip' => $this->webapp->iphex($this->webapp->request_ip(TRUE)),
+				'question' => $question
+			])) {
+				$error = '我们会尽快处理您反馈的问题！';
+				return TRUE;
+			}
+			$error = $this->webapp->mysql->error;
+			break;
+		};
+		return FALSE;
 	}
 	//操作记录
 	private function record(string $type, array $data, bool $result = FALSE):array

@@ -72,6 +72,7 @@ masker.dialog = (context, title, url) => new Promise(resolve =>
 masker.json = (context, callback) => masker(...Array.isArray(context) ? context : (context instanceof HTMLFormElement
 	? [context.action, {method: context.method.toUpperCase(), body: new FormData(context)}]
 	: [context instanceof HTMLAnchorElement ? context.href : context])).then(response => response.json()).then(callback || (async data => {
+	data.hasOwnProperty('debug') && console.log(data);
 	if (Array.isArray(data.errors) && data.errors.length)
 	{
 		await masker.dialog(data.errors.join('\n'), '错误信息');
@@ -210,12 +211,9 @@ masker.shortchanged = videos =>
 		//videos.active.querySelectorAll('div.videolink>a').forEach(element => element.onclick = () => masker.log(element));
 		//videos.active.video.removeAttribute('height');
 		//videos.active.firstElementChild.removeAttribute('controls');
-
-		videos.active.firstElementChild.controlslist = 'nodownload nofullscreen';
-		videos.active.firstElementChild.disablepictureinpicture = true;
+		// videos.active.firstElementChild.controlslist = 'nodownload nofullscreen';
+		// videos.active.firstElementChild.disablepictureinpicture = true;
 	}
-
-
 
 	const videoinfo = videos.active.querySelector('div.videoinfo');
 	videoinfo.innerHTML = videos.current.name;

@@ -40,15 +40,17 @@ class webapp_redis extends Redis
 }
 abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Countable, Stringable
 {
+	private bool $cache;
+	private readonly array $args;
 	public readonly webapp $webapp;
 	public readonly webapp_redis $redis;
 	public readonly webapp_redis_table $root;
 	public readonly string $cond, $sort, $key, $value;
-	private bool $cache;
-	protected string $tablename = '', $primary = '';
+	protected string $tablename = '', $primary = '', $expire = '';
 	abstract function format(array $data):array;
 	function __construct(webapp_redis|webapp_redis_table $context, ...$commands)
 	{
+		$this->args = func_get_args();
 		$this->webapp = $context->webapp;
 		$cond = '';
 		$sort = NULL;
@@ -171,6 +173,10 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	{
 		return $this->webapp->mysql->{$this->tablename}(($this->cond ? "{$this->cond} AND " : 'WHERE ') . $this->webapp->mysql->format(...$additional));
 	}
+	// function evalkeys(...$additional):iterable
+	// {
+	// 	return $this->eval(...$additional)->select($this->primary)
+	// }
 	function time():int
 	{
 		return intval($this->redis->get("{$this->key}.time"));
@@ -186,23 +192,29 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 		{
 			$this->redis->del($this->key, ...$this->redis->sMembers($this->key));
 			$this->redis->sRem($this->tablename, $this->key);
-			$this->root === $this ? $this->cache()->cacheable() : $this->cache();
+			return new static(...$this->args);
 		}
-		else
-		{
-			$this->root === $this && $this->redis->clear($this->tablename);
-		}
+		$this->root === $this && $this->redis->clear($this->tablename);
 		return $this;
 	}
 	function cache():static
 	{
+		$this->cache = TRUE;
 		if ($this->redis->sAdd($this->tablename, $this->key))
 		{
-			($time = $this->root->time())
+			if ($this->root === $this)
+			{
+				$this->cacheable();
+				$time = $this->webapp->time();
+			}
+			else
+			{
+				$time = $this->root->time();
+			}
+			$time
 				&& $this->alloc($key, 'time')
 				&& $this->redis->set($key, $time);
 		}
-		$this->cache = TRUE;
 		return $this;
 	}
 	function cacheable(&$set = NULL, &$list = NULL):bool
@@ -213,8 +225,10 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 			if ($this->root === $this) foreach ($this() as $data)
 			{
 				$this->redis->sAdd($set, $key = $data[$this->primary])
-					&& $this->redis->hMSet("{$this->tablename}:{$key}", $this->format($data))
-					&& $this->redis->rPush($list, $key);
+					&& $this->redis->hMSet($primary = "{$this->tablename}:{$key}", $this->format($data))
+					&& $this->redis->rPush($list, $key)
+					&& $this->expire
+					&& $this->redis->expireAt($primary, (int)$data[$this->expire]);
 			} else foreach ($this()->select($this->primary) as $data)
 			{
 				$this->redis->sAdd($set, $key = $data[$this->primary]) && $this->redis->rPush($list, $key);
@@ -226,45 +240,45 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 		}
 		return $this->cache;
 	}
-	function refresh():static
-	{
-		if ($this->cacheable(list:$list))
-		{
+	// function refresh():static
+	// {
+	// 	if ($this->cacheable(list:$list))
+	// 	{
 			
-			print_r(array_diff($this()->select($this->primary)->column($this->primary), $this->keys()));
+	// 		print_r(array_diff($this()->select($this->primary)->column($this->primary), $this->keys()));
 
 
-			// foreach ($this()->select($this->primary) as $i => $data)
-			// {
-			// 	//var_dump($i);
+	// 		foreach ($this()->select($this->primary) as $i => $data)
+	// 		{
+	// 			//var_dump($i);
 	
-			// 	if ($data[$this->primary] !== $this->redis->lIndex($list, $i))
-			// 	{
-			// 		//$this->flush();
-			// 		var_dump($i, $data[$this->primary], $this->redis->lIndex($list, $i));
-			// 		break;
-			// 	}
+	// 			if ($data[$this->primary] !== $this->redis->lIndex($list, $i))
+	// 			{
+	// 				//$this->flush();
+	// 				var_dump($i, $data[$this->primary], $this->redis->lIndex($list, $i));
+	// 				break;
+	// 			}
 				
-			// }
-			// if (array_diff($this()->select($this->primary)->column($this->primary), $this->keys()))
-			// {
-			// 	var_dump(1);
-			// 	$this->flush();
-			// }
+	// 		}
+	// 		if (array_diff($this()->select($this->primary)->column($this->primary), $this->keys()))
+	// 		{
+	// 			var_dump(1);
+	// 			$this->flush();
+	// 		}
 
-			// foreach ($this() as $data)
-			// {
+	// 		foreach ($this() as $data)
+	// 		{
 				
-			// 	if ($a = array_diff($this->format($data), $this[$data[$this->primary]] ?? []))
-			// 	{
-			// 		var_dump($a);
-			// 		$this->flush();
-			// 		break;
-			// 	}
-			// }
-		}
-		return $this;
-	}
+	// 			if ($a = array_diff($this->format($data), $this[$data[$this->primary]] ?? []))
+	// 			{
+	// 				var_dump($a);
+	// 				$this->flush();
+	// 				break;
+	// 			}
+	// 		}
+	// 	}
+	// 	return $this;
+	// }
 	function column(string $field, string $index = NULL):array
 	{
 		if ($this->cache)

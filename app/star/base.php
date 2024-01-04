@@ -704,22 +704,18 @@ class base extends webapp
 	//获取指定广告（位置）
 	function fetch_ads():webapp_redis_table
 	{
-		return new class($this->redis, 'ORDER BY weight DESC') extends webapp_redis_table
+		return new class($this->redis, 'expire>?i ORDER BY weight DESC', $this->time) extends webapp_redis_table
 		{
-			protected string $tablename = 'ads', $primary = 'hash';
+			protected string $tablename = 'ads', $primary = 'hash', $expire = 'expire';
 			function __construct(webapp_redis|webapp_redis_table $context, ...$commands)
 			{
 				parent::__construct($context, ...$commands);
-				$this->root === $this && $this->cache()->cacheable();
+				$this->root === $this && $this->cache();
 			}
 			function format(array $data):array
 			{
 				return [
 					'hash' => $data['hash'],
-					'expire' => $data['expire'],
-					'view' => $data['view'],
-					'click' => $data['click'],
-					'seat' => $data['seat'],
 					'weight' => $data['weight'],
 					'picture' => "?/news/{$data['hash']}?mask{$data['ctime']}",
 					'support' => $data['acturl'],
@@ -857,6 +853,21 @@ class base extends webapp
 					'name' => $data['name'],
 					'extdata' => $data['extdata']
 				];
+			}
+			function randtop(string $tag)
+			{
+				if ($this->root->alloc($key, "randtop.{$tag}"))
+				{
+					$keys = $this->eval("FIND_IN_SET(?s,tags) {$this->sort} LIMIT 7", $tag)
+						->select($this->primary)->column($this->primary);
+					$this->redis->sAdd($key, ...$keys);
+				}
+				else
+				{
+					$keys = $this->redis->sMembers($key);
+				}
+				shuffle($keys);
+				return $this->iter(...$keys);
 			}
 			function similar(array|string $video):static
 			{

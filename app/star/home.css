@@ -143,6 +143,22 @@ header>strong{
 	flex-grow: 1;
 	margin-left: -2rem;
 }
+header>strong[data-title]::before{
+	content: attr(data-title);
+	width: 4rem;
+	height: 2rem;
+	display: inline-block;
+	background-image: url(/star/logo.png);
+	background-position: center;
+	background-size: contain;
+	background-repeat: no-repeat;
+	white-space: nowrap;
+	text-indent: 3.6rem;
+	line-height: 2rem;
+	margin-left: -4rem;
+	font-size: var(--webapp-font-large);
+}
+
 header>input{
 	outline: none;
 	border: 1px solid rgba(27, 31, 35, 0.2);
@@ -266,6 +282,35 @@ main.myshare>mark{
 }
 main.myshare>mark::before{
 	content: attr(data-iid);
+}
+main.report{
+	display: flex;
+	margin: var(--webapp-gap);
+	gap: var(--webapp-gap);
+	flex-direction: column;
+}
+main.report>div.reply{
+	padding: var(--webapp-gapitem);
+	border-radius: var(--webapp-gapradius);
+	background-color: var(--webapp-button);
+}
+main.report>div>time::before{
+	content: attr(datetime);
+	display: block;
+	color: var(--webapp-hover);
+	font-size: var(--webapp-font-small);
+}
+main.report>div>time{
+	display: block;
+	padding: var(--webapp-gapitem) calc(var(--webapp-gapitem) * 2);
+	border-radius: var(--webapp-gapradius);
+	background-color: var(--webapp-hint);
+	white-space: pre-wrap;
+}
+main.report>div>pre{
+	margin: 0;
+	padding: var(--webapp-gapitem);
+	font-family: var(--webapp-font-sans-serif);
 }
 
 
@@ -637,7 +682,7 @@ div.short>main>webapp-videos>div>webapp-video>div.videoinfo>mark>a{
 div.videolink{
 	position: absolute;
 	right: 1rem;
-	bottom: 4rem;
+	bottom: 5rem;
 	display: flex;
 	gap: var(--webapp-gap);
 	flex-direction: column;
@@ -648,6 +693,7 @@ div.videolink>img{
 	object-fit: cover;
 	border: 1px solid var(--webapp-foreground);
 	border-radius: 50%;
+	margin-bottom: var(--webapp-gap);
 }
 div.videolink>a{
 	display: flex;

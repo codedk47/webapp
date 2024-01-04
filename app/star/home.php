@@ -344,7 +344,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$data['notice'] = ['title' => $configs['notice_title'], 'content' => $configs['notice_content']];
 		}
-		if ($ad = $this->webapp->fetch_ads->rand(0))
+		if ($ad = $this->webapp->fetch_ads->rand(1))
 		{
 			$data['popup'] = ['title' => $ad['name'], 'picture' => $ad['picture'], 'support' => $ad['support']];
 		}
@@ -398,7 +398,10 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			foreach ($this->webapp->fetch_subjects->with('type=?s', $type)->cache() as $subject)
 			{
-				$this->add_video_lists($this->main, $this->webapp->fetch_videos->iter(...str_split($subject['videos'], 12)),
+				$keys = str_split($subject['videos'], 12);
+				shuffle($keys);
+				$this->add_video_lists($this->main,
+					$this->webapp->fetch_videos->iter(...$keys),
 					$subject['style'], $subject['name'], "?home/subject,hash:{$subject['hash']}");
 			}
 		}
@@ -406,8 +409,9 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			foreach ($classify as $hash => $name)
 			{
-				$this->add_video_lists($this->main, $this->webapp->fetch_videos
-					->with('type="h" AND FIND_IN_SET(?s,tags)', $hash)->cache()->show(5), 3, "最新{$name}", "?home/home,type:{$hash}");
+				$this->add_video_lists($this->main,
+					$this->webapp->fetch_videos->randtop($hash),
+					3, "最新{$name}", "?home/home,type:{$hash}");
 			}
 		}
 	}
@@ -688,7 +692,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->meta(['name' => 'theme-color', 'content' => 'black']);
 		$this->xml->body->div['class'] = 'short';
 		$this->header->append('a', ['href' => 'javascript:history.back();', 'class' => 'arrow']);
-		$this->header->append('strong', '短视频');
+		$this->header->append('strong', ['data-title' => '抖 音']);
 		$template = $this->main->append('webapp-videos', [
 			'onchange' => 'masker.shortchanged(this)',
 			'data-fetch' => '?home/short,page:',
@@ -819,7 +823,7 @@ class webapp_router_home extends webapp_echo_masker
 		$form->field('question', 'textarea', [
 			'placeholder' => '请尽可能详细的描述您当前遇到的问题，以便我们可以进行及时有效的处理。',
 			'spellcheck' => 'false',
-			'maxlength' => 200,
+			'maxlength' => 400,
 			'rows' => 12,
 			'required' => NULL
 		]);
@@ -830,10 +834,9 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function post_my_report()
 	{
-		$data = ['dialog' => '反馈失败，请稍后重试！'];
-		if ($this->form_report()->fetch($report) && $this->user->report($report['question']))
-		{
-			$data['dialog'] = '我们会尽快处理您反馈的问题！';
+		$data = [];
+		if ($this->form_report()->fetch($report, $data['dialog'])
+			&& $this->user->report($report['question'], $data['dialog'])) {
 			$data['reload'] = 0;
 		}
 		$this->json($data);
@@ -842,10 +845,18 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->set_header_title('问题反馈');
 		$this->form_report($this->aside);
-
-
-
 		$this->set_footer_menu();
+		$this->main['class'] = 'report';
+		foreach ($this->webapp->mysql->reports('WHERE userid=?s ORDER BY time DESC LIMIT 10', $this->user->id) as $report)
+		{
+			$question = $this->main->append('div');
+			$question->append('time', [$report['question'], 'datetime' => $report['date'], 'class' => 'question']);
+			if ($report['reply'])
+			{
+				$question['class'] = 'reply';
+				$question->append('pre', $report['reply']);
+			}
+		}
 	}
 	function get_my_historys()
 	{
