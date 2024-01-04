@@ -850,11 +850,11 @@ class webapp_router_home extends webapp_echo_masker
 		foreach ($this->webapp->mysql->reports('WHERE userid=?s ORDER BY time DESC LIMIT 10', $this->user->id) as $report)
 		{
 			$question = $this->main->append('div');
-			$question->append('time', [$report['question'], 'datetime' => $report['date'], 'class' => 'question']);
+			$question->append('time', ["您：{$report['question']}", 'datetime' => $report['date'], 'class' => 'question']);
 			if ($report['reply'])
 			{
 				$question['class'] = 'reply';
-				$question->append('pre', $report['reply']);
+				$question->append('pre', "客服：{$report['reply']}");
 			}
 		}
 	}
