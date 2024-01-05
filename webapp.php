@@ -1168,7 +1168,7 @@ CSS);
 	function get_masker()
 	{
 		$this->response_content_type('text/javascript');
-		if ($this->nonematch($decode . $type, TRUE))
+		if ($this->nonematch('masker', TRUE))
 		{
 			$this->response_sendfile(__DIR__ . '/res/js/masker.js');
 			return 200;
