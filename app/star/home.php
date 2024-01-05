@@ -149,7 +149,9 @@ class webapp_router_home extends webapp_echo_masker
 
 	function set_footer_menu():webapp_html
 	{
-		$this->footer->insert('div', 'before')['style'] = 'height:4rem';
+		// $before = $this->footer->insert('div', 'before')->setattr(['asdasd']);
+		
+		// ['style'] = 'height:4rem';
 		$this->footer['class'] = 'nav';
 		$this->footer->append('a', ['首页', 'href' => '?home/home']);
 		$this->footer->append('a', ['抖音', 'href' => '?home/short']);
@@ -533,11 +535,11 @@ class webapp_router_home extends webapp_echo_masker
 			return 404;
 		}
 		$this->aside['data-type'] .= $video['type'];
-		if ($this->user->count())
+		if (1 || $this->user->count())
 		{
 			if ($this->user->watched($hash) === FALSE)
 			{
-				$this->user->watch($hash) && $this->user->count(-1);
+				//$this->user->watch($hash) && $this->user->count(-1);
 			}
 		}
 		else
