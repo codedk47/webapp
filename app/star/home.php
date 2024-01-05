@@ -582,8 +582,6 @@ class webapp_router_home extends webapp_echo_masker
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', htmlentities($video['name']));
 
-
-
 		//影片信息（功能菜单）
 		$videomenu = $videoinfo->append('div', ['style' => 'justify-content:center;gap:calc(var(--webapp-gap)*4);margin:var(--webapp-gapitem) 0']);
 
@@ -630,26 +628,16 @@ class webapp_router_home extends webapp_echo_masker
 		//影片信息（扩展数据）
 		if ($video['extdata'])
 		{
-			$extdata = json_decode($video['extdata'], TRUE);
-
-			isset($extdata['issue'])
-				&& $extdata['issue']
-				&& $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['issue'], 'data-label' => '发行日期']);
-
-			if ((isset($extdata['publisher']) && $extdata['publisher']) || (isset($extdata['director']) && $extdata['director']))
+			$extdata = array_filter(json_decode($video['extdata'], TRUE), trim(...));
+			isset($extdata['issue']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['issue'], 'data-label' => '发行日期']);
+			if (isset($extdata['publisher']) || isset($extdata['director']))
 			{
 				$extinfo = $videoinfo->append('div', ['class' => 'extinfo']);
-				$extdata['publisher'] && $extinfo->append('mark', [$extdata['publisher'], 'data-label' => '发行商']);
-				$extdata['director'] && $extinfo->append('mark', [$extdata['director'], 'data-label' => '导演']);
+				isset($extdata['publisher']) && $extinfo->append('mark', [$extdata['publisher'], 'data-label' => '发行商']);
+				isset($extdata['director']) && $extinfo->append('mark', [$extdata['director'], 'data-label' => '导演']);
 			}
-			
-			isset($extdata['series'])
-				&& $extdata['series']
-				&& $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['series'], 'data-label' => '系列']);
-
-			isset($extdata['series'])
-				&& $extdata['series']
-				&& $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['actress'], 'data-label' => '女优']);
+			isset($extdata['series']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['series'], 'data-label' => '系列']);
+			isset($extdata['series']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['actress'], 'data-label' => '女优']);
 		}
 
 		//关联影片
