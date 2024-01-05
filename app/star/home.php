@@ -149,7 +149,8 @@ class webapp_router_home extends webapp_echo_masker
 
 	function set_footer_menu():webapp_html
 	{
-		// $before = $this->footer->insert('div', 'before')->setattr(['asdasd']);
+		$this->footer->insert('div', 'before')->setattr([
+			"本站永久域名 {$this->webapp['app_website']} 回家不迷路！", 'class' => 'nav']);
 		
 		// ['style'] = 'height:4rem';
 		$this->footer['class'] = 'nav';
@@ -535,11 +536,11 @@ class webapp_router_home extends webapp_echo_masker
 			return 404;
 		}
 		$this->aside['data-type'] .= $video['type'];
-		if (1 || $this->user->count())
+		if ($this->user->count())
 		{
 			if ($this->user->watched($hash) === FALSE)
 			{
-				//$this->user->watch($hash) && $this->user->count(-1);
+				$this->user->watch($hash) && $this->user->count(-1);
 			}
 		}
 		else

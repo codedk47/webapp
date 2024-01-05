@@ -69,6 +69,12 @@ body>div:first-child{
 	border: 1px solid red;
 	box-sizing: border-box; */
 }
+body>div:first-child>div.nav{
+	margin: calc(var(--webapp-gap) * 2) 0;
+	padding-bottom: calc(var(--webapp-gap) * 6);
+	text-align: center;
+}
+
 /* splashscreen */
 body>div.splashscreen:first-child>header:not(:empty){
 	position: fixed;
@@ -316,7 +322,6 @@ main.report>div>pre{
 	padding: var(--webapp-gapitem);
 	font-family: var(--webapp-font-sans-serif);
 }
-
 
 /* footer */
 footer{
