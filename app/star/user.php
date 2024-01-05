@@ -165,22 +165,23 @@ class user extends ArrayObject implements Countable
 	{
 		if ($this->id)
 		{
-			$count = $this['iid'] ? 20 : 10;
 			$count = match (intval($this['share']))
 			{
-				0 => $count,
-				1 => $count + 10,
-				2 => $count + 20,
+				0 => 10,
+				1 => 15,
+				2 => 20,
 				default => -1
 			};
 			if ($count === -1)
 			{
 				return $count;
 			}
-			$this->webapp->redis->hExists($key = "user:{$this->id}", 'count')
-				? $this->webapp->redis->hIncrBy($key, 'count', $increment)
-				: $this->webapp->redis->hSet($key, 'count', $count + $increment);
-			return $this->webapp->redis->hGet($key, 'count');
+			$this->webapp->redis->hSetNx($key = "user:{$this->id}", 'count', $count);
+			return $this->webapp->redis->hIncrBy($key, 'count', $increment);
+			// $this->webapp->redis->hExists($key = "user:{$this->id}", 'count')
+			// 	? $this->webapp->redis->hIncrBy($key, 'count', $increment)
+			// 	: $this->webapp->redis->hSet($key, 'count', $count + $increment);
+			// return $this->webapp->redis->hGet($key, 'count');
 		}
 		return 0;
 	}
@@ -203,7 +204,7 @@ class user extends ArrayObject implements Countable
 			}
 			if ($this->webapp->mysql->sync(fn() => $this->cond('AND iid IS NULL')->update('iid=?s', $id) === 1
 				&& $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update('share=share+1') === 1)) {
-				$this->count(+10);
+				$this->count(+5);
 				$this->webapp->redis->hSet("user:{$this->id}", 'iid', $this['iid'] = $id);
 				if ($this->webapp->redis->exists($target = "user:{$id}"))
 				{

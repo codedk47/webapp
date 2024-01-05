@@ -66,6 +66,8 @@ class webapp_router_home extends webapp_echo_masker
 		if ($form->echo)
 		{
 			$ua = $this->webapp->request_device();
+			var_dump($ua, preg_match('/DID\/(\w{16})/', $ua, $pattern), $pattern);
+
 			$did = $this->webapp->query['did'] ?? NULL;
 			$form->echo([
 				'cid' => preg_match('/CID\/(\w{4})/', $ua, $pattern) ? $pattern[1] : (string)$this->webapp->redis->get("cid:{$did}"),
