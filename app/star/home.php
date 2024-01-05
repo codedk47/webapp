@@ -575,7 +575,6 @@ class webapp_router_home extends webapp_echo_masker
 			$strong->text('每日观影剩余次数已耗尽，请点击');
 			$strong->append('q', ['style' => 'margin:0 var(--webapp-gap)'])->append('a', ['分享链接', 'href' => '?home/my-shareurl']);
 			$strong->text('获得更多次数！');
-			return 401;
 		}
 		
 		//影片信息（标题）
