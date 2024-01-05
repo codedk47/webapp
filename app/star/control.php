@@ -19,7 +19,7 @@ class webapp_router_control extends webapp_echo_masker
 		$this->script(['src' => '/webapp/app/star/base.js']);
 		$this->nav([
 			['数据', '?control/home'],
-			['配置', '?control/configs'],
+			
 			['广告', '?control/ads'],
 			['渠道', '?control/channels'],
 			['分类 & 标签', '?control/tags'],
@@ -30,12 +30,13 @@ class webapp_router_control extends webapp_echo_masker
 			//['产品', '?control/prods'],
 			
 			['记录', [
+				['站点配置', '?control/configs'],
 				['问题汇报', '?control/reports'],
-				['上传的图片', '?control/images'],
-				['购买影片', '?control/record-video'],
-				['余额提现', '?control/record-exchange-balance'],
-				['游戏提现', '?control/record-exchange-game'],
-				['充值', '?control/record-recharge']
+				// ['上传的图片', '?control/images'],
+				// ['购买影片', '?control/record-video'],
+				// ['余额提现', '?control/record-exchange-balance'],
+				// ['游戏提现', '?control/record-exchange-game'],
+				// ['充值', '?control/record-recharge']
 			]],
 			//['评论', '?control/comments'],
 			
@@ -1978,6 +1979,100 @@ class webapp_router_control extends webapp_echo_masker
 		}
 		$this->webapp->clear_configs();
 		$this->goto('/configs');
+	}
+
+	function get_reports(string $search = NULL,int $page = 0)
+	{
+		$conds = [[]];
+		if ($search)
+		{
+			if (strlen($search) === 10 && trim($search, webapp::key) === '')
+			{
+				$conds[0][] = 'userid=?s';
+				$conds[] = $search;
+			}
+			else
+			{
+				$search = urldecode($search);
+				$conds[0][] = 'question LIKE ?s';
+				$conds[] = "%{$search}%";
+			}
+		}
+		if ($clientip = $this->webapp->query['clientip'] ?? '')
+		{
+			$conds[0][] = 'clientip=?s';
+			$conds[] = $clientip;
+		}
+		if ($promise = $this->webapp->query['promise'] ?? '')
+		{
+			$conds[0][] = 'promise=?s';
+			$conds[] = $promise;
+		}
+
+		$conds[0] = sprintf('%sORDER BY time DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
+		$table = $this->main->table($this->webapp->mysql->reports(...$conds)->paging($page), function($table, $value)
+		{
+			$table->row();
+			$table->cell(date('Y-m-d\\TH:i:s', $value['time']));
+			$table->cell($value['hash']);
+			$table->cell()->append('a', [$value['userid'], 'href' => "?control/reports,search:{$value['userid']}"]);
+			$table->cell()->append('a', [$this->webapp->hexip($value['clientip']), 'href' => "?control/reports,clientip:{$value['clientip']}"]);
+
+			///$table->cell($value['promise']);
+			$cell = $table->cell();
+			if ($value['promise'] === 'pending')
+			{
+				$cell->append('a', ['解决',
+					'href' => "?control/report,promise:resolve,hash:{$value['hash']}",
+					'data-method' => 'patch',
+					'data-dialog' => '{"reply":"textarea"}',
+					'data-bind' => 'click']);
+
+				$cell->append('span', ' | ');
+
+				$cell->append('a', ['拒绝',
+					'href' => "?control/report,promise:reject,hash:{$value['hash']}",
+					'data-method' => 'patch',
+					'data-dialog' => '{"reply":"textarea"}',
+					'data-bind' => 'click']);
+			}
+			else
+			{
+				$cell->text(['resolve' => '已解决', 'reject' => '已拒绝'][$value['promise']]);
+			}
+
+
+			$table->row();
+			$cell = $table->cell(['colspan' => 5]);
+			$cell->append('pre', [$value['question'], 'style' => 'margin:0']);
+			if ($value['reply'])
+			{
+				$cell->append('hr');
+				$cell->append('pre', [$value['reply'], 'style' => 'margin:0']);
+			}
+		});
+		$table->fieldset('时间', 'HASH', '用户ID', 'IP', '状态 | 回复');
+		$table->header('问题汇报 %d 项', $table->count());
+		$table->paging($this->webapp->at(['page' => '']));
+
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $search,
+			'style' => 'padding:2px;width:21rem',
+			'placeholder' => '用户ID或问题描述',
+			'onkeydown' => 'event.keyCode==13&&g({search:this.value||null,page:null})'
+		]);
+
+		$table->bar->select(['' => '全部', 'pending' => '待办的', 'resolve' => '已解决', 'reject' => '已拒绝'])
+			->setattr(['onchange' => 'g({promise:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($promise);
+
+	}
+	function patch_report(string $hash, string $promise)
+	{
+		$this->webapp->mysql->reports('WHERE hash=?s AND promise="pending" LIMIT 1', $hash)->update([
+		 	'promise' => $promise, 'reply' => $this->webapp->request_content()['reply'] ?? '']) === 1
+				? $this->goto() : $this->dialog('回复失败！');
 	}
 
 	//记录

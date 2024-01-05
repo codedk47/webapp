@@ -119,6 +119,9 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
 	}
+	// static function shuffle()
+	// {
+	// }
 	static function random(int $length):string
 	{
 		return random_bytes($length);
