@@ -53,10 +53,16 @@ class webapp_router_home extends webapp_echo_masker
 		]);
 		$form->fieldset();
 		$form->button('我已满18周岁', 'submit');
-		$form->fieldset()->text('警告：禁止未满18周岁的用户登录使用！');
+		$form->fieldset('警告：禁止未满18周岁的用户登录使用！')->setattr(['class' => 'tip']);
 		$form->field('cid');
 		$form->field('did');
 		$form->field('tid');
+
+		$tip = $form->fieldset('小贴士:')->setattr(['class' => 'tip', 'style' => 'text-align:left;margin-top:1rem'])->append('ul');
+		$tip->append('li', '请您一定保存好您的凭证信息，在您更换新手机，或重新安装app后，可以通过凭证回复原有账号绑定。');
+		$tip->append('li', '如需保存凭证，请移步到 个人中心，找到右上角的 凭证，点击保存二维码 ！');
+		$tip->append('li', '请您牢记本站回家地址: ')->append('a', [$this->webapp['app_website'], 'href' => "https://{$this->webapp['app_website']}"]);
+
 		if ($form->echo)
 		{
 			$ua = $this->webapp->request_device();

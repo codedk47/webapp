@@ -123,10 +123,14 @@ form.login>fieldset:first-child>strong{
 	text-align: center;
 	white-space: nowrap;
 }
-form.login>fieldset:last-child{
+form.login>fieldset.tip{
 	color: var(--webapp-hover);
 	font-size: var(--webapp-font-small);
 	text-align: center;
+}
+form.login>fieldset.tip>ul{
+	margin: 0;
+	line-height: var(--webapp-font-medium);
 }
 
 /* header */
