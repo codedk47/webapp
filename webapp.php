@@ -1168,7 +1168,12 @@ CSS);
 	function get_masker()
 	{
 		$this->response_content_type('text/javascript');
-		$this->response_sendfile(__DIR__ . '/res/js/masker.js');
+		if ($this->nonematch($decode . $type, TRUE))
+		{
+			$this->response_sendfile(__DIR__ . '/res/js/masker.js');
+			return 200;
+		}
+		return 304;
 	}
 }
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Countable, Stringable
