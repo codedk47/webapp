@@ -443,6 +443,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_search(string $word = '', int $page = 0)
 	{
+		$this->set_footer_menu();
 		if ($word = trim(urldecode($word)))
 		{
 			$cond = ['name LIKE ?s', "%{$word}%"];
@@ -502,7 +503,6 @@ class webapp_router_home extends webapp_echo_masker
 			{
 				$this->main->append('blockquote', '404 很抱歉，没有找到相关内容');
 			}
-			$this->set_footer_menu();
 			return;
 		}
 		$this->set_header_search();
@@ -571,10 +571,10 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		else
 		{
-			$strong = $this->aside->append('strong')->append('span');
-			$strong->text('每日观影剩余次数已耗尽，请点击');
-			$strong->append('q', ['style' => 'margin:0 var(--webapp-gap)'])->append('a', ['分享链接', 'href' => '?home/my-shareurl']);
-			$strong->text('获得更多次数！');
+			$strong = $this->aside->append('strong')->append('div');
+			$strong->append('span', '每日观影剩余次数已耗尽');
+			$strong->append('a', ['请点击分享链接', 'href' => '?home/my-shareurl', 'class' => 'button']);
+			$strong->append('span', '获得更多次数！');
 		}
 		
 		//影片信息（标题）
@@ -789,7 +789,14 @@ class webapp_router_home extends webapp_echo_masker
 		$dl = $this->webapp->fetch_configs()['down_page'];
 
 		$this->main['class'] = 'myshare';
-		$this->main->append('div', '请保存截图或者使用对方手机扫以下二维码，下载安装后进入个人中心，输入以下邀请代码后，双双获得奖励！');
+		$dl = $this->main->append('ul');
+		$dl->append('li', 'H狐狸看片不花钱，只要邀请新注册用户，即可免费看片。');
+		$dl->append('li', '方法一：请复制或截图二维码与邀请码，发给朋友，对方安装并输入您的邀请码，即可获得免费看片次数。');
+		$dl->append('li', '方法二：打开您的二维码，对方手机打开相机扫描二维码，安装并输入您的邀请码，即可获得免费看片次数。');
+
+		//$this->main->append('div', '请保存截图或者使用对方手机扫以下二维码，下载安装后进入个人中心，输入以下邀请代码后，双双获得奖励！');
+
+
 		$this->main->append('figure')->append('img', ['src' => sprintf('?qrcode/%s', $this->webapp->encrypt($dl))]);
 
 		
@@ -801,11 +808,11 @@ class webapp_router_home extends webapp_echo_masker
 		$this->main->append('a', ['复制二维码地址', 'href' => $dl, 'class' => 'button',
 			'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>location.href=this.href)']);
 		$dl = $this->main->append('dl');
-		$dl->append('dt', '奖励规则：');
-		$dl->append('dd', '被邀请人获得每日影片观看 +10 次。');
-		$dl->append('dd', '邀请他人一次，每日影片观看 +10 次。');
-		$dl->append('dd', '邀请他人二次，每日影片观看 +20 次。');
-		$dl->append('dd', '邀请他人三次及以上，无限观看影片。');
+		$dl->append('dt', '免费看片规则：');
+		$dl->append('dd', '新安装用户获得每日影片观看 +10次。');
+		$dl->append('dd', '邀请朋友一次，每日影片观看 +5次。');
+		$dl->append('dd', '邀请朋友二次，每日影片观看 +5次。');
+		$dl->append('dd', '邀请三个朋友及以上，无限观看影片。');
 	}
 
 
