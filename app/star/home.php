@@ -743,10 +743,10 @@ class webapp_router_home extends webapp_echo_masker
 		$anchors->append('a', ['问题反馈', 'href' => '?home/my-report', 'data-right' => '>>']);
 		//$anchors->append('a', ['注销账号', 'href' => 'javascript:;', 'onclick' => 'return masker.delete_account(this)', 'data-right' => '退出']);
 		$node = $this->main->append('ul');
-		$first = $node->append('li');
-		$first->text('请记住本站回家域名');
-		$first->append('q', [$this->webapp['app_website'], 'style' => 'color:var(--webapp-foreground)']);
-		$first->text('回家不迷路！');
+		// $first = $node->append('li');
+		// $first->text('请记住本站回家域名');
+		// $first->append('q', [$this->webapp['app_website'], 'style' => 'color:var(--webapp-foreground)']);
+		// $first->text('回家不迷路！');
 		$node->append('li', '保存凭证后，可以通过凭证找回账号！');
 		if ($this->user['did'])
 		{
@@ -783,14 +783,14 @@ class webapp_router_home extends webapp_echo_masker
 
 		$dl = $this->webapp->fetch_configs()['down_page'];
 		$this->main->append('figure')->append('img', ['src' => sprintf('?qrcode/%s', $this->webapp->encrypt($dl))]);
-
+		$this->main->append('strong', '手机长安可以选择复制以下邀请码');
 		$mark = $this->main->append('mark', ['data-iid' => '邀请码：']);
 		foreach (str_split($this->webapp->time33hash($this->webapp->hashtime33($this->user->id), FALSE), 4) as $a)
 		{
 			$mark->append('span', $a);
 		}
-		$this->main->append('a', ['复制二维码地址', 'href' => $dl, 'class' => 'button',
-			'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>location.href=this.href)']);
+		// $this->main->append('a', ['复制二维码地址', 'href' => $dl, 'class' => 'button',
+		// 	'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>location.href=this.href)']);
 		$dl = $this->main->append('dl');
 		$dl->append('dt', '免费看片规则：');
 		$dl->append('dd', '新安装用户获得每日影片观看 +10次。');

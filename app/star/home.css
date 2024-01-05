@@ -258,12 +258,14 @@ main>blockquote{
 }
 main.myshare{
 	display: flex;
+	margin: 0 var(--webapp-gap);
+	gap: var(--webapp-gapitem);
 	flex-direction: column;
-	margin: var(--webapp-gap);
 }
 main.myshare>ul{
 	margin: 0;
 	padding: 0;
+	color: var(--webapp-hover);
 	line-height: var(--webapp-font-large);
 }
 main.myshare>ul>li{
@@ -271,7 +273,7 @@ main.myshare>ul>li{
 	text-indent: calc(var(--webapp-gap) * 2);
 }
 main.myshare>figure{
-	margin: var(--webapp-gap) auto;
+	margin: 0 auto;
 	padding: var(--webapp-gap);
 	background-color: var(--webapp-foreground);
 	width: 18rem;
@@ -282,6 +284,11 @@ main.myshare>figure{
 main.myshare>figure>img{
 	width: 100%;
 	height: 100%;
+}
+main.myshare>strong{
+	color: var(--webapp-hover);
+	text-align: center;
+	font-size: var(--webapp-font-small);
 }
 main.myshare>a{
 	text-align: center;
@@ -302,6 +309,10 @@ main.myshare>mark{
 }
 main.myshare>mark::before{
 	content: attr(data-iid);
+}
+main.myshare>dl{
+	margin: 0;
+	color: var(--webapp-hover);
 }
 
 main.report{
