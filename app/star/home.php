@@ -542,6 +542,32 @@ class webapp_router_home extends webapp_echo_masker
 			{
 				$this->user->watch($hash) && $this->user->count(-1);
 			}
+			//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
+			$watch = $this->aside->append('webapp-video', [
+				'data-poster' => $video['poster'],
+				'data-m3u8' => $video['m3u8'],
+				'oncanplay' => 'masker.canplay(this)',
+				//'autoheight' => NULL,
+				//'autoplay' => NULL,
+				//'muted' => NULL,
+				'controls' => NULL
+			]);
+			if ($ad = $this->webapp->fetch_ads->rand(3))
+			{
+				$watch->append('a', ['href' => $ad['support'],
+					'data-duration' => 5,
+					'data-unit' => '秒',
+					'data-skip' => '跳过',
+					'onclick' => 'console.log(123)'
+				])->append('img', ['src' => $ad['picture'],
+					'onload' => 'this.parentNode.parentNode.splashscreen(this.parentNode)',
+					'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)'
+				]);
+			}
+			else
+			{
+				$watch->setattr('autoplay');
+			}
 		}
 		else
 		{
@@ -552,35 +578,6 @@ class webapp_router_home extends webapp_echo_masker
 			return 401;
 		}
 		
-		//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
-		
-		$watch = $this->aside->append('webapp-video', [
-			'data-poster' => $video['poster'],
-			'data-m3u8' => $video['m3u8'],
-			'oncanplay' => 'masker.canplay(this)',
-			//'autoheight' => NULL,
-			//'autoplay' => NULL,
-			//'muted' => NULL,
-			'controls' => NULL
-		]);
-		
-		if ($ad = $this->webapp->fetch_ads->rand(3))
-		{
-			$watch->append('a', ['href' => $ad['support'],
-				'data-duration' => 5,
-				'data-unit' => '秒',
-				'data-skip' => '跳过',
-				'onclick' => 'console.log(123)'
-			])->append('img', ['src' => $ad['picture'],
-				'onload' => 'this.parentNode.parentNode.splashscreen(this.parentNode)',
-				'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)'
-			]);
-		}
-		else
-		{
-			$watch->setattr('autoplay');
-		}
-
 		//影片信息（标题）
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', htmlentities($video['name']));
