@@ -152,7 +152,7 @@ else
 		return response;
 	}
 	let pid = 0, passive = true;
-	const pending = new Map, headers = {'Service-Worker': 'masker'}, origin = event =>
+	const pending = new Map, headers = {'Service-Worker': 'masker', 'User-Agent': navigator.userAgent}, origin = event =>
 		clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject()));
 	addEventListener('message', event =>
