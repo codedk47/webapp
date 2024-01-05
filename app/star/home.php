@@ -65,9 +65,9 @@ class webapp_router_home extends webapp_echo_masker
 
 		if ($form->echo)
 		{
-			print_r($_SERVER);
-			$ua = $this->webapp->request_device();
-			var_dump($ua, preg_match('/DID\/(\w{16})/', $ua, $pattern), $pattern);
+			// print_r($_SERVER);
+			// $ua = $this->webapp->request_device();
+			// var_dump($ua, preg_match('/DID\/(\w{16})/', $ua, $pattern), $pattern);
 
 			$did = $this->webapp->query['did'] ?? NULL;
 			$form->echo([

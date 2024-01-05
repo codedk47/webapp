@@ -4,7 +4,7 @@ if (self.window)
 	{
 		const init = new Promise(resolve => navigator.serviceWorker.ready.then(registration =>
 		{
-			alert(navigator.userAgent)
+			//alert(navigator.userAgent)
 			const message = new MessageChannel;
 			message.port1.onmessage = () =>
 			{
