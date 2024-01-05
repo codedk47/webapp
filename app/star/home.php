@@ -736,7 +736,7 @@ class webapp_router_home extends webapp_echo_masker
 			'href' => '?home/my-invite,code:',
 			'onclick' => 'return !masker.prompt(this.textContent).then(value => masker.json(this.href + value))',
 			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
-		$anchors->append('a', ['分享链接，双方获得奖励', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
+		$anchors->append('a', ['分享链接，获取观影次数', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
 
 		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorites', 'data-right' => count($this->user->favorites())]);
 		$anchors->append('a', ['历史记录', 'href' => '?home/my-historys', 'data-right' => count($this->user->historys())]);
@@ -774,32 +774,16 @@ class webapp_router_home extends webapp_echo_masker
 	//分享链接
 	function get_my_shareurl()
 	{
-		// var_dump( $this->user->invite('JGGCV5K2FLPQ', $error), $error, $this->user->count() );
-
-
-
-		// return;
-
-
 		$this->set_header_title('分享链接');
-		//$configs = $this->webapp->fetch_configs()['down_page'];
-
-		
+		$this->main['class'] = 'myshare';
+		$ul = $this->main->append('ul');
+		$ul->append('li', "{$this->webapp['app_name']}看片不花钱，只要邀请新注册用户，即可免费看片。");
+		$ul->append('li', '方法一：请复制或截图二维码与邀请码，发给朋友，对方安装并输入您的邀请码，即可获得免费看片次数。');
+		$ul->append('li', '方法二：打开您的二维码，对方手机打开相机扫描二维码，安装并输入您的邀请码，即可获得免费看片次数。');
 
 		$dl = $this->webapp->fetch_configs()['down_page'];
-
-		$this->main['class'] = 'myshare';
-		$dl = $this->main->append('ul');
-		$dl->append('li', 'H狐狸看片不花钱，只要邀请新注册用户，即可免费看片。');
-		$dl->append('li', '方法一：请复制或截图二维码与邀请码，发给朋友，对方安装并输入您的邀请码，即可获得免费看片次数。');
-		$dl->append('li', '方法二：打开您的二维码，对方手机打开相机扫描二维码，安装并输入您的邀请码，即可获得免费看片次数。');
-
-		//$this->main->append('div', '请保存截图或者使用对方手机扫以下二维码，下载安装后进入个人中心，输入以下邀请代码后，双双获得奖励！');
-
-
 		$this->main->append('figure')->append('img', ['src' => sprintf('?qrcode/%s', $this->webapp->encrypt($dl))]);
 
-		
 		$mark = $this->main->append('mark', ['data-iid' => '邀请码：']);
 		foreach (str_split($this->webapp->time33hash($this->webapp->hashtime33($this->user->id), FALSE), 4) as $a)
 		{
