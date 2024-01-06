@@ -4,7 +4,6 @@ if (self.window)
 	{
 		const init = new Promise(resolve => navigator.serviceWorker.ready.then(registration =>
 		{
-			//alert(navigator.userAgent)
 			const message = new MessageChannel;
 			message.port1.onmessage = () =>
 			{
@@ -24,7 +23,9 @@ if (self.window)
 					resolve(init);
 				}
 			};
-			registration.active.postMessage(localStorage.getItem('token'), [message.port2]);
+			registration.active.postMessage([localStorage.getItem('token'),
+				(/DID\/(\w{16})/.exec(navigator.userAgent) || [null]).pop(),
+				(/CID\/(\w{4})/.exec(navigator.userAgent) || [null]).pop()], [message.port2]);
 			navigator.serviceWorker.addEventListener('message', event => origin.then(result =>
 				registration.active.postMessage({pid: event.data, result})));
 			navigator.serviceWorker.startMessages();
@@ -79,7 +80,7 @@ if (self.window)
 	masker.then = callback => init.then(([sw]) => callback(sw));
 	masker.init = callback => init.then(([, init]) => init.then(callback));
 	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
-	masker.authorization = signature => masker.then(active => active.postMessage(localStorage.setItem('token', signature) || localStorage.getItem('token')));
+	masker.authorization = signature => masker.then(active => active.postMessage([localStorage.setItem('token', signature) || localStorage.getItem('token')]));
 	masker.open = resources => init.then(() =>
 	{
 		const frame = document.createElement('iframe');
@@ -158,13 +159,14 @@ else
 			client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject()));
 	addEventListener('message', event =>
 	{
-		if (event.data === null || ['string', 'number', 'boolean'].includes(typeof event.data))
+		if (Array.isArray(event.data))
 		{
+			const [token, did, cid] = event.data;
 			if (event.ports.length ? passive : true)
 			{
-				if (typeof event.data === 'string')
+				if (token)
 				{
-					headers.Authorization = `Bearer ${event.data}`;
+					headers.Authorization = `Bearer ${token}`;
 				}
 				else
 				{
@@ -173,6 +175,14 @@ else
 			}
 			if (event.ports.length)
 			{
+				if (did)
+				{
+					headers['Device-Id'] = did;
+				}
+				if (cid)
+				{
+					headers['Channel-Id'] = cid;
+				}
 				passive = event.ports[0].postMessage(null);
 			}
 		}

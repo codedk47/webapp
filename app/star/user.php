@@ -500,7 +500,7 @@ class user extends ArrayObject implements Countable
 		{
 			$did = isset($user['did'])
 				&& is_string($user['did'])
-				&& strlen($user['did']) === 16 ? $user['did'] : NULL;
+				&& preg_match('/^\w{16}$/', $user['did']) ? $user['did'] : NULL;
 			if ($did && $webapp->mysql->users('WHERE did=?s LIMIT 1', $did)->fetch($userdata))
 			{
 				break;

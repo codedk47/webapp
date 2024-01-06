@@ -65,14 +65,11 @@ class webapp_router_home extends webapp_echo_masker
 
 		if ($form->echo)
 		{
-			// print_r($_SERVER);
-			$ua = $this->webapp->request_device();
-			// var_dump($ua, preg_match('/DID\/(\w{16})/', $ua, $pattern), $pattern);
-
+			var_dump($this->webapp->request_header('Channel-Id'), $this->webapp->request_header('Device-Id'));
 			$did = $this->webapp->query['did'] ?? NULL;
 			$form->echo([
-				'cid' => preg_match('/CID\/(\w{4})/', $ua, $pattern) ? $pattern[1] : (string)$this->webapp->redis->get("cid:{$did}"),
-				'did' => preg_match('/DID\/(\w{16})/', $ua, $pattern) ? $pattern[1] : $did,
+				'cid' => $this->webapp->request_header('Channel-Id') ?? (string)$this->webapp->redis->get("cid:{$did}"),
+				'did' => $this->webapp->request_header('Device-Id') ?? $did,
 				'tid' => NULL]);
 		}
 		$form->xml['onsubmit'] = 'return masker.create_account(this)';
