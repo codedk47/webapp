@@ -400,22 +400,29 @@ class base extends webapp
 		
 		$videos = $this->fetch_videos->cache();
 		$subjects = $this->fetch_subjects->cache();
-		if ($videos->time())
+		if ($updatable)
 		{
-			if ($updatable)
-			{
-				$videos->flush()->cacheable();
-				$subjects->flush()->cacheable();
-			}
-			// $updatable
-			// 	? $videos->flush()->cacheable()
-			// 	: $videos->refresh()->cacheable();
+			$videos->flush();
+			$subjects->flush();
 		}
-		else
-		{
-			$videos->flush()->cacheable();
-			$subjects->flush()->cacheable();
-		}
+
+
+		// if ($videos->time())
+		// {
+		// 	if ($updatable)
+		// 	{
+		// 		$videos->flush()->cacheable();
+		// 		$subjects->flush()->cacheable();
+		// 	}
+		// 	// $updatable
+		// 	// 	? $videos->flush()->cacheable()
+		// 	// 	: $videos->refresh()->cacheable();
+		// }
+		// else
+		// {
+		// 	$videos->flush()->cacheable();
+		// 	$subjects->flush()->cacheable();
+		// }
 	}
 	//======================以上为内部功能======================
 	//======================以下为扩展功能======================
@@ -854,7 +861,7 @@ class base extends webapp
 					'extdata' => $data['extdata']
 				];
 			}
-			function randtop(string $tag)
+			function randtop(string $tag):iterable
 			{
 				if ($this->root->alloc($key, "randtop.{$tag}"))
 				{

@@ -417,13 +417,21 @@ div[class|=grid]>a>figure{
 	border-radius: var(--webapp-gapradius);
 	box-shadow: 0 0 .2rem var(--webapp-edge);
 	text-shadow: 1px 1px 1px var(--webapp-background);
-	/*
+	/*h
 	4:3	= 75%
 	3:2	= 66.66%
 	8:5	= 62.5%
 	2:1	= 50%
 	16:9= 56.25%
 	21:9= 42.86%
+	*/
+	/*v
+	3:4	= 133.33%
+	2:3	= 150%
+	5:8 = 160%
+	1:2 = 200%
+	9:16= 177.77%
+	9:21= 233.33%
 	*/
 }
 div[class|=grid]>a>figure[data-label]::before{
@@ -500,9 +508,48 @@ div[class|=grid][class*=-t1]{
 div[class|=grid][class*=-t2]{
 	grid-template-columns: 1fr 1fr;
 }
-div[class|=grid][class*=-t3]>a:first-child{
+div[class|=grid][class*=-t3],
+div[class|=grid][class*=-t7],
+div[class|=grid][class*=-t9]{
+	grid-template-columns: 1fr 1fr 1fr;
+}
+div[class|=grid][class*=-t3]>a>figure,
+div[class|=grid][class*=-t4]>a>figure{
+	padding-bottom: 150%;
+}
+div[class|=grid][class*=-t4],
+div[class|=grid][class*=-t5],
+div[class|=grid][class*=-t8]{
+	display: flex;
+	overflow-x: auto;
+	transform-origin: center;
+}
+div[class|=grid][class*=-t4]>a,
+div[class|=grid][class*=-t5]>a,
+div[class|=grid][class*=-t8]>a{
+	width: 40%;
+	flex-shrink: 0;
+}
+div[class|=grid][class*=-t5]>a{
+	width: 80%;
+}
+div[class|=grid][class*=-t6]>a:first-child{
 	grid-column: 1 / 3;
 }
+div[class|=grid][class*=-t7]>a>figure,
+div[class|=grid][class*=-t8]>a>figure,
+div[class|=grid][class*=-t9]>a:not(:first-child)>figure{
+	padding-bottom: 142%;
+}
+div[class|=grid][class*=-t7]>a>figure>img,
+div[class|=grid][class*=-t8]>a>figure>img,
+div[class|=grid][class*=-t9]>a>figure>img{
+	object-position: right;
+}
+div[class|=grid][class*=-t9]>a:first-child{
+	grid-column: 1 / 4;
+}
+/* 
 div[class|=grid][class*=-t4]>a:first-child{
 	grid-column: 1 / 4;
 }
@@ -532,7 +579,7 @@ div[class|=grid][class*=-t6]{
 div[class|=grid][class*=-t6]>a{
 	width: 80%;
 	flex-shrink: 0;
-}
+} */
 
 
 div[class|=grid][class*=-icon]{

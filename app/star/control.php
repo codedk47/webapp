@@ -595,14 +595,16 @@ class webapp_router_control extends webapp_echo_masker
 
 	//========专题========
 	const subject_styles = [
-		1 => '1 全大图',
-		2 => '2 全小图',
-		3 => '3 一大两小',
-		4 => '4 一大三竖版右侧封面',
-		5 => '5 竖版右侧封面',
-		6 => '6 单排滑动',
-
-		7 => '7 个人（没用）'
+		1 => '1 横版（大）',
+		2 => '2 横版（小）',
+		3 => '3 竖版',
+		4 => '4 竖版（单排滑动）',
+		5 => '5 横版（单排滑动）',
+		6 => '6 横版（先大后小）',
+		7 => '7 横版（右侧封面）',
+		8 => '8 横版（右侧封面单排滑动）',
+		9 => '9 横版（右侧封面先大后小）',
+		255 => '个人（没用）'
 	];
 	const subject_fetch_methods = [
 		'intersect' => '标签HASH交集',
@@ -666,7 +668,7 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
 			$table->cell($value['hash']);
 			$table->cell($value['sort']);
-			$table->cell($classify[$value['type']]);
+			$table->cell($classify[$value['type']] ?? NULL);
 			$table->cell()->append('a', [$value['name'], 'href' => "?control/subject,hash:{$value['hash']}"]);
 			$table->cell(self::subject_styles[$value['style']] ?? $value['style']);
 			$table->cell()->append('a', ["{$value['fetch_method']}({$value['fetch_values']})",
@@ -715,7 +717,7 @@ class webapp_router_control extends webapp_echo_masker
 		if ($this->form_subject()->fetch($subject)
 			&& $this->webapp->mysql->subjects('WHERE hash=?s LIMIT 1', $hash)->update([
 			'ctime' => $this->webapp->time] + $subject)) {
-			$this->webapp->fetch_subjects->flush();
+			$this->webapp->fetch_subjects->flush()->cache();
 			$this->goto("/subjects,type:{$subject['type']}");
 		}
 		else

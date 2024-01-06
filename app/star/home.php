@@ -158,7 +158,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->footer->append('a', ['首页', 'href' => '?home/home']);
 		$this->footer->append('a', ['抖音', 'href' => '?home/short']);
 		//$this->footer->append('a', ['游戏', 'href' => '?home/game']);
-		$this->footer->append('a', ['剧场', 'href' => '?home/home,type:K3yp']);
+		$this->footer->append('a', ['剧场', 'href' => '?home/home,type:fL83']);
 		$this->footer->append('a', ['我的', 'href' => '?home/my']);
 		return $this->footer;
 	}
@@ -421,7 +421,7 @@ class webapp_router_home extends webapp_echo_masker
 			{
 				$this->add_video_lists($this->main,
 					$this->webapp->fetch_videos->randtop($hash),
-					3, "最新{$name}", "?home/home,type:{$hash}");
+					6, "最新{$name}", "?home/home,type:{$hash}");
 			}
 		}
 	}
