@@ -22,6 +22,7 @@ class base extends webapp
 		$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
 		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
 			'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
+		$form->button('更新视频', 'submit');
 
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:60rem', 'required' => NULL]);
@@ -51,13 +52,28 @@ class base extends webapp
 		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1], preview_format(...));
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'style' => 'width:4rem', 'required' => NULL]);
 
-		$tagnode = $form->fieldset()->append('ul');
-		$tagnode['class'] = 'choosetags';
-		$form->field('tags');
-		$form->fieldset['style'] = 'height:28rem';
-
 		$form->fieldset();
-		$form->button('更新视频', 'submit');
+		$tagc = [];
+		$tags = [];
+		foreach ($this->webapp->mysql->tags('ORDER BY level ASC,sort DESC')->select('hash,level,name') as $tag)
+		{
+			$tagc[$tag['hash']] = $tag['level'];
+			$tags[$tag['hash']] = $tag['name'];
+		}
+		$form->field('tags', 'checkbox', ['options' => $tags], fn($v,$i)=>$i?join(',',$v):explode(',',$v))['class'] = 'restag';
+		$blevel = null;
+		$nlevel = self::tags_level;
+		foreach ($form->fieldset->xpath('ul/li') as $li)
+		{
+			$level = (string)$li->label->input['value'];
+			$li['class'] = "level{$tagc[$level]}";
+			if ($blevel !== $tagc[$level])
+			{
+				$blevel = $tagc[$level];
+				$li->insert('li', 'before')->setattr([$nlevel[$blevel], 'class' => 'part']);
+			}
+		}
+		$form->xml->append('script', 'document.querySelectorAll("ul.restag>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 
 		$form->xml['method'] = 'patch';
 		$form->xml['onsubmit'] = 'return video_value(this)';
@@ -72,23 +88,7 @@ class base extends webapp
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
 			$change['data-uploadurl'] = "?video-cover/{$hash}";
 			$change['data-key'] = bin2hex($this->random(8));
-			foreach ($this->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC,hash ASC')->column('name', 'hash') as $taghash => $tagname)
-			{
-				$tagnode->append('input', ['type' => 'radio', 'name' => 'tag', 'value' => $taghash, 'id' => "tag{$taghash}"]);
-				$tagnode->append('label', [$tagname, 'for' => "tag{$taghash}"]);
-				$ul = $tagnode->append('ul');
-				foreach ($this->mysql->tags('WHERE phash=?s ORDER BY sort DESC,hash ASC', $taghash) as $tag)
-				{
-					$ul->append('li')->labelinput("t{$taghash}[]", 'checkbox', $tag['hash'], $tag['name']);
-				}
-			}
-			foreach ($video['tags'] ? explode(',', $video['tags']) : [] as $tag)
-			{
-				if ($checked = $tagnode->xpath("//input[@value='{$tag}']"))
-				{
-					$checked[0]->setattr(['checked' => NULL]);
-				}
-			}
+
 			$form->echo($video);
 		}
 		return $form;

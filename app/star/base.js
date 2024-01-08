@@ -100,23 +100,11 @@ function view_video(data, preview)
 
 function video_value(form)
 {
-	const formdata = new FormData(form), data = Object.fromEntries(formdata), tags = [];
-	if (formdata.get('tag'))
+	const formdata = new FormData(form), body = Object.fromEntries(formdata), tags = [];
+	body.tags = formdata.getAll('tags[]');
+	delete body['tags[]'];
+	masker(form.action, {method: 'PATCH', body}).then(response => response.json()).then(json =>
 	{
-		tags[tags.length] = formdata.get('tag');
-		tags.push(...formdata.getAll(`t${formdata.get('tag')}[]`));
-		if (tags.length > 5)
-		{
-			alert('标签数量不得超过5个！');
-			return false;
-		}
-	}
-	data.tags = tags.join(',');
-	fetch (form.action, {
-		method: 'PATCH',
-		headers: {'Mask-Key': datakey},
-		body: content_to_buffer(JSON.stringify(data), datakey)
-	}).then(r => r.json()).then(json => {
 		if (json.errors.length)
 		{
 			return alert(json.errors.join('\n'));
