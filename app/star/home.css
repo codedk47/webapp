@@ -637,14 +637,14 @@ div.float>a{
 /* div.videoinfo */
 div.videoinfo{
 	display: flex;
-	gap: var(--webapp-gapitem);
+	gap: var(--webapp-gap);
 	flex-direction: column;
 	padding: var(--webapp-gapitem);
 }
 /* mark.tags */
 div.videoinfo>mark{
 	display: flex;
-	gap: var(--webapp-gapitem);
+	gap: var(--webapp-gap);
 	flex-wrap: wrap;
 	background-color: transparent;
 }
@@ -653,14 +653,18 @@ div.videoinfo>mark>a{
 	color: var(--webapp-foreground);
 	background-color: var(--webapp-button);
 	border-radius: var(--webapp-gapradius);
-	font-size: var(--webapp-font-small);
 }
 div.videoinfo>div{
 	display: flex;
 	gap: var(--webapp-gapitem);
 	flex-wrap: wrap;
+	align-items: center;
 }
-div.videoinfo>div>a{
+div.videoinfo>div.useraction{
+	gap: calc(var(--webapp-gap) * 4);
+	justify-content: center;
+}
+div.videoinfo>div.useraction>a{
 	display: flex;
 	overflow: hidden;
 	border: 1px solid var(--webapp-edge);
@@ -668,33 +672,26 @@ div.videoinfo>div>a{
 	background-color: var(--webapp-hint);
 	align-items: center;
 }
-div.videoinfo>div>a>svg{
+div.videoinfo>div.useraction>a>svg{
 	padding: var(--webapp-gapitem);
 	background-image: var(--webapp-concavity);
 }
-div.videoinfo>div>a>span{
-
+div.videoinfo>div.useraction>a>span{
 	padding: 0 var(--webapp-gapitem);
 	padding-right: var(--webapp-gap);
 }
-div.videoinfo>div.extinfo>mark[data-label]{
+div.videoinfo>div[data-label]::before{
+	content: attr(data-label);
+}
+div.videoinfo>div[data-label]>a{
 	overflow: hidden;
 	color: var(--webapp-anchor);
 	border: 1px solid var(--webapp-edge);
-
+	padding: .2rem var(--webapp-gapitem);
 	border-radius: var(--webapp-gapradius);
 	background-color: var(--webapp-hint);
-	padding-right: var(--webapp-gap);
 	white-space: nowrap;
 }
-div.videoinfo>div.extinfo>mark[data-label]::before{
-	content: attr(data-label);
-	padding: var(--webapp-gapitem);
-	display: inline-block;
-	background-image: var(--webapp-concavity);
-	margin-right: var(--webapp-gapitem);
-}
-
 
 div.short{
 	height: 100%;

@@ -546,7 +546,7 @@ class webapp_router_home extends webapp_echo_masker
 			//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
 			$watch = $this->aside->append('webapp-video', [
 				'data-poster' => $video['poster'],
-				'data-m3u8' => $video['m3u8'],
+				//'data-m3u8' => $video['m3u8'],
 				'oncanplay' => 'masker.canplay(this)',
 				//'autoheight' => NULL,
 				//'autoplay' => NULL,
@@ -582,10 +582,10 @@ class webapp_router_home extends webapp_echo_masker
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', htmlentities($video['name']));
 
-		//影片信息（功能菜单）
-		$videomenu = $videoinfo->append('div', ['style' => 'justify-content:center;gap:calc(var(--webapp-gap)*4);margin:var(--webapp-gapitem) 0']);
+		//影片信息（用户行为）
+		$useraction = $videoinfo->append('div', ['class' => 'useraction']);
 
-		$anchor = $videomenu->append('a', ['href' => '?home/log,type:liked', 'onclick' => 'return masker.log(this)', 'data-body' => $hash, 'data-toggle' => '已喜欢']);
+		$anchor = $useraction->append('a', ['href' => '?home/log,type:liked', 'onclick' => 'return masker.log(this)', 'data-body' => $hash, 'data-toggle' => '已喜欢']);
 		$anchor->svg(['fill' => 'white'])->icon('heart');
 		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('heart-fill');
 		$anchor->append('span', $anchor['data-value'] = '喜欢');
@@ -598,7 +598,7 @@ class webapp_router_home extends webapp_echo_masker
 				(string)$anchor->svg[0]['style']];
 		}
 
-		$anchor = $videomenu->append('a', ['href' => '?home/log,type:favorited', 'onclick' => 'return masker.log(this)', 'data-body' => $hash, 'data-toggle' => '已收藏']);
+		$anchor = $useraction->append('a', ['href' => '?home/log,type:favorited', 'onclick' => 'return masker.log(this)', 'data-body' => $hash, 'data-toggle' => '已收藏']);
 		$anchor->svg(['fill' => 'white'])->icon('star');
 		$anchor->svg(['fill' => 'white', 'style' => 'display:none'])->icon('star-fill');
 		$anchor->append('span', $anchor['data-value'] = '收藏');
@@ -611,11 +611,26 @@ class webapp_router_home extends webapp_echo_masker
 				(string)$anchor->svg[0]['style']];
 		}
 
+		//判断是否剧集
+		if (in_array('K3yp', explode(',', $video['tags']), TRUE))
+		{
+			$videoseries = $videoinfo->append('mark');
+			foreach ($this->webapp->fetch_videos->eval('type=?s AND name LIKE ?s ORDER BY name ASC',
+				$video['type'], trim($video['name'], "0123456789 \n\r\t\v\x00") . '%') as $series) {
+				$anchor = $videoseries->append('a', [str_pad(intval(strrchr($series['name'], ' ')), 2, 0, STR_PAD_LEFT),
+					'href' => "?home/watch,hash:{$series['hash']}"]);
+				if ($series['hash'] === $hash)
+				{
+					$anchor['style'] = 'background-color:var(--webapp-foreground);color:var(--webapp-background)';
+				}
+			}
+		}
+
 		//影片信息（标签）
 		$this->tags = $this->webapp->fetch_tags->shortname();
 		if ($video['tags'])
 		{
-			$taginfo = $videoinfo->append('mark');
+			$taginfo = $videoinfo->append('div', ['data-label' => '标签:']);
 			foreach (explode(',', $video['tags']) as $tag)
 			{
 				if (isset($this->tags[$tag]))
@@ -629,15 +644,34 @@ class webapp_router_home extends webapp_echo_masker
 		if ($video['extdata'])
 		{
 			$extdata = array_filter(json_decode($video['extdata'], TRUE), trim(...));
-			isset($extdata['issue']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['issue'], 'data-label' => '发行日期']);
-			if (isset($extdata['publisher']) || isset($extdata['director']))
+			isset($extdata['issue']) && $videoinfo->append('div', [$extdata['issue'], 'data-label' => '发行日期:']);
+
+			isset($extdata['publisher']) && $videoinfo->append('div', ['data-label' => '发行商:'])
+				->append('a', [$extdata['publisher'], 'href' => 'javascript:;']);
+			isset($extdata['director']) && $videoinfo->append('div', ['data-label' => '导演:'])
+				->append('a', [$extdata['director'], 'href' => 'javascript:;']);
+			isset($extdata['series']) && $videoinfo->append('div', ['data-label' => '系列:'])
+				->append('a', [$extdata['series'], 'href' => 'javascript:;']);
+
+			if (isset($extdata['actress']))
 			{
-				$extinfo = $videoinfo->append('div', ['class' => 'extinfo']);
-				isset($extdata['publisher']) && $extinfo->append('mark', [$extdata['publisher'], 'data-label' => '发行商']);
-				isset($extdata['director']) && $extinfo->append('mark', [$extdata['director'], 'data-label' => '导演']);
+				$extinfo = $videoinfo->append('div', ['data-label' => '女优:']);
+				foreach (explode(',', $extdata['actress']) as $actress)
+				{
+					$extinfo->append('a', [$actress, 'href' => 'javascript:;']);
+				}
 			}
-			isset($extdata['series']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['series'], 'data-label' => '系列']);
-			isset($extdata['series']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['actress'], 'data-label' => '女优']);
+			// if (isset($extdata['publisher']) || isset($extdata['director']))
+			// {
+			// 	$label = [];
+
+
+			// 	$extinfo = $videoinfo->append('div', ['class' => 'extinfo']);
+			// 	isset($extdata['publisher']) && $extinfo->append('mark', [$extdata['publisher'], 'data-label' => '发行商']);
+			// 	isset($extdata['director']) && $extinfo->append('mark', [$extdata['director'], 'data-label' => '导演']);
+			// }
+			// isset($extdata['series']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['series'], 'data-label' => '系列']);
+			// isset($extdata['series']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['actress'], 'data-label' => '女优']);
 		}
 
 		//关联影片
@@ -682,7 +716,7 @@ class webapp_router_home extends webapp_echo_masker
 			return;
 		}
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
-		$this->script(['src' => '/webapp/res/js/video.js?v=1']);
+		$this->script(['src' => '/webapp/res/js/video.js?v=m']);
 		$this->meta(['name' => 'theme-color', 'content' => 'black']);
 		$this->xml->body->div['class'] = 'short';
 		$this->header->append('a', ['href' => 'javascript:history.back();', 'class' => 'arrow']);
