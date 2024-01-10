@@ -661,17 +661,6 @@ class webapp_router_home extends webapp_echo_masker
 					$extinfo->append('a', [$actress, 'href' => 'javascript:;']);
 				}
 			}
-			// if (isset($extdata['publisher']) || isset($extdata['director']))
-			// {
-			// 	$label = [];
-
-
-			// 	$extinfo = $videoinfo->append('div', ['class' => 'extinfo']);
-			// 	isset($extdata['publisher']) && $extinfo->append('mark', [$extdata['publisher'], 'data-label' => '发行商']);
-			// 	isset($extdata['director']) && $extinfo->append('mark', [$extdata['director'], 'data-label' => '导演']);
-			// }
-			// isset($extdata['series']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['series'], 'data-label' => '系列']);
-			// isset($extdata['series']) && $videoinfo->append('div', ['class' => 'extinfo'])->append('mark', [$extdata['actress'], 'data-label' => '女优']);
 		}
 
 		//关联影片
