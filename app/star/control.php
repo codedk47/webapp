@@ -867,7 +867,7 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell($value['cid']);
 
 			$table->cell($value['device']);
-			$table->cell($value['tid']);
+			// $table->cell($value['tid']);
 			$table->cell($value['did']);
 
 			$table->cell($value['nickname']);
@@ -885,7 +885,9 @@ class webapp_router_control extends webapp_echo_masker
 
 		});
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '登录', '观看', '分享', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称',
+		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '登录', '观看', '分享', '渠道ID', '设备类型',
+			//'绑定手机',
+			'设备ID', '昵称',
 			//'影片数', '余额', '会员到期', '金币', '观影券'
 		);
 		$table->header('用户 %d 项', $table->count());
