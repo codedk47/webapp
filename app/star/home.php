@@ -398,7 +398,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_search(NULL);
 		$this->set_footer_menu();
 		$this->set_float_button();
-		$this->add_slideshows_ads($this->main, 1);
+		$this->add_slideshows_ads($this->main, 2);
 		if (isset($classify[$type]) === FALSE)
 		{
 			$this->add_nav_ads($this->main, 9, '福利导航');
@@ -433,7 +433,7 @@ class webapp_router_home extends webapp_echo_masker
 		// 	$this->add_video_lists($this->template(), $this->webapp->fetch_subjects->videos($hash, $page));
 		// 	return;
 		// }
-		$this->add_slideshows_ads($this->main, 1);
+		$this->add_slideshows_ads($this->main, 2);
 		
 		if (is_array($subject = $this->webapp->fetch_subjects[$hash]))
 		{
@@ -478,7 +478,7 @@ class webapp_router_home extends webapp_echo_masker
 			// }
 			$this->set_header_search(word:$word);
 			$this->set_aside_classify($this->webapp->at(['classify' => '', 'page' => NULL]), $classify, '全部');
-			$this->add_slideshows_ads($this->main, 1);
+			$this->add_slideshows_ads($this->main, 2);
 			$this->set_float_button();
 			$result = $this->webapp->fetch_videos->with(...$cond);
 			if ($result->count())
@@ -507,7 +507,7 @@ class webapp_router_home extends webapp_echo_masker
 			return;
 		}
 		$this->set_header_search();
-		$this->add_slideshows_ads($this->main, 1);
+		$this->add_slideshows_ads($this->main, 2);
 		foreach ($this->webapp->fetch_tags->levels(not:[0, 1, 2, 3, 12]) as $describe => $tags)
 		{
 			$node = $this->main->append('div', ['class' => 'videoinfo']);
@@ -664,10 +664,10 @@ class webapp_router_home extends webapp_echo_masker
 		}
 
 		//关联影片
-		$this->add_slideshows_ads($this->main, 1);
+		$this->add_slideshows_ads($this->main, 2);
 		$this->add_video_lists($this->main, $this->webapp->fetch_videos->watch_actress($video), 2, '相关推荐');
 
-		$this->add_slideshows_ads($this->main, 1);
+		$this->add_slideshows_ads($this->main, 2);
 		$this->add_titles('随机推荐')->append('a', ['换一换', 'href' => "?home/ramdom,hash:{$video['hash']}",
 			'onclick' => 'return !fetch(this.href).then(response=>response.text()).then(content=>this.parentNode.nextElementSibling.innerHTML=content)']);
 		$this->add_video_lists($this->main, $this->webapp->fetch_videos->watch_random($video['hash']), 2);
