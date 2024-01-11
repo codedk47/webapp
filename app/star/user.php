@@ -204,11 +204,11 @@ class user extends ArrayObject implements Countable
 			}
 			if ($this->webapp->mysql->sync(fn() => $this->cond('AND iid IS NULL')->update('iid=?s', $id) === 1
 				&& $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update('share=share+1') === 1)) {
-				$this->count(+5);
 				$this->webapp->redis->hSet("user:{$this->id}", 'iid', $this['iid'] = $id);
 				if ($this->webapp->redis->exists($target = "user:{$id}"))
 				{
 					$this->webapp->redis->hIncrBy($target, 'share', 1);
+					$this->webapp->redis->hIncrBy($target, 'count', 10);
 				}
 				$error = '领取成功！';
 				return TRUE;
