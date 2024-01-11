@@ -378,7 +378,6 @@ div.titles{
 	display: flex;
 	justify-content: space-between;
 	padding: 0 var(--webapp-gapitem);
-	padding-top: var(--webapp-gap);
 }
 div.titles>strong{
 	font-size: var(--webapp-font-large);
