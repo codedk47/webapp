@@ -8,7 +8,7 @@ class webapp_router_home extends webapp_echo_masker
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
-		unset($this->xml->body->div['class']);
+		unset($this->xml->head->link[1], $this->xml->body->div['class']);
 		$this->free = $webapp['app_free'];
 		$this->footer[0] = NULL;
 		if ($this->initiated)
@@ -18,7 +18,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->title($webapp['app_name']);
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
-		$this->xml->head->link['href'] = '/webapp/app/star/home.css?' . $webapp->random_hash(TRUE);
+		$this->xml->head->link['href'] = '/webapp/app/star/home.css?v=m';
 		$this->script(['src' => '/webapp/app/star/home.js?v=r']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=q']);
 		

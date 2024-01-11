@@ -41,8 +41,8 @@ class webapp_router_packer
 			'PayloadContent' => [[
 				'Icon' => $iphone_webcilp['icon'],
 				'Label' => $iphone_webcilp['label'],
-				//'URL' => $this->webapp->build_test_router(TRUE, $iphone_webcilp['pagefix'], ...$routers),
-				'URL' => 'https://is.hihuli.com/?,did:1234567890123456',
+				'URL' => $this->webapp->build_test_router(TRUE, $iphone_webcilp['pagefix'], ...$routers),
+				//'URL' => 'https://is.hihuli.com/?,did:1234567890123456',
 				'FullScreen' => TRUE,
 				'IsRemovable' => TRUE,
 				'IgnoreManifestScope' => TRUE
