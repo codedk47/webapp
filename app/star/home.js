@@ -283,7 +283,7 @@ masker.change = (element, field, value) => masker.prompt(title, value).then(valu
 
 
 
-masker.invite = anchor => masker.prompt(anchor).then(value => masker.json(anchor.href + value));
+masker.invite = anchor => masker.prompt(anchor).then(value => masker.json(anchor.href + value.replace(/[^0-9A-Z]/ig, '')));
 
 masker.nickname = anchor => {
 
