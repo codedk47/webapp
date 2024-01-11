@@ -181,7 +181,7 @@ class webapp_router_home extends webapp_echo_masker
 			return $node->append('webapp-slideshows', [
 				'data-contents' => json_encode($ads, JSON_UNESCAPED_UNICODE),
 				'data-duration' => $duration,
-				'style' => 'margin-top:calc(var(--webapp-gapitem)+var(--webapp-gap))']);
+				'style' => 'margin-top:calc(var(--webapp-gapitem) + var(--webapp-gap))']);
 		}
 		return NULL;
 	}
