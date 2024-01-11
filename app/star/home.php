@@ -19,7 +19,7 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/home.css?v=m';
-		$this->script(['src' => '/webapp/app/star/home.js?v=a']);
+		$this->script(['src' => '/webapp/app/star/home.js?v=r']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=q']);
 		
 		//$this->footer->text('asd');
@@ -758,7 +758,7 @@ class webapp_router_home extends webapp_echo_masker
 
 		$anchors->append('a', ['输入邀请码',
 			'href' => '?home/my-invite,code:',
-			'onclick' => 'return !masker.prompt(this.textContent).then(value => masker.json(this.href + value))',
+			'onclick' => 'return !masker.prompt(this.textContent).then(value=>masker.json(this.href+value.replace(/[^0-9A-Z]/ig,"")))',
 			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
 		$anchors->append('a', ['分享链接，获取观影次数', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
 
