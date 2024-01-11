@@ -863,6 +863,7 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell()->append('a', [$value['id'], 'href' => "?control/user,id:{$value['id']}"]);
 			$table->cell(number_format($value['login']));
 			$table->cell(number_format($value['watch']));
+			$table->cell(number_format($value['share']));
 			$table->cell($value['cid']);
 
 			$table->cell($value['device']);
@@ -870,21 +871,23 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell($value['did']);
 
 			$table->cell($value['nickname']);
-			$table->cell(number_format($value['video_num']));
-			$table->cell(number_format($value['balance']));
-			$table->cell(match (true)
-			{
-				$value['expire'] === 0 => '超级会员',
-				$value['expire'] < $this->webapp->time => '已经过期',
-				$value['expire'] - 316224000 > $this->webapp->time => '永久会员',
-				default => date('Y-m-d', $value['expire'])
-			});
-			$table->cell(number_format($value['coin']));
-			$table->cell(number_format($value['ticket']));
+			// $table->cell(number_format($value['video_num']));
+			// $table->cell(number_format($value['balance']));
+			// $table->cell(match (true)
+			// {
+			// 	$value['expire'] === 0 => '超级会员',
+			// 	$value['expire'] < $this->webapp->time => '已经过期',
+			// 	$value['expire'] - 316224000 > $this->webapp->time => '永久会员',
+			// 	default => date('Y-m-d', $value['expire'])
+			// });
+			// $table->cell(number_format($value['coin']));
+			// $table->cell(number_format($value['ticket']));
 
 		});
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '登录', '观看', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称', '影片数', '余额', '会员到期', '金币', '观影券');
+		$table->fieldset('注册日期', '最后登录日期', '最后登录IP', 'ID', '登录', '观看', '分享', '渠道ID', '设备类型', '绑定手机', '设备ID', '昵称',
+			//'影片数', '余额', '会员到期', '金币', '观影券'
+		);
 		$table->header('用户 %d 项', $table->count());
 
 		$table->bar->append('input', [
