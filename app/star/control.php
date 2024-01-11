@@ -16,7 +16,7 @@ class webapp_router_control extends webapp_echo_masker
 
 		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
 		$this->link_resources($webapp['app_resources']);
-		$this->script(['src' => '/webapp/app/star/base.js']);
+		$this->script(['src' => '/webapp/app/star/base.js?v=q']);
 		$this->nav([
 			['数据', '?control/home'],
 			
