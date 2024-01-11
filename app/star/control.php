@@ -269,6 +269,11 @@ class webapp_router_control extends webapp_echo_masker
 
 		return $form;
 	}
+	function patch_ads()
+	{
+		$this->webapp->fetch_ads->flush();
+		$this->json(['dialog' => '刷新完成！']);
+	}
 	function get_ads(int $page = 1)
 	{
 		$conds = [[]];
@@ -336,9 +341,12 @@ class webapp_router_control extends webapp_echo_masker
 		$table->bar->select(['' => '所有位置'] + $seats)
 			->setattr(['onchange' => 'g({seat:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($seat);
-		// $table->bar->select(['' => '所有展示'] + $displays)
-		// 	->setattr(['onchange' => 'g({display:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-		// 	->selected($display);
+
+		$table->bar->append('button', ['刷新前端广告缓存',
+			'data-src' => '?control/ads',
+			'data-method' => 'patch',
+			'data-bind' => 'click',
+			'style' => 'margin-left:.6rem;padding:.1rem']);
 	}
 	function get_ad_insert()
 	{
@@ -356,7 +364,6 @@ class webapp_router_control extends webapp_echo_masker
 				'click' => 0,
 				'change' => 'sync'] + $ad)
 			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
-			$this->webapp->fetch_ads->flush();
 			$this->webapp->response_location('?control/ads');
 		}
 		else
@@ -366,7 +373,7 @@ class webapp_router_control extends webapp_echo_masker
 	}
 	function delete_ad(string $hash, string $seat = NULL)
 	{
-		$this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->delete() === 1 && $this->webapp->fetch_ads->flush()
+		$this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->delete() === 1
 			? $this->goto("/ads,seat:{$seat}")
 			: $this->dialog('广告删除失败！');
 	}
@@ -395,7 +402,6 @@ class webapp_router_control extends webapp_echo_masker
 			}
 			if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
 			{
-				$this->webapp->fetch_ads->flush();
 				$this->webapp->response_location('?control/ads');
 			}
 			return 200;
