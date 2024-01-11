@@ -808,11 +808,8 @@ class webapp_router_home extends webapp_echo_masker
 		$dl = $this->webapp->fetch_configs()['down_page'];
 		$this->main->append('figure')->append('img', ['src' => sprintf('?qrcode/%s', $this->webapp->encrypt($dl))]);
 		$this->main->append('strong', '手机长安可以选择复制以下邀请码');
-		$mark = $this->main->append('mark', ['data-iid' => '邀请码：']);
-		foreach (str_split($this->webapp->time33hash($this->webapp->hashtime33($this->user->id), FALSE), 4) as $a)
-		{
-			$mark->append('span', $a);
-		}
+		$this->main->append('mark', [join(' ',
+			str_split($this->webapp->time33hash($this->webapp->hashtime33($this->user->id), FALSE), 4)), 'data-iid' => '邀请码：']);
 		// $this->main->append('a', ['复制二维码地址', 'href' => $dl, 'class' => 'button',
 		// 	'onclick' => 'return !navigator.clipboard.writeText(this.href).then(()=>alert("链接拷贝成功，请分享给好友通过浏览器打开下载APP"),()=>location.href=this.href)']);
 		$dl = $this->main->append('dl');
