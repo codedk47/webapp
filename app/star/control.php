@@ -244,13 +244,10 @@ class webapp_router_control extends webapp_echo_masker
 	function form_ad(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
-		$form->fieldset->append('div', [
-			'class' => 'cover',
-			'style' => 'width:32rem;height:18rem;background-size:contain'
-		]);
+		$form->fieldset->append('img', ['style' => 'width:32rem;height:18rem;object-fit:contain']);
 
 		$form->fieldset('广告图片 / 过期时间');
-		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => 'cover_preview(this,document.querySelector("div.cover"))']);
+		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => 'image_preview(this,document.querySelector("form>fieldset>img"))']);
 		$form->field('expire', 'date', ['value' => date('Y-m-t')], fn($v, $i) => $i ? strtotime($v) : date('Y-m-d', $v));
 
 		$form->fieldset('展示位置 / 权重（越大越几率越大） / 名称');
@@ -355,6 +352,8 @@ class webapp_router_control extends webapp_echo_masker
 				'hash' => $hash,
 				'mtime' => $this->webapp->time,
 				'ctime' => $this->webapp->time,
+				'view' => 0,
+				'click' => 0,
 				'change' => 'sync'] + $ad)
 			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
 			$this->webapp->fetch_ads->flush();

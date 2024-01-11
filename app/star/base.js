@@ -1,3 +1,20 @@
+function image_preview(input, img)
+{
+	if (input.files.length)
+	{
+		img.src = URL.createObjectURL(input.files[0]);
+	}
+}
+
+
+
+
+
+
+
+
+
+
 function content_to_buffer(contents, hash = null)
 {
 	const
@@ -115,31 +132,6 @@ function video_value(form)
 		}
 	});
 	return false;
-}
-function video_cover(input, preview)
-{
-	if (input.files.length < 1) return alert('请选择一个封面图片！');
-	if (input.disabled) return;
-	input.disabled = true;
-	const reader = new FileReader;
-	reader.onload = event =>
-	{
-		const
-		buffer = new Uint8Array(event.target.result),
-		key = input.dataset.key.match(/.{2}/g).map(value => parseInt(value, 16));
-		fetch(input.dataset.uploadurl, {
-			method: 'PATCH',
-			headers: {'Mask-Key': input.dataset.key},
-			body: buffer.map((byte, i) => byte ^ key[i % 8])
-		}).then(r => r.json()).then(json =>
-		{
-			//console.log(json);
-			preview.style.backgroundImage = `url(${URL.createObjectURL(input.files[0])})`;
-			preview.textContent = '';
-			input.disabled = false;
-		})
-	};
-	reader.readAsArrayBuffer(input.files[0]);
 }
 function video_cover(input, preview)
 {
