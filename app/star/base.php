@@ -711,7 +711,7 @@ class base extends webapp
 	//获取指定广告（位置）
 	function fetch_ads():webapp_redis_table
 	{
-		return new class($this->redis, 'expire>?i ORDER BY weight DESC', $this->time) extends webapp_redis_table
+		return new class($this->redis, '`change`="none" AND expire>?i ORDER BY weight DESC', $this->time) extends webapp_redis_table
 		{
 			protected string $tablename = 'ads', $primary = 'hash', $expire = 'expire';
 			function __construct(webapp_redis|webapp_redis_table $context, ...$commands)

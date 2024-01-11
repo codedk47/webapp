@@ -375,8 +375,9 @@ class webapp_router_control extends webapp_echo_masker
 		if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->fetch($ad))
 		{
 			$form = $this->form_ad($this->main);
-			$form->xml->fieldset->div->append('img', ['src' => "?/news/{$ad['hash']}?mask{$ad['ctime']}"]);
-			//$form->xml->fieldset->div['data-cover'] = "/news/{$ad['hash']}?{$ad['ctime']}";
+			$form->xml->fieldset->img['src'] = $ad['change'] === 'none'
+				? "?/news/{$ad['hash']}?mask{$ad['ctime']}"
+				: '/webapp/res/ps/loading.svg';
 			$form->echo($ad);
 		}
 	}
