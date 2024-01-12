@@ -222,7 +222,14 @@ class webapp_router_control extends webapp_echo_masker
 			'onkeydown' => 'event.keyCode==13&&g({cid:this.value||null})'
 		]);
 	}
-
+	function patch_flush(string $data)
+	{
+		match ($data) {
+			'ads' => $this->webapp->fetch_ads->flush(),
+			'subjects' => $this->webapp->fetch_subjects->flush()->cache()
+		};
+		$this->json(['dialog' => '刷新完成！']);
+	}
 	//========广告========
 	function ad_seats():array
 	{
@@ -268,11 +275,6 @@ class webapp_router_control extends webapp_echo_masker
 		$form->button('提交', 'submit');
 
 		return $form;
-	}
-	function patch_ads()
-	{
-		$this->webapp->fetch_ads->flush();
-		$this->json(['dialog' => '刷新完成！']);
 	}
 	function get_ads(int $page = 1)
 	{
@@ -343,7 +345,7 @@ class webapp_router_control extends webapp_echo_masker
 			->selected($seat);
 
 		$table->bar->append('button', ['刷新前端广告缓存',
-			'data-src' => '?control/ads',
+			'data-src' => '?control/flush,data:ads',
 			'data-method' => 'patch',
 			'data-bind' => 'click',
 			'style' => 'margin-left:.6rem;padding:.1rem']);
@@ -612,6 +614,12 @@ class webapp_router_control extends webapp_echo_masker
 		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
 			->select(['' => '全部分类', ...$classify])
 			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'padding:.1rem'])->selected($type);
+
+		$table->bar->append('button', ['刷新前端专题缓存',
+			'data-src' => '?control/flush,data:subjects',
+			'data-method' => 'patch',
+			'data-bind' => 'click',
+			'style' => 'margin-left:.6rem;padding:.1rem']);
 	}
 	function get_subject(string $hash = NULL)
 	{
