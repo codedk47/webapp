@@ -101,7 +101,7 @@ class webapp_router_packer
 			flock($index, LOCK_UN);
 			fclose($index);
 		}
-		if ($this->channel($cid) && (is_file($packcid = "{$currentdir}/{$cid}.{$android_apk['packer_suffix']}")
+		if ($this->webapp->cid($cid) && (is_file($packcid = "{$currentdir}/{$cid}.{$android_apk['packer_suffix']}")
 			|| webapp::lib('apkpacker/apkpacker.php')("{$android_apk['prepare_directory']}/{$currentapk}", $cid, $packcid))) {
 			$this->webapp->recordlog($cid, 'dpc_android');
 			$currentapk ="{$currentfix}/{$cid}.{$android_apk['packer_suffix']}";
