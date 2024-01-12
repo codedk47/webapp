@@ -343,6 +343,8 @@ main.report>div>pre{
 	margin: 0;
 	padding: var(--webapp-gapitem);
 	font-family: var(--webapp-font-sans-serif);
+	white-space: pre-wrap;
+	word-wrap: break-word;
 }
 
 /* footer */
