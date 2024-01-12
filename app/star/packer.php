@@ -56,8 +56,8 @@ class webapp_router_packer
 	}
 	function android_apk(?string $cid):int
 	{
-		$this->webapp->response_location('/hhuli.apk');
-		return 302;
+		// $this->webapp->response_location('/hhuli.apk');
+		// return 302;
 		// $android_apk = [
 		// 	'prepare_directory' => 'D:/apks',
 		// 	'replace_interval' => 0,
@@ -65,7 +65,7 @@ class webapp_router_packer
 		// 	'download_path' => 'http://hostlocal/pwa'
 		// ];
 		$android_apk = $this->webapp['android_apk'];
-		$currentapk = trim(file_get_contents($file = __DIR__ . '/packer.txt'));
+		$currentapk = trim(file_get_contents($file = "{$android_apk['prepare_directory']}/packer.txt"));
 		$currentfix = basename($currentapk, ".{$android_apk['packer_suffix']}");
 		$currentdir = "{$android_apk['prepare_directory']}/{$currentfix}";
 		if ($this->webapp->time(-$android_apk['replace_interval']) > filemtime($file)
