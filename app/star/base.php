@@ -363,7 +363,7 @@ class base extends webapp
 	//本地命令行运行专题获取更新
 	function get_subject_fetch(string $ob = NULL)
 	{
-		if (PHP_SAPI !== 'cli' || $ob !== 'fore') return 404;
+		if (PHP_SAPI !== 'cli' && $ob !== 'fore') return 404;
 		function detect(string $haystack, array $needles, callable $method):bool
 		{
 			foreach ($needles as $needle)
