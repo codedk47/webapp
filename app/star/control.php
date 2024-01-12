@@ -628,7 +628,6 @@ class webapp_router_control extends webapp_echo_masker
 			'hash' => substr($this->webapp->random_hash(TRUE), -4),
 			'mtime' => $this->webapp->time,
 			'ctime' => $this->webapp->time] + $subject)) {
-			$this->webapp->fetch_subjects->flush();
 			$this->goto("/subjects,type:{$subject['type']}");
 		}
 		else
@@ -639,14 +638,13 @@ class webapp_router_control extends webapp_echo_masker
 	function delete_subject(string $hash)
 	{
 		$this->webapp->mysql->subjects('WHERE hash=?s LIMIT 1', $hash)->delete() === 1
-			&& $this->webapp->fetch_subjects->flush() ? $this->goto('/subjects') : $this->dialog('专题删除失败！');
+			? $this->goto('/subjects') : $this->dialog('专题删除失败！');
 	}
 	function patch_subject(string $hash)
 	{
 		if ($this->form_subject()->fetch($subject)
 			&& $this->webapp->mysql->subjects('WHERE hash=?s LIMIT 1', $hash)->update([
 			'ctime' => $this->webapp->time] + $subject)) {
-			$this->webapp->fetch_subjects->flush()->cache();
 			$this->goto("/subjects,type:{$subject['type']}");
 		}
 		else
