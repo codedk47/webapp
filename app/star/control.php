@@ -226,7 +226,8 @@ class webapp_router_control extends webapp_echo_masker
 	{
 		match ($data) {
 			'ads' => $this->webapp->fetch_ads->flush(),
-			'subjects' => $this->webapp->fetch_subjects->flush()->cache()
+			'subjects' => $this->webapp->fetch_subjects->flush()->cache(),
+			'subjectvideos' => $this->webapp->get_subject_fetch('fore')
 		};
 		$this->json(['dialog' => '刷新完成！']);
 	}
@@ -1189,28 +1190,33 @@ class webapp_router_control extends webapp_echo_masker
 		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
 			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
-		$table->bar->select(['' => '要求', 'vip' => '会员', 'free' => '免费', 'coin' => '金币'])
-			->setattr(['onchange' => 'g({require:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-			->selected($require);
+		// $table->bar->select(['' => '要求', 'vip' => '会员', 'free' => '免费', 'coin' => '金币'])
+		// 	->setattr(['onchange' => 'g({require:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+		// 	->selected($require);
 		$table->bar->select(['' => '全部类型'] + base::video_type)
 			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($type);
-		$table->bar->select(['' => '默认排序（最后修改）',
-			'view-desc' => '观看（降序）',
-			'like-desc' => '点赞（降序）',
-			'sales-desc' => '销量（降序）'])
-			->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-			->selected($sort);
-		$table->bar->append('button', ['所有完成视频通过审核',
-			'style' => 'margin-left:.6rem',
-			'data-src' => '?control/video-all-finished-to-allow',
-			'data-method' => 'patch',
-			'data-bind' => 'click'
-		]);
+		// $table->bar->select(['' => '默认排序（最后修改）',
+		// 	'view-desc' => '观看（降序）',
+		// 	'like-desc' => '点赞（降序）',
+		// 	'sales-desc' => '销量（降序）'])
+		// 	->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+		// 	->selected($sort);
+		// $table->bar->append('button', ['所有完成视频通过审核',
+		// 	'style' => 'margin-left:.6rem',
+		// 	'data-src' => '?control/video-all-finished-to-allow',
+		// 	'data-method' => 'patch',
+		// 	'data-bind' => 'click'
+		// ]);
 		$table->bar->append('button', ['清理异常',
 			'style' => 'margin-left:.6rem',
 			'onclick' => 'location.href="?control/video-exception-clear"'
 		]);
+		$table->bar->append('button', ['刷新前端专题影片缓存',
+			'data-src' => '?control/flush,data:subjectvideos',
+			'data-method' => 'patch',
+			'data-bind' => 'click',
+			'style' => 'margin-left:.6rem;padding:.1rem']);
 		$table->bar['style'] = 'white-space:nowrap';
 	}
 	function get_video(string $hash)

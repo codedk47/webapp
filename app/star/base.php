@@ -361,9 +361,9 @@ class base extends webapp
 		}
 	}
 	//本地命令行运行专题获取更新
-	function get_subject_fetch()
+	function get_subject_fetch(string $ob = NULL)
 	{
-		if (PHP_SAPI !== 'cli') return 404;
+		if (PHP_SAPI !== 'cli' || $ob !== 'fore') return 404;
 		function detect(string $haystack, array $needles, callable $method):bool
 		{
 			foreach ($needles as $needle)
@@ -403,7 +403,10 @@ class base extends webapp
 				$updatable = TRUE;
 				$success = $this->mysql->videos('WHERE hash=?s LIMIT 1', $video['hash'])
 					->update('subjects=?s', $values) === 1 ? 'OK' : 'NO';
-				echo "{$video['hash']} -> [{$video['subjects']}] >> [{$values}] {$success}\n";
+				if ($ob === NULL)
+				{
+					echo "{$video['hash']} -> [{$video['subjects']}] >> [{$values}] {$success}\n";
+				}
 			}
 		}
 		
