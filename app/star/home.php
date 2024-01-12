@@ -21,9 +21,6 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->head->link['href'] = '/webapp/app/star/home.css?v=n';
 		$this->script(['src' => '/webapp/app/star/home.js?v=r']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=q']);
-		
-		//$this->footer->text('asd');
-
 	}
 	function init(bool $success)
 	{
