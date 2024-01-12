@@ -611,9 +611,9 @@ class webapp_router_control extends webapp_echo_masker
 		$table->fieldset('删除', '创建时间', '修改时间', 'HASH', '排序', '分类', '名称', '展示样式', '数据来源');
 		$table->header('找到 %d 项', $table->count());
 		$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
-		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
-			->select(['' => '全部分类', ...$classify])
-			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'padding:.1rem'])->selected($type);
+		$table->bar->select(['' => '全部分类', ...$classify])
+			->setattr(['onchange' => 'g({type:this.value||null})',
+				'style' => 'margin-left:.6rem;padding:.1rem'])->selected($type);
 
 		$table->bar->append('button', ['刷新前端专题缓存',
 			'data-src' => '?control/flush,data:subjects',

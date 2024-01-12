@@ -22,7 +22,6 @@ class base extends webapp
 		$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
 		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
 			'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
-		$form->button('更新视频', 'submit');
 
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:60rem', 'required' => NULL]);
@@ -73,6 +72,16 @@ class base extends webapp
 				$li->insert('li', 'before')->setattr([$nlevel[$blevel], 'class' => 'part']);
 			}
 		}
+		$form->fieldset()['style'] = join(';', [
+			'position: fixed',
+			'bottom: 2rem',
+			'right: 2rem',
+			'padding: .6rem',
+			'border-radius: .4rem',
+			'background-color: rgba(0,0,0,.4)'
+		]);
+		$form->button('更新视频', 'submit')['style'] = 'font-size: 2rem';
+
 		$form->xml->append('script', 'document.querySelectorAll("ul.restag>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 
 		$form->xml['method'] = 'patch';
