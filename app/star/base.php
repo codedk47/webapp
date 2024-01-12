@@ -398,31 +398,11 @@ class base extends webapp
 			}
 		}
 		
-		$videos = $this->fetch_videos->cache();
-		$subjects = $this->fetch_subjects->cache();
 		if ($updatable)
 		{
-			$videos->flush();
-			$subjects->flush();
+			$this->fetch_videos->flush()->cache();
+			$this->fetch_subjects->flush()->cache();
 		}
-
-
-		// if ($videos->time())
-		// {
-		// 	if ($updatable)
-		// 	{
-		// 		$videos->flush()->cacheable();
-		// 		$subjects->flush()->cacheable();
-		// 	}
-		// 	// $updatable
-		// 	// 	? $videos->flush()->cacheable()
-		// 	// 	: $videos->refresh()->cacheable();
-		// }
-		// else
-		// {
-		// 	$videos->flush()->cacheable();
-		// 	$subjects->flush()->cacheable();
-		// }
 	}
 	//======================以上为内部功能======================
 	//======================以下为扩展功能======================
