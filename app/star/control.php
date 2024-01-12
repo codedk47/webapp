@@ -992,9 +992,9 @@ class webapp_router_control extends webapp_echo_masker
 		if (is_string($search))
 		{
 			$search = urldecode($search);
-			if (in_array(strlen($search), [4, 12], TRUE) && trim($search, webapp::key) === '')
+			if (strlen($search) === 12 && trim($search, webapp::key) === '')
 			{
-				$conds[0][] = strlen($search) === 4 ? 'FIND_IN_SET(?s,tags)' : 'hash=?s';
+				$conds[0][] = 'hash=?s';
 				$conds[] = $search;
 			}
 			else
@@ -1010,8 +1010,11 @@ class webapp_router_control extends webapp_echo_masker
 		}
 		if ($tag = $this->webapp->query['tag'] ?? '')
 		{
-			$conds[0][] = 'FIND_IN_SET(?s,tags)';
-			$conds[] = $tag;
+			foreach (explode('.', $tag) as $taghash)
+			{
+				$conds[0][] = 'FIND_IN_SET(?s,tags)';
+				$conds[] = $taghash;
+			}
 		}
 		if ($sync = $this->webapp->query['sync'] ?? '')
 		{
@@ -1054,7 +1057,7 @@ class webapp_router_control extends webapp_echo_masker
 			'view-desc' => '`view` DESC',
 			'like-desc' => '`like` DESC',
 			'sales-desc' => '`sales` DESC',
-			default => '`ctime` DESC'
+			default => '`mtime` DESC'
 		}. ',hash ASC';
 		$tags = $this->webapp->fetch_tags->shortname();
 		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
@@ -1170,23 +1173,28 @@ class webapp_router_control extends webapp_echo_masker
 		$table->header('视频 %d 项', $table->count());
 		unset($table->xml->tbody->tr[0]);
 
+		// $table->bar->append('input', [
+		// 	'type' => 'search',
+		// 	'value' => $userid,
+		// 	'style' => 'padding:2px;width:8rem',
+		// 	'placeholder' => '用户ID',
+		// 	'onkeydown' => 'event.keyCode==13&&g({userid:this.value||null,page:null})'
+		// ]);
 		$table->bar->append('input', [
 			'type' => 'search',
-			'value' => $userid,
-			'style' => 'padding:2px;width:8rem',
-			'placeholder' => '用户ID',
-			'onkeydown' => 'event.keyCode==13&&g({userid:this.value||null,page:null})'
+			'value' => $tag,
+			'style' => 'padding:2px;width:10rem',
+			'placeholder' => '标签多个用 “.” 间隔',
+			'onkeydown' => 'event.keyCode==13&&g({tag:this.value||null,page:null})'
 		]);
+
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $search,
-			'style' => 'margin-left:.6rem;padding:2px;width:24rem',
-			'placeholder' => '请输入视频HASH、标签HASH、关键字按【Enter】进行搜索。',
+			'style' => 'margin-left:.6rem;padding:2px;width:20rem',
+			'placeholder' => '请输入视频HASH或关键字按【Enter】进行搜索。',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
-		// $table->bar->select(['' => '全部分类'] + $this->tag_types())
-		// 	->setattr(['onchange' => 'g({tag:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-		// 	->selected($tag);
 		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
 			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
