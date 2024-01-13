@@ -1010,11 +1010,16 @@ class webapp_router_control extends webapp_echo_masker
 		}
 		if ($tag = $this->webapp->query['tag'] ?? '')
 		{
-			foreach (explode('.', $tag) as $taghash)
+			$tagsearch = explode('.', $tag);
+			foreach ($tagsearch as $taghash)
 			{
 				$conds[0][] = 'FIND_IN_SET(?s,tags)';
 				$conds[] = $taghash;
 			}
+		}
+		else
+		{
+			$tagsearch = [];
 		}
 		if ($sync = $this->webapp->query['sync'] ?? '')
 		{
@@ -1187,6 +1192,14 @@ class webapp_router_control extends webapp_echo_masker
 			'placeholder' => '标签多个用 “.” 间隔',
 			'onkeydown' => 'event.keyCode==13&&g({tag:this.value||null,page:null})'
 		]);
+		$taglevels = $this->webapp->fetch_tags->levels();
+		
+		$table->bar->select(['' => '标签1', ...$taglevels])
+			->setattr(['onchange' => 'g({tag:this.value||null})', 'style' => 'margin-left:.6rem;width:6rem;padding:2px'])
+			->selected($tagsearch[0] ?? NULL);
+		// $table->bar->select(['' => '标签2', ...$taglevels])
+		// 	->setattr(['onchange' => 'g({tag:this.value||this})', 'style' => 'margin-left:.6rem;width:6rem;padding:2px'])
+		// 	->selected($tagsearch[1] ?? NULL);
 
 		$table->bar->append('input', [
 			'type' => 'search',

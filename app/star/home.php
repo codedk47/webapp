@@ -644,6 +644,8 @@ class webapp_router_home extends webapp_echo_masker
 			$extdata = array_filter(json_decode($video['extdata'], TRUE), trim(...));
 			isset($extdata['issue']) && $videoinfo->append('div', [$extdata['issue'], 'data-label' => '发行日期:']);
 
+			isset($extdata['actor']) && $videoinfo->append('div', ['data-label' => '作者:'])
+				->append('a', [$extdata['actor'], 'href' => 'javascript:;']);
 			isset($extdata['publisher']) && $videoinfo->append('div', ['data-label' => '发行商:'])
 				->append('a', [$extdata['publisher'], 'href' => 'javascript:;']);
 			isset($extdata['director']) && $videoinfo->append('div', ['data-label' => '导演:'])
@@ -773,7 +775,7 @@ class webapp_router_home extends webapp_echo_masker
 		if ($this->user['did'])
 		{
 			$logout = $node->append('li');
-			$logout->text('您有还可以');
+			$logout->text('您还可以');
 			$logout->append('a', ['注销',
 				'href' => "?home/home,did:{$this->user['did']}",
 				'onclick' => 'return masker.delete_account(this)',
