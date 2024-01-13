@@ -1840,7 +1840,7 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell($value['name']);
 			$table->cell($value['url']);
 			$table->cell("{$dpurl}{$value['hash']}");
-		}, $dpurl, $h5url);
+		}, $dpurl);
 		$table->fieldset('删除', '创建日期', '渠道ID', '类型', '比率', '名称', '地址', '落地页地址');
 		$table->header('渠道');
 		$table->bar->append('button', ['创建渠道', 'onclick' => 'location.href="?control/channel"']);
