@@ -129,10 +129,16 @@ class webapp_router_control extends webapp_echo_masker
 			? ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s AND cid=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid]
 			: ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s GROUP BY cid', join(',', $sum), join(',', $merge), $datefrom, $dateto];
 
-		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics)
+		$channels = $this->webapp->mysql->channels->column('name', 'hash');
+		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics, $channels)
 		{
 			$node = [$table->row()];
-			$table->cell([$log['cid'], 'rowspan' => 12]);
+
+			$ceil = $table->cell(['rowspan' => 12]);
+			$ceil->append('span', [$channels[$log['cid']] ?? '未知渠道', 'style' => 'font-size:.8rem']);
+			$ceil->append('br');
+			$ceil->append('span', "[{$log['cid']}]");
+
 			$table->cell(['访问', 'rowspan' => 3]);
 			$table->cell('总计');
 			$node[] = $table->row();
@@ -161,6 +167,7 @@ class webapp_router_control extends webapp_echo_masker
 			$node[] = $table->row();
 			$table->cell('安卓');
 			$node[] = $table->row();
+			$table->cell(['-', 'colspan' => 28]);
 			// $table->cell(['充值', 'rowspan' => 6]);
 			// $table->cell('总计');
 			// $node[] = $table->row();
@@ -206,7 +213,7 @@ class webapp_router_control extends webapp_echo_masker
 					$node[$i]->append('td', number_format($hourdata[$hour][$field] ?? 0));
 				}
 			}
-		}, $statistics);
+		}, $statistics, [base::cid => '官方渠道', ...$channels]);
 		$table->xml['class'] .= '-statistics';
 		$table->fieldset('渠道', '分类', '详细', '总计', ...range(0, 23));
 		
