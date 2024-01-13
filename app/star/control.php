@@ -1828,9 +1828,8 @@ class webapp_router_control extends webapp_echo_masker
 	{
 		$conds = [[]];
 		$dpurl = $this->webapp->fetch_configs('down_page');
-		$h5url = $this->webapp->fetch_configs('h5_domain');
 		$conds[0] = sprintf('%sORDER BY mtime DESC,hash ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
-		$table = $this->main->table($this->webapp->mysql->channels(...$conds)->paging($page), function($table, $value, $dpurl, $h5url)
+		$table = $this->main->table($this->webapp->mysql->channels(...$conds)->paging($page), function($table, $value, $dpurl)
 		{
 			$table->row();
 			$table->cell()->append('a', ['删除']);
@@ -1841,9 +1840,8 @@ class webapp_router_control extends webapp_echo_masker
 			$table->cell($value['name']);
 			$table->cell($value['url']);
 			$table->cell("{$dpurl}{$value['hash']}");
-			$table->cell("{$h5url}{$value['hash']}");
 		}, $dpurl, $h5url);
-		$table->fieldset('删除', '创建日期', '渠道ID', '类型', '比率', '名称', '地址', '落地页地址', 'H5地址');
+		$table->fieldset('删除', '创建日期', '渠道ID', '类型', '比率', '名称', '地址', '落地页地址');
 		$table->header('渠道');
 		$table->bar->append('button', ['创建渠道', 'onclick' => 'location.href="?control/channel"']);
 	}
