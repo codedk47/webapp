@@ -127,7 +127,7 @@ class webapp_router_control extends webapp_echo_masker
 
 		$cond = $cid
 			? ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s AND cid=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid]
-			: ['SELECT "全部" cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto];
+			: ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s GROUP BY cid', join(',', $sum), join(',', $merge), $datefrom, $dateto];
 
 		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics)
 		{
