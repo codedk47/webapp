@@ -1188,7 +1188,7 @@ class webapp_router_control extends webapp_echo_masker
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $tag,
-			'style' => 'padding:2px;width:10rem',
+			'style' => 'padding:2px;width:8rem',
 			'placeholder' => '标签多个用 “.” 间隔',
 			'onkeydown' => 'event.keyCode==13&&g({tag:this.value||null,page:null})'
 		]);
@@ -1197,15 +1197,15 @@ class webapp_router_control extends webapp_echo_masker
 		$table->bar->select(['' => '标签1', ...$taglevels])
 			->setattr(['onchange' => 'g({tag:this.value||null})', 'style' => 'margin-left:.6rem;width:6rem;padding:2px'])
 			->selected($tagsearch[0] ?? NULL);
-		// $table->bar->select(['' => '标签2', ...$taglevels])
-		// 	->setattr(['onchange' => 'g({tag:this.value||this})', 'style' => 'margin-left:.6rem;width:6rem;padding:2px'])
-		// 	->selected($tagsearch[1] ?? NULL);
+		$table->bar->select(['' => '标签2', ...$taglevels])
+			->setattr(['onchange' => 'g({tag:this.value?(this.previousElementSibling.value?`${this.previousElementSibling.value}.${this.value}`:this.value):this.previousElementSibling.value})', 'style' => 'margin-left:.6rem;width:6rem;padding:2px'])
+			->selected($tagsearch[1] ?? NULL);
 
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $search,
-			'style' => 'margin-left:.6rem;padding:2px;width:20rem',
-			'placeholder' => '请输入视频HASH或关键字按【Enter】进行搜索。',
+			'style' => 'margin-left:.6rem;padding:2px;width:16rem',
+			'placeholder' => '视频HASH或关键字按【Enter】搜索',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
 		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
