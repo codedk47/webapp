@@ -301,8 +301,10 @@ JS);
 			$div = $html->footer->append('div');
 			$div->append('span', '安装说明：本APP含有成人内容，容易被杀毒软件误判为恶意软件，H狐狸TV保证无毒和恶意程序，请放心使用');
 			$div->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])->append('img', ['src' => '/star/packer/tg.png']);
-			// $html->footer->append('img', ['src' => "/star/packer/tip-android.jpg"]);
-			// $html->footer->append('img', ['src' => "/star/packer/tip-iphone.jpg"]);
+			$html->xml->body->append('img', ['src' => $this->type === 'android'
+				? '/star/packer/tip-android.jpg'
+				: '/star/packer/tip-iphone.jpg',
+				'style' => 'width:100%']);
 		}
 		else
 		{
