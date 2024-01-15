@@ -758,9 +758,13 @@ class webapp_router_home extends webapp_echo_masker
 
 		$anchors->append('a', ['输入邀请码',
 			'href' => '?home/my-invite,code:',
+			'style' => 'color:var(--webapp-primary);font-weight:bold',
 			'onclick' => 'return !masker.prompt(this.textContent).then(value=>masker.json(this.href+value.replace(/[^0-9A-Z]/ig,"")))',
 			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
-		$anchors->append('a', ['分享链接，获取观影次数', 'href' => '?home/my-shareurl', 'data-right' => "{$this->user['share']} 次"]);
+		$anchors->append('a', ['分享链接，获取观影次数',
+			'href' => '?home/my-shareurl',
+			'style' => 'color:var(--webapp-primary);font-weight:bold',
+			'data-right' => "{$this->user['share']} 次"]);
 
 		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorites', 'data-right' => count($this->user->favorites())]);
 		$anchors->append('a', ['历史记录', 'href' => '?home/my-historys', 'data-right' => count($this->user->historys())]);

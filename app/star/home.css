@@ -12,7 +12,7 @@
 	--webapp-hint: hsl(var(--webapp-color), 15%);
 	--webapp-edge: hsl(var(--webapp-color), 0%);
 	
-	--webapp-primary: 40, 167, 69;
+	--webapp-primary: hsl(var(--webapp-color), 30%);
 	--webapp-danger: 203, 36, 49;
 	--webapp-concavity: linear-gradient(-180deg, hsl(var(--webapp-color), 30%) 0%, var(--webapp-button) 90%);
 
@@ -883,6 +883,7 @@ div.listmenu>a::after{
 	content: attr(data-right);
 	color: var(--webapp-button);
 	float: right;
+	font-weight: normal;
 }
 div.listmenu>a:not(:first-child){
 	border-top: 1px solid rgba(0, 0, 0, 0.1);

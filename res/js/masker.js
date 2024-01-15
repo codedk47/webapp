@@ -22,6 +22,7 @@ if (self.window)
 					}
 					resolve(init);
 				}
+				setTimeout(function aws(){fetch('/ping').then(r => setTimeout(aws, 1000));}, 1000);
 			};
 			registration.active.postMessage([localStorage.getItem('token'),
 				(/DID\/(\w{16})/.exec(navigator.userAgent) || [null]).pop(),
@@ -223,6 +224,9 @@ else
 			{
 				case '/favicon.ico':
 					return fetch('/webapp/favicon.ico');
+				case '/ping':
+					return new Response(null);
+					return Response.json({});
 				default:
 					return request(event.request, true);
 			}
