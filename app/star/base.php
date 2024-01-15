@@ -18,10 +18,16 @@ class base extends webapp
 	function form_video(webapp_html|array $ctx = NULL, string $hash = NULL):webapp_form
 	{
 		$form = new webapp_form($ctx ?? $this, '?video-value/');
-		
-		$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
-		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
-			'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
+		$play = $form->fieldset->append('webapp-video', [
+			'muted' => NULL,
+			'controls' => NULL,
+			'style' => 'width:600px;height:320px'
+		]);
+		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
+
+		//$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
+		// $change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
+		// 	'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
 
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:60rem', 'required' => NULL]);
@@ -90,13 +96,20 @@ class base extends webapp
 		{
 			$form->xml['action'] .= $this->encrypt($video['hash']);
 			$ym = date('ym', $video['mtime']);
-			$cover['src'] = $video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE)
+			$play['data-poster'] = $video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE)
 				? "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}"
 				: '/webapp/res/ps/loading.svg';
+			$play['data-m3u8'] = "?/{$ym}/{$video['hash']}/play?mask{$video['ctime']}";
+
+			// $cover['src'] = $video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE)
+			// 	? "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}"
+			// 	: '/webapp/res/ps/loading.svg';
 			$video['preview_start'] = $video['preview'] >> 16 & 0xffff;
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
-			$change['data-uploadurl'] = "?video-cover/{$hash}";
-			$change['data-key'] = bin2hex($this->random(8));
+			//$change['data-uploadurl'] = "?video-cover/{$hash}";
+			//$change['data-key'] = bin2hex($this->random(8));
+
+
 
 			$form->echo($video);
 		}

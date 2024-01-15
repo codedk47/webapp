@@ -1283,6 +1283,8 @@ class webapp_router_control extends webapp_echo_masker
 	}
 	function get_video(string $hash)
 	{
+		$this->script(['src' => '/webapp/res/js/hls.min.js']);
+		$this->script(['src' => '/webapp/res/js/video.js']);
 		$this->webapp->form_video($this->main, $hash)->xml['action'] .= ',goto:' . $this->webapp->url64_encode('?control/videos');
 	}
 	function patch_video(string $hash, string $sync)
