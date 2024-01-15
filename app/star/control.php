@@ -1062,6 +1062,9 @@ class webapp_router_control extends webapp_echo_masker
 					$conds[0][] = 'FIND_IN_SET(?s,tags)=0';
 					$conds[] = $classify['hash'];
 				}
+				$conds[0][] = 'FIND_IN_SET("lQr8",tags)=0';
+				$conds[0][] = 'FIND_IN_SET("5IFq",tags)=0';
+				$conds[0][] = 'FIND_IN_SET("K3yp",tags)=0';
 			}
 			else
 			{
