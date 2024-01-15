@@ -1055,8 +1055,19 @@ class webapp_router_control extends webapp_echo_masker
 		}
 		if ($type = $this->webapp->query['type'] ?? '')
 		{
-			$conds[0][] = 'type=?s';
-			$conds[] = $type;
+			if ($type === 'notclassify')
+			{
+				foreach ($this->webapp->mysql->tags('WHERE level=0') as $classify)
+				{
+					$conds[0][] = 'FIND_IN_SET(?s,tags)=0';
+					$conds[] = $classify['hash'];
+				}
+			}
+			else
+			{
+				$conds[0][] = 'type=?s';
+				$conds[] = $type;
+			}
 		}
 
 		if ($subject = $this->webapp->query['subject'] ?? '')
@@ -1221,7 +1232,7 @@ class webapp_router_control extends webapp_echo_masker
 		// $table->bar->select(['' => '要求', 'vip' => '会员', 'free' => '免费', 'coin' => '金币'])
 		// 	->setattr(['onchange' => 'g({require:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 		// 	->selected($require);
-		$table->bar->select(['' => '全部类型'] + base::video_type)
+		$table->bar->select(['' => '全部类型', 'notclassify' => '没有分类'] + base::video_type)
 			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($type);
 		// $table->bar->select(['' => '默认排序（最后修改）',
