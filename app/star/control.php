@@ -814,7 +814,7 @@ class webapp_router_control extends webapp_echo_masker
 	}
 
 	//========用户========
-	function form_user(webapp_html $html = NULL):webapp_form
+	function form_user(string $id, webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
@@ -824,8 +824,14 @@ class webapp_router_control extends webapp_echo_masker
 		$form->field('ticket', 'number', ['min' => 0]);
 		$form->field('uid', 'number', ['min' => 0, 'max' => 65535]);
 
-		// $form->fieldset();
-		// $form->field('followed_ids', 'textarea', ['rows' => 4, 'cols' => 40]);
+		$form->fieldset();
+		// if ($this->webapp->redis->get("user:{}"))
+		// $form->button('从');
+		$form->button('增加1次分享')->setattr([
+			'data-method' => 'patch',
+			'data-src' => "?control/user-share,id:{$id}",
+			'data-bind' => 'click'
+		]);
 
 		$form->fieldset();
 		$form->button('更新', 'submit');
@@ -834,7 +840,21 @@ class webapp_router_control extends webapp_echo_masker
 		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
-
+	function patch_user_share(string $id)
+	{
+		$data = ['dialog' => '操作失败'];
+		if ($this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update('share=share+1') === 1)
+		{
+			$data['dialog'] = '操作成功！';
+			if ($this->webapp->redis->exists($key = "user:{$id}"))
+			{
+				$this->webapp->redis->hIncrBy($key, 'share', 1);
+				$this->webapp->redis->hIncrBy($key, 'count', 10);
+				$data['dialog'] .= '用户缓存已更新！';
+			}
+		}
+		$this->json($data);
+	}
 
 	function get_users(int $page = 1)
 	{
@@ -927,7 +947,7 @@ class webapp_router_control extends webapp_echo_masker
 	{
 		if ($this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->fetch($user))
 		{
-			$form = $this->form_user($this->main);
+			$form = $this->form_user($id, $this->main);
 			$form->xml->fieldset[0] = $this->webapp->signature($user['id'], $user['cid']);
 			$form->echo($user);
 		}
@@ -935,7 +955,7 @@ class webapp_router_control extends webapp_echo_masker
 
 	function patch_user(string $id)
 	{
-		if ($this->form_user()->fetch($user) && $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update([
+		if ($this->form_user($id)->fetch($user) && $this->webapp->mysql->users('WHERE id=?s LIMIT 1', $id)->update([
 			'ctime' => $this->webapp->time
 		] + $user)) {
 			$this->webapp->user_sync($id);
