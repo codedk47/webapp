@@ -228,7 +228,9 @@ class webapp_router_control extends webapp_echo_masker
 			'placeholder' => '渠道ID',
 			'onkeydown' => 'event.keyCode==13&&g({cid:this.value||null})'
 		]);
-		$table->bar->append('button', ['渠道分组', 'onclick' => 'g({cid:"all"})']);
+		$table->bar->append('button', $cid === 'all'
+			? ['渠道总计', 'onclick' => 'g({cid:null})']
+			: ['渠道分组', 'onclick' => 'g({cid:"all"})']);
 	}
 	function patch_flush(string $data)
 	{
