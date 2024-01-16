@@ -752,7 +752,7 @@ class webapp_router_home extends webapp_echo_masker
 		$info->append('a', ['点击保存二维码', 'href' => "{$qrurl},type:png,filename:{$this->user->id}.png", 'target' => '_blank', 'data-label' => '凭证：']);
 
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
-		$anchors->append('a', ['每日观影剩余次数', 'href' => 'javascript:;', 'data-right' => ($count = count($this->user)) > 0 ? "{$count} 次" : '无限']);
+		$anchors->append('a', ['每日观影剩余次数', 'href' => 'javascript:;', 'data-right' => ($count = count($this->user)) === -1 ? '无限' : "{$count} 次"]);
 		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => 'Telegram']);
 		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => 'Telegram']);
 
