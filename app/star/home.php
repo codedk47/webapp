@@ -508,7 +508,7 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		$this->set_header_search();
 		$this->add_slideshows_ads($this->main, 2);
-		foreach ($this->webapp->fetch_tags->levels(not:[0, 1, 2, 3, 12]) as $describe => $tags)
+		foreach ($this->webapp->fetch_tags->levels(not:[0, 1, 2, 3, 10, 11, 12]) as $describe => $tags)
 		{
 			$node = $this->main->append('div', ['class' => 'videoinfo']);
 			$node->append('strong', $describe);
