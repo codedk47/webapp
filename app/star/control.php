@@ -73,7 +73,7 @@ class webapp_router_control extends webapp_echo_masker
 	// 	$this->xml['style'] = $this->xml->body['style'] = 'background:red;height:100%';
 	// 	$this->main->append('h1', 'get_splashscreen');
 	// }
-	function get_home(string $cid = NULL, string $datefrom = '', string $dateto = '')
+	function get_home(string $cid = '', string $datefrom = '', string $dateto = '')
 	{
 		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $datefrom))
 		{
@@ -125,19 +125,19 @@ class webapp_router_control extends webapp_echo_masker
 			$merge[] = sprintf('JSON_OBJECT(%s)', join(',', $fields));
 		}
 
-		$cond = $cid
+		$cond = strlen($cid) === 4
 			? ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s AND cid=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid]
 			: ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s??', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid === 'all' ? ' GROUP BY cid' : ''];
 
-		$channels = $cid === 'all' ? NULL : $this->webapp->mysql->channels->column('name', 'hash');
-		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics, $channels)
+		$channels = $this->webapp->mysql->channels->column('name', 'hash');
+		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics, $channels) use($cid)
 		{
 			$node = [$table->row()];
 
 			$ceil = $table->cell(['rowspan' => 12]);
-			$ceil->append('span', $channels === NULL ? '总计' : [$channels[$log['cid']] ?? '未知渠道', 'style' => 'font-size:.8rem']);
+			$ceil->append('span', [$cid ? $channels[$log['cid']] ?? '未知渠道' : '总计', 'style' => 'font-size:.8rem']);
 			$ceil->append('br');
-			$ceil->append('span', $channels === NULL ? '全部' : "[{$log['cid']}]");
+			$ceil->append('span', $cid ? "[{$log['cid']}]" : '全部');
 
 			$table->cell(['访问', 'rowspan' => 3]);
 			$table->cell('总计');
@@ -213,7 +213,7 @@ class webapp_router_control extends webapp_echo_masker
 					$node[$i]->append('td', number_format($hourdata[$hour][$field] ?? 0));
 				}
 			}
-		}, $statistics, $channels === NULL ? NULL : [base::cid => '官方渠道', ...$channels]);
+		}, $statistics, [base::cid => '官方渠道', ...$channels]);
 		$table->xml['class'] .= '-statistics';
 		$table->fieldset('渠道', '分类', '详细', '总计', ...range(0, 23));
 		
