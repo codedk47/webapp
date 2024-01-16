@@ -129,7 +129,7 @@ class webapp_router_control extends webapp_echo_masker
 			? ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s AND cid=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid]
 			: ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s??', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid === 'all' ? ' GROUP BY cid' : ''];
 
-		$channels = $cid === 'all' ? $this->webapp->mysql->channels->column('name', 'hash') : NULL;
+		$channels = $cid === 'all' ? NULL : $this->webapp->mysql->channels->column('name', 'hash');
 		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics, $channels)
 		{
 			$node = [$table->row()];
