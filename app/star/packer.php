@@ -167,8 +167,8 @@ class webapp_router_packer
 		$html = new webapp_echo_html($this->webapp);
 		unset($html->xml->head->link);
 		$html->title('H狐狸');
-		$html->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-MS9BLFECB7']);
-		$html->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-MS9BLFECB7")');
+		$html->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-M24YPC36NJ']);
+		$html->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-M24YPC36NJ")');
 		$html->footer[0] = NULL;
 		$html->xml->body->div['class'] = 'packer';
 		$html->xml->head->append('style')->cdata(<<<'CSS'
