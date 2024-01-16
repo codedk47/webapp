@@ -1,9 +1,12 @@
 <?php
 class webapp_stream
 {
-	public $context;
-	public function __construct()
+	public readonly mixed $context;
+	public function __construct($stream)
 	{
+		//$this->buffer = fopen('php://memory', 'r+');
+
+
 		var_dump(123);
 	}
 	// public dir_closedir(): bool

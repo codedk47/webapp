@@ -127,17 +127,17 @@ class webapp_router_control extends webapp_echo_masker
 
 		$cond = $cid
 			? ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s AND cid=?s', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid]
-			: ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s GROUP BY cid', join(',', $sum), join(',', $merge), $datefrom, $dateto];
+			: ['SELECT cid,??,JSON_ARRAY(??) AS hourdata FROM recordlog WHERE date>=?s AND date<=?s??', join(',', $sum), join(',', $merge), $datefrom, $dateto, $cid === 'all' ? ' GROUP BY cid' : ''];
 
-		$channels = $this->webapp->mysql->channels->column('name', 'hash');
+		$channels = $cid === 'all' ? $this->webapp->mysql->channels->column('name', 'hash') : NULL;
 		$table = $this->main->table($this->webapp->mysql(...$cond), function($table, $log, $statistics, $channels)
 		{
 			$node = [$table->row()];
 
 			$ceil = $table->cell(['rowspan' => 12]);
-			$ceil->append('span', [$channels[$log['cid']] ?? '未知渠道', 'style' => 'font-size:.8rem']);
+			$ceil->append('span', $channels === NULL ? '总计' : [$channels[$log['cid']] ?? '未知渠道', 'style' => 'font-size:.8rem']);
 			$ceil->append('br');
-			$ceil->append('span', "[{$log['cid']}]");
+			$ceil->append('span', $channels === NULL ? '全部' : "[{$log['cid']}]");
 
 			$table->cell(['访问', 'rowspan' => 3]);
 			$table->cell('总计');
@@ -213,7 +213,7 @@ class webapp_router_control extends webapp_echo_masker
 					$node[$i]->append('td', number_format($hourdata[$hour][$field] ?? 0));
 				}
 			}
-		}, $statistics, [base::cid => '官方渠道', ...$channels]);
+		}, $statistics, $channels === NULL ? NULL : [base::cid => '官方渠道', ...$channels]);
 		$table->xml['class'] .= '-statistics';
 		$table->fieldset('渠道', '分类', '详细', '总计', ...range(0, 23));
 		
@@ -228,6 +228,7 @@ class webapp_router_control extends webapp_echo_masker
 			'placeholder' => '渠道ID',
 			'onkeydown' => 'event.keyCode==13&&g({cid:this.value||null})'
 		]);
+		$table->bar->append('button', ['渠道分组', 'onclick' => 'g({cid:"all"})']);
 	}
 	function patch_flush(string $data)
 	{
