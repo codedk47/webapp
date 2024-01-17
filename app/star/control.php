@@ -969,11 +969,7 @@ class webapp_router_control extends webapp_echo_masker
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
 		$table->bar->select(['' => '全部分享',
-			'more0' => '至少1次',
-			'1' => '1 次分享',
-			'2' => '2 次分享',
-			'3' => '3 次分享',
-			'more3' => '大于3次'])
+			'more0' => '至少1次', '1' => '1 次分享', '2' => '2 次分享', '3' => '3 次分享', 'more3' => '大于3次', '0' => '没有分享'])
 			->setattr(['onchange' => 'g({share:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($filter_share);
 
