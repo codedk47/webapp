@@ -886,9 +886,10 @@ class base extends webapp
 			{
 				if (is_array(is_string($video) ? $video = $this[$video] : $video))
 				{
-					$cond = ['type=?s', $video['type']];
-					if ($classify = array_intersect($this->webapp->fetch_tags->with('level=0')->keys(),
-						$video['tags'] ? explode(',', $video['tags']) : [])) {
+					$tags = $video['tags'] ? explode(',', $video['tags']) : [];
+					$cond = in_array('5IFq', $tags, TRUE) ? ['FIND_IN_SET("5IFq",tags)'] : ['type=?s', $video['type']];
+					if ($classify = array_intersect($this->webapp->fetch_tags->with('level=0')->keys(), $tags))
+					{
 						$cond[0] .= ' AND FIND_IN_SET(?s,tags)';
 						$cond[] = current($classify);
 					}
