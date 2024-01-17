@@ -21,6 +21,7 @@ class base extends webapp
 		$play = $form->fieldset->append('webapp-video', [
 			'muted' => NULL,
 			'controls' => NULL,
+			'oncanplay' => 'this.firstElementChild.style.objectFit=this.height>this.width?"contain":"cover"',
 			'style' => 'width:600px;height:320px'
 		]);
 		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
