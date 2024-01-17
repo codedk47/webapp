@@ -126,14 +126,19 @@ class webapp_router_home extends webapp_echo_masker
 		$this->header->append('strong', $name);
 		return $this->header;
 	}
-	function set_aside_classify(string $url, string $selected = NULL, string $insert = NULL):webapp_html
+	function set_aside_classify(string $url, string $selected = NULL, array $insert = [], &$classify = NULL):webapp_html
 	{
 		$this->aside['class'] = 'classify';
-		if ($insert)
+		foreach ($insert as $hash => $name)
 		{
-			$this->aside->append('a', [$insert, 'href' => $url, 'class' => 'selected']);
+			$node = $this->aside->append('a', [$name, 'href' => $url . $hash]);
+			if ($hash === $selected)
+			{
+				unset($this->aside->a['class']);
+				$node['class'] = 'selected';
+			}
 		}
-		foreach ($this->webapp->fetch_tags->classify() as $hash => $name)
+		foreach ($classify = $this->webapp->fetch_tags->classify() as $hash => $name)
 		{
 			$node = $this->aside->append('a', [$name, 'href' => $url . $hash]);
 			if ($hash === $selected)
@@ -375,17 +380,7 @@ class webapp_router_home extends webapp_echo_masker
 	function get_home(string $type = '')
 	{
 		$this->aside['class'] = 'classify';
-		$this->aside->append('a', ['最新', 'href' => '?home/home', 'class' => 'selected']);
-		$classify = $this->webapp->fetch_tags->classify();
-		foreach ($classify as $hash => $name)
-		{
-			$node = $this->aside->append('a', [$name, 'href' => "?home/home,type:{$hash}"]);
-			if ($hash === $type)
-			{
-				unset($this->aside->a['class']);
-				$node['class'] = 'selected';
-			}
-		}
+		$this->set_aside_classify('?home/home,type:', $type, [ '' => '最新'], $classify);
 		$this->aside->insert('aside', 'after')->setattr('style', join(';', [
 			'position: sticky',
 			'top: 2rem',
@@ -477,7 +472,9 @@ class webapp_router_home extends webapp_echo_masker
 			// 	return;
 			// }
 			$this->set_header_search(word:$word);
-			$this->set_aside_classify($this->webapp->at(['classify' => '', 'page' => NULL]), $classify, '全部');
+			$this->set_aside_classify($this->webapp->at(['classify' => '', 'page' => NULL]), $classify, [ '' => '全部', '5IFq' => '抖音']);
+
+
 			$this->add_slideshows_ads($this->main, 2);
 			$this->set_float_button();
 			$result = $this->webapp->fetch_videos->with(...$cond);
