@@ -908,13 +908,12 @@ class webapp_router_control extends webapp_echo_masker
 				default => ['share=?i', $filter_share]
 			};
 		}
-
-		$conds[0] = sprintf('%sORDER BY %s,id ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '', match($filter_sort = $this->webapp->query['sort'] ?? NULL)
+		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ' . match($filter_sort = $this->webapp->query['sort'] ?? '')
 		{
 			'login-desc' => 'login DESC',
 			'watch-desc' => 'watch DESC',
 			default => 'mtime DESC'
-		});
+		} . ',id ASC';
 		$table = $this->main->table($this->webapp->mysql->users(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
@@ -1139,11 +1138,12 @@ class webapp_router_control extends webapp_echo_masker
 		}
 		$conds[0] = ($conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '') . 'ORDER BY ' . match ($sort = $this->webapp->query['sort'] ?? '')
 		{
+			'ctime-desc' => 'ctime DESC',
 			'view-desc' => '`view` DESC',
 			'like-desc' => '`like` DESC',
 			'sales-desc' => '`sales` DESC',
 			default => '`mtime` DESC'
-		}. ',hash ASC';
+		} . ',hash ASC';
 		$tags = $this->webapp->fetch_tags->shortname();
 		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
 		{
@@ -1297,12 +1297,13 @@ class webapp_router_control extends webapp_echo_masker
 		$table->bar->select(['' => '全部类型', 'notclassify' => '没有分类'] + base::video_type)
 			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($type);
-		// $table->bar->select(['' => '默认排序（最后修改）',
-		// 	'view-desc' => '观看（降序）',
-		// 	'like-desc' => '点赞（降序）',
-		// 	'sales-desc' => '销量（降序）'])
-		// 	->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
-		// 	->selected($sort);
+		$table->bar->select(['' => '默认（入库降序）',
+			'ctime-desc' => '最后修改（降序）',
+			'view-desc' => '观看（降序）',
+			'like-desc' => '点赞（降序）',
+			'sales-desc' => '销量（降序）'])
+			->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($sort);
 		// $table->bar->append('button', ['所有完成视频通过审核',
 		// 	'style' => 'margin-left:.6rem',
 		// 	'data-src' => '?control/video-all-finished-to-allow',
