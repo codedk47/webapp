@@ -1269,7 +1269,7 @@ class webapp_router_control extends webapp_echo_masker
 			'type' => 'search',
 			'value' => $tag,
 			'style' => 'padding:2px;width:8rem',
-			'placeholder' => '标签多个用 “.” 间隔',
+			'placeholder' => '标签用 “.” 间隔',
 			'onkeydown' => 'event.keyCode==13&&g({tag:this.value||null,page:null})'
 		]);
 		$taglevels = $this->webapp->fetch_tags->levels();
