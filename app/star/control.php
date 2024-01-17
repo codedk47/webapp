@@ -862,31 +862,51 @@ class webapp_router_control extends webapp_echo_masker
 	function get_users(int $page = 1)
 	{
 		$conds = [[]];
-		if (strlen($uid = $this->webapp->query['uid'] ?? ''))
+		// if (strlen($uid = $this->webapp->query['uid'] ?? ''))
+		// {
+		// 	if (intval($uid) === -1)
+		// 	{
+		// 		$conds[0][] = 'uid!=0';
+		// 	}
+		// 	else
+		// 	{
+		// 		$conds[0][] = 'uid=?i';
+		// 		$conds[] = $uid;
+		// 	}
+		// }
+
+		$filter_date = $this->webapp->query['date'] ?? date('Y-m-d');
+		if ($filter_search = $this->webapp->query['search'] ?? '')
 		{
-			if (intval($uid) === -1)
-			{
-				$conds[0][] = 'uid!=0';
-			}
-			else
-			{
-				$conds[0][] = 'uid=?i';
-				$conds[] = $uid;
-			}
-		}
-		if ($search = $this->webapp->query['search'] ?? '')
-		{
-			if (strlen($search) === 10 && trim($search, webapp::key) === '')
+			if (strlen($filter_search) === 10 && trim($filter_search, webapp::key) === '')
 			{
 				$conds[0][] = 'id=?s';
-				$conds[] = $search;
+				$conds[] = $filter_search;
 			}
 			else
 			{
-				$search = urldecode($search);
+				$filter_search = urldecode($filter_search);
 				$conds[0][] = 'nickname LIKE ?s';
-				$conds[] = '%' . $search . '%';
+				$conds[] = "%{$filter_search}%";
 			}
+		}
+		else
+		{
+			if ($filter_date)
+			{
+				$conds[0][] = 'date=?s';
+				$conds[] = $filter_date;
+			}
+		}
+
+		if ($filter_share = $this->webapp->query['share'] ?? '')
+		{
+			[$conds[0][], $conds[]] = match ($filter_share)
+			{
+				'more0' => ['share>?i', 0],
+				'more3' => ['share>?i', 3],
+				default => ['share=?i', $filter_share]
+			};
 		}
 
 		$conds[0] = sprintf('%sORDER BY mtime DESC,id ASC', $conds[0] ? 'WHERE ' . join(' AND ', $conds[0]) . ' ' : '');
@@ -929,21 +949,33 @@ class webapp_router_control extends webapp_echo_masker
 			'最后登录日期', '最后登录IP');
 		$table->header('用户 %d 项', $table->count());
 
+		// $table->bar->append('input', [
+		// 	'type' => 'search',
+		// 	'value' => $uid,
+		// 	'style' => 'width:10rem',
+		// 	'placeholder' => 'UP后台ID，-1 全部',
+		// 	'onkeydown' => 'event.keyCode==13&&g({uid:this.value||null,page:null})'
+		// ]);
 		$table->bar->append('input', [
-			'type' => 'search',
-			'value' => $uid,
-			'style' => 'width:10rem',
-			'placeholder' => 'UP后台ID，-1 全部',
-			'onkeydown' => 'event.keyCode==13&&g({uid:this.value||null,page:null})'
+			'type' => 'date',
+			'value' => $filter_date,
+			'onchange' => 'g({date:this.value||"",page:null})'
 		]);
 		$table->bar->append('input', [
 			'type' => 'search',
-			'value' => $search,
+			'value' => $filter_search,
 			'style' => 'margin-left:.6rem',
 			'placeholder' => '用户信息按【Enter】搜索',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
-
+		$table->bar->select(['' => '全部分享',
+			'1' => '1 次分享',
+			'2' => '2 次分享',
+			'3' => '3 次分享',
+			'more0' => '至少1次',
+			'more3' => '大于3次'])
+			->setattr(['onchange' => 'g({share:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
+			->selected($filter_share);
 
 	}
 	function get_user(string $id)
