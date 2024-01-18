@@ -25,7 +25,10 @@ class base extends webapp
 			'style' => 'width:600px;height:320px'
 		]);
 		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
-
+		$form->field('ctime', 'select', ['options' => [
+			'no' => '不修改最后修改时间',
+			'yes' => '修改最后修改时间'
+		]]);
 		//$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
 		// $change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
 		// 	'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
@@ -203,16 +206,22 @@ class base extends webapp
 		$json = $this->app('webapp_echo_json');
 		if (is_string($hash = $this->decrypt($encrypt))
 			&& $this->form_video(json_decode($this->request_maskdata() ?? '[]', TRUE))->fetch($video)) {
-
+			if ($video['ctime'] === 'yes')
+			{
+				$video['ctime'] = $this->time;
+			}
+			else
+			{
+				unset($video['ctime']);
+			}
 			if (is_string($up) && $video['require'] === '0') //??fix
 			{
 				$video['require'] = '-1';
 			}
-
 			$video['preview'] = $video['preview_end'] > $video['preview_start']
 				? ($video['preview_start'] & 0xffff) << 16 | ($video['preview_end'] - $video['preview_start']) & 0xffff : 10;
 			unset($video['preview_start'], $video['preview_end']);
-			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update(['ctime' => $this->time] + $video) === 1)
+			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update($video) === 1)
 			{
 				$json->goto($goto ? $this->url64_decode($goto) : NULL);
 			}
