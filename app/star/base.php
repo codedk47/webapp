@@ -25,10 +25,7 @@ class base extends webapp
 			'style' => 'width:600px;height:320px'
 		]);
 		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
-		$form->field('ctime', 'select', ['options' => [
-			'no' => '不修改最后修改时间',
-			'yes' => '修改最后修改时间'
-		]]);
+
 		//$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
 		// $change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
 		// 	'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
@@ -90,6 +87,10 @@ class base extends webapp
 			'border-radius: .4rem',
 			'background-color: rgba(0,0,0,.4)'
 		]);
+		$form->field('ctime', 'select', ['options' => [
+			'no' => '跳过修改时间',
+			'yes' => '更新修改时间'
+		]]);
 		$form->button('更新视频', 'submit')['style'] = 'font-size: 2rem';
 
 		$form->xml->append('script', 'document.querySelectorAll("ul.restag>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
