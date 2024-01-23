@@ -75,36 +75,10 @@ class webapp_router_control extends webapp_echo_masker
 	// }
 	function get_home(string $date = NULL, string $cid = '', string $datefrom = '', string $dateto = '')
 	{
-		$statistics = [
-			'dpv',
-			'dpv_ios',
-			'dpv_android',
-			'dpc',
-			'dpc_ios',
-			'dpc_android',
-			'signin',
-			'signin_ios',
-			'signin_android',
-			'signup',
-			'signup_ios',
-			'signup_android',
-			// 'recharge',
-			// 'recharge_new',
-			// 'recharge_old',
-			// 'recharge_coin',
-			// 'recharge_vip',
-			// 'recharge_vip_new',
-			// 'order',
-			// 'order_ok',
-			// 'order_ios',
-			// 'order_ios_ok',
-			// 'order_android',
-			// 'order_android_ok'
-		];
 		if (preg_match('/^\d{4}\-\d{2}$/', $date ??= date('Y-m')))
 		{
 			$stat = $this->webapp->mysql->recordlog('WHERE date LIKE ?s', "{$date}%")->statmonth($date, 'cid', 'right(date,2)', 
-				array_map(fn($v) => "SUM(IF({day}=0 OR right(date,2)={day},{$v},0))", $statistics),
+				array_map(fn($v) => "SUM(IF({day}=0 OR right(date,2)={day},{$v},0))", ['dpv', 'dpc', 'signin', 'signup']),
 				'ORDER BY $6$0 DESC LIMIT 50');
 			// $fields = ['cid', 'RIGHT(date,2) day', ...array_map(fn($v) => "SUM({$v}) {$v}", $statistics)];
 			// $a = $this->webapp->mysql->recordlog('WHERE date LIKE ?s GROUP BY date ORDER BY cid ASC,date ASC', "{$pattern[1]}%")
@@ -141,7 +115,32 @@ class webapp_router_control extends webapp_echo_masker
 			$table->xml['class'] .= '-statistics';
 			return;
 		}
-
+		$statistics = [
+			'dpv',
+			'dpv_ios',
+			'dpv_android',
+			'dpc',
+			'dpc_ios',
+			'dpc_android',
+			'signin',
+			'signin_ios',
+			'signin_android',
+			'signup',
+			'signup_ios',
+			'signup_android',
+			// 'recharge',
+			// 'recharge_new',
+			// 'recharge_old',
+			// 'recharge_coin',
+			// 'recharge_vip',
+			// 'recharge_vip_new',
+			// 'order',
+			// 'order_ok',
+			// 'order_ios',
+			// 'order_ios_ok',
+			// 'order_android',
+			// 'order_android_ok'
+		];
 		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $datefrom))
 		{
 			$datefrom = date('Y-m-01');
