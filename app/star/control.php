@@ -78,8 +78,8 @@ class webapp_router_control extends webapp_echo_masker
 		if (preg_match('/^\d{4}\-\d{2}$/', $date ??= date('Y-m')))
 		{
 			$stat = $this->webapp->mysql->recordlog('WHERE date LIKE ?s', "{$date}%")->statmonth($date, 'cid', 'right(date,2)', 
-				array_map(fn($v) => "SUM(IF({day}=0 OR right(date,2)={day},{$v},0))", ['dpv', 'dpc', 'signin', 'signup']),
-				'ORDER BY $6$0 DESC LIMIT 50');
+				array_map(fn($v) => "SUM(IF({day}=0 OR right(date,2)={day},{$v},0))", ['dpv', 'dpc', 'signin', 'signup']), 'ORDER BY $2$0 DESC');
+
 			// $fields = ['cid', 'RIGHT(date,2) day', ...array_map(fn($v) => "SUM({$v}) {$v}", $statistics)];
 			// $a = $this->webapp->mysql->recordlog('WHERE date LIKE ?s GROUP BY date ORDER BY cid ASC,date ASC', "{$pattern[1]}%")
 			// 	->select(join(',', $fields));
