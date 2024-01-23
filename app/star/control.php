@@ -73,16 +73,8 @@ class webapp_router_control extends webapp_echo_masker
 	// 	$this->xml['style'] = $this->xml->body['style'] = 'background:red;height:100%';
 	// 	$this->main->append('h1', 'get_splashscreen');
 	// }
-	function get_home(string $cid = '', string $datefrom = '', string $dateto = '')
+	function get_home(string $date = NULL, string $cid = '', string $datefrom = '', string $dateto = '')
 	{
-		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $datefrom))
-		{
-			$datefrom = date('Y-m-01');
-		}
-		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $dateto))
-		{
-			$dateto = date('Y-m-t');
-		}
 		$statistics = [
 			'dpv',
 			'dpv_ios',
@@ -109,6 +101,56 @@ class webapp_router_control extends webapp_echo_masker
 			// 'order_android',
 			// 'order_android_ok'
 		];
+		if (preg_match('/^\d{4}\-\d{2}$/', $date ??= date('Y-m')))
+		{
+			$stat = $this->webapp->mysql->recordlog('WHERE date LIKE ?s', "{$date}%")->statmonth($date, 'cid', 'right(date,2)', 
+				array_map(fn($v) => "SUM(IF({day}=0 OR right(date,2)={day},{$v},0))", $statistics),
+				'ORDER BY $6$0 DESC LIMIT 50');
+			// $fields = ['cid', 'RIGHT(date,2) day', ...array_map(fn($v) => "SUM({$v}) {$v}", $statistics)];
+			// $a = $this->webapp->mysql->recordlog('WHERE date LIKE ?s GROUP BY date ORDER BY cid ASC,date ASC', "{$pattern[1]}%")
+			// 	->select(join(',', $fields));
+			$day = date('t', strtotime("{$date}-01"));
+			$table = $this->main->table($stat, function($table, $log, $day)
+			{
+				$tr = [$table->row()];
+				$table->cell([$log['cid'] ?? '所有', 'rowspan' => 4]);
+				$table->cell('访问');
+				$tr[] = $table->row();
+				$table->cell('点击');
+				$tr[] = $table->row();
+				$table->cell('登录');
+				$tr[] = $table->row();
+				$table->cell('新增');
+				$table->row();
+				$table->cell(['-', 'colspan' => $day + 3]);
+				for ($i = 0; $i <= $day; ++$i)
+				{
+					$tr[0]->append('td', number_format($log["\$0\${$i}"]));
+					$tr[1]->append('td', number_format($log["\$1\${$i}"]));
+					$tr[2]->append('td', number_format($log["\$2\${$i}"]));
+					$tr[3]->append('td', number_format($log["\$3\${$i}"]));
+				}
+
+			}, $day);
+			$table->fieldset('渠道', '记录', '总计', ...range(1, $day));
+			$table->header('数据统计 %s 月', $date);
+
+			$table->bar->append('input', ['type' => 'month', 'value' => $date, 'onchange' => 'g({date:this.value||null})', 'style' => 'padding:1px']);
+			$table->bar->append('button', ['按天数查看', 'onclick' => 'g({date:""})', 'style' => 'margin-left:.6rem']);
+
+			$table->xml['class'] .= '-statistics';
+			return;
+		}
+
+		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $datefrom))
+		{
+			$datefrom = date('Y-m-01');
+		}
+		if (!preg_match('/^\d{4}\-\d{2}\-\d{2}$/', $dateto))
+		{
+			$dateto = date('Y-m-t');
+		}
+		
 		$sum = [];
 		$merge = [];
 		for ($i = 0; $i < 24; ++$i)
@@ -231,6 +273,7 @@ class webapp_router_control extends webapp_echo_masker
 		$table->bar->append('button', $cid === 'all'
 			? ['渠道总计', 'onclick' => 'g({cid:null})']
 			: ['渠道分组', 'onclick' => 'g({cid:"all"})']);
+		$table->bar->append('button', ['按整月查看', 'onclick' => 'g({date:null})']);
 	}
 	function patch_flush(string $data)
 	{
