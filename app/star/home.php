@@ -66,8 +66,9 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			//print_r($_SERVER);
 			//var_dump($this->webapp->request_header('Channel-Id'), $this->webapp->request_header('Device-Id'));
+			$did = $this->webapp->query['did'] ?? NULL;
 			$form->echo([
-				'cid' => $this->webapp->request_header('Channel-Id') ?? $this->webapp->redis_did_read_cid($did = $this->webapp->query['did'] ?? NULL),
+				'cid' => $this->webapp->request_header('Channel-Id') ?? $this->webapp->redis_did_read_cid($did),
 				'did' => $this->webapp->request_header('Device-Id') ?? $did,
 				'tid' => NULL]);
 		}
