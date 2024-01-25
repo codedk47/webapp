@@ -581,7 +581,7 @@ class base extends webapp
 		$this->redis->set("did:{$did}", $cid = $this->cid($cid), 180);
 		return $did;
 	}
-	function redis_did_read_cid(string $did):string
+	function redis_did_read_cid(?string $did):string
 	{
 		$cid = $this->redis->get("did:{$did}");
 		return is_string($cid) ? $cid : self::cid;
