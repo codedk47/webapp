@@ -371,7 +371,7 @@ class webapp_router_home extends webapp_echo_masker
 		//file_put_contents('d:/log.txt', "{$type} = {$content}");
 		$this->json(['result' => match ($type)
 		{
-			'watch' => $this->user->watch($content),
+			'watch' => $this->user->count() && $this->user->watch($content) && $this->user->count(-1),
 			'liked' => $this->user->like($content),
 			'favorited' => $this->user->favorite($content),
 			default => FALSE
@@ -675,6 +675,24 @@ class webapp_router_home extends webapp_echo_masker
 	
 	function get_short(int $page = 0)
 	{
+		if ($this->user->count() === 0)
+		{
+			if ($page)
+			{
+				$this->json([]);
+			}
+			else
+			{
+				$this->set_header_search();
+				$this->set_footer_menu();
+				$this->aside['style'] = 'padding:1rem';
+				$strong = $this->aside->append('strong')->append('div');
+				$strong->append('span', '每日观影剩余次数已耗尽');
+				$strong->append('a', ['请点击分享链接', 'href' => '?home/my-shareurl', 'class' => 'button']);
+				$strong->append('span', '获得更多次数！');
+			}
+			return;
+		}
 		if ($page)
 		{
 			$videos = [];
@@ -691,6 +709,7 @@ class webapp_router_home extends webapp_echo_masker
 					}
 				}
 				$videos[] = [
+					'hash' => $video['hash'],
 					'name' => $video['name'],
 					'm3u8' => $video['m3u8'],
 					'poster' => $video['poster'],
