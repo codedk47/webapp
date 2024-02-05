@@ -262,11 +262,24 @@ class user extends ArrayObject implements Countable
 
 	function like(string $hash):bool
 	{
-		return FALSE;
+		$likes = is_string($like = $this->webapp->redis->hGet($key = "user:{$this->id}", 'like')) ? str_split($like, 12) : [];
+		if (is_int($index = array_search($hash, $likes, TRUE)))
+		{
+			array_splice($likes, $index, 1);
+			$result = -1;
+		}
+		else
+		{
+			$likes[] = $hash;
+			$result = 1;
+		}
+		$this->webapp->redis->hSet($key, 'like', join($likes));
+		return $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`like`=`like`+?i', $result) === 1;
 	}
 	function liked(string $hash):bool
 	{
-		return FALSE;
+		return is_string($like = $this->webapp->redis->hGet("user:{$this->id}", 'like'))
+			&& in_array($hash, str_split($like, 12), TRUE);
 	}
 
 	//收藏视频列表最多50个（是否详细）
