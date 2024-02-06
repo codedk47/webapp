@@ -707,7 +707,11 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return $this(new webapp_redis($this));
 	}
+	function locale():array
+	{
 
+		return [];
+	}
 
 	//request
 	function request_ip(bool $proxy = FALSE):string

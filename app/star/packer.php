@@ -205,6 +205,9 @@ aside>img{
 main{
 	position: relative;
 	flex-grow: 1;
+	background-position: top center;
+	background-repeat: no-repeat;
+	background-size: cover;
 }
 main>img{
 	position: absolute;
@@ -275,7 +278,8 @@ type = mobile ? device[0].toLowerCase() : 'desktop',
 bg = masker(`/star/packer/${mobile ? 'mobile' : 'desktop'}`);
 addEventListener('DOMContentLoaded', () =>
 {
-	bg.then(blob => document.querySelector('main').appendChild(new Image).src = blob);
+	//bg.then(blob => document.querySelector('main').appendChild(new Image).src = blob);
+	bg.then(blob => document.querySelector('main').style.backgroundImage = `url(${blob})`);
 	if (mobile)
 	{
 
