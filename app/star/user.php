@@ -223,7 +223,7 @@ class user extends ArrayObject implements Countable
 	{
 		if ($this->id && $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('view=view+1') === 1)
 		{
-			$this->webapp->fetch_videos->increment($hash) && $this->webapp->recordlog($this['cid'], match ($this['device'])
+			$this->webapp->fetch_videos->watch_increment($hash) && $this->webapp->recordlog($this['cid'], match ($this['device'])
 			{
 				'android' => 'watch_android',
 				'ios' => 'watch_ios',

@@ -956,9 +956,9 @@ class base extends webapp
 			{
 				return $this->similar($hash)->random(8);
 			}
-			function increment(string $hash):bool
+			function watch_increment(string $hash):bool
 			{
-				return $this->redis->exists($key = "video:{$hash}") && $this->redis->hIncrBy($key, 'view', 1);
+				return isset($this[$hash]) && $this->redis->hIncrBy("videos:{$hash}", 'view', 1);
 			}
 		};
 	}
