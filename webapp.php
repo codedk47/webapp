@@ -709,7 +709,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function locale():array
 	{
-
 		return [];
 	}
 

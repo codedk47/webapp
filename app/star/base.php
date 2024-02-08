@@ -468,6 +468,12 @@ class base extends webapp
 	// {
 	// 	return FALSE;
 	// }
+	function everydayable(string $content, string $key = 'everydayable'):bool
+	{
+		return $this->redis->exists($key)
+			? $this->redis->sAdd($key, $content) === 1
+			: $this->redis->sAdd($key, $content) && $this->redis->expire($key, mktime(23, 59, 59));
+	}
 	//记录日志
 	function recordlog(string $cid, string $field, int $value = 1, int $nowtime = NULL):bool
 	{
@@ -475,6 +481,14 @@ class base extends webapp
 		$ciddate = $cid . date('Ymd', $nowtime);
 		$values = match (TRUE)
 		{
+			$field === 'pv' => $this->everydayable($this->request_ip(TRUE), 'uv') ? ['pv' => $value, 'uv' => $value] : ['pv' => $value],
+			in_array($field, ['pv_ios', 'pv_android'], TRUE) => $this->everydayable($this->request_ip(TRUE), 'uv')
+				? ['pv' => $value, $field => $value, 'uv' => $value, 'uv' . substr($field, 2) => $value]
+				: ['pv' => $value, $field => $value],
+
+			$field === 'watch' => ['watch' => $value],
+			in_array($field, ['watch_ios', 'watch_android'], TRUE) => ['watch' => $value, $field => $value],
+
 			$field === 'dpv' => ['dpv' => $value],
 			in_array($field, ['dpv_ios', 'dpv_android'], TRUE) => ['dpv' => $value, $field => $value],
 
@@ -517,6 +531,15 @@ class base extends webapp
 		}
 		$update = sprintf('%s,hourdata=JSON_SET(hourdata,%s)', join(',', $incrdata), join(',', $hourdata));
 		$insert = [
+			'pv'				=> 0,
+			'pv_ios'			=> 0,
+			'pv_android'		=> 0,
+			'uv'				=> 0,
+			'uv_ios'			=> 0,
+			'uv_android'		=> 0,
+			'watch'				=> 0,
+			'watch_ios'			=> 0,
+			'watch_android'		=> 0,
 			'dpv'				=> 0,
 			'dpv_ios'			=> 0,
 			'dpv_android'		=> 0,
