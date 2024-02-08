@@ -81,6 +81,15 @@ class webapp_router_home extends webapp_echo_masker
 		$this->form_login($this->main)->xml['class'] = 'login';
 		return 200;
 	}
+	function pv():void
+	{
+		$this->user->id && $this->webapp->recordlog($this->user['cid'], match ($this->user['device'])
+		{
+			'android' => 'pv_android',
+			'ios' => 'pv_ios',
+			default => 'pv'
+		});
+	}
 	function post_create_account()
 	{
 		$data = ['token' => NULL];
@@ -379,7 +388,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_home(string $type = '')
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->aside['class'] = 'classify';
 		$this->set_aside_classify('?home/home,type:', $type, [ '' => '最新'], $classify);
 		$this->aside->insert('aside', 'after')->setattr('style', join(';', [
@@ -423,7 +432,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_subject(string $hash, int $page = 0)
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->tags = $this->webapp->fetch_tags->shortname();
 		// if ($page)
 		// {
@@ -441,7 +450,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_search(string $word = '', int $page = 0)
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->set_footer_menu();
 		if ($word = trim(urldecode($word)))
 		{
@@ -526,7 +535,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_watch(string $hash)
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js']);
 		$this->set_header_search();
@@ -726,7 +735,7 @@ class webapp_router_home extends webapp_echo_masker
 			$this->json($videos);
 			return;
 		}
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js?v=m']);
 		$this->meta(['name' => 'theme-color', 'content' => 'black']);
@@ -763,7 +772,7 @@ class webapp_router_home extends webapp_echo_masker
 
 	function get_my()
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->xml->body->div['class'] = 'my';
 		$this->set_header_title('个人中心');
 
@@ -826,7 +835,7 @@ class webapp_router_home extends webapp_echo_masker
 	//分享链接
 	function get_my_shareurl()
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->set_header_title('分享链接');
 		$this->main['class'] = 'myshare';
 		$ul = $this->main->append('ul');
@@ -877,7 +886,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_my_report()
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->set_header_title('问题反馈');
 		$this->form_report($this->aside);
 		$this->set_footer_menu();
@@ -895,7 +904,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_my_historys()
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->set_header_title('观影记录');
 		$this->set_footer_menu();
 		$this->add_video_lists($this->main,
@@ -906,7 +915,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function get_my_favorites()
 	{
-		$this->webapp->recordlog($this->user['cid'] ?? base::cid, 'pv');
+		$this->pv();
 		$this->set_header_title('收藏记录');
 		$this->set_footer_menu();
 		$this->add_video_lists($this->main,
