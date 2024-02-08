@@ -223,15 +223,12 @@ class user extends ArrayObject implements Countable
 	{
 		if ($this->id && $this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('view=view+1') === 1)
 		{
-			if ($this->webapp->redis->exists($key = "video:{$hash}"))
+			$this->webapp->fetch_videos->increment($hash) && $this->webapp->recordlog($this['cid'], match ($this['device'])
 			{
-				$this->webapp->redis->hIncrBy($key, 'view', 1) && $this->webapp->recordlog($this['cid'], match ($this['device'])
-				{
-					'android' => 'watch_android',
-					'ios' => 'watch_ios',
-					default => 'watch'
-				});
-			}
+				'android' => 'watch_android',
+				'ios' => 'watch_ios',
+				default => 'watch'
+			});
 			$historys = $this['historys'] ? str_split($this['historys'], 12) : [];
 			if (is_int($index = array_search($hash, $historys, TRUE)))
 			{

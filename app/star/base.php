@@ -956,6 +956,10 @@ class base extends webapp
 			{
 				return $this->similar($hash)->random(8);
 			}
+			function increment(string $hash):bool
+			{
+				return $this->redis->exists($key = "video:{$hash}") && $this->redis->hIncrBy($key, 'view', 1);
+			}
 		};
 	}
 }
