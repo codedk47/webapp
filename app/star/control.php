@@ -78,7 +78,7 @@ class webapp_router_control extends webapp_echo_masker
 		if (preg_match('/^\d{4}\-\d{2}$/', $date ??= date('Y-m')))
 		{
 			$stat = $this->webapp->mysql->recordlog('WHERE date LIKE ?s', "{$date}%")->statmonth($date, 'cid', 'right(date,2)', 
-				array_map(fn($v) => "SUM(IF({day}=0 OR right(date,2)={day},{$v},0))", ['dpv', 'dpc', 'signin', 'signup']), 'ORDER BY $2$0 DESC');
+				array_map(fn($v) => "SUM(IF({day}=0 OR right(date,2)={day},{$v},0))", ['pv', 'uv', 'watch', 'dpv', 'dpc', 'signin', 'signup']), 'ORDER BY $2$0 DESC');
 
 			// $fields = ['cid', 'RIGHT(date,2) day', ...array_map(fn($v) => "SUM({$v}) {$v}", $statistics)];
 			// $a = $this->webapp->mysql->recordlog('WHERE date LIKE ?s GROUP BY date ORDER BY cid ASC,date ASC', "{$pattern[1]}%")
@@ -87,7 +87,15 @@ class webapp_router_control extends webapp_echo_masker
 			$table = $this->main->table($stat, function($table, $log, $day)
 			{
 				$tr = [$table->row()];
-				$table->cell([$log['cid'] ?? '所有', 'rowspan' => 4]);
+				$table->cell([$log['cid'] ?? '所有', 'rowspan' => 7]);
+				$table->cell('PV');
+				$tr[] = $table->row();
+				$table->cell('UV');
+				$tr[] = $table->row();
+				$table->cell('观影');
+				$tr[] = $table->row();
+
+
 				$table->cell('访问');
 				$tr[] = $table->row();
 				$table->cell('点击');
@@ -103,6 +111,9 @@ class webapp_router_control extends webapp_echo_masker
 					$tr[1]->append('td', number_format($log["\$1\${$i}"]));
 					$tr[2]->append('td', number_format($log["\$2\${$i}"]));
 					$tr[3]->append('td', number_format($log["\$3\${$i}"]));
+					$tr[4]->append('td', number_format($log["\$4\${$i}"]));
+					$tr[5]->append('td', number_format($log["\$5\${$i}"]));
+					$tr[6]->append('td', number_format($log["\$6\${$i}"]));
 				}
 
 			}, $day);
