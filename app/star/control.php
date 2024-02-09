@@ -127,6 +127,16 @@ class webapp_router_control extends webapp_echo_masker
 			return;
 		}
 		$statistics = [
+			'pv',
+			'pv_ios',
+			'pv_android',
+			'uv',
+			'uv_ios',
+			'uv_android',
+			'watch',
+			'watch_ios',
+			'watch_android',
+
 			'dpv',
 			'dpv_ios',
 			'dpv_android',
@@ -186,10 +196,32 @@ class webapp_router_control extends webapp_echo_masker
 		{
 			$node = [$table->row()];
 
-			$ceil = $table->cell(['rowspan' => 12]);
+			$ceil = $table->cell(['rowspan' => 21]);
 			$ceil->append('span', [$cid ? $channels[$log['cid']] ?? '未知渠道' : '总计', 'style' => 'font-size:.8rem']);
 			$ceil->append('br');
 			$ceil->append('span', $cid ? "[{$log['cid']}]" : '全部');
+			$table->cell(['PV', 'rowspan' => 3]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('苹果');
+			$node[] = $table->row();
+			$table->cell('安卓');
+			$node[] = $table->row();
+			$table->cell(['UV', 'rowspan' => 3]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('苹果');
+			$node[] = $table->row();
+			$table->cell('安卓');
+			$node[] = $table->row();
+			$table->cell(['观看', 'rowspan' => 3]);
+			$table->cell('总计');
+			$node[] = $table->row();
+			$table->cell('苹果');
+			$node[] = $table->row();
+			$table->cell('安卓');
+			$node[] = $table->row();
+
 
 			$table->cell(['访问', 'rowspan' => 3]);
 			$table->cell('总计');
