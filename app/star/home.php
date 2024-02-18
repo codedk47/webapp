@@ -626,7 +626,7 @@ class webapp_router_home extends webapp_echo_masker
 		//判断是否剧集或者卡通动漫
 		if (in_array('K3yp', $tags, TRUE) || in_array('9Oi0', $tags, TRUE))
 		{
-			$videoseries = $videoinfo->append('mark', ['data-label' => '标签:']);
+			$videoseries = $videoinfo->append('mark', ['data-label' => '选集:']);
 			foreach ($this->webapp->fetch_videos->eval('type=?s AND name LIKE ?s ORDER BY name ASC',
 				$video['type'], trim($video['name'], "0123456789 \n\r\t\v\x00") . '%') as $series) {
 				$anchor = $videoseries->append('a', [str_pad(intval(preg_match('/\d+$/', $series['name'], $number)
