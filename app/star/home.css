@@ -684,6 +684,7 @@ div.videoinfo>div.useraction>a>span{
 div.videoinfo>mark[data-label]::before,
 div.videoinfo>div[data-label]::before{
 	content: attr(data-label);
+	color: var(--webapp-foreground);
 }
 div.videoinfo>div[data-label]>a{
 	overflow: hidden;
