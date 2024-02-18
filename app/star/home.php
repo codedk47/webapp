@@ -629,8 +629,8 @@ class webapp_router_home extends webapp_echo_masker
 			$videoseries = $videoinfo->append('mark');
 			foreach ($this->webapp->fetch_videos->eval('type=?s AND name LIKE ?s ORDER BY name ASC',
 				$video['type'], trim($video['name'], "0123456789 \n\r\t\v\x00") . '%') as $series) {
-				$anchor = $videoseries->append('a', [str_pad(intval(strrchr($series['name'], ' ')), 2, 0, STR_PAD_LEFT),
-					'href' => "?home/watch,hash:{$series['hash']}"]);
+				$anchor = $videoseries->append('a', [str_pad(intval(preg_match('/\d+$/', $series['name'], $number)
+					? $number[0] : strrchr($series['name'], ' ')), 2, 0, STR_PAD_LEFT), 'href' => "?home/watch,hash:{$series['hash']}"]);
 				if ($series['hash'] === $hash)
 				{
 					$anchor['style'] = 'background-color:var(--webapp-foreground);color:var(--webapp-background)';
