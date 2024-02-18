@@ -681,6 +681,7 @@ div.videoinfo>div.useraction>a>span{
 	padding: 0 var(--webapp-gapitem);
 	padding-right: var(--webapp-gap);
 }
+div.videoinfo>mark[data-label]::before,
 div.videoinfo>div[data-label]::before{
 	content: attr(data-label);
 }
