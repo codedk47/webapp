@@ -621,8 +621,10 @@ class webapp_router_home extends webapp_echo_masker
 				(string)$anchor->svg[0]['style']];
 		}
 
-		//判断是否剧集
-		if (in_array('K3yp', explode(',', $video['tags']), TRUE))
+		$tags = explode(',', $video['tags']);
+
+		//判断是否剧集或者卡通动漫
+		if (in_array('K3yp', $tags, TRUE) || in_array('9Oi0', $tags, TRUE))
 		{
 			$videoseries = $videoinfo->append('mark');
 			foreach ($this->webapp->fetch_videos->eval('type=?s AND name LIKE ?s ORDER BY name ASC',
@@ -641,7 +643,7 @@ class webapp_router_home extends webapp_echo_masker
 		if ($video['tags'])
 		{
 			$taginfo = $videoinfo->append('div', ['data-label' => '标签:']);
-			foreach (explode(',', $video['tags']) as $tag)
+			foreach ($tags as $tag)
 			{
 				if (isset($this->tags[$tag]))
 				{
