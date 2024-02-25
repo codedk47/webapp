@@ -434,11 +434,11 @@ class base extends webapp
 			}
 		}
 		
-		if ($updatable)
-		{
+		//if ($updatable)
+		//{
 			$this->fetch_videos->flush()->cache();
 			$this->fetch_subjects->flush()->cache();
-		}
+		//}
 	}
 	//======================以上为内部功能======================
 	//======================以下为扩展功能======================
