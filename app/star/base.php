@@ -440,6 +440,17 @@ class base extends webapp
 			$this->fetch_subjects->flush()->cache();
 		//}
 	}
+	function get_pack()
+	{
+		var_dump( iterator_to_array($this->fetch_subjects->with('type="DQFQ"')->cache()) );
+		if (1)
+		{
+
+			echo "asd";
+			//$this->fetch_videos->flush()->cache();
+			//$this->fetch_subjects->flush()->cache();
+		}
+	}
 	//======================以上为内部功能======================
 	//======================以下为扩展功能======================
 	const cid = '0000';
