@@ -442,12 +442,9 @@ class base extends webapp
 	}
 	function get_pack()
 	{
-		
-		var_dump( count(iterator_to_array($this->fetch_videos->randtop('DQFQ'))) );
 		if (1)
 		{
-
-			echo "asd";
+			echo date("Y-m-d H:i:s\n");
 			//$this->fetch_videos->flush()->cache();
 			//$this->fetch_subjects->flush()->cache();
 		}
