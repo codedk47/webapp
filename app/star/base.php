@@ -442,7 +442,8 @@ class base extends webapp
 	}
 	function get_pack()
 	{
-		var_dump( iterator_to_array($this->fetch_subjects->with('type="DQFQ"')->cache()) );
+		
+		var_dump( iterator_to_array($this->fetch_videos->randtop('DQFQ')) );
 		if (1)
 		{
 
