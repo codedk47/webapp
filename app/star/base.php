@@ -443,7 +443,7 @@ class base extends webapp
 	function get_pack()
 	{
 		
-		var_dump( iterator_to_array($this->fetch_videos->randtop('DQFQ')) );
+		var_dump( count(iterator_to_array($this->fetch_videos->randtop('DQFQ'))) );
 		if (1)
 		{
 
