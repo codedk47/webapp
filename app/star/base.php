@@ -445,8 +445,8 @@ class base extends webapp
 		if (empty(iterator_to_array($this->fetch_videos->randtop('DQFQ'))))
 		{
 			echo date("Y-m-d H:i:s\n");
-			// $this->fetch_videos->flush()->cache();
-			// $this->fetch_subjects->flush()->cache();
+			$this->fetch_videos->flush()->cache();
+			$this->fetch_subjects->flush()->cache();
 		}
 	}
 	//======================以上为内部功能======================
