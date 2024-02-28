@@ -306,6 +306,10 @@ class base extends webapp
 				&& $this->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])
 					->update(['ctime' => $this->time(), 'change' => 'none']) === 1 ? "OK\n" : "NO\n";
 		}
+		if (isset($ad))
+		{
+			echo "asd\n";
+		}
 		echo "----SYNC FACE----\n";
 		foreach ($this->mysql->users('WHERE uid!=0 AND fid=0') as $user)
 		{
