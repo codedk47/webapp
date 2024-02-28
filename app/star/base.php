@@ -264,23 +264,23 @@ class base extends webapp
 	function get_sync_record()
 	{
 		if (PHP_SAPI !== 'cli') return 404;
-		echo "----SYNC RECORD----\n";
-		foreach ($this->mysql->records('WHERE result="success" AND type NOT IN("video","exchange") AND log="pending"')->all() as $record)
-		{
-			$this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->select('id,date,device')->fetch($user);
-			echo "{$record['hash']} - ",
-			$this->mysql->sync(fn() => $this->recordlog($record['cid'], match ($user['device'])
-				{
-					'android' => 'order_android_ok',
-					'ios' => 'order_ios_ok',
-					default => 'order_ok'
-				}, 1, $record['mtime'])
-				&& $this->recordlog($record['cid'], sprintf('recharge%s%s',
-					in_array($record['type'], ['vip', 'coin'], TRUE) ? "_{$record['type']}" : '',
-					date('Y-m-d', $record['mtime']) === $user['date'] ? '_new' : '_old'), $record['fee'], $record['mtime'])
-				&& $this->mysql->records('WHERE hash=?s AND log="pending" LIMIT 1', $record['hash'])->update('log="success"') === 1)
-			? "OK\n" : "NO\n";
-		}
+		// echo "----SYNC RECORD----\n";
+		// foreach ($this->mysql->records('WHERE result="success" AND type NOT IN("video","exchange") AND log="pending"')->all() as $record)
+		// {
+		// 	$this->mysql->users('WHERE id=?s LIMIT 1', $record['userid'])->select('id,date,device')->fetch($user);
+		// 	echo "{$record['hash']} - ",
+		// 	$this->mysql->sync(fn() => $this->recordlog($record['cid'], match ($user['device'])
+		// 		{
+		// 			'android' => 'order_android_ok',
+		// 			'ios' => 'order_ios_ok',
+		// 			default => 'order_ok'
+		// 		}, 1, $record['mtime'])
+		// 		&& $this->recordlog($record['cid'], sprintf('recharge%s%s',
+		// 			in_array($record['type'], ['vip', 'coin'], TRUE) ? "_{$record['type']}" : '',
+		// 			date('Y-m-d', $record['mtime']) === $user['date'] ? '_new' : '_old'), $record['fee'], $record['mtime'])
+		// 		&& $this->mysql->records('WHERE hash=?s AND log="pending" LIMIT 1', $record['hash'])->update('log="success"') === 1)
+		// 	? "OK\n" : "NO\n";
+		// }
 		echo "----SYNC COVER----\n";
 		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change"') as $cover)
 		{
@@ -297,6 +297,7 @@ class base extends webapp
 			}
 			echo "WAITING\n";
 		}
+
 		echo "----SYNC AD----\n";
 		foreach ($this->mysql->ads('WHERE `change`="sync"') as $ad)
 		{
@@ -306,33 +307,30 @@ class base extends webapp
 				&& $this->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])
 					->update(['ctime' => $this->time(), 'change' => 'none']) === 1 ? "OK\n" : "NO\n";
 		}
-		if (isset($ad))
-		{
-			echo "asd\n";
-		}
-		echo "----SYNC FACE----\n";
-		foreach ($this->mysql->users('WHERE uid!=0 AND fid=0') as $user)
-		{
-			$hash = $this->webapp->time33hash($this->webapp->hashtime33($user['id']));
-			echo "{$hash} - ",
-				is_file($image = "{$this['face_savedir']}/{$hash}")
-				&& copy($image, "{$this['face_syncdir']}/{$hash}")
-				&& $this->mysql->users('WHERE id=?s LIMIT 1', $user['id'])->update([
-					'ctime' => $this->time(),
-					'fid' => 255]) === 1 ? "OK\n" : "NO\n";
-		}
-		echo "----SYNC IMGS----\n";
-		foreach ($this->mysql->images('WHERE sync="pending"') as $img)
-		{
-			$ym = date('ym', $img['mtime']);
-			echo "{$img['hash']} - ",
-				is_file($image = "{$this['imgs_savedir']}/{$ym}/{$img['hash']}")
-				&& (is_dir($syncdir = "{$this['imgs_syncdir']}/{$ym}") || mkdir($syncdir))
-				&& copy($image, "{$syncdir}/{$img['hash']}")
-				&& $this->mysql->images('WHERE hash=?s LIMIT 1', $img['hash'])->update([
-					'ctime' => $this->time(),
-					'sync' => "finished"]) === 1 ? "OK\n" : "NO\n";
-		}
+		isset($ad) && $this->fetch_ads->flush();
+		// echo "----SYNC FACE----\n";
+		// foreach ($this->mysql->users('WHERE uid!=0 AND fid=0') as $user)
+		// {
+		// 	$hash = $this->webapp->time33hash($this->webapp->hashtime33($user['id']));
+		// 	echo "{$hash} - ",
+		// 		is_file($image = "{$this['face_savedir']}/{$hash}")
+		// 		&& copy($image, "{$this['face_syncdir']}/{$hash}")
+		// 		&& $this->mysql->users('WHERE id=?s LIMIT 1', $user['id'])->update([
+		// 			'ctime' => $this->time(),
+		// 			'fid' => 255]) === 1 ? "OK\n" : "NO\n";
+		// }
+		// echo "----SYNC IMGS----\n";
+		// foreach ($this->mysql->images('WHERE sync="pending"') as $img)
+		// {
+		// 	$ym = date('ym', $img['mtime']);
+		// 	echo "{$img['hash']} - ",
+		// 		is_file($image = "{$this['imgs_savedir']}/{$ym}/{$img['hash']}")
+		// 		&& (is_dir($syncdir = "{$this['imgs_syncdir']}/{$ym}") || mkdir($syncdir))
+		// 		&& copy($image, "{$syncdir}/{$img['hash']}")
+		// 		&& $this->mysql->images('WHERE hash=?s LIMIT 1', $img['hash'])->update([
+		// 			'ctime' => $this->time(),
+		// 			'sync' => "finished"]) === 1 ? "OK\n" : "NO\n";
+		// }
 	}
 	//本地命令行运行视频同步处理
 	function get_sync_video()
