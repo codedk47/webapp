@@ -304,8 +304,7 @@ class base extends webapp
 				is_file($image = "{$this['ad_savedir']}/{$ad['hash']}")
 				&& copy($image, "{$this['ad_syncdir']}/{$ad['hash']}")
 				&& $this->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])
-					->update(['ctime' => $this->time(), 'change' => 'none']) === 1
-				&& $this->clear_ads($ad['seat'], $ad['hash']) ? "OK\n" : "NO\n";
+					->update(['ctime' => $this->time(), 'change' => 'none']) === 1 ? "OK\n" : "NO\n";
 		}
 		echo "----SYNC FACE----\n";
 		foreach ($this->mysql->users('WHERE uid!=0 AND fid=0') as $user)
