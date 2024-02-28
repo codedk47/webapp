@@ -713,23 +713,37 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 
 	//request
+	function request_header(string $name):?string
+	{
+		return $this->io->request_header($name);
+	}
+	function request_authorization(&$type = NULL):?string
+	{
+		return is_string($authorization = $this->request_header('Authorization'))
+			? ([$type] = explode(' ', $authorization, 2))[1] ?? $type : NULL;
+	}
+	function request_country():?string
+	{
+		//CF-IPCountry
+		return $this->request_header('CF-IPCountry') ?? NULL;
+	}
 	function request_ip(bool $proxy = FALSE):string
 	{
 		//CF-Connecting-IP
-		return $proxy && ($ip = $this->io->request_header('X-Forwarded-For'))
+		return $proxy && ($ip = $this->request_header('X-Forwarded-For'))
 			? current(explode(',', $ip))
 			: $this->io->request_ip();
 	}
 	function request_scheme():string
 	{
-		return $this->io->request_header('X-Forwarded-Proto')
+		return $this->request_header('X-Forwarded-Proto')
 			?? $this->io->request_scheme();
 	}
 	function request_host():string
 	{
-		return $this->io->request_header('X-Forwarded-Host')
-			?? $this->io->request_header('Host')
-			?? $this['app_hostname'];
+		return $this->request_header('X-Forwarded-Host')
+			?? $this->request_header('Host')
+			?? $this->request_ip();
 	}
 	function request_origin(string $path = NULL):string
 	{
@@ -743,16 +757,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		return dirname($this->request_entry());
 	}
-	// function request_cond(string $name = 'cond'):array
-	// {
-	// 	$cond = [];
-	// 	preg_match_all('/(\w+\.(?:eq|ne|gt|ge|lt|le|lk|nl|in|ni))(?:\.([^\/]*))?/', $this->request_query($name), $values, PREG_SET_ORDER);
-	// 	foreach ($values as $value)
-	// 	{
-	// 		$cond[$value[1]] = array_key_exists(2, $value) ? urldecode($value[2]) : NULL;
-	// 	}
-	// 	return $cond;
-	// }
 	function request_cookie(string $name):?string
 	{
 		return $this->io->request_cookie($name);
@@ -760,15 +764,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	function request_cookie_decrypt(string $name):?string
 	{
 		return static::decrypt($this->request_cookie($name));
-	}
-	function request_header(string $name):?string
-	{
-		return $this->io->request_header($name);
-	}
-	function request_authorization(&$type = NULL):?string
-	{
-		return is_string($authorization = $this->request_header('Authorization'))
-			? ([$type] = explode(' ', $authorization, 2))[1] ?? $type : NULL;
 	}
 	function request_locale():array
 	{
@@ -849,7 +844,16 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		$this->app('webapp_echo_json', ['uploadurl' => $uploadurl, 'offset' => $offset]);
 	}
 
-
+	// function request_cond(string $name = 'cond'):array
+	// {
+	// 	$cond = [];
+	// 	preg_match_all('/(\w+\.(?:eq|ne|gt|ge|lt|le|lk|nl|in|ni))(?:\.([^\/]*))?/', $this->request_query($name), $values, PREG_SET_ORDER);
+	// 	foreach ($values as $value)
+	// 	{
+	// 		$cond[$value[1]] = array_key_exists(2, $value) ? urldecode($value[2]) : NULL;
+	// 	}
+	// 	return $cond;
+	// }
 	// function request_app_channel():string
 	// {
 	// 	$this->query['wacid'] ?? $this->request_header('webapp-cid')
