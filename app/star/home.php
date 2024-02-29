@@ -403,9 +403,11 @@ class webapp_router_home extends webapp_echo_masker
 		$this->set_header_search(NULL);
 		$this->set_footer_menu();
 		$this->set_float_button();
-		$navads = $this->add_nav_ads($this->main, 9, '福利导航');
-
 		$this->add_slideshows_ads($this->main, 2);
+		if (isset($classify[$type]) === FALSE)
+		{
+			$this->add_nav_ads($this->main, 9, '福利导航');
+		}
 		$this->tags = $this->webapp->fetch_tags->shortname();
 		if ($this->webapp->fetch_subjects->unique('type', $type))
 		{
@@ -414,7 +416,7 @@ class webapp_router_home extends webapp_echo_masker
 			$c = (int)ceil($subjects->count() * 0.5);
 			foreach ($subjects as $subject)
 			{
-				++$i === $c && $this->add_nav_ads($this->main, 9, '福利导航');
+				++$i === $c && $this->add_slideshows_ads($this->main, 2);
 				$keys = str_split($subject['videos'], 12);
 				shuffle($keys);
 				$this->add_video_lists($this->main,
@@ -428,14 +430,14 @@ class webapp_router_home extends webapp_echo_masker
 			$c = (int)ceil(count($classify) * 0.5);
 			foreach ($classify as $hash => $name)
 			{
-				++$i === $c && $this->add_nav_ads($this->main, 9, '福利导航');
+				++$i === $c && $this->add_slideshows_ads($this->main, 2);
 				$this->add_video_lists($this->main,
 					$this->webapp->fetch_videos->randtop($hash),
 					6, "最新{$name}", "?home/home,type:{$hash}");
 				
 			}
 		}
-		$this->add_nav_ads($this->main, 9, '福利导航');
+		$this->add_slideshows_ads($this->main, 2);
 	}
 	function get_subject(string $hash, int $page = 0)
 	{
@@ -685,7 +687,6 @@ class webapp_router_home extends webapp_echo_masker
 		}
 
 		//关联影片
-		$this->add_nav_ads($this->main, 9, '福利导航');
 		$this->add_slideshows_ads($this->main, 2);
 		$this->add_video_lists($this->main, $this->webapp->fetch_videos->watch_actress($video), 2, '相关推荐');
 
