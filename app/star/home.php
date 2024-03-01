@@ -555,48 +555,61 @@ class webapp_router_home extends webapp_echo_masker
 			$this->aside->append('strong', '您所观看的影片不见啦 :(');
 			return 404;
 		}
-		$this->aside['data-type'] .= $video['type'];
-		if ($this->user->count())
+		$tags = explode(',', $video['tags']);
+		if (match ($this->webapp->request_country())
 		{
-			if ($this->user->watched($hash) === FALSE)
-			{
-				$this->user->watch($hash) && $this->user->count(-1);
-			}
-			//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
-			$watch = $this->aside->append('webapp-video', [
-				'data-poster' => $video['poster'],
-				'data-m3u8' => $video['m3u8'],
-				'oncanplay' => 'masker.canplay(this)',
-				//'autoheight' => NULL,
-				'autoplay' => NULL,
-				//'muted' => NULL,
-				'controls' => NULL
-			]);
-			if ($ad = $this->webapp->fetch_ads->rand(3))
-			{
-				$watch->append('a', ['href' => $ad['support'],
-					'data-duration' => 5,
-					'data-unit' => '秒',
-					'data-skip' => '跳过',
-					'onclick' => 'console.log(123)'
-				])->append('img', ['src' => $ad['picture'],
-					'onload' => 'this.parentNode.parentNode.splashscreen(this.parentNode)',
-					'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)'
-				]);
-			}
-			else
-			{
-				$watch->setattr('autoplay');
-			}
+			'US' => in_array('lqe2', $tags, TRUE),
+			'JP' => in_array('F2i7', $tags, TRUE),
+			default => FALSE
+		})
+		{
+			$this->aside->append('strong', '根据当地法律法规，禁止播放该影片！');
 		}
 		else
 		{
-			$strong = $this->aside->append('strong')->append('div');
-			$strong->append('span', '每日观影剩余次数已耗尽');
-			$strong->append('a', ['请点击分享链接', 'href' => '?home/my-shareurl', 'class' => 'button']);
-			$strong->append('span', '获得更多次数！');
+			$this->aside['data-type'] .= $video['type'];
+			if ($this->user->count())
+			{
+				if ($this->user->watched($hash) === FALSE)
+				{
+					$this->user->watch($hash) && $this->user->count(-1);
+				}
+				//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
+				$watch = $this->aside->append('webapp-video', [
+					'data-poster' => $video['poster'],
+					'data-m3u8' => $video['m3u8'],
+					'oncanplay' => 'masker.canplay(this)',
+					//'autoheight' => NULL,
+					'autoplay' => NULL,
+					//'muted' => NULL,
+					'controls' => NULL
+				]);
+				if ($ad = $this->webapp->fetch_ads->rand(3))
+				{
+					$watch->append('a', ['href' => $ad['support'],
+						'data-duration' => 5,
+						'data-unit' => '秒',
+						'data-skip' => '跳过',
+						'onclick' => 'console.log(123)'
+					])->append('img', ['src' => $ad['picture'],
+						'onload' => 'this.parentNode.parentNode.splashscreen(this.parentNode)',
+						'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)'
+					]);
+				}
+				else
+				{
+					$watch->setattr('autoplay');
+				}
+			}
+			else
+			{
+				$strong = $this->aside->append('strong')->append('div');
+				$strong->append('span', '每日观影剩余次数已耗尽');
+				$strong->append('a', ['请点击分享链接', 'href' => '?home/my-shareurl', 'class' => 'button']);
+				$strong->append('span', '获得更多次数！');
+			}
 		}
-		
+
 		//影片信息（标题）
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', htmlentities($video['name']));
@@ -629,8 +642,6 @@ class webapp_router_home extends webapp_echo_masker
 				(string)$anchor->svg[1]['style'],
 				(string)$anchor->svg[0]['style']];
 		}
-
-		$tags = explode(',', $video['tags']);
 
 		//判断是否剧集或者卡通动漫
 		if (in_array('K3yp', $tags, TRUE) || in_array('9Oi0', $tags, TRUE))
