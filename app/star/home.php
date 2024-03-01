@@ -563,7 +563,7 @@ class webapp_router_home extends webapp_echo_masker
 			default => FALSE
 		})
 		{
-			$this->aside->append('strong', '根据当地法律法规，禁止播放该影片！');
+			$this->aside->append('strong', '很抱歉，您所在地区暂时无法播放该视频。');
 		}
 		else
 		{
