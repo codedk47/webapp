@@ -945,14 +945,22 @@ class webapp_router_control extends webapp_echo_masker
 	}
 	function get_user_share()
 	{
-		$dialog = ['当前所有用户：'];
+		$dialog = ['所有用户分享统计：'];
 		foreach ($this->webapp->mysql->users('WHERE share>0 GROUP BY share ORDER BY share DESC')->select('share,count(1) c') as $data)
 		{
 			$dialog[] = "分享 {$data['share']} 次：{$data['c']}";
 		}
 		$this->json(['dialog' => join("\n", $dialog)]);
 	}
-
+	function get_user_share_today()
+	{
+		$dialog = ['今日用户分享统计：'];
+		foreach ($this->webapp->mysql->users('WHERE date=?s AND share>0 GROUP BY share ORDER BY share DESC', date('Y-m-d'))->select('share,count(1) c') as $data)
+		{
+			$dialog[] = "分享 {$data['share']} 次：{$data['c']}";
+		}
+		$this->json(['dialog' => join("\n", $dialog)]);
+	}
 	function get_users(int $page = 1)
 	{
 		$conds = [[]];
@@ -1074,8 +1082,13 @@ class webapp_router_control extends webapp_echo_masker
 			->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($filter_sort);
 
-		$table->bar->append('button', ['统计用户分享数据',
+		$table->bar->append('button', ['所有用户分享数据',
 			'data-src' => '?control/user-share',
+			'data-bind' => 'click',
+			'style' => 'margin-left:.6rem;padding:.1rem']);
+
+		$table->bar->append('button', ['今日用户分享数据',
+			'data-src' => '?control/user-share-today',
 			'data-bind' => 'click',
 			'style' => 'margin-left:.6rem;padding:.1rem']);
 
