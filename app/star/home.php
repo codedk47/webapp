@@ -39,7 +39,7 @@ class webapp_router_home extends webapp_echo_masker
 	function form_login(webapp_html $node = NULL):webapp_form
 	{
 		$form = new webapp_form($node ?? $this->webapp, '?home/create_account');
-		$form->fieldset->append('img', ['src' => '/webapp/app/star/static/logo.png']);
+		$form->fieldset->append('img', ['src' => '/star/logo.png']);
 		$form->fieldset->append('strong', $this->webapp['app_name']);
 		// $form->fieldset();
 		// $form->button('扫码凭证登录');
