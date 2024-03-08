@@ -441,15 +441,7 @@ class base extends webapp
 			$this->fetch_subjects->flush()->cache();
 		//}
 	}
-	function get_pack()
-	{
-		if (empty(iterator_to_array($this->fetch_videos->randtop('DQFQ'))))
-		{
-			echo date("Y-m-d H:i:s\n");
-			$this->fetch_videos->flush()->cache();
-			$this->fetch_subjects->flush()->cache();
-		}
-	}
+
 	//======================以上为内部功能======================
 	//======================以下为扩展功能======================
 	const cid = '0000';
