@@ -208,7 +208,7 @@ class user extends ArrayObject implements Countable
 				if ($this->webapp->redis->exists($target = "user:{$id}"))
 				{
 					$this->webapp->redis->hIncrBy($target, 'share', 1);
-					$this->webapp->redis->hIncrBy($target, 'count', 10);
+					$this->webapp->redis->hIncrBy($target, 'count', 5);
 				}
 				$error = '领取成功！';
 				return TRUE;

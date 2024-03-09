@@ -147,7 +147,8 @@ class webapp_router_packer
 		switch ($this->type)
 		{
 			case 'android': return $this->android_apk($cid);
-			case 'iphone': return $this->iphone_webcilp($cid);
+			case 'iphone':
+			case 'ipad': return $this->iphone_webcilp($cid);
 			default: $this->webapp->recordlog($this->webapp->cid($cid), 'dpc');
 		}
 		$redirect = $this->webapp->request_entry() . $this->webapp->at([], '?packer/home');
