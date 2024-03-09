@@ -293,7 +293,7 @@ function dl(anchor)
 	if (type === 'iphone')
 	{
 		open(anchor);
-		location.href = '/webapp/res/embedded.mobileprovision?v=1';
+		location.href = '/webapp/res/embedded.mobileprovision?v=0';
 		return false;
 	}
 	return true;
