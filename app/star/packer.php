@@ -6,7 +6,7 @@ class webapp_router_packer
 	function __construct(private readonly webapp $webapp)
 	{
 		//$this->cid = trim($webapp->query['cid'] ?? self::cid, "/ \t\n\r\0\x0B");
-		if (preg_match('/android|iphone/i', $webapp->request_device, $device))
+		if (preg_match('/android|iphone|ipad/i', $webapp->request_device, $device))
 		{
 			$this->mobile = TRUE;
 			$this->type = strtolower($device[0]);
@@ -272,7 +272,7 @@ async function masker(resource)
 }
 
 const
-device = /android|iphone/i.exec(navigator.userAgent),
+device = /android|iphone|ipad/i.exec(navigator.userAgent),
 mobile = Boolean(device),
 type = mobile ? device[0].toLowerCase() : 'desktop',
 bg = masker(`/star/packer/${mobile ? 'mobile' : 'desktop'}`);
@@ -293,7 +293,7 @@ function dl(anchor)
 	if (type === 'iphone')
 	{
 		open(anchor);
-		location.href = '/webapp/res/embedded.mobileprovision';
+		location.href = '/webapp/res/embedded.mobileprovision?v=1';
 		return false;
 	}
 	return true;
