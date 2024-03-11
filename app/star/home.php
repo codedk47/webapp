@@ -19,8 +19,8 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/home.css?v=o';
-		$this->script(['src' => '/webapp/app/star/home.js?v=t']);
-		$this->script(['src' => '/webapp/res/js/slideshows.js?v=q']);
+		$this->script(['src' => '/webapp/app/star/home.js?v=y']);
+		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-W33CFKQCZS']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-W33CFKQCZS")');
 	}
@@ -191,10 +191,13 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
+			$this->webapp->mysql->ads('WHERE hash IN(?S)', array_column($ads, 'hash'))->update('`view`=`view`+1');
 			return $node->append('webapp-slideshows', [
 				'data-contents' => json_encode($ads, JSON_UNESCAPED_UNICODE),
 				'data-duration' => $duration,
-				'style' => 'margin-top:calc(var(--webapp-gapitem) + var(--webapp-gap))']);
+				'style' => 'margin-top:calc(var(--webapp-gapitem) + var(--webapp-gap))',
+				'onchange' => 'this.active.onclick=()=>masker.lognews(`?home/news,hash:${this.current.hash}`)'
+			]);
 		}
 		return NULL;
 	}
@@ -202,21 +205,18 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
+			$this->webapp->mysql->ads('WHERE hash IN(?S)', array_column($ads, 'hash'))->update('`view`=`view`+1');
 			if ($title)
 			{
 				$element = $node->append('div', ['class' => 'titles']);
 				$element->append('strong', $title);
 			}
-
 			$element = $node->append('div', ['class' => 'grid-icon']);
-
-
 			foreach ($ads as $ad)
 			{
-				$anchor = $element->append('a', ['href' => $ad['support']]);
+				$anchor = $element->append('a', ['href' => "?home/news,hash:{$ad['hash']}", 'onclick' => 'return masker.lognews(this)']);
 				$anchor->append('figure')->append('img', ['src' => $ad['picture']]);
 				$anchor->append('strong', $ad['name']);
-
 				//$a->append('figcaption', $ad['name']);
 				//$element->append('a', ['href' => $ad['support']])->append('img');
 			}
@@ -350,12 +350,13 @@ class webapp_router_home extends webapp_echo_masker
 		// 		break;
 		// 	}
 		// }
-
+		$this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])->update('`view`=`view`+1');
 		$this->script('masker.then(masker.splashscreen)');
 		$this->xml->body->div['class'] = 'splashscreen';
 		$this->xml->body->setattr([
 			'style' => "background: url({$ad['picture']}) center / cover no-repeat var(--webapp-background)",
-			'data-support' => $ad['support'],
+			//'data-support' => $ad['support'],
+			'data-support' => "javascript:masker.lognews('?home/news,hash:{$ad['hash']}');",
 			'data-duration' => 5,
 			'data-autoskip' => TRUE
 		]);
@@ -371,6 +372,16 @@ class webapp_router_home extends webapp_echo_masker
 		if ($ad = $this->webapp->fetch_ads->rand(1))
 		{
 			$data['popup'] = ['title' => $ad['name'], 'picture' => $ad['picture'], 'support' => $ad['support']];
+		}
+		$this->json($data);
+	}
+	function get_news(string $hash)
+	{
+		$data = [];
+		if ($ad = $this->webapp->fetch_ads[$hash])
+		{
+			$this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update('click=click+1');
+			$data['support'] = $ad['support'];
 		}
 		$this->json($data);
 	}
@@ -588,11 +599,12 @@ class webapp_router_home extends webapp_echo_masker
 				]);
 				if ($ad = $this->webapp->fetch_ads->rand(3))
 				{
-					$watch->append('a', ['href' => $ad['support'],
+					$this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])->update('`view`=`view`+1');
+					$watch->append('a', ['href' => "?home/news,hash:{$ad['hash']}",
 						'data-duration' => 5,
 						'data-unit' => '秒',
 						'data-skip' => '跳过',
-						'onclick' => 'console.log(123)'
+						'onclick' => 'return masker.lognews(this)'
 					])->append('img', ['src' => $ad['picture'],
 						'onload' => 'this.parentNode.parentNode.splashscreen(this.parentNode)',
 						'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)'

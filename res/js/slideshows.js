@@ -31,6 +31,8 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 	#contents = [];
 	#slider;
 	#index = 0;
+	#active;
+	#current;
 	constructor()
 	{
 		super();
@@ -114,10 +116,15 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 					: [this.#slide.appendChild(this.#slide.firstElementChild),
 						this.#contents[this.#index + 1 >= this.#contents.length ? 0 : this.#index + 1]]);
 				this.#slide.style.left = '-100%';
+				this.#active = this.#slide.children[1];
+				this.#current = this.#contents[this.#index];
+				this.onchange && this.onchange();
 			}
 			transitioning = false;
 		});
 	}
+	get active(){return this.#active;}
+	get current(){return this.#current;}
 	#setcontent(node, content)
 	{
 		node.style.backgroundImage = `url(${content.picture})`;
@@ -127,7 +134,7 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 	{
 		switch (this.#contents.length)
 		{
-			case 0: this.#setcontent(this.#anchor[1], content);
+			case 0: this.#setcontent(this.#active = this.#anchor[1], this.#current = content, this.onchange && this.onchange());
 			case 1: this.#setcontent(this.#anchor[2], content);
 			case 2: this.#setcontent(this.#anchor[0], content);
 		}

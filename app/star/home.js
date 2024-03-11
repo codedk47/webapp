@@ -198,6 +198,11 @@ masker.log = (anchor, callback) =>
 	}).finally(() => anchor.onclick = () => masker.log(anchor, callback));
 	return false;
 };
+masker.lognews = anchor =>
+{
+	masker.json(typeof anchor === 'string' ? anchor : anchor.href, data => location.href = data.support);
+	return false;
+};
 masker.canplay = video =>
 {
 	video.firstElementChild.style.objectFit = 'contain';
