@@ -185,14 +185,14 @@ div.packer{
 }
 header{
 	position: absolute;
-	right: 0;
-	bottom: 0;
+	top: 1rem;
+	right: 1rem;
 	z-index: 1;
 }
 aside:not(:empty){
 	position: absolute;
-	right: 1rem;
-	top: 42%;
+	left: 6rem;
+	bottom: 5rem;
 	width: 17%;
 	max-width: 11rem;
 	z-index: 1;
@@ -206,10 +206,11 @@ aside>img{
 main{
 	position: relative;
 	flex-grow: 1;
-	background-position: top center;
+	background-position: top left;
 	background-repeat: no-repeat;
 	background-size: cover;
 }
+
 main>img{
 	position: absolute;
 	width: 100%;
@@ -276,7 +277,7 @@ const
 device = /android|iphone|ipad/i.exec(navigator.userAgent),
 mobile = Boolean(device),
 type = mobile ? device[0].toLowerCase() : 'desktop',
-bg = masker(`/star/packer/${mobile ? 'mobile' : 'desktop'}`);
+bg = masker(`/star/packer/pink/${mobile ? 'mobile' : 'desktop'}`);
 addEventListener('DOMContentLoaded', () =>
 {
 	//bg.then(blob => document.querySelector('main').appendChild(new Image).src = blob);
@@ -303,11 +304,24 @@ JS);
 		$dl = $this->webapp->request_entry() . $this->webapp->at(['cid' => $cid], '?packer/dl');
 		if ($this->mobile)
 		{
-			$html->footer->append('a', ['href' => $dl, 'target' => '_blank', 'onclick' => 'return dl(this)'])
-				->append('img', ['src' => "/star/packer/dl-{$this->type}.png"]);
-			$div = $html->footer->append('div');
-			$div->append('span', '安装说明：本APP含有成人内容，容易被杀毒软件误判为恶意软件，H狐狸TV保证无毒和恶意程序，请放心使用');
-			$div->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])->append('img', ['src' => '/star/packer/tg.png']);
+			// $html->footer->append('a', ['href' => $dl, 'target' => '_blank', 'onclick' => 'return dl(this)'])
+			// 	->append('img', ['src' => "/star/packer/dl-{$this->type}.png"]);
+			// $div = $html->footer->append('div');
+			// $div->append('span', '安装说明：本APP含有成人内容，容易被杀毒软件误判为恶意软件，H狐狸TV保证无毒和恶意程序，请放心使用');
+			// $div->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])->append('img', ['src' => '/star/packer/tg.png']);
+			
+
+			$html->main->append('div', ['style' => 'position:absolute;left:0;right:2%;text-align:right'])->append('a', [
+				'href' => $this->webapp['app_business'],
+				'target' => '_blank',
+				'style' => 'display:block;transform:scale(.5);transform-origin:right'])->append('img', ['src' => '/star/packer/pink/tg.png']);
+
+			$html->main->append('div', ['style' => 'position:absolute;left:0;right:0;bottom:0;text-align:center'])->append('a', [
+				'href' => $dl,
+				'target' => '_blank',
+				'onclick' => 'return dl(this)'])->append('img', ['src' => "/star/packer/pink/dl-{$this->type}.png"]);
+
+			$html->footer['style'] = 'background-color:white;height:10%';
 			$html->xml->body->append('img', ['src' => $this->type === 'android'
 				? '/star/packer/tip-android.jpg'
 				: '/star/packer/tip-iphone.jpg',
@@ -317,7 +331,8 @@ JS);
 		{
 			$encrypt = $this->webapp->encrypt($dl);
 			$html->aside->append('img', ['src' => "?qrcode/{$encrypt}"]);
-			$html->header->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])->append('img', ['src' => '/star/packer/tg.png']);
+			$html->header->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])
+				->append('img', ['src' => '/star/packer/pink/tg.png']);
 		}
 		$this->webapp->echo($html);
 	}
