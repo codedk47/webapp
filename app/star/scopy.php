@@ -3,11 +3,10 @@ require '../../webapp.php';
 $ffmpeg = webapp::lib('ffmpeg/interface.php');
 $mysql = new webapp_mysql;
 $mysql->select_db('app');
-$rootsrc = 'D:/sync';
-$rootdst = 'D:/out';
+$rootsrc = 'X:/OK';
+$rootdst = 'Z:/';
 $dirs = array_slice(scandir($rootsrc), 2);
 shuffle($dirs);
-
 foreach ($dirs as $dirname)
 {
     $from = "{$rootsrc}/{$dirname}";
