@@ -4,13 +4,13 @@ $ffmpeg = webapp::lib('ffmpeg/interface.php');
 $mysql = new webapp_mysql;
 $mysql->select_db('app');
 $rootsrc = 'X:/OK';
-$rootdst = 'Z:/';
+$rootdst = 'Z:';
 $dirs = array_slice(scandir($rootsrc), 2);
 shuffle($dirs);
 foreach ($dirs as $dirname)
 {
     $from = "{$rootsrc}/{$dirname}";
-    $info = json_decode(shell_exec("D:/wmhp/work/webapp/lib/ffmpeg/ffprobe.exe -allowed_extensions ALL -print_format json -show_format -i \"{$from}/play.m3u8\""), TRUE);
+    $info = json_decode(shell_exec("D:/wmhp/work/webapp/lib/ffmpeg/ffprobe.exe -allowed_extensions ALL -v quiet -print_format json -show_format -i \"{$from}/play.m3u8\""), TRUE);
     $duration = (int)round($info['format']['duration']);
     if ($mysql->videos->insert([
         'hash' => $hash = webapp::hash($dirname),
