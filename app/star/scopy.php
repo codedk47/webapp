@@ -58,7 +58,7 @@ foreach ($dirs as $dirname)
     }
     if ($mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('sync="allow"') === 1)
     {
-        exec("RD /S /Q \"{$from}\"");
+        #exec("RD /S /Q \"{$from}\"");
         echo "OK\n";
     }
 }
