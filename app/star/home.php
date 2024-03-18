@@ -581,12 +581,12 @@ class webapp_router_home extends webapp_echo_masker
 		else
 		{
 			$this->aside['data-type'] .= $video['type'];
-			if ($this->user->count())
-			{
-				if ($this->user->watched($hash) === FALSE)
-				{
-					$this->user->watch($hash) && $this->user->count(-1);
-				}
+			// if ($this->user->count())
+			// {
+			// 	if ($this->user->watched($hash) === FALSE)
+			// 	{
+			// 		$this->user->watch($hash) && $this->user->count(-1);
+			// 	}
 				//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
 				$watch = $this->aside->append('webapp-video', [
 					'data-poster' => $video['poster'],
@@ -614,14 +614,14 @@ class webapp_router_home extends webapp_echo_masker
 				{
 					$watch->setattr('autoplay');
 				}
-			}
-			else
-			{
-				$strong = $this->aside->append('strong')->append('div');
-				$strong->append('span', '每日观影剩余次数已耗尽');
-				$strong->append('a', ['请点击分享链接', 'href' => '?home/my-shareurl', 'class' => 'button']);
-				$strong->append('span', '获得更多次数！');
-			}
+			// }
+			// else
+			// {
+			// 	$strong = $this->aside->append('strong')->append('div');
+			// 	$strong->append('span', '每日观影剩余次数已耗尽');
+			// 	$strong->append('a', ['请点击分享链接', 'href' => '?home/my-shareurl', 'class' => 'button']);
+			// 	$strong->append('span', '获得更多次数！');
+			// }
 		}
 
 		//影片信息（标题）
@@ -821,19 +821,19 @@ class webapp_router_home extends webapp_echo_masker
 		$info->append('a', ['点击保存二维码', 'href' => "{$qrurl},type:png,filename:{$this->user->id}.png", 'target' => '_blank', 'data-label' => '凭证：']);
 
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
-		$anchors->append('a', ['每日观影剩余次数', 'href' => 'javascript:;', 'data-right' => ($count = count($this->user)) === -1 ? '无限' : "{$count} 次"]);
+		//$anchors->append('a', ['每日观影剩余次数', 'href' => 'javascript:;', 'data-right' => ($count = count($this->user)) === -1 ? '无限' : "{$count} 次"]);
 		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => 'Telegram']);
 		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => 'Telegram']);
 
-		$anchors->append('a', ['输入邀请码',
-			'href' => '?home/my-invite,code:',
-			'style' => 'color:var(--webapp-primary);font-weight:bold',
-			'onclick' => 'return !masker.prompt(this.textContent).then(value=>masker.json(this.href+value.replace(/[^0-9A-Z]/ig,"")))',
-			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
-		$anchors->append('a', ['分享链接，获取观影次数',
-			'href' => '?home/my-shareurl',
-			'style' => 'color:var(--webapp-primary);font-weight:bold',
-			'data-right' => "{$this->user['share']} 次"]);
+		// $anchors->append('a', ['输入邀请码',
+		// 	'href' => '?home/my-invite,code:',
+		// 	'style' => 'color:var(--webapp-primary);font-weight:bold',
+		// 	'onclick' => 'return !masker.prompt(this.textContent).then(value=>masker.json(this.href+value.replace(/[^0-9A-Z]/ig,"")))',
+		// 	'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
+		// $anchors->append('a', ['分享链接，获取观影次数',
+		// 	'href' => '?home/my-shareurl',
+		// 	'style' => 'color:var(--webapp-primary);font-weight:bold',
+		// 	'data-right' => "{$this->user['share']} 次"]);
 
 		$anchors->append('a', ['收藏记录', 'href' => '?home/my-favorites', 'data-right' => count($this->user->favorites())]);
 		$anchors->append('a', ['历史记录', 'href' => '?home/my-historys', 'data-right' => count($this->user->historys())]);
