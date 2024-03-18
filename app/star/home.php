@@ -445,7 +445,7 @@ class webapp_router_home extends webapp_echo_masker
 				$this->add_video_lists($this->main,
 					in_array($hash, ['F2i7', 'DQFQ', 'JGKx'], TRUE)
 						? $this->webapp->fetch_videos->randtop($hash)
-						: $this->webapp->fetch_videos->with('FIND_IN_SET(?s,tags)', $hash)->cache()->show(7, 86400),
+						: $this->webapp->fetch_videos->with('FIND_IN_SET(?s,tags)', $hash)->cache()->show(7, 60),
 					6, "最新{$name}", "?home/home,type:{$hash}");
 				
 			}
