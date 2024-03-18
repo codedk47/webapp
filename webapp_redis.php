@@ -341,6 +341,29 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	// function each(callable $detect)
 	// {
 	// }
+	function showx(int $length, int $expire = 600):iterable
+	{
+		if ($this->cache)
+		{
+			$this->alloc($key, 'show');
+			$length = max(0, min($length, $count = $this->count()));
+			if ($this->redis->set("{$key}.time", $expire))
+			{
+				$this->redis->expire("{$key}.time", $expire);
+				$offset = $this->redis->incrBy($key, $length);
+				if ($offset > $count)
+				{
+					$this->redis->set($key, $offset = $offset >= $count + $length ? $length : $count);
+				}
+			}
+			else
+			{
+				$offset = max($this->redis->get($key), $length);
+			}
+			return $this->getIterator($offset - $length, $length);
+		}
+		return $this->getIterator($length);
+	}
 	function show(int $length, int $expire = 600):iterable
 	{
 		if ($this->cache)
