@@ -33,17 +33,16 @@ class base extends webapp
 		$form->fieldset('影片名称');
 		$form->field('name', 'text', ['style' => 'width:60rem', 'required' => NULL]);
 
-		$form->fieldset('下架：-2、会员：-1、免费：0、金币 / 定时发布日期');
-		$form->field('require', 'number', [
-			'value' => 0,
-			'min' => -2,
-			'style' => 'width:13rem',
-			'placeholder' => '要求',
-			'required' => NULL
-		]);
-		$form->field('ptime', 'datetime-local', format:fn($v, $i) => $i ? strtotime($v) : date('Y-m-d\\TH:i', $v));
+		$form->fieldset('扩展信息');
+		$form->field('issue', 'text', ['placeholder' => '发行日期']);
+		$form->field('actor', 'text', ['placeholder' => '作者']);
+		$form->field('publisher', 'text', ['placeholder' => '发行商']);
+		$form->field('director', 'text', ['placeholder' => '导演']);
+		$form->field('series', 'text', ['placeholder' => '系列']);
+		$form->field('actress', 'text', ['placeholder' => '女优']);
+		
 
-		$form->fieldset('视频类型 / 预览时段 / 排序');
+		$form->fieldset('视频类型 / 预览时段 / 排序 / 下架：-2、会员：-1、免费：0、金币 / 定时发布日期');
 		$form->field('type', 'select', ['options' => base::video_type]);
 		function preview_format($v, $i)
 		{
@@ -57,6 +56,14 @@ class base extends webapp
 		$form->field('preview_start', 'time', ['value' => '00:00:00', 'step' => 1], preview_format(...));
 		$form->field('preview_end', 'time', ['value' => '00:00:10', 'step' => 1], preview_format(...));
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'style' => 'width:4rem', 'required' => NULL]);
+		$form->field('require', 'number', [
+			'value' => 0,
+			'min' => -2,
+			'style' => 'width:13rem',
+			'placeholder' => '要求',
+			'required' => NULL
+		]);
+		$form->field('ptime', 'datetime-local', format:fn($v, $i) => $i ? strtotime($v) : date('Y-m-d\\TH:i', $v));
 
 		$form->fieldset();
 		$tagc = [];
@@ -115,8 +122,7 @@ class base extends webapp
 			//$change['data-key'] = bin2hex($this->random(8));
 
 
-
-			$form->echo($video);
+			$form->echo($video['extdata'] ? $video + json_decode($video['extdata'], TRUE) : $video);
 		}
 		return $form;
 	}
@@ -222,6 +228,17 @@ class base extends webapp
 			$video['preview'] = $video['preview_end'] > $video['preview_start']
 				? ($video['preview_start'] & 0xffff) << 16 | ($video['preview_end'] - $video['preview_start']) & 0xffff : 10;
 			unset($video['preview_start'], $video['preview_end']);
+
+			$extdata = [];
+			foreach (['issue', 'actor', 'publisher', 'director', 'series', 'actress'] as $field)
+			{
+				if ($extvalue = trim($video[$field]))
+				{
+					$extdata[$field] = $extvalue;
+				}
+				unset($video[$field]);
+			}
+			$video['extdata'] = $extdata ? json_encode($extdata, JSON_UNESCAPED_UNICODE) : NULL;
 			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update($video) === 1)
 			{
 				$json->goto($goto ? $this->url64_decode($goto) : NULL);
