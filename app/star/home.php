@@ -391,7 +391,8 @@ class webapp_router_home extends webapp_echo_masker
 		//file_put_contents('d:/log.txt', "{$type} = {$content}");
 		$this->json(['result' => match ($type)
 		{
-			'watch' => $this->user->count() && $this->user->watch($content) && $this->user->count(-1),
+			//'watch' => $this->user->count() && $this->user->watch($content) && $this->user->count(-1),
+			'watch' => $this->user->watch($content),
 			'liked' => $this->user->like($content),
 			'favorited' => $this->user->favorite($content),
 			default => FALSE
