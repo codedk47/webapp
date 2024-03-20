@@ -31,7 +31,7 @@ class base extends webapp
 		// 	'onchange' => 'video_cover(this,document.querySelector("div.cover"))']);
 
 		$form->fieldset('影片名称');
-		$form->field('name', 'text', ['style' => 'width:60rem', 'required' => NULL]);
+		$form->field('name', 'textarea', ['style' => 'width:60rem', 'rows' => 3, 'required' => NULL]);
 
 		$form->fieldset('扩展信息');
 		$form->field('issue', 'text', ['placeholder' => '发行日期']);
