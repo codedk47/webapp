@@ -589,9 +589,12 @@ class webapp_router_home extends webapp_echo_masker
 			// 		$this->user->watch($hash) && $this->user->count(-1);
 			// 	}
 				//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
+
+				
+				
 				$watch = $this->aside->append('webapp-video', [
 					'data-poster' => $video['poster'],
-					'data-m3u8' => $video['m3u8'],
+					'data-m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', $video['m3u8']),
 					'oncanplay' => 'masker.canplay(this)',
 					//'autoheight' => NULL,
 					'autoplay' => NULL,
