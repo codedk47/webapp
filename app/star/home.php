@@ -834,7 +834,7 @@ class webapp_router_home extends webapp_echo_masker
 			'style' => 'color:var(--webapp-primary);font-weight:bold',
 			'onclick' => 'return !masker.prompt(this.textContent).then(value=>masker.json(this.href+value.replace(/[^0-9A-Z]/ig,"")))',
 			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
-		$anchors->append('a', ['分享链接，获取观影次数',
+		$anchors->append('a', ['分享链接',
 			'href' => '?home/my-shareurl',
 			'style' => 'color:var(--webapp-primary);font-weight:bold',
 			'data-right' => "{$this->user['share']} 次"]);
