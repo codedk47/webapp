@@ -582,7 +582,7 @@ class webapp_router_home extends webapp_echo_masker
 		else
 		{
 			$this->aside['data-type'] .= $video['type'];
-			$this->user->watched($hash);
+			$this->user->watch($hash);
 			// if ($this->user->count())
 			// {
 			// 	if ($this->user->watched($hash) === FALSE)
