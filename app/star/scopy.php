@@ -14,7 +14,7 @@ foreach ($dirs as $dirname)
     $duration = (int)round($info['format']['duration']);
     if ($mysql->videos->insert([
         'hash' => $hash = webapp::hash($dirname),
-        'userid' => '0000000001',
+        'userid' => '0000000002',
         'mtime' => $time = time(),
         'ctime' => $time,
         'ptime' => $time,
@@ -51,6 +51,7 @@ foreach ($dirs as $dirname)
         echo "ERROR XCOPY\n";
         continue;
 	}
+    gc_collect_cycles();
     if (webapp::maskfile("{$to}/play.m3u8", "{$to}/play") === FALSE
         || webapp::maskfile("{$to}/cover.jpg", "{$to}/cover") === FALSE) {
         echo "ERROR MASK\n";
