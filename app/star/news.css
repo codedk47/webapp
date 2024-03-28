@@ -37,21 +37,106 @@ html,body{
 	padding: 0;
 	height: 100%;
 }
+a{
+	color: var(--webapp-anchor);
+	text-decoration: none;
+}
 
-body>nav{
+
+
+body>div>header{
 	display: flex;
 	gap: .4rem;
 	padding: .4rem;
-	position: fixed;
+	position: sticky;
 	top: 0;
 	left: 0;
 	right: 0;
 	background: rgba(0, 0, 0, .4);
 	backdrop-filter: blur(.4rem);
 	box-shadow: 0 0 .2rem var(--webapp-edge);
+	z-index: 1;
 }
-body>nav>input{
+body>div>header>input{
 	flex-grow: 1;
 	background-color: transparent;
 	border: none;
+}
+
+
+
+div[class|=videos]{
+	display: grid;
+	padding: var(--webapp-gapitem);
+	gap: var(--webapp-gapitem);
+	grid-template-columns: 1fr;
+}
+div[class|=videos]>a{
+	display: block;
+}
+div[class|=videos]>a>figure{
+	margin: 0;
+	position: relative;
+	overflow: hidden;
+	color: var(--webapp-foreground);
+	font-size: var(--webapp-font-small);
+	background-color: var(--webapp-button);
+	padding-bottom: 56.25%;
+	border-radius: var(--webapp-gapradius);
+	box-shadow: 0 0 .2rem var(--webapp-edge);
+	text-shadow: 1px 1px 1px var(--webapp-background);
+	/*h
+	4:3	= 75%
+	3:2	= 66.66%
+	8:5	= 62.5%
+	2:1	= 50%
+	16:9= 56.25%
+	21:9= 42.86%
+	*/
+	/*v
+	3:4	= 133.33%
+	2:3	= 150%
+	5:8 = 160%
+	1:2 = 200%
+	9:16= 177.77%
+	9:21= 233.33%
+	*/
+}
+div[class|=videos]>a>figure>img{
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	/* aspect-ratio: 16 / 9; */
+}
+div[class|=videos]>a>strong{
+	display: block;
+	overflow: hidden;
+	line-height: calc(var(--webapp-font-normal) * 1.5);
+	max-height: calc(var(--webapp-font-normal) * 3);
+	font-size: var(--webapp-font-small);
+	word-break: break-all;
+	font-weight: lighter;
+}
+/* @media screen and (min-width: 480px) {
+	div[class|=videos]{
+		grid-template-columns: 1fr;
+	}
+}
+ */
+@media screen and (min-width: 481px) {
+	div[class|=videos]{
+		grid-template-columns: 1fr 1fr;
+	}
+}
+@media screen and (min-width: 769px) {
+	div[class|=videos]{
+		grid-template-columns: 1fr 1fr 1fr 1fr;
+	}
+}
+@media screen and (min-width: 1280px) {
+	div[class|=videos]{
+		grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+	}
 }
