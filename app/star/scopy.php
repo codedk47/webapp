@@ -41,6 +41,12 @@ foreach ($dirs as $dirname)
     }
     echo "{$hash} [{$name}] ";
     $ym = date('ym', $time);
+    if (is_file("{$from}/cover.jpg") === FALSE)
+    {
+        echo "ERROR COVER\n";
+        $mysql->videos->delete('WHERE hash=?s LIMIT 1', $hash);
+        continue;
+    }
     if ((is_dir($movedst = "{$rootdst}/{$ym}") || mkdir($movedst)) === FALSE)
     {
         echo "ERROR MKDIR\n";
@@ -52,13 +58,6 @@ foreach ($dirs as $dirname)
         echo "ERROR XCOPY\n";
         continue;
 	}
-    if (is_file("{$to}/cover.jpg") === FALSE)
-    {
-        echo "ERROR COVER\n";
-        $mysql->videos->delete('WHERE hash=?s LIMIT 1', $hash);
-        continue;
-    }
-
 
     if (webapp::maskfile("{$to}/play.m3u8", "{$to}/play") === FALSE
         || webapp::maskfile("{$to}/cover.jpg", "{$to}/cover") === FALSE) {
@@ -71,7 +70,3 @@ foreach ($dirs as $dirname)
         echo "OK\n";
     }
 }
-
-
-
-
