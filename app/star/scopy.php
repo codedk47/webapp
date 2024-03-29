@@ -12,9 +12,10 @@ foreach ($dirs as $dirname)
     $from = "{$rootsrc}/{$dirname}";
     $info = json_decode(shell_exec("D:/wmhp/work/webapp/lib/ffmpeg/ffprobe.exe -allowed_extensions ALL -v quiet -print_format json -show_format -i \"{$from}/play.m3u8\""), TRUE);
     $duration = (int)round($info['format']['duration']);
+    $name = preg_match('/\w{4}\=\d{2}/', $dirname) ? trim(substr($dirname, 7)) : $dirname;
     if ($mysql->videos->insert([
         'hash' => $hash = webapp::hash($dirname),
-        'userid' => '0000000002',
+        'userid' => '0000000003',
         'mtime' => $time = time(),
         'ctime' => $time,
         'ptime' => $time,
@@ -33,12 +34,12 @@ foreach ($dirs as $dirname)
         'favorite' => 0,
         'tags' => '',
         'subjects' => '',
-        'name' => $dirname
+        'name' => $name
     ]) === FALSE) {
-        echo "{$hash} [{$dirname}] ERROR EXISTS(", $mysql->videos->delete('WHERE hash=?s LIMIT 1', $hash), ")\n";
+        echo "{$hash} [{$name}] ERROR EXISTS(", $mysql->videos->delete('WHERE hash=?s LIMIT 1', $hash), ")\n";
         continue;
     }
-    echo "{$hash} [{$dirname}] ";
+    echo "{$hash} [{$name}] ";
     $ym = date('ym', $time);
     if ((is_dir($movedst = "{$rootdst}/{$ym}") || mkdir($movedst)) === FALSE)
     {
@@ -51,6 +52,14 @@ foreach ($dirs as $dirname)
         echo "ERROR XCOPY\n";
         continue;
 	}
+    if (is_file("{$to}/cover.jpg") === FALSE)
+    {
+        echo "ERROR COVER\n";
+        $mysql->videos->delete('WHERE hash=?s LIMIT 1', $hash);
+        continue;
+    }
+
+
     if (webapp::maskfile("{$to}/play.m3u8", "{$to}/play") === FALSE
         || webapp::maskfile("{$to}/cover.jpg", "{$to}/cover") === FALSE) {
         echo "ERROR MASK\n";
