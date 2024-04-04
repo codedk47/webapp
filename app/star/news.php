@@ -15,23 +15,12 @@ class webapp_router_news extends webapp_echo_html
 		$this->meta(['name' => 'description', 'content' => $description]);
 	}
 
-	function add_top_nav()
-	{
-		$nav = $this->xml->body->append('nav');
-
-		$nav->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('markdown', 24);
-		$nav->append('input', ['type' => 'search']);
-		$nav->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('search', 24);
-		$nav->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('person', 24);
-
-	}
-
 	function set_header_nav()
 	{
 		$this->header->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('markdown', 24);
 		$this->header->append('input', ['type' => 'search']);
 		$this->header->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('search', 24);
-		$this->header->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('person', 24);
+		$this->header->append('a', ['href' => '?news/user'])->svg(['fill' => 'white'])->icon('person', 24);
 	}
 
 
@@ -43,7 +32,7 @@ class webapp_router_news extends webapp_echo_html
 		$element = $none->append('div', ['class' => 'videos']);
 		foreach ($videos as $video)
 		{
-			$anchor = $element->append('a', ['href' => "#{$video['hash']}"]);
+			$anchor = $element->append('a', ['href' => "?news/watch,hash:{$video['hash']}"]);
 			$figure = $anchor->append('figure');
 
 
@@ -53,6 +42,11 @@ class webapp_router_news extends webapp_echo_html
 		}
 
 
+	}
+
+	function add_ads_video()
+	{
+		
 	}
 
 
@@ -67,6 +61,17 @@ class webapp_router_news extends webapp_echo_html
 		$this->add_div_videos($this->main, $this->webapp->fetch_videos->paging(1, 10));
 	}
 
+	function get_watch(string $hash)
+	{
 
 
+
+
+
+	}
+
+	function get_user()
+	{
+
+	}
 }

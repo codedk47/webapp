@@ -1,5 +1,5 @@
 <?php
-class webapp_nfas extends webapp
+class webapp_ext_nfs_base extends webapp
 {
 	const
 	folder = 1 << 7,

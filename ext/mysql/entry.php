@@ -1,6 +1,6 @@
 <?php
 require 'webapp/webapp_stdio.php';
-class webapp_entry_mysql extends webapp
+class webapp_ext_mysql_entry extends webapp
 {
 	private readonly array $connect;
 	function __construct()
