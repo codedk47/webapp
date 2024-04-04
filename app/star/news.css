@@ -63,6 +63,15 @@ body>div>header>input{
 	border: none;
 }
 
+aside.watch{
+	position: relative;
+	padding-bottom: 56.25%;
+	background-color: var(--webapp-edge);
+}
+aside.watch>webapp-video{
+	position: absolute;
+	inset: 0;
+}
 
 
 div[class|=videos]{

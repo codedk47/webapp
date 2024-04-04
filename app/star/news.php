@@ -1,6 +1,7 @@
 <?php
 class webapp_router_news extends webapp_echo_html
 {
+	private string $origin = 'https://3minz.com';
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -26,9 +27,6 @@ class webapp_router_news extends webapp_echo_html
 
 	function add_div_videos(webapp_html $none, iterable $videos)
 	{
-		$origin = 'https://3minz.com';
-
-
 		$element = $none->append('div', ['class' => 'videos']);
 		foreach ($videos as $video)
 		{
@@ -37,7 +35,7 @@ class webapp_router_news extends webapp_echo_html
 
 
 
-			$figure->append('img', ['loading' => 'lazy', 'src' => $origin . substr($video['poster'], 1, 24) . '.jpg']);
+			$figure->append('img', ['loading' => 'lazy', 'src' => $this->origin . substr($video['poster'], 1, 24) . '.jpg']);
 			$anchor->append('strong', $video['name']);
 		}
 
@@ -63,7 +61,38 @@ class webapp_router_news extends webapp_echo_html
 
 	function get_watch(string $hash)
 	{
+		$this->script(['src' => '/webapp/res/js/hls.min.js']);
+		$this->script(['src' => '/webapp/res/js/video.js']);
+		$this->set_header_nav();
+		$this->aside['class'] = 'watch';
 
+
+		if (empty($video = $this->webapp->fetch_videos[$hash]))
+		{
+			$this->aside->append('strong', '您所观看的影片不见啦 :(');
+			return 404;
+		}
+		$this->tags = $this->webapp->fetch_tags->shortname();
+		$tags = [];
+		if ($video['tags'])
+		{
+			foreach (explode(',', $video['tags']) as $tag)
+			{
+				$tags[$tag] = $this->tags[$tag];
+			}
+		}
+
+		$this->title($video['name']);
+		$this->add_meta_seo(join(' ', array_values($tags)), $video['name']);
+		$watch = $this->aside->append('webapp-video', [
+			'data-poster' => $this->origin . substr($video['poster'], 1, 24) . '.jpg',
+			'data-m3u8' => $this->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
+			'oncanplay' => 'console.log(this)',
+			//'autoheight' => NULL,
+			//'autoplay' => NULL,
+			//'muted' => NULL,
+			'controls' => NULL
+		]);
 
 
 
