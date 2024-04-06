@@ -560,7 +560,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->pv();
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
-		$this->script(['src' => '/webapp/res/js/videofix.js']);
+		$this->script(['src' => '/webapp/res/js/video.js']);
 		$this->set_header_search();
 		$this->set_footer_menu();
 		$this->aside['class'] = 'watch';
@@ -595,7 +595,8 @@ class webapp_router_home extends webapp_echo_masker
 				
 				$watch = $this->aside->append('webapp-video', [
 					'data-poster' => $video['poster'],
-					'data-m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', '@' . substr($video['m3u8'], 1)),
+					'data-m3u8' => $video['m3u8'],
+					//'data-m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', $video['m3u8']),
 					'oncanplay' => 'masker.canplay(this)',
 					//'autoheight' => NULL,
 					'autoplay' => NULL,
@@ -765,8 +766,8 @@ class webapp_router_home extends webapp_echo_masker
 				$videos[] = [
 					'hash' => $video['hash'],
 					'name' => $video['name'],
-					//'m3u8' => $video['m3u8'],
-					'm3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', $video['m3u8']),
+					'm3u8' => $video['m3u8'],
+					//'m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', $video['m3u8']),
 					'poster' => $video['poster'],
 					'watched' => $this->user->watched($video['hash']),
 					'liked' => $this->user->liked($video['hash']),
