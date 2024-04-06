@@ -560,7 +560,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->pv();
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
-		$this->script(['src' => '/webapp/res/js/video.js?v=1']);
+		$this->script(['src' => '/webapp/res/js/videofix.js']);
 		$this->set_header_search();
 		$this->set_footer_menu();
 		$this->aside['class'] = 'watch';
