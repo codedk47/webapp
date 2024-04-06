@@ -210,7 +210,9 @@ customElements.define('webapp-video', class extends HTMLElement
 			}
 			else
 			{
-				this.#playm3u8(resource);
+				this.#playm3u8(resource.startsWith('@/') && sessionStorage.getItem('origin')
+					? `${new URL(sessionStorage.getItem('origin')).origin}${resource.substring(1)}`
+					: resource);
 			}
 		});
 	}
