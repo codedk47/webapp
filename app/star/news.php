@@ -18,28 +18,24 @@ class webapp_router_news extends webapp_echo_html
 
 	function set_header_nav()
 	{
-		$this->header->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('markdown', 24);
+		$this->header->append('a', ['href' => '?news'])->svg(['fill' => 'white'])->icon('markdown', 24);
 		$this->header->append('input', ['type' => 'search']);
 		$this->header->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('search', 24);
 		$this->header->append('a', ['href' => '?news/user'])->svg(['fill' => 'white'])->icon('person', 24);
 	}
 
 
-	function add_div_videos(webapp_html $none, iterable $videos)
+	function add_div_videos(webapp_html $none, iterable $videos):webapp_html
 	{
 		$element = $none->append('div', ['class' => 'videos']);
 		foreach ($videos as $video)
 		{
 			$anchor = $element->append('a', ['href' => "?news/watch,hash:{$video['hash']}"]);
-			$figure = $anchor->append('figure');
-
-
-
-			$figure->append('img', ['loading' => 'lazy', 'src' => $this->origin . substr($video['poster'], 1, 24) . '.jpg']);
+			$anchor->figure($this->origin . substr($video['poster'], 1, 24) . '.jpg');
 			$anchor->append('strong', $video['name']);
 		}
 
-
+		return $element;
 	}
 
 	function add_ads_video()
@@ -56,7 +52,7 @@ class webapp_router_news extends webapp_echo_html
 		//$this->main->append('h1', 'test');
 
 
-		$this->add_div_videos($this->main, $this->webapp->fetch_videos->paging(1, 10));
+		$this->add_div_videos($this->main, $this->webapp->fetch_videos->paging(4, 30));
 	}
 
 	function get_watch(string $hash)
@@ -64,39 +60,90 @@ class webapp_router_news extends webapp_echo_html
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js']);
 		$this->set_header_nav();
-		$this->aside['class'] = 'watch';
 
 
-		if (empty($video = $this->webapp->fetch_videos[$hash]))
-		{
-			$this->aside->append('strong', '您所观看的影片不见啦 :(');
-			return 404;
-		}
+		$this->main['class'] = 'watch';
+
+
 		$this->tags = $this->webapp->fetch_tags->shortname();
-		$tags = [];
-		if ($video['tags'])
+		$player = $this->main->append('div', ['class' => 'player']);
+		if ($video = $this->webapp->fetch_videos[$hash])
 		{
-			foreach (explode(',', $video['tags']) as $tag)
+			$this->title($video['name']);
+			$watch = $player->append('webapp-video', [
+				'data-poster' => $this->origin . substr($video['poster'], 1, 24) . '.jpg',
+				'data-m3u8' => $this->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
+				'oncanplay' => 'console.log(this)',
+				//'autoheight' => NULL,
+				//'autoplay' => NULL,
+				//'muted' => NULL,
+				'controls' => NULL
+			]);
+			$videoinfo = $player->append('div', ['class' => 'videoinfo']);
+			$videoinfo->append('strong', htmlentities($video['name']));
+			$tags = [];
+			if ($video['tags'])
 			{
-				$tags[$tag] = $this->tags[$tag];
+				$taginfo = $videoinfo->append('div', ['data-label' => 'Label:']);
+				foreach (explode(',', $video['tags']) as $tag)
+				{
+					if (isset($this->tags[$tag]))
+					{
+						
+						$tags[$tag] = $this->tags[$tag];
+						$taginfo->append('a', [$this->tags[$tag], 'href' => 'javascript:;']);
+					}
+					
+				}
 			}
+			$this->add_meta_seo(join(' ', array_values($tags)), $video['name']);
+			//影片信息（扩展数据）
+			if ($video['extdata'])
+			{
+				$extdata = array_filter(json_decode($video['extdata'], TRUE), trim(...));
+				isset($extdata['issue']) && $videoinfo->append('div', [$extdata['issue'], 'data-label' => 'Issue:']);
+
+				isset($extdata['actor']) && $videoinfo->append('div', ['data-label' => 'Actor:'])
+					->append('a', [$extdata['actor'], 'href' => 'javascript:;']);
+				isset($extdata['publisher']) && $videoinfo->append('div', ['data-label' => 'Publisher:'])
+					->append('a', [$extdata['publisher'], 'href' => 'javascript:;']);
+				isset($extdata['director']) && $videoinfo->append('div', ['data-label' => 'Director:'])
+					->append('a', [$extdata['director'], 'href' => 'javascript:;']);
+				isset($extdata['series']) && $videoinfo->append('div', ['data-label' => 'Series:'])
+					->append('a', [$extdata['series'], 'href' => 'javascript:;']);
+
+				if (isset($extdata['actress']))
+				{
+					$extinfo = $videoinfo->append('div', ['data-label' => 'Actress:']);
+					foreach (explode(',', $extdata['actress']) as $actress)
+					{
+						$extinfo->append('a', [$actress, 'href' => 'javascript:;']);
+					}
+				}
+			}
+
 		}
+		else
+		{
+			$player->append('strong', '您所观看的影片不见啦 :(');
+		}
+		
+		
+		$this->add_div_videos($player, $this->webapp->fetch_videos->paging(2, 8))['class'] = 'playleft';
 
-		$this->title($video['name']);
-		$this->add_meta_seo(join(' ', array_values($tags)), $video['name']);
-		$watch = $this->aside->append('webapp-video', [
-			'data-poster' => $this->origin . substr($video['poster'], 1, 24) . '.jpg',
-			'data-m3u8' => $this->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
-			'oncanplay' => 'console.log(this)',
-			//'autoheight' => NULL,
-			//'autoplay' => NULL,
-			//'muted' => NULL,
-			'controls' => NULL
-		]);
+		$this->add_div_videos($this->main, $this->webapp->fetch_videos->paging(2, 10))['class'] = 'playright';
 
+		// $relates = $this->main->append('div', ['class' => 'relate']);
+		
+		// foreach ($this->webapp->fetch_videos->paging(1, 10) as $relate)
+		// {
+		// 	$anchor = $relates->append('a', ['href' => "?news/watch,hash:{$relate['hash']}"]);
+		// 	$figure = $anchor->append('figure');
+		// 	$figure->append('img', ['loading' => 'lazy', 'src' => $this->origin . substr($relate['poster'], 1, 24) . '.jpg']);
+		// 	$anchor->append('strong', $relate['name']);
+		// }
 
-
-
+		
 	}
 
 	function get_user()

@@ -63,27 +63,64 @@ body>div>header>input{
 	border: none;
 }
 
-aside.watch{
+main.watch{
+	display: grid;
+	grid-template-columns: 1fr;
+}
+main.watch>div.player>webapp-video{
 	position: relative;
 	padding-bottom: 56.25%;
 	background-color: var(--webapp-edge);
 }
-aside.watch>webapp-video{
+main.watch>div.player>webapp-video>video{
 	position: absolute;
 	inset: 0;
 }
+div.videoinfo{
+	display: flex;
+	gap: var(--webapp-gap);
+	flex-direction: column;
+	padding: var(--webapp-gapitem);
+}
+div.videoinfo>div{
+	display: flex;
+	gap: var(--webapp-gapitem);
+	flex-wrap: wrap;
+	align-items: center;
+}
+div.videoinfo>div[data-label]>a{
+	overflow: hidden;
+	color: var(--webapp-anchor);
+	border: 1px solid var(--webapp-edge);
+	padding: .2rem var(--webapp-gapitem);
+	border-radius: var(--webapp-gapradius);
+	background-color: var(--webapp-hint);
+	white-space: nowrap;
+}
+div.videoinfo>div[data-label]::before{
+	content: attr(data-label);
+	color: var(--webapp-foreground);
+}
 
 
-div[class|=videos]{
+
+
+div.videos,
+div.playleft,
+div.playright{
 	display: grid;
 	padding: var(--webapp-gapitem);
 	gap: var(--webapp-gapitem);
 	grid-template-columns: 1fr;
 }
-div[class|=videos]>a{
+div.videos>a,
+div.playleft>a,
+div.playright>a{
 	display: block;
 }
-div[class|=videos]>a>figure{
+div.videos>a>figure,
+div.playleft>a>figure,
+div.playright>a>figure{
 	margin: 0;
 	position: relative;
 	overflow: hidden;
@@ -111,7 +148,9 @@ div[class|=videos]>a>figure{
 	9:21= 233.33%
 	*/
 }
-div[class|=videos]>a>figure>img{
+div.videos>a>figure>img,
+div.playleft>a>figure>img,
+div.playright>a>figure>img{
 	position: absolute;
 	inset: 0;
 	width: 100%;
@@ -119,7 +158,9 @@ div[class|=videos]>a>figure>img{
 	object-fit: cover;
 	/* aspect-ratio: 16 / 9; */
 }
-div[class|=videos]>a>strong{
+div.videos>a>strong,
+div.playleft>a>strong,
+div.playright>a>strong{
 	display: block;
 	overflow: hidden;
 	line-height: calc(var(--webapp-font-normal) * 1.5);
@@ -135,16 +176,34 @@ div[class|=videos]>a>strong{
 }
  */
 @media screen and (min-width: 481px) {
-	div[class|=videos]{
+	div[class|=videos],
+	div.playleft,
+	div.playright{
 		grid-template-columns: 1fr 1fr;
 	}
 }
 @media screen and (min-width: 769px) {
+	main.watch{
+		grid-template-columns: 3fr 1fr;
+	}
 	div[class|=videos]{
 		grid-template-columns: 1fr 1fr 1fr 1fr;
 	}
+	div.playleft{
+		grid-template-columns: 1fr 1fr;
+	}
+	div.playright{
+		grid-template-columns: 1fr;
+	}
 }
 @media screen and (min-width: 1280px) {
+	body>div{
+		width: 1300px;
+		margin: 0 auto;
+	}
+	div.playleft{
+		grid-template-columns: 1fr 1fr 1fr 1fr;
+	}
 	div[class|=videos]{
 		grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
 	}

@@ -842,6 +842,17 @@ class webapp_html extends webapp_xml
 	// 	$node['class'] = 'webapp-button';
 	// 	return $node;
 	// }
+	function figure(string $source, string $caption = NULL):static
+	{
+		$figure = $this->append('figure');
+		$figure->append('img', ['loading' => 'lazy', 'src' => $source]);
+		is_string($caption) && $figure->figcaption = $caption;
+		return $figure;
+	}
+	function iframe(array $attributes):static
+	{
+		return $this->append('iframe', $attributes + ['loading' => 'lazy']);
+	}
 
 	function atree(iterable $link, bool $fold = FALSE)
 	{
