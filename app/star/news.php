@@ -32,7 +32,10 @@ class webapp_router_news extends webapp_echo_html
 		{
 			$anchor = $element->append('a', ['href' => "?news/watch,hash:{$video['hash']}"]);
 			$anchor->figure($this->origin . substr($video['poster'], 1, 24) . '.jpg');
-			$anchor->append('strong', $video['name']);
+
+			
+
+			$anchor->append('strong', preg_replace('/[^\w]+/', '', $video['name']));
 		}
 
 		return $element;
@@ -52,7 +55,7 @@ class webapp_router_news extends webapp_echo_html
 		//$this->main->append('h1', 'test');
 
 
-		$this->add_div_videos($this->main, $this->webapp->fetch_videos->paging(4, 30));
+		$this->add_div_videos($this->main, $this->webapp->fetch_videos->with('FIND_IN_SET("lqe2",tags)')->paging(1, 30));
 	}
 
 	function get_watch(string $hash)
@@ -80,7 +83,7 @@ class webapp_router_news extends webapp_echo_html
 				'controls' => NULL
 			]);
 			$videoinfo = $player->append('div', ['class' => 'videoinfo']);
-			$videoinfo->append('strong', htmlentities($video['name']));
+			$videoinfo->append('strong', preg_replace('/[^\w]+/', '', $video['name']));
 			$tags = [];
 			if ($video['tags'])
 			{
@@ -129,9 +132,9 @@ class webapp_router_news extends webapp_echo_html
 		}
 		
 		
-		$this->add_div_videos($player, $this->webapp->fetch_videos->paging(2, 8))['class'] = 'playleft';
+		$this->add_div_videos($player, $this->webapp->fetch_videos->with('FIND_IN_SET("lqe2",tags)')->paging(1, 8))['class'] = 'playleft';
 
-		$this->add_div_videos($this->main, $this->webapp->fetch_videos->paging(2, 10))['class'] = 'playright';
+		$this->add_div_videos($this->main, $this->webapp->fetch_videos->with('FIND_IN_SET("lqe2",tags)')->paging(1, 10))['class'] = 'playright';
 
 		// $relates = $this->main->append('div', ['class' => 'relate']);
 		
