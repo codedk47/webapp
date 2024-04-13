@@ -18,8 +18,8 @@ class webapp_router_home extends webapp_echo_masker
 		$this->title($webapp['app_name']);
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
-		$this->xml->head->link['href'] = '/webapp/app/star/home.css?v=o';
-		$this->script(['src' => '/webapp/app/star/home.js?v=y']);
+		$this->xml->head->link['href'] = '/webapp/app/star/home.css?v=z';
+		$this->script(['src' => '/webapp/app/star/home.js?v=z']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-W33CFKQCZS']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-W33CFKQCZS")');
@@ -662,6 +662,9 @@ class webapp_router_home extends webapp_echo_masker
 				(string)$anchor->svg[1]['style'],
 				(string)$anchor->svg[0]['style']];
 		}
+		$useraction->select(['' => '线路检测中...'] + array_combine($this->webapp['app_resources'],
+			['线路1国内', '线路2国际']))['onchange'] = 'masker.selectorigin(this)';
+
 
 		//判断是否剧集或者卡通动漫
 		if (in_array('K3yp', $tags, TRUE) || in_array('9Oi0', $tags, TRUE))

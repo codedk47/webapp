@@ -203,10 +203,16 @@ masker.lognews = anchor =>
 	masker.json(typeof anchor === 'string' ? anchor : anchor.href, data => location.href = data.support);
 	return false;
 };
+masker.selectorigin = select => select.value && location.reload(sessionStorage.setItem('origin', select.value));
 masker.canplay = video =>
 {
+	const selectorigin = document.querySelector('div.useraction>select');
+	if (selectorigin)
+	{
+		selectorigin.removeChild(selectorigin.firstChild);
+		selectorigin.value = sessionStorage.getItem('origin');
+	}
 	video.firstElementChild.style.objectFit = 'contain';
-	//video.firstElementChild.style.objectFit = video.height > video.width ? 'contain' : 'cover';
 };
 masker.shortchanged = videos =>
 {

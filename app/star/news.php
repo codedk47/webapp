@@ -5,7 +5,7 @@ class webapp_router_news extends webapp_echo_html
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
-
+		$this->title($this->webapp['app_name']);
 
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?' . $this->webapp->random_hash(TRUE);
 		$this->footer[0] = NULL;
@@ -18,10 +18,10 @@ class webapp_router_news extends webapp_echo_html
 
 	function set_header_nav()
 	{
-		$this->header->append('a', ['href' => '?news'])->svg(['fill' => 'white'])->icon('markdown', 24);
+		$this->header->append('a', ['href' => '?news'])->svg()->icon('markdown', 24);
 		$this->header->append('input', ['type' => 'search']);
-		$this->header->append('a', ['href' => '#'])->svg(['fill' => 'white'])->icon('search', 24);
-		$this->header->append('a', ['href' => '?news/user'])->svg(['fill' => 'white'])->icon('person', 24);
+		$this->header->append('a', ['href' => '#'])->svg()->icon('search', 24);
+		//$this->header->append('a', ['href' => '?news/user'])->svg()->icon('person', 24);
 	}
 
 
@@ -49,7 +49,7 @@ class webapp_router_news extends webapp_echo_html
 
 	function get_home()
 	{
-		$this->add_meta_seo('asdasd', 'ewewewewe');
+		$this->add_meta_seo($this->webapp['app_name'], $this->webapp['app_name']);
 		$this->set_header_nav();
 
 		//$this->main->append('h1', 'test');
@@ -72,7 +72,7 @@ class webapp_router_news extends webapp_echo_html
 		$player = $this->main->append('div', ['class' => 'player']);
 		if ($video = $this->webapp->fetch_videos[$hash])
 		{
-			$this->title($video['name']);
+			$this->title("{$this->webapp['app_name']} {$video['name']}");
 			$watch = $player->append('webapp-video', [
 				'data-poster' => $this->origin . substr($video['poster'], 1, 24) . '.jpg',
 				'data-m3u8' => $this->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
@@ -128,6 +128,7 @@ class webapp_router_news extends webapp_echo_html
 		}
 		else
 		{
+			
 			$player->append('strong', '您所观看的影片不见啦 :(');
 		}
 		

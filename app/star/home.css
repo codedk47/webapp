@@ -662,7 +662,7 @@ div.videoinfo>div{
 	align-items: center;
 }
 div.videoinfo>div.useraction{
-	gap: calc(var(--webapp-gap) * 4);
+	gap: calc(var(--webapp-gap) * 2);
 	justify-content: center;
 }
 div.videoinfo>div.useraction>a{
@@ -680,6 +680,10 @@ div.videoinfo>div.useraction>a>svg{
 div.videoinfo>div.useraction>a>span{
 	padding: 0 var(--webapp-gapitem);
 	padding-right: var(--webapp-gap);
+}
+div.videoinfo>div.useraction>select{
+	width: 119px;
+	padding: var(--webapp-gapitem);
 }
 div.videoinfo>mark[data-label]::before,
 div.videoinfo>div[data-label]::before{

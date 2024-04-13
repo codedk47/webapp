@@ -1,12 +1,14 @@
+
+/* https://colorizer.org/ */
 :root {
 	--webapp-hue: 0;
 	--webapp-saturation: 100%;
 	--webapp-color: var(--webapp-hue), var(--webapp-saturation);
-	--webapp-background: hsl(var(--webapp-color), 7%);
-	--webapp-foreground: hsl(var(--webapp-color), 100%);
+	--webapp-background: hsl(var(--webapp-color), 100%);
+	--webapp-foreground: hsl(var(--webapp-color), 1%);
 	/* --webapp-convex: ; */
 
-	--webapp-anchor: hsl(var(--webapp-color), 100%);
+	--webapp-anchor: hsl(var(--webapp-color), 9%);
 	--webapp-button: hsl(var(--webapp-color), 20%);
 	--webapp-hover: hsl(var(--webapp-hue), 0%, 47%);
 	--webapp-hint: hsl(var(--webapp-color), 15%);
@@ -52,9 +54,9 @@ body>div>header{
 	top: 0;
 	left: 0;
 	right: 0;
-	background: rgba(0, 0, 0, .4);
+	
 	backdrop-filter: blur(.4rem);
-	box-shadow: 0 0 .2rem var(--webapp-edge);
+	
 	z-index: 1;
 }
 body>div>header>input{
@@ -90,7 +92,7 @@ div.videoinfo>div{
 }
 div.videoinfo>div[data-label]>a{
 	overflow: hidden;
-	color: var(--webapp-anchor);
+	color: var(--webapp-background);
 	border: 1px solid var(--webapp-edge);
 	padding: .2rem var(--webapp-gapitem);
 	border-radius: var(--webapp-gapradius);
@@ -128,7 +130,6 @@ div.playright>a>figure{
 	font-size: var(--webapp-font-small);
 	background-color: var(--webapp-button);
 	padding-bottom: 56.25%;
-	border-radius: var(--webapp-gapradius);
 	box-shadow: 0 0 .2rem var(--webapp-edge);
 	text-shadow: 1px 1px 1px var(--webapp-background);
 	/*h
