@@ -769,8 +769,9 @@ class webapp_router_home extends webapp_echo_masker
 				$videos[] = [
 					'hash' => $video['hash'],
 					'name' => $video['name'],
-					'm3u8' => $video['m3u8'],
+					//'m3u8' => $video['m3u8'],
 					//'m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', $video['m3u8']),
+					'm3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', '@' . substr($video['m3u8'], 1)),
 					'poster' => $video['poster'],
 					'watched' => $this->user->watched($video['hash']),
 					'liked' => $this->user->liked($video['hash']),
