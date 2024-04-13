@@ -209,7 +209,7 @@ masker.canplay = video =>
 	const selectorigin = document.querySelector('div.useraction>select');
 	if (selectorigin)
 	{
-		selectorigin.removeChild(selectorigin.firstChild);
+		selectorigin.firstChild.value || selectorigin.removeChild(selectorigin.firstChild);
 		selectorigin.value = sessionStorage.getItem('origin');
 	}
 	video.firstElementChild.style.objectFit = 'contain';
