@@ -789,6 +789,11 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->body->div['class'] = 'short';
 		$this->header->append('a', ['href' => 'javascript:history.back();', 'class' => 'arrow']);
 		$this->header->append('strong', ['data-title' => '抖 音']);
+		$this->header->select(['' => '线路检测中...'] + array_combine($this->webapp['app_resources'],
+			['线路1国内', '线路2国际']))['onchange'] = 'masker.selectorigin(this)';
+		$this->header->append('script')->cdata('const selectorigin = document.querySelector("header>select");
+		selectorigin.firstChild.value || selectorigin.removeChild(selectorigin.firstChild);
+		selectorigin.value = sessionStorage.getItem("origin");');
 		$template = $this->main->append('webapp-videos', [
 			'onchange' => 'masker.shortchanged(this)',
 			'data-fetch' => '?home/short,page:',
