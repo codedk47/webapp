@@ -152,7 +152,6 @@ header:not(:empty){
 header>strong{
 	text-align: center;
 	flex-grow: 1;
-	margin-left: -2rem;
 }
 header>strong[data-title]::before{
 	content: attr(data-title);
