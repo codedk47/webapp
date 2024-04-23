@@ -150,8 +150,11 @@ div.playright>a>figure{
 	*/
 }
 div.videos>a>figure>img,
+div.videos>a>figure>video,
 div.playleft>a>figure>img,
-div.playright>a>figure>img{
+div.playleft>a>figure>video,
+div.playright>a>figure>img,
+div.playright>a>figure>video{
 	position: absolute;
 	inset: 0;
 	width: 100%;
