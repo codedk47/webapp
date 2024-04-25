@@ -21,15 +21,16 @@ class webapp_router_news extends webapp_echo_html
 	{
 		$this->header->append('a', ['href' => '?news'])->svg()->icon('markdown', 24);
 		$this->header->append('input', ['type' => 'search']);
-		$this->header->append('a', ['href' => '#'])->svg()->icon('search', 24);
+		$this->header->append('a', ['href' => '?news/search,keywords:high'])->svg()->icon('search', 24);
 		//$this->header->append('a', ['href' => '?news/user'])->svg()->icon('person', 24);
 	}
 
 
-	function add_div_videos(webapp_html $none, iterable $videos):webapp_html
+	function add_div_videos(webapp_html $node, iterable $videos, int $page = 1, int $size = 20):webapp_html
 	{
-		$element = $none->append('div', ['class' => 'videos']);
-		foreach ($videos as $video)
+		$pagination = $videos instanceof webapp_redis_table;
+		$element = $node->append('div', ['class' => 'videos']);
+		foreach ($pagination ? $videos->paging($page, $size) : $videos as $video)
 		{
 			$anchor = $element->append('a', ['href' => "?news/watch,hash:{$video['hash']}"]);
 			$anchor->figure($this->origin . substr($video['poster'], 1, 24) . '.jpg');
@@ -38,6 +39,41 @@ class webapp_router_news extends webapp_echo_html
 
 			$anchor->append('strong', preg_replace('/[^\w]+/', '', $video['name']));
 		}
+		if ($pagination && ($max = ceil($videos->count() / $size)) > 1)
+		{
+			$size = max(1, $size);
+			$url = $this->webapp->at(['page' => '']);
+			$page = $node->append('div', ['class' => 'pages']);
+			$show = 8;
+			if ($max > $show)
+			{
+				$halved = intval($show * 0.5);
+				$offset = min($max, max($size, $halved) + $halved);
+				$ranges = range(max(1, $offset - $halved * 2 + 1), $offset);
+				$size > 1 && $page->append('a', ['Top', 'href' => "{$url}1"]);
+				foreach ($ranges as $index)
+				{
+					$curr = $page->append('a', [$index, 'href' => "{$url}{$index}"]);
+					if ($index == $size)
+					{
+						$curr['class'] = 'selected';
+					}
+				}
+				$size < $max && $page->append('a', ['End', 'href' => $url . $max]);
+			}
+			else
+			{
+				for ($i = 1; $i <= $max; ++$i)
+				{
+					$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
+					if ($i === $size)
+					{
+						$curr['class'] = 'selected';
+					}
+				}
+			}
+		}
+
 
 		return $element;
 	}
@@ -147,6 +183,22 @@ class webapp_router_news extends webapp_echo_html
 		// 	$figure->append('img', ['loading' => 'lazy', 'src' => $this->origin . substr($relate['poster'], 1, 24) . '.jpg']);
 		// 	$anchor->append('strong', $relate['name']);
 		// }
+
+		
+	}
+
+	function get_search(string $keywords, int $page = 1)
+	{
+		$this->add_meta_seo($keywords = urldecode($keywords), $this->webapp['app_name']);
+		$this->set_header_nav();
+
+		//$this->main->append('h1', 'test');
+
+
+		$this->add_div_videos($this->main, $this->webapp->fetch_videos->with('name LIKE ?s', "%{$keywords}%"), $page);
+
+
+
 
 		
 	}

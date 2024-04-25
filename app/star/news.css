@@ -173,6 +173,21 @@ div.playright>a>strong{
 	word-break: break-all;
 	font-weight: lighter;
 }
+div.pages{
+	display: flex;
+	gap: var(--webapp-gapitem);
+	padding: var(--webapp-gapitem);
+	justify-content: center;
+	padding-bottom: calc(var(--webapp-gap) * 2);
+}
+div.pages>a{
+	padding: var(--webapp-gapitem) .6rem;
+	border-radius: var(--webapp-gapradius);
+}
+div.pages>a.selected{
+	color: var(--webapp-foreground);
+	background-color: var(--webapp-button);
+}
 /* @media screen and (min-width: 480px) {
 	div[class|=videos]{
 		grid-template-columns: 1fr;
