@@ -825,21 +825,27 @@ class base extends webapp
 			}
 			function format(array $tag):array
 			{
-				return [
+				$data = [
 					'hash' => $tag['hash'],
 					'click' => $tag['click'],
 					'level' => $tag['level'],
 					'name' => $tag['name'],
-					'shortname' => strstr($tag['name'], ',', TRUE)
+					'shortname' => strstr("{$tag['name']},", ',', TRUE)
 				];
+				foreach ($tag['locale'] ? json_decode($tag['locale'], TRUE) : [] as $locale => $name)
+				{
+					$data["name{$locale}"] = $name;
+					$data["shortname{$locale}"] = strstr("{$name},", ',', TRUE);
+				}
+				return $data;
 			}
 			function classify():array
 			{
 				return $this->root->with('level=0')->column('shortname', $this->primary);
 			}
-			function shortname():array
+			function shortname(string $locale = NULL):array
 			{
-				return $this->root->column('shortname', $this->primary);
+				return $this->root->column("shortname{$locale}", $this->primary);
 			}
 			function like(string $word):array
 			{

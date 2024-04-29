@@ -1,4 +1,5 @@
 <?php
+const LOCALE = 'en';
 class webapp_router_news extends webapp_echo_html
 {
 	private string $origin = 'https://3minz.com';
@@ -26,11 +27,11 @@ class webapp_router_news extends webapp_echo_html
 	}
 
 
-	function add_div_videos(webapp_html $node, iterable $videos, int $page = 1, int $size = 20):webapp_html
+	function add_div_videos(webapp_html $node, iterable $videos, int $index = 1, int $count = 20):webapp_html
 	{
 		$pagination = $videos instanceof webapp_redis_table;
 		$element = $node->append('div', ['class' => 'videos']);
-		foreach ($pagination ? $videos->paging($page, $size) : $videos as $video)
+		foreach ($pagination ? $videos->paging($index, $count) : $videos as $video)
 		{
 			$anchor = $element->append('a', ['href' => "?news/watch,hash:{$video['hash']}"]);
 			$anchor->figure($this->origin . substr($video['poster'], 1, 24) . '.jpg');
@@ -39,34 +40,34 @@ class webapp_router_news extends webapp_echo_html
 
 			$anchor->append('strong', preg_replace('/[^\w]+/', '', $video['name']));
 		}
-		if ($pagination && ($max = ceil($videos->count() / $size)) > 1)
+		if ($pagination && ($max = ceil($videos->count() / $count)) > 1)
 		{
-			$size = max(1, $size);
+			$index = max(1, $index);
 			$url = $this->webapp->at(['page' => '']);
 			$page = $node->append('div', ['class' => 'pages']);
-			$show = 8;
+			$show = 4;
 			if ($max > $show)
 			{
 				$halved = intval($show * 0.5);
-				$offset = min($max, max($size, $halved) + $halved);
+				$offset = min($max, max($index, $halved) + $halved);
 				$ranges = range(max(1, $offset - $halved * 2 + 1), $offset);
-				$size > 1 && $page->append('a', ['Top', 'href' => "{$url}1"]);
-				foreach ($ranges as $index)
+				$index > 1 && $page->append('a', ['Top', 'href' => "{$url}1"]);
+				foreach ($ranges as $i)
 				{
-					$curr = $page->append('a', [$index, 'href' => "{$url}{$index}"]);
-					if ($index == $size)
+					$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
+					if ($i == $index)
 					{
 						$curr['class'] = 'selected';
 					}
 				}
-				$size < $max && $page->append('a', ['End', 'href' => $url . $max]);
+				$index < $max && $page->append('a', ['End', 'href' => $url . $max]);
 			}
 			else
 			{
 				for ($i = 1; $i <= $max; ++$i)
 				{
 					$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
-					if ($i === $size)
+					if ($i === $index)
 					{
 						$curr['class'] = 'selected';
 					}
@@ -105,7 +106,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->main['class'] = 'watch';
 
 
-		$this->tags = $this->webapp->fetch_tags->shortname();
+		$this->tags = $this->webapp->fetch_tags->shortname(LOCALE);
 		$player = $this->main->append('div', ['class' => 'player']);
 		if ($video = $this->webapp->fetch_videos[$hash])
 		{

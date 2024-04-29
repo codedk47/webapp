@@ -182,6 +182,7 @@ div.pages{
 }
 div.pages>a{
 	padding: var(--webapp-gapitem) .6rem;
+	border: 1px solid var(--webapp-edge);
 	border-radius: var(--webapp-gapradius);
 }
 div.pages>a.selected{
