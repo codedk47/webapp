@@ -313,7 +313,7 @@ class user extends ArrayObject implements Countable
 				array_unshift($favorites, $hash);
 			}
 			//$this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update('`like`=`like`+?i', $result);
-			$favorites = join(array_slice($favorites, -50));
+			$favorites = join(array_slice($favorites, -100));
 			if ($this->cond()->update('favorites=?s', $favorites) === 1)
 			{
 				$this->update('favorites', $this['favorites'] = $favorites);
