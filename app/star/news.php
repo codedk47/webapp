@@ -9,7 +9,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->title($this->webapp['app_name']);
 		$this->xml->body->div['style'] = 'width:100%';
 
-		$this->xml->head->link['href'] = '/webapp/app/star/news.css?a' . $this->webapp->random_hash(TRUE);
+		$this->xml->head->link['href'] = '/webapp/app/star/news.css?' . $this->webapp->random_hash(TRUE);
 		$this->script(['src' => '/webapp/app/star/news.js?v=jk']);
 		$this->footer[0] = NULL;
 	}
