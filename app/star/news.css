@@ -85,8 +85,7 @@ div.videoinfo{
 	padding: var(--webapp-gapitem);
 }
 div.videoinfo>strong{
-	white-space: pre-wrap;
-	word-wrap: break-word;
+	word-break: break-all;
 }
 div.videoinfo>div{
 	display: flex;
