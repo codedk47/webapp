@@ -84,6 +84,10 @@ div.videoinfo{
 	flex-direction: column;
 	padding: var(--webapp-gapitem);
 }
+div.videoinfo>strong{
+	white-space: pre-wrap;
+	word-wrap: break-word;
+}
 div.videoinfo>div{
 	display: flex;
 	gap: var(--webapp-gapitem);
