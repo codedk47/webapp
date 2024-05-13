@@ -2,7 +2,7 @@
 const LOCALE = 'en';
 class webapp_router_news extends webapp_echo_html
 {
-	private string $origin = 'https://3minz.com';
+	private string $origin = 'https://gonglidi.com';
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -33,8 +33,13 @@ class webapp_router_news extends webapp_echo_html
 		$element = $node->append('div', ['class' => 'videos']);
 		foreach ($pagination ? $videos->paging($index, $count) : $videos as $video)
 		{
+			$path = $this->origin . substr($video['poster'], 1, 18);
+
 			$anchor = $element->append('a', ['href' => "?news/watch,hash:{$video['hash']}"]);
-			$anchor->figure($this->origin . substr($video['poster'], 1, 24) . '.jpg');
+
+
+
+			$anchor->figure("{$path}/cover.jpg")['data-preview'] = "{$path}/preview.webm";
 
 			
 

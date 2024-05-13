@@ -9,7 +9,7 @@ addEventListener('DOMContentLoaded', event =>
 			video.poster = element.firstElementChild.src;
 			video.muted = true;
 			video.autoplay = true;
-			video.src = '/preview.webm';
+			video.src = element.dataset.preview;
 			element.appendChild(video);
 		};
 	});
