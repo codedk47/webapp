@@ -6,6 +6,7 @@ addEventListener('DOMContentLoaded', event =>
 		element.onmouseleave = event => element.removeChild(video);
 		element.onmouseenter = element.ontouchstart = event =>
 		{
+			event.preventDefault();
 			video.poster = element.firstElementChild.src;
 			video.muted = true;
 			video.autoplay = true;
