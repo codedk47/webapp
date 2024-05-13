@@ -21,8 +21,10 @@ class webapp_router_news extends webapp_echo_html
 	function set_header_nav()
 	{
 		$this->header->append('a', ['href' => '?news'])->svg()->icon('markdown', 24);
-		$this->header->append('input', ['type' => 'search']);
-		$this->header->append('a', ['href' => '?news/search,keywords:high'])->svg()->icon('search', 24);
+		$this->header->append('input', ['type' => 'search',
+			'onkeypress' => 'if(event.keyCode===13)location.href=this.nextElementSibling.href+this.value']);
+		$this->header->append('a', ['href' => '?news/search,keywords:',
+			'onclick' => 'return !!void(location.href=this.href+this.previousElementSibling.value)'])->svg()->icon('search', 24);
 		//$this->header->append('a', ['href' => '?news/user'])->svg()->icon('person', 24);
 	}
 
