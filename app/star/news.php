@@ -7,7 +7,7 @@ class webapp_router_news extends webapp_echo_html
 	{
 		parent::__construct($webapp);
 		$this->title($this->webapp['app_name']);
-		$this->xml->body->div['style'] = 'width:100%';
+		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?' . $this->webapp->random_hash(TRUE);
 		$this->script(['src' => '/webapp/app/star/news.js?v=jk']);
@@ -143,7 +143,7 @@ class webapp_router_news extends webapp_echo_html
 					{
 						
 						$tags[$tag] = $this->tags[$tag];
-						$taginfo->append('a', [$this->tags[$tag], 'href' => 'javascript:;']);
+						//$taginfo->append('a', [$this->tags[$tag], 'href' => 'javascript:;']);
 					}
 					
 				}
