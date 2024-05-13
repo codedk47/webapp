@@ -3,7 +3,7 @@ addEventListener('DOMContentLoaded', event =>
 	const video = document.createElement('video');
 	video.muted = true;
 	video.autoplay = true;
-	video.playsinline = true;
+	video.setAttribute('playsinline', 'true');
 	document.querySelectorAll('div.videos>a>figure,div.playleft>a>figure,div.playright>a>figure').forEach(element =>
 	{
 		element.onmouseleave = event => element.removeChild(video);
