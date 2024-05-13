@@ -8,14 +8,20 @@ addEventListener('DOMContentLoaded', event =>
 
 	document.querySelectorAll('div.videos>a>figure,div.playleft>a>figure,div.playright>a>figure').forEach(element =>
 	{
-		element.onmouseleave = event => element.removeChild(video);
+		element.onmouseleave = event => element.querySelector('video') && element.removeChild(video);
 		element.onmouseenter = element.parentNode.ontouchstart = event =>
 		{
 			video.poster = element.firstElementChild.src;
-			
-			
 			video.src = element.dataset.preview;
 			element.appendChild(video);
+		};
+		element.parentNode.onclick = event =>
+		{
+			if (event.target.tagName !== 'VIDEO')
+			{
+				event.preventDefault();
+				element.onmouseenter()
+			}
 		};
 	});
 });

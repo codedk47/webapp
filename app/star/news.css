@@ -165,6 +165,14 @@ div.playright>a>figure>video{
 	object-fit: cover;
 	/* aspect-ratio: 16 / 9; */
 }
+div.videos>a>figure>span,
+div.playleft>a>figure>span,
+div.playright>a>figure>span{
+	position: absolute;
+	top: .4rem;
+	right: .4rem;
+	z-index: 1;
+}
 div.videos>a>strong,
 div.playleft>a>strong,
 div.playright>a>strong{
