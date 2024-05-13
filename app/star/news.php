@@ -132,7 +132,7 @@ class webapp_router_news extends webapp_echo_html
 				'controls' => NULL
 			]);
 			$videoinfo = $player->append('div', ['class' => 'videoinfo']);
-			$videoinfo->append('strong', preg_replace('/[^\w]+/', '', $video['name']));
+			$videoinfo->append('strong', preg_replace('/[^\w ]+/', '', $video['name']));
 			$tags = [];
 			if ($video['tags'])
 			{
