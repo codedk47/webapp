@@ -66,6 +66,7 @@ body>div>header>input{
 }
 
 main.watch{
+	width: 600px;
 	display: grid;
 	grid-template-columns: 1fr;
 }
@@ -196,9 +197,6 @@ div.pages>a.selected{
 }
  */
 @media screen and (min-width: 481px) {
-	main.watch{
-		grid-template-columns: 1fr;
-	}
 	div[class|=videos],
 	div.playleft,
 	div.playright{
