@@ -143,7 +143,7 @@ class webapp_router_news extends webapp_echo_html
 					{
 						
 						$tags[$tag] = $this->tags[$tag];
-						//$taginfo->append('a', [$this->tags[$tag], 'href' => 'javascript:;']);
+						$taginfo->append('a', [$this->tags[$tag], 'href' => 'javascript:;']);
 					}
 					
 				}
