@@ -235,7 +235,7 @@ class user extends ArrayObject implements Countable
 				array_splice($historys, $index, 1);
 			}
 			array_unshift($historys, $hash);
-			$historys = join(array_slice($historys, 0, 50));
+			$historys = join(array_slice($historys, 0, 100));
 			return $this->cond()->update('watch=watch+1,historys=?s', $historys) === 1
 				&& $this->update('historys', $this['historys'] = $historys);
 		}
