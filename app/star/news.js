@@ -6,14 +6,16 @@ addEventListener('DOMContentLoaded', event =>
 	{
 		element.onmouseleave = event =>
 		{
+			
 			if (video && video.isConnected)
 			{
-				element.removeChild(video);
+				video.remove();
+				video = null;
 			}
 		};
-		element.onmouseenter = element.parentNode.ontouchstart = event =>
+		element.onmouseenter = event =>
 		{
-			element.onmouseleave();
+			
 			video = document.createElement('video');
 			video.setAttribute('playsinline', 'true');
 			video.setAttribute('disablepictureinpicture', 'true');
@@ -28,6 +30,11 @@ addEventListener('DOMContentLoaded', event =>
 			// 	video.style.opacity = null;
 				
 			// }
+		};
+		element.parentNode.ontouchstart = () =>
+		{
+			element.onmouseleave();
+			element.onmouseenter();
 		};
 		// element.parentNode.onclick = event =>
 		// {
