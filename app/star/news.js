@@ -13,6 +13,7 @@ addEventListener('DOMContentLoaded', event =>
 		};
 		element.onmouseenter = element.parentNode.ontouchstart = event =>
 		{
+			element.onmouseleave();
 			video = document.createElement('video');
 			video.setAttribute('playsinline', 'true');
 			video.setAttribute('disablepictureinpicture', 'true');
