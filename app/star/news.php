@@ -10,7 +10,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?' . $this->webapp->random_hash(TRUE);
-		$this->script(['src' => '/webapp/app/star/news.js?v=nm']);
+		$this->script(['src' => '/webapp/app/star/news.js?v=ak']);
 		$this->footer[0] = NULL;
 	}
 	function add_meta_seo(string $keywords, string $description)
@@ -44,7 +44,7 @@ class webapp_router_news extends webapp_echo_html
 
 			$figure = $anchor->figure("{$path}/cover.jpg");
 			$figure['data-preview'] = "{$path}/preview.webm";
-			$figure->append('span')->svg()->icon('play', 32);
+			//$figure->append('span')->svg()->icon('play', 32);
 
 			
 
