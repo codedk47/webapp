@@ -95,7 +95,7 @@ class webapp_router_news extends webapp_echo_html
 	}
 
 	
-	function get_home()
+	function get_home(int $page = 1)
 	{
 		$this->add_meta_seo($this->webapp['app_name'], $this->webapp['app_name']);
 		$this->set_header_nav();
@@ -103,7 +103,7 @@ class webapp_router_news extends webapp_echo_html
 		//$this->main->append('h1', 'test');
 
 
-		$this->add_div_videos($this->main, $this->webapp->fetch_videos->with('FIND_IN_SET("lqe2",tags)')->paging(1, 30));
+		$this->add_div_videos($this->main, $this->webapp->fetch_videos, $page);
 	}
 	function get_news()
 	{
