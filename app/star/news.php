@@ -48,7 +48,7 @@ class webapp_router_news extends webapp_echo_html
 
 			
 
-			$anchor->append('strong', preg_replace('/[^\w]+/', '', $video['name']));
+			$anchor->append('strong', $video['name']);
 		}
 		if ($pagination && ($max = ceil($videos->count() / $count)) > 1)
 		{
@@ -134,7 +134,7 @@ class webapp_router_news extends webapp_echo_html
 				'controls' => NULL
 			]);
 			$videoinfo = $player->append('div', ['class' => 'videoinfo']);
-			$videoinfo->append('strong', preg_replace('/[^\w ]+/', '', $video['name']));
+			$videoinfo->append('strong', $video['name']);
 			$tags = [];
 			if ($video['tags'])
 			{
