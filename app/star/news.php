@@ -102,9 +102,9 @@ class webapp_router_news extends webapp_echo_html
 		
 		$this->add_div_videos($this->main, $this->webapp->fetch_videos, $page);
 	}
-	function get_news()
+	function get_news(int $page = 1)
 	{
-		$this->get_home();
+		$this->get_home($page);
 	}
 	function get_watch(string $hash)
 	{
