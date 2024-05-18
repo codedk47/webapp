@@ -11,6 +11,8 @@ class webapp_router_news extends webapp_echo_html
 
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?aK';
 		$this->script(['src' => '/webapp/app/star/news.js?v=amk']);
+		// $this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-W33CFKQCZS']);
+		// $this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-W33CFKQCZS")');
 		$this->footer[0] = NULL;
 	}
 	function add_meta_seo(string $keywords, string $description)
@@ -138,9 +140,8 @@ class webapp_router_news extends webapp_echo_html
 				$taginfo = $videoinfo->append('div', ['data-label' => 'Label:']);
 				foreach (explode(',', $video['tags']) as $tag)
 				{
-					if (isset($this->tags[$tag]))
+					if ($tag != 'lqe2' && isset($this->tags[$tag]))
 					{
-						
 						$tags[$tag] = $this->tags[$tag];
 						$taginfo->append('a', [$this->tags[$tag], 'href' => 'javascript:;']);
 					}
