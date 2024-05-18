@@ -9,7 +9,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->title($this->webapp['app_name']);
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 
-		$this->xml->head->link['href'] = '/webapp/app/star/news.css?aK';
+		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=qw';
 		$this->script(['src' => '/webapp/app/star/news.js?v=amk']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-G65DP9ETZ5']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
@@ -23,12 +23,14 @@ class webapp_router_news extends webapp_echo_html
 
 	function set_header_nav()
 	{
-		$this->header->append('a', ['href' => '?news'])->append('img', ['src' => '/star/news.png', 'width' => 75.2, 'height' => 28.3]);
-		$this->header->append('input', ['type' => 'search',
+		$this->header->append('a', ['href' => '?news']);
+		$search = $this->header->append('span');
+		$search->append('input', ['type' => 'search',
+			'placeholder' => 'Search videos',
 			'onkeypress' => 'if(event.keyCode===13)location.href=this.nextElementSibling.href+this.value']);
-		$this->header->append('a', ['href' => '?news/search,keywords:',
-			'onclick' => 'return !!void(location.href=this.href+this.previousElementSibling.value)'])->svg()->icon('search', 24);
-		//$this->header->append('a', ['href' => '?news/user'])->svg()->icon('person', 24);
+		$search->append('a', ['href' => '?news/search,keywords:',
+			'onclick' => 'return !!void(location.href=this.href+this.previousElementSibling.value)'])
+			->svg(['fill' => 'white'])->icon('search', 24);
 	}
 
 
