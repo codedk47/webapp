@@ -171,7 +171,7 @@ div.playright>a>strong{
 	overflow: hidden;
 	line-height: calc(var(--webapp-font-normal) * 1.5);
 	max-height: calc(var(--webapp-font-normal) * 3);
-	
+	color: var(--webapp-anchor);
 	word-break: break-all;
 	font-weight: lighter;
 }
