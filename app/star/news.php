@@ -32,7 +32,7 @@ class webapp_router_news extends webapp_echo_html
 	}
 
 
-	function add_div_videos(webapp_html $node, iterable $videos, int $index = 1, int $count = 20):webapp_html
+	function add_div_videos(webapp_html $node, iterable $videos, int $index = 1, int $count = 30):webapp_html
 	{
 		$pagination = $videos instanceof webapp_redis_table;
 		$element = $node->append('div', ['class' => 'videos']);
