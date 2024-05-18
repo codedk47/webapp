@@ -27,6 +27,7 @@ class webapp_router_news extends webapp_echo_html
 		$search = $this->header->append('span');
 		$search->append('input', ['type' => 'search',
 			'placeholder' => 'Search videos',
+			'value' => urldecode($this->webapp->query['keywords'] ?? ''),
 			'onkeypress' => 'if(event.keyCode===13)location.href=this.nextElementSibling.href+this.value']);
 		$search->append('a', ['href' => '?news/search,keywords:',
 			'onclick' => 'return !!void(location.href=this.href+this.previousElementSibling.value)'])
