@@ -11,8 +11,8 @@ class webapp_router_news extends webapp_echo_html
 
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?aK';
 		$this->script(['src' => '/webapp/app/star/news.js?v=amk']);
-		// $this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-W33CFKQCZS']);
-		// $this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-W33CFKQCZS")');
+		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-G65DP9ETZ5']);
+		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
 		$this->footer[0] = NULL;
 	}
 	function add_meta_seo(string $keywords, string $description)
