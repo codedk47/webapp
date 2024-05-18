@@ -50,14 +50,6 @@ body>div>header{
 	display: flex;
 	gap: .4rem;
 	padding: .4rem;
-	position: sticky;
-	top: 0;
-	left: 0;
-	right: 0;
-	
-	backdrop-filter: blur(.4rem);
-	
-	z-index: 1;
 }
 body>div>header>input{
 	flex-grow: 1;
@@ -131,7 +123,6 @@ div.playright>a>figure{
 	overflow: hidden;
 	color: var(--webapp-foreground);
 	font-size: var(--webapp-font-small);
-	background-color: var(--webapp-button);
 	padding-bottom: 56.25%;
 	box-shadow: 0 0 .2rem var(--webapp-edge);
 	text-shadow: 1px 1px 1px var(--webapp-background);
@@ -180,7 +171,7 @@ div.playright>a>strong{
 	overflow: hidden;
 	line-height: calc(var(--webapp-font-normal) * 1.5);
 	max-height: calc(var(--webapp-font-normal) * 3);
-	font-size: var(--webapp-font-small);
+	
 	word-break: break-all;
 	font-weight: lighter;
 }
@@ -197,7 +188,7 @@ div.pages>a{
 	border-radius: var(--webapp-gapradius);
 }
 div.pages>a.selected{
-	color: var(--webapp-foreground);
+	color: var(--webapp-background);
 	background-color: var(--webapp-button);
 }
 /* @media screen and (min-width: 480px) {
