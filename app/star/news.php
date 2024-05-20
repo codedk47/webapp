@@ -10,7 +10,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=er';
-		$this->script(['src' => '/webapp/app/star/news.js?v=kk']);
+		$this->script(['src' => '/webapp/app/star/news.js?v=gj']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-G65DP9ETZ5']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
 		$this->footer[0] = NULL;
