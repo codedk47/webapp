@@ -10,7 +10,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=er';
-		$this->script(['src' => '/webapp/app/star/news.js?v=amk']);
+		$this->script(['src' => '/webapp/app/star/news.js?v=bv']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-G65DP9ETZ5']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
 		$this->footer[0] = NULL;
@@ -42,17 +42,10 @@ class webapp_router_news extends webapp_echo_html
 		foreach ($pagination ? $videos->paging($index, $count) : $videos as $video)
 		{
 			$path = $this->origin . substr($video['poster'], 1, 18);
-
-			$anchor = $element->append('a', ['href' => "?news/watch,hash:{$video['hash']}"]);
-
-
-
-			$figure = $anchor->figure("{$path}/cover.jpg");
-			$figure['data-preview'] = "{$path}/preview.webm";
-			//$figure->append('span')->svg()->icon('play', 32);
-
-			
-
+			$anchor = $element->append('a', [
+				'href' => "?news/watch,hash:{$video['hash']}",
+				'data-preview' => "{$path}/preview.webm"]);
+			$anchor->figure("{$path}/cover.jpg");
 			$anchor->append('strong', $video['name']);
 		}
 		if ($pagination && ($max = ceil($videos->count() / $count)) > 1)
