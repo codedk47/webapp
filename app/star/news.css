@@ -52,7 +52,7 @@ body>div>header{
 	padding: .4rem;
 }
 body>div>header>a:first-child{
-	width: 100px;
+	width: 132px;
 	height: 32px;
 	background: url("/star/news.png") no-repeat center/cover;
 }
