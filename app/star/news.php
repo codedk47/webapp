@@ -21,8 +21,8 @@ class webapp_router_news extends webapp_echo_html
 	{
 		$this->xml['prefix'] = 'og:https://ogp.me/ns#';
 		$this->meta(['name' => 'og:title', 'content' => $this->webapp['app_name']]);
-		$this->meta(['name' => 'og:image', 'content' => $image ?? '/star/news.png']);
-		$this->meta(['name' => 'og:description', 'content' => $description]);
+		$this->meta(['name' => 'og:image', '/star/logo.jpg']);
+		//$this->meta(['name' => 'og:description', 'content' => $description]);
 
 		$this->meta(['name' => 'og:type', 'content' => 'video.movie']);
 		$this->meta(['name' => 'og:url', 'content' => "https://{$this->webapp['app_website']}"]);
