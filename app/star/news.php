@@ -17,11 +17,11 @@ class webapp_router_news extends webapp_echo_html
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
 		$this->footer[0] = NULL;
 	}
-	function add_meta_seo(string $keywords, string $description)
+	function add_meta_seo(string $keywords, string $description, string $image = NULL)
 	{
 		$this->xml['prefix'] = 'og:https://ogp.me/ns#';
 		$this->meta(['name' => 'og:title', 'content' => $this->webapp['app_name']]);
-		$this->meta(['name' => 'og:image', 'content' => '/star/news.png']);
+		$this->meta(['name' => 'og:image', 'content' => $image ?? '/star/news.png']);
 		$this->meta(['name' => 'og:description', 'content' => $description]);
 
 		$this->meta(['name' => 'og:type', 'content' => 'video.movie']);
@@ -130,7 +130,7 @@ class webapp_router_news extends webapp_echo_html
 		{
 			$this->title("{$this->webapp['app_name']} {$video['name']}");
 			$watch = $player->append('webapp-video', [
-				'data-poster' => $this->origin . substr($video['poster'], 1, 24) . '.jpg',
+				'data-poster' => $cover = $this->origin . substr($video['poster'], 1, 24) . '.jpg',
 				'data-m3u8' => $this->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
 				'oncanplay' => 'console.log(this)',
 				//'autoheight' => NULL,
@@ -154,7 +154,7 @@ class webapp_router_news extends webapp_echo_html
 					
 				}
 			}
-			$this->add_meta_seo(join(' ', array_values($tags)), $video['name']);
+			$this->add_meta_seo(join(' ', array_values($tags)), $video['name'], $cover);
 			//影片信息（扩展数据）
 			if ($video['extdata'])
 			{
