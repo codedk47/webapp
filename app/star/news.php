@@ -155,12 +155,8 @@ class webapp_router_news extends webapp_echo_html
 					
 				}
 			}
-			$this->add_meta_seo(
-				"{$video['name']} - {$this->webapp['iphone_webcilp']['label']}",
-				join(' ', array_values($tags)),
-				$video['name'],
-				$cover
-			);
+			$this->add_meta_seo("{$video['name']} - {$this->webapp['iphone_webcilp']['label']}",
+				join(' ', array_values($tags)), image: $cover);
 			//影片信息（扩展数据）
 			if ($video['extdata'])
 			{
