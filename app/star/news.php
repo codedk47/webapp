@@ -17,7 +17,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
 		$this->footer[0] = NULL;
 	}
-	function add_meta_seo(string $keywords, string $description, string $image = NULL)
+	function add_meta_seo(string $keywords = NULL, string $description = NULL, string $image = NULL)
 	{
 		$this->xml['prefix'] = 'og:https://ogp.me/ns#';
 		$this->meta(['name' => 'og:title', 'content' => $this->webapp['app_name']]);
@@ -28,8 +28,8 @@ class webapp_router_news extends webapp_echo_html
 		$this->meta(['name' => 'og:type', 'content' => 'video.movie']);
 		$this->meta(['name' => 'og:url', 'content' => "https://{$this->webapp['app_website']}"]);
 
-		$this->meta(['name' => 'keywords', 'content' => $keywords]);
-		$this->meta(['name' => 'description', 'content' => $description]);
+		$this->meta(['name' => 'keywords', 'content' => $keywords ?? $this->webapp['iphone_webcilp']['displayname']]);
+		$this->meta(['name' => 'description', 'content' => $description ?? $this->webapp['iphone_webcilp']['description']]);
 	}
 
 	function set_header_nav()
