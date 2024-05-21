@@ -129,7 +129,7 @@ class webapp_router_news extends webapp_echo_html
 		$player = $this->main->append('div', ['class' => 'player']);
 		if ($video = $this->webapp->fetch_videos[$hash])
 		{
-			$this->title("{$this->webapp['app_name']} {$video['name']}");
+			$this->title("{$video['name']} - {$this->webapp['iphone_webcilp']['label']}");
 			$watch = $player->append('webapp-video', [
 				'data-poster' => $cover = $this->origin . substr($video['poster'], 1, 24) . '.jpg',
 				'data-m3u8' => $this->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
