@@ -6,7 +6,7 @@ class webapp_router_news extends webapp_echo_html
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
-		$this->title($this->webapp['app_name']);
+		
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=er';
 		unset($this->xml->head->link[1]);
@@ -17,10 +17,11 @@ class webapp_router_news extends webapp_echo_html
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
 		$this->footer[0] = NULL;
 	}
-	function add_meta_seo(string $keywords = NULL, string $description = NULL, string $image = NULL)
+	function add_meta_seo(string $title = NULL, string $keywords = NULL, string $description = NULL, string $image = NULL)
 	{
 		$this->xml['prefix'] = 'og:https://ogp.me/ns#';
-		$this->meta(['name' => 'og:title', 'content' => $this->webapp['app_name']]);
+		$this->title($title ??= $this->webapp['app_name']);
+		$this->meta(['name' => 'og:title', 'content' => $title]);
 		$this->meta(['name' => 'og:image', 'content' => $image ?? '/star/logo.jpg']);
 		//$this->meta(['name' => 'og:description', 'content' => $description]);
 
@@ -129,7 +130,6 @@ class webapp_router_news extends webapp_echo_html
 		$player = $this->main->append('div', ['class' => 'player']);
 		if ($video = $this->webapp->fetch_videos[$hash])
 		{
-			$this->title("{$video['name']} - {$this->webapp['iphone_webcilp']['label']}");
 			$watch = $player->append('webapp-video', [
 				'data-poster' => $cover = $this->origin . substr($video['poster'], 1, 24) . '.jpg',
 				'data-m3u8' => $this->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
@@ -155,7 +155,12 @@ class webapp_router_news extends webapp_echo_html
 					
 				}
 			}
-			$this->add_meta_seo(join(' ', array_values($tags)), $video['name'], $cover);
+			$this->add_meta_seo(
+				"{$video['name']} - {$this->webapp['iphone_webcilp']['label']}",
+				join(' ', array_values($tags)),
+				$video['name'],
+				$cover
+			);
 			//影片信息（扩展数据）
 			if ($video['extdata'])
 			{
