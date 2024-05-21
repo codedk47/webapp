@@ -214,6 +214,16 @@ class webapp_echo_html extends webapp_implementation
 	{
 		$this->xml->head->title = $title;
 	}
+	function meta_open_graph(string $title, string $type, string $image = NULL):void
+	{
+		//https://ogp.me/
+		$this->xml['prefix'] = 'og:https://ogp.me/ns#';
+		$this->meta(['name' => 'og:title', 'content' => $title]);
+		$this->meta(['name' => 'og:type', 'content' => $type]);
+		$this->meta(['name' => 'og:image', 'content' => $image ?? '/?favicon']);
+		//$this->meta(['name' => 'og:url', 'content' => ]);
+	}
+
 	function link_resources(string|array $origin, string $rel = 'dns-prefetch'):void
 	{
 		foreach (is_string($origin) ? [$origin] : $origin as $href)

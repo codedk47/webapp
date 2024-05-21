@@ -978,6 +978,11 @@ class webapp_router_control extends webapp_echo_masker
 		// }
 
 		$filter_date = $this->webapp->query['date'] ?? date('Y-m-d');
+		if ($filter_cid = $this->webapp->query['cid'] ?? '')
+		{
+			$conds[0][] = 'cid=?s';
+			$conds[] = $filter_cid;
+		}
 		if ($filter_search = $this->webapp->query['search'] ?? '')
 		{
 			if (strlen($filter_search) === 10 && trim($filter_search, webapp::key) === '')
@@ -1066,6 +1071,13 @@ class webapp_router_control extends webapp_echo_masker
 			'type' => 'date',
 			'value' => $filter_date,
 			'onchange' => 'g({date:this.value||"",page:null})'
+		]);
+		$table->bar->append('input', [
+			'type' => 'search',
+			'value' => $filter_cid,
+			'style' => 'width:80px;margin-left:.6rem',
+			'placeholder' => '渠道ID',
+			'onkeydown' => 'event.keyCode==13&&g({cid:this.value?urlencode(this.value):null,page:null})'
 		]);
 		$table->bar->append('input', [
 			'type' => 'search',
