@@ -17,10 +17,13 @@ class webapp_router_news extends webapp_echo_html
 	}
 	function add_meta_seo(string $keywords, string $description)
 	{
-		$this->meta(['name' => 'title', 'content' => $this->webapp['app_name']]);
-		$this->meta(['name' => 'type', 'content' => 'video.movie']);
-		$this->meta(['name' => 'image', 'content' => '/star/news.png']);
-		$this->meta(['name' => 'url', 'content' => $this->webapp['app_website']]);
+		$this->meta(['name' => 'og:title', 'content' => $this->webapp['app_name']]);
+		$this->meta(['name' => 'og:image', 'content' => '/star/news.png']);
+		$this->meta(['name' => 'og:description', 'content' => $description]);
+
+		// $this->meta(['name' => 'type', 'content' => 'video.movie']);
+		
+		// $this->meta(['name' => 'url', 'content' => $this->webapp['app_website']]);
 
 		$this->meta(['name' => 'keywords', 'content' => $keywords]);
 		$this->meta(['name' => 'description', 'content' => $description]);
