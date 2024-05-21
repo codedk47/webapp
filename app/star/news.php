@@ -17,6 +17,11 @@ class webapp_router_news extends webapp_echo_html
 	}
 	function add_meta_seo(string $keywords, string $description)
 	{
+		$this->meta(['name' => 'title', 'content' => $this->webapp['app_name']]);
+		$this->meta(['name' => 'type', 'content' => 'video.movi​​e']);
+		$this->meta(['name' => 'image', 'content' => '/star/news.png']);
+		$this->meta(['name' => 'url', 'content' => $this->webapp['app_website']]);
+
 		$this->meta(['name' => 'keywords', 'content' => $keywords]);
 		$this->meta(['name' => 'description', 'content' => $description]);
 	}
@@ -96,7 +101,7 @@ class webapp_router_news extends webapp_echo_html
 	function get_home(int $page = 1)
 	{
 		$this->set_header_nav();
-		$this->add_meta_seo($this->webapp['app_name'], $this->webapp['app_name']);
+		$this->add_meta_seo($this->webapp['app_name'], $this->webapp['app_website']);
 		
 		$this->add_div_videos($this->main, $this->webapp->fetch_videos, $page);
 	}
