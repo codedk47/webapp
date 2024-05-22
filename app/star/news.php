@@ -56,7 +56,7 @@ class webapp_router_news extends webapp_echo_html
 			$path = $this->origin . substr($video['poster'], 1, 18);
 			$anchor = $element->append('a', [
 				'href' => "?news/watch,hash:{$video['hash']}",
-				'data-preview' => "{$path}/preview.webm"]);
+				'data-preview' => "{$path}/preview.mp4"]);
 			$anchor->figure("{$path}/cover.jpg");
 			$anchor->append('strong', $video['name']);
 		}
