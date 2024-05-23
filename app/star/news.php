@@ -9,7 +9,8 @@ class webapp_router_news extends webapp_echo_html
 		
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=er';
-		unset($this->xml->head->link[1]);
+		$this->xml->head->link[1]['type'] = 'image/jpeg';
+		$this->xml->head->link[1]['href'] = '/star/logo.jpg';
 
 		$this->script(['src' => '/webapp/app/star/news.js?v=gj']);
 
