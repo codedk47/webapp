@@ -8,7 +8,7 @@ class webapp_router_console extends webapp_echo_html
 		parent::__construct($webapp);
 		$this->title('Console');
 
-		if ($this->webapp->not_sign_in()) return;
+		if ($this->webapp->not_sign_in(method:'home')) return;
 		
 		// if ($this->initiated || isset($this->admin) === FALSE)
 		// {
