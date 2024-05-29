@@ -473,63 +473,6 @@ JS;
 		return 401;
 	}
 }
-class webapp_echo_htmlmask extends webapp_echo_html
-{
-	public readonly bool $entry;
-	function __construct(webapp $webapp)
-	{
-		parent::__construct($webapp);
-		if ($this->entry = $webapp->method === "{$webapp['request_method']}_{$webapp['app_index']}")
-		{
-			unset($this->xml->head->link[0], $this->xml->body->div);
-	
-			$this->script(['src' => '/webapp/res/js/loader.js']);
-			$this->script(['src' => '/webapp/res/js/framer.js']);
-			//$this->wallpaper();
-			$this->xml->body['style'] = 'margin:0px';//;padding:0px;overflow:hidden
-			$this->xml->body->append('iframe', [
-				'importance' => 'high',
-				'width' => '100%',
-				'height' => '100%',
-				'style'=> 'position:fixed;border:none',
-				'data-load' => '?load',
-				'src' => 'about:blank'
-			]);
-		}
-		else
-		{
-			$this->script('history.pushState(null,null,document.URL);window.addEventListener("popstate",()=>history.pushState(null,null,document.URL))');
-			unset($this->xml->head->link[1]);
-		}
-	}
-	function __toString():string
-	{
-		if ($this->entry)
-		{
-			return parent::__toString();
-		}
-		$this->webapp->response_content_type('@text/html');
-		foreach ($this->xml->xpath('//*[@src]|//*[@href]|//*[@action]') as $node)
-		{
-			if (strlen($source = (string)$node[$type = match (TRUE)
-				{
-					isset($node['src']) => 'src',
-					isset($node['href']) => 'href',
-					default => 'action'
-				}])
-				&& preg_match('/^\w+\:/', $source) === 0) {
-				$node[$type] = match($source[0])
-				{
-					'/' => "{$this->webapp->request_origin}{$source}",
-					'?' => "{$this->webapp->request_entry}{$source}",
-					default => "{$this->webapp->request_dir}/{$source}"
-				};
-			}
-		}
-		return $this->webapp->maskdata(parent::__toString());
-	}
-}
-
 /*
 class webapp_echo_xls extends webapp_echo_xml
 {

@@ -66,8 +66,8 @@ class ffmpeg implements Stringable
 	}
 	function preview(string $filename = NULL):bool
 	{
-		return $this('-vf "select=\'lte(mod(t,%d),1)\',scale=-1:240,setpts=N/FRAME_RATE/TB" -an "%s"',
-			$this->duration / 10, $filename ?? "{$this->dirname}/preview.webm");
+		return $this('-vf "select=\'lte(mod(t,%d),1)\',scale=-1:240,setpts=N/FRAME_RATE/TB,fps=fps=15" -b:v 480k -vcodec h264 -an "%s"',
+			$this->duration / 10, $filename ?? "{$this->dirname}/preview.mp4");
 	}
 	function download(string $filename, array $headerset = []):bool
 	{

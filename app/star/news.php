@@ -210,18 +210,23 @@ class webapp_router_news extends webapp_echo_html
 
 	function get_search(string $keywords, int $page = 1)
 	{
-		$this->add_meta_seo($keywords = urldecode($keywords), $this->webapp['app_name']);
 		$this->set_header_nav();
-
-		//$this->main->append('h1', 'test');
-
-
-		$this->add_div_videos($this->main, $this->webapp->fetch_videos->with('name LIKE ?s', "%{$keywords}%"), $page);
-
-
-
-
-		
+		$tags = array_map(strtolower(...), $this->webapp->fetch_tags->shortname(LOCALE));
+		$words = array_map(fn($word) => strtolower(trim($word)), array_unique(array_filter(explode(' ', urldecode($keywords)))));
+		$this->add_meta_seo(join(' ',$words), $this->webapp['app_name']);
+		$conditions = [];
+		foreach ($words as $word)
+		{
+			$conditions[] = $this->webapp->mysql->format(...($tag = array_search($word, $tags))
+				? ['FIND_IN_SET(?s,tags)', $tag]
+				: ['name LIKE ?s', "%{$word}%"]);
+		}
+		if (empty($conditions) || ($result = $this->webapp->fetch_videos->with(join(' OR ', $conditions)))->count() === 0)
+		{
+			$this->main->append('h1', 'Not Found');
+			return 404;
+		}
+		$this->add_div_videos($this->main, $result, $page);
 	}
 
 	function get_user()
