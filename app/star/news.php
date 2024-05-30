@@ -12,7 +12,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->xml->head->link[1]['type'] = 'image/jpeg';
 		$this->xml->head->link[1]['href'] = '/star/logo.jpg';
 
-		$this->script(['src' => '/webapp/app/star/news.js?v=mj']);
+		$this->script(['src' => '/webapp/app/star/news.js?v=mq']);
 
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-G65DP9ETZ5']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');

@@ -1,6 +1,6 @@
 function adulted()
 {
-	document.querySelectorAll('body>div').style.filter = null;
+	document.querySelector('body>div').style.filter = null;
 	document.cookie = 'adult=yes';
 }
 addEventListener('DOMContentLoaded', event =>
