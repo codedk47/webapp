@@ -23,10 +23,11 @@ class webapp_router_news extends webapp_echo_html
 		{
 			//document.cookie="adult=yes",
 			$adult = $this->xml->body->append('dialog');
-			$adult->append('header', 'WARNING');
-			$adult->append('h4', 'This site is for adults only!');
-			$adult->append('a', ['Yes, I am an adult.', 'href' => 'javascript:;', 'onclick' => 'this.parentNode.remove()']);
-			$adult->append('a', ['No, leave the site.', 'href' => 'https://www.google.com/']);
+			$adult->append('h4', 'Are you 18 years of age or older?');
+			$adult->append('pre', ['You must be 18 years or older to access and use this website.
+By clicking ENTER below, you certify that you are 18 years or older.']);
+			$adult->append('a', ['Enter', 'href' => 'javascript:;', 'onclick' => 'this.parentNode.remove()']);
+			$adult->append('a', ['No', 'href' => 'https://www.google.com/']);
 		}
 
 
