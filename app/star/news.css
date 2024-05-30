@@ -52,11 +52,11 @@ dialog{
 	border: 1px solid var(--webapp-anchor);
 	box-shadow: 0 0 var(--webapp-gapitem) var(--webapp-edge);
 }
-dialog::backdrop{
+/* dialog::backdrop{
 	filter: blur(var(--webapp-gapitem));
 	backdrop-filter: blur(var(--webapp-gapitem));
 	background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'><defs><filter id='blur'><feGaussianBlur stdDeviation='5' /></filter></defs><rect filter='url(%23blur)' fill='rgba(255,255,255,0.5)' x='0' y='0' width='100%' height='100%'/></svg>");
-}
+} */
 dialog>h4{
 	margin: 0;
 	color: var(--webapp-button);
@@ -172,10 +172,10 @@ div.playright>a>figure{
 	margin: 0;
 	position: relative;
 	overflow: hidden;
+	border: 1px solid var(--webapp-edge);
 	color: var(--webapp-foreground);
 	font-size: var(--webapp-font-small);
 	padding-bottom: 56.25%;
-	box-shadow: 0 0 .2rem var(--webapp-edge);
 	text-shadow: 1px 1px 1px var(--webapp-background);
 	/*h
 	4:3	= 75%

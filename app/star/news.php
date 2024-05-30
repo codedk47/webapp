@@ -8,11 +8,11 @@ class webapp_router_news extends webapp_echo_html
 		parent::__construct($webapp);
 		
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
-		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=em';
+		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=nh';
 		$this->xml->head->link[1]['type'] = 'image/jpeg';
 		$this->xml->head->link[1]['href'] = '/star/logo.jpg';
 
-		$this->script(['src' => '/webapp/app/star/news.js?v=gj']);
+		$this->script(['src' => '/webapp/app/star/news.js?v=kl']);
 
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-G65DP9ETZ5']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
@@ -21,12 +21,12 @@ class webapp_router_news extends webapp_echo_html
 
 		if ($this->webapp->request_cookie('adult') === NULL)
 		{
-			//document.cookie="adult=yes",
+			$this->script('addEventListener("DOMContentLoaded",adulted)');
 			$adult = $this->xml->body->append('dialog');
 			$adult->append('h4', 'Are you 18 years of age or older?');
 			$adult->append('pre', ['You must be 18 years or older to access and use this website.
 By clicking ENTER below, you certify that you are 18 years or older.']);
-			$adult->append('a', ['Enter', 'href' => 'javascript:;', 'onclick' => 'this.parentNode.remove()']);
+			$adult->append('a', ['Enter', 'href' => 'javascript:;', 'onclick' => 'adulted(this.parentNode.remove())']);
 			$adult->append('a', ['No', 'href' => 'https://www.google.com/']);
 		}
 
