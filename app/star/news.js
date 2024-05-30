@@ -14,14 +14,6 @@ function adulted(event)
 addEventListener('DOMContentLoaded', event =>
 {
 	document.querySelectorAll('body>dialog').forEach(dialog => dialog.showModal());
-	console.log(document.cookie.indexOf('adult=yes'))
-
-
-
-
-
-
-
 
 	const video = document.createElement('video');
 	video.setAttribute('playsinline', 'true');
