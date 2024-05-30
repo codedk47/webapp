@@ -21,10 +21,11 @@ class webapp_router_news extends webapp_echo_html
 
 		if ($this->webapp->request_cookie('adult') === NULL)
 		{
+			//document.cookie="adult=yes",
 			$adult = $this->xml->body->append('dialog');
 			$adult->append('header', 'WARNING');
 			$adult->append('h4', 'This site is for adults only!');
-			$adult->append('a', ['Yes, I am an adult.', 'href' => 'javascript:;', 'onclick' => 'document.cookie="adult=yes",this.parentNode.remove()']);
+			$adult->append('a', ['Yes, I am an adult.', 'href' => 'javascript:;', 'onclick' => 'this.parentNode.remove()']);
 			$adult->append('a', ['No, leave the site.', 'href' => 'https://www.google.com/']);
 		}
 
