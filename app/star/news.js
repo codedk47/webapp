@@ -1,5 +1,15 @@
 addEventListener('DOMContentLoaded', event =>
 {
+	document.querySelectorAll('body>dialog').forEach(dialog => dialog.showModal());
+
+
+
+
+
+
+
+
+
 	const video = document.createElement('video');
 	video.setAttribute('playsinline', 'true');
 	video.setAttribute('disablepictureinpicture', 'true');

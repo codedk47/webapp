@@ -17,6 +17,18 @@ class webapp_router_news extends webapp_echo_html
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-G65DP9ETZ5']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
 		$this->footer[0] = NULL;
+
+
+		if ($this->webapp->request_cookie('adult') === NULL)
+		{
+			$adult = $this->xml->body->append('dialog');
+			$adult->append('header', 'WARNING');
+			$adult->append('h4', 'This site is for adults only!');
+			$adult->append('a', ['Yes, I am an adult.', 'href' => 'javascript:;', 'onclick' => 'document.cookie="adult=yes",this.parentNode.remove()']);
+			$adult->append('a', ['No, leave the site.', 'href' => 'https://www.google.com/']);
+		}
+
+
 	}
 	function add_meta_seo(string $title = NULL, string $keywords = NULL, string $description = NULL, string $image = NULL)
 	{
