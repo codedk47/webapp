@@ -8,11 +8,11 @@ class webapp_router_news extends webapp_echo_html
 		parent::__construct($webapp);
 		
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
-		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=nh';
+		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=cv';
 		$this->xml->head->link[1]['type'] = 'image/jpeg';
 		$this->xml->head->link[1]['href'] = '/star/logo.jpg';
 
-		$this->script(['src' => '/webapp/app/star/news.js?v=kl']);
+		$this->script(['src' => '/webapp/app/star/news.js?v=mj']);
 
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-G65DP9ETZ5']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-G65DP9ETZ5")');
@@ -21,7 +21,7 @@ class webapp_router_news extends webapp_echo_html
 
 		if ($this->webapp->request_cookie('adult') === NULL)
 		{
-			$this->script('addEventListener("DOMContentLoaded",adulted)');
+			$this->xml->body->div['style'] = 'filter:blur(var(--webapp-gapitem))';
 			$adult = $this->xml->body->append('dialog');
 			$adult->append('h4', 'Are you 18 years of age or older?');
 			$adult->append('pre', ['You must be 18 years or older to access and use this website.

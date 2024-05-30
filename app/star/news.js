@@ -1,16 +1,8 @@
-function adulted(event)
+function adulted()
 {
-	if (event)
-	{
-		document.querySelectorAll('img').forEach(img => img.style.filter = 'blur(var(--webapp-gapitem))');
-	}
-	else
-	{
-		document.cookie="adult=yes";
-		document.querySelectorAll('img').forEach(img => img.style.filter = null);
-	}
+	document.querySelectorAll('body>div').style.filter = null;
+	document.cookie = 'adult=yes';
 }
-
 addEventListener('DOMContentLoaded', event =>
 {
 	document.querySelectorAll('body>dialog').forEach(dialog => dialog.showModal());
