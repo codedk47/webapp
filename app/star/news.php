@@ -226,16 +226,18 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 	{
 		$this->set_header_nav();
 		$tags = array_map(strtolower(...), $this->webapp->fetch_tags->shortname(LOCALE));
-		$words = array_map(fn($word) => strtolower(trim($word)), array_unique(array_filter(explode(' ', urldecode($keywords)))));
-		$this->add_meta_seo(join(' ',$words), $this->webapp['app_name']);
-		$conditions = [];
-		foreach ($words as $word)
+		$keyword = join(' ', array_filter(array_map(trim(...), explode(' ', strtolower(urldecode($keywords))))));
+		$this->add_meta_seo($keyword, $this->webapp['app_name']);
+		$conditions = ['name LIKE ?s', "%{$keyword}%"];
+		if ($tag = array_search($keyword, $tags))
 		{
-			$conditions[] = $this->webapp->mysql->format(...($tag = array_search($word, $tags))
-				? ['FIND_IN_SET(?s,tags)', $tag]
-				: ['name LIKE ?s', "%{$word}%"]);
+			$conditions[0] .= ' OR FIND_IN_SET(?s,tags)';
+			$conditions[] = $tag;
 		}
-		if (empty($conditions) || ($result = $this->webapp->fetch_videos->with(join(' OR ', $conditions)))->count() === 0)
+		//PRINT_R($tags);
+
+		$result = $this->webapp->fetch_videos->with(...$conditions);
+		if ($result->count() === 0)
 		{
 			$this->main->append('h1', 'Not Found');
 			return 404;
