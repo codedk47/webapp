@@ -1095,7 +1095,7 @@ class webapp_form implements ArrayAccess
 				if (isset($this->captcha) && (isset($input['captcha_encrypt'], $input['captcha_decrypt'])
 					&& is_string($input['captcha_encrypt']) && is_string($input['captcha_decrypt'])
 					&& $this->context->captcha_verify($input['captcha_encrypt'], $input['captcha_decrypt'])) === FALSE) {
-					$field = 'captcha';
+					$field = 'captcha_decrypt';
 					break;
 				}
 			}

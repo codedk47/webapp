@@ -166,8 +166,9 @@ class webapp_echo_json extends ArrayObject implements Stringable
 class webapp_echo_html extends webapp_implementation
 {
 	use webapp_echo;
+	protected readonly array $auth;
 	public readonly webapp_html $header, $aside, $main, $footer;
-	function __construct(public readonly webapp $webapp)
+	function __construct(public readonly webapp $webapp, callable $authenticate = NULL, string $storage = NULL)
 	{
 		//https://validator.w3.org/nu/#textarea
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
@@ -195,6 +196,50 @@ class webapp_echo_html extends webapp_implementation
 			&$node->header, &$node->aside, &$node->main,
 			$node->append('footer', $webapp['copy_webapp'])];
 
+		if ($authenticate && empty($this->auth = $webapp->authorize($webapp->request_cookie($storage ??= $webapp['admin_cookie']), $authenticate)))
+		{
+			if (is_array($input = json_decode($webapp->request_header('Sign-In') ?? '', TRUE)))
+			{
+				$webapp->app('webapp_echo_json', ['signature' => NULL]);
+				if (static::form_sign_in($this->webapp)->fetch($account, $errors, $input))
+				{
+					if ($user = $authenticate($account['username'], $account['password'], $webapp->time))
+					{
+						$webapp->app['signature'] = $webapp->signature(...$user);
+					}
+					else
+					{
+						$webapp->app['errors'][] = 'Authorization failed';
+					}
+				}
+				return $webapp->response_status(200);
+			}
+			$form = static::form_sign_in($this->main);
+			$form->xml['data-storage'] = $storage;
+			$form->xml['onsubmit'] = <<<'JS'
+if (this.style.pointerEvents !== 'none')
+{
+	const
+	data = Object.fromEntries(new FormData(this).entries()),
+	fieldset = this.querySelectorAll('fieldset');
+	this.style.pointerEvents = 'none';
+	fieldset.forEach(field => field.disabled = true);
+	this.oninput = event => Object.keys(data).forEach(field => this[field].setCustomValidity(''));
+	fetch(this.action, {headers: {'Sign-In': JSON.stringify(data)}}).then(response => response.json())
+	.then(contents => contents.signature
+		? location.reload(document.cookie = `${this.dataset.storage}=${contents.signature}`)
+		: ((this[(/\[([^\]]+)\]/.exec(contents.errors[contents.errors.length - 1]) || [])[1]] || this.username)
+			.setCustomValidity(contents.errors.join('\n')), requestAnimationFrame(() => this.reportValidity())))
+	.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
+}
+return false;
+JS;
+			$webapp->response_status(401);
+		}
+		else
+		{
+			$this->auth ??= [];
+		}
 	}
 	function meta(array $attributes):webapp_html
 	{

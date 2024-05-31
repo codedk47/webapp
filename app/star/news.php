@@ -19,7 +19,7 @@ class webapp_router_news extends webapp_echo_html
 		$this->footer[0] = NULL;
 
 
-		if ($this->webapp->request_cookie('adult') === NULL)
+		if ($this->webapp->request_cookie('adult') !== 'yes')
 		{
 			$this->xml->body->div['style'] = 'filter:blur(var(--webapp-gapitem))';
 			$adult = $this->xml->body->append('dialog');

@@ -1,55 +1,33 @@
 <?php
 class webapp_router_console extends webapp_echo_html
 {
-	private readonly bool $admin;
-	private readonly ?string $uid;
 	function __construct(webapp $webapp)
 	{
-		parent::__construct($webapp);
+		parent::__construct($webapp, function(string $uid, string $pwd) use($webapp)
+		{
+			return $uid === $webapp['admin_username'] && $pwd === $webapp['admin_password'] ? [$uid, $pwd] : [];
+		});
 		$this->title('Console');
-
-		if ($this->webapp->not_sign_in(method:'home')) return;
-		
-		// if ($this->initiated || isset($this->admin) === FALSE)
-		// {
-		// 	$this->admin = FALSE;
-		// 	$this->uid = NULL;
-		// 	return;
-		// }
-
+		if (empty($this->auth)) return;
 		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
 		$this->link_resources($webapp['app_resources']);
 		//$this->script(['src' => '/webapp/app/star/base.js?v=w']);
 		$this->nav([
-			['数据', '?console/home'],
+			['Home', '?console/home'],
 			
-			['广告', '?console/ads'],
-			['渠道', '?console/channels'],
-			['分类 & 标签', '?console/tags'],
-			['专题', '?console/subjects'],
+			['Ads', '?console/ads'],
+			//['渠道', '?console/channels'],
+			['Tags', '?console/tags'],
+			//['专题', '?console/subjects'],
 
-			['视频', '?console/videos'],
+			['Videos', '?console/videos'],
 
-			['站点配置', '?console/configs'],
-			['问题汇报', '?console/reports'],
+			['Configs', '?console/configs'],
+			['Reports', '?console/reports'],
 
 	
-			['注销登录', "javascript:masker.authorization(null).then(()=>location.replace(location.href));", 'style' => 'color:maroon']
+			['Logout', "javascript:;", 'style' => 'color:maroon']
 		]);
-	}
-	function authorization($uid, $pwd):array
-	{
-		if ($uid === $this->webapp['admin_username'] && $pwd === $this->webapp['admin_password'])
-		{
-			$this->admin = TRUE;
-			return [$this->uid = $uid, $pwd];
-		}
-		if (array_key_exists($uid, $this->webapp['admin_users']) && $pwd === $this->webapp['admin_users'][$uid])
-		{
-			$this->admin = FALSE;
-			return [$this->uid = $uid, $pwd];
-		}
-		return [];
 	}
 	function goto(string $url = NULL):void
 	{
