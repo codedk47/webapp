@@ -234,8 +234,6 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 			$conditions[0] .= ' OR FIND_IN_SET(?s,tags)';
 			$conditions[] = $tag;
 		}
-		//PRINT_R($tags);
-
 		$result = $this->webapp->fetch_videos->with(...$conditions);
 		if ($result->count() === 0)
 		{
