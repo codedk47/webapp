@@ -26,7 +26,7 @@ class webapp_router_console extends webapp_echo_html
 			['Reports', '?console/reports'],
 
 	
-			['Logout', "javascript:;", 'style' => 'color:maroon']
+			['Logout', "javascript:location.reload(document.cookie='webapp=0');", 'style' => 'color:maroon']
 		]);
 	}
 	function goto(string $url = NULL):void
