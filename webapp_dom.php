@@ -1078,7 +1078,7 @@ class webapp_form implements ArrayAccess
 		{
 			if ($this->echo)
 			{
-				$field = '';
+				$field = NULL;
 				break;
 			}
 			if (is_array($this->context))
@@ -1089,6 +1089,10 @@ class webapp_form implements ArrayAccess
 			else
 			{
 				$errors = &($this->context)(new stdClass)->errors;
+				if (isset($this->context->app) && $this->context->app instanceof ArrayObject)
+				{
+					$error = &$this->context->app['error'];
+				}
 				$input ??= is_string($content = $this->context->request_maskdata())
 					? json_decode($content, TRUE)
 					: $this->context->request_content((string)$this->xml['enctype']);

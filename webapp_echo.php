@@ -201,7 +201,7 @@ class webapp_echo_html extends webapp_implementation
 			if (is_array($input = json_decode($webapp->request_header('Sign-In') ?? '', TRUE)))
 			{
 				$webapp->app('webapp_echo_json');
-				if (static::form_sign_in($this->webapp)->fetch($account, $webapp->app['error'], $input))
+				if (static::form_sign_in($this->webapp)->fetch($account, input: $input))
 				{
 					if ($auth = $authenticate($account['username'], $account['password'], $webapp->time))
 					{
@@ -209,7 +209,7 @@ class webapp_echo_html extends webapp_implementation
 					}
 					else
 					{
-						$webapp->app['error'] = ['field' => 'username', 'message' => $webapp->app['errors'][] = 'Authorization failed'];
+						$webapp->app['errors'][] = 'Authorization failed';
 					}
 				}
 				return $webapp->response_status(200);
