@@ -1131,7 +1131,7 @@ class webapp_form implements ArrayAccess
 			}
 			return TRUE;
 		} while (0);
-		$errors[] = $error = "Form input[{$field}] invalid";
+		$error = ['field' => $field, 'message' => $errors[] = "Form input[{$field}] invalid"];
 		return FALSE;
 	}
 

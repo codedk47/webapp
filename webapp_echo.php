@@ -200,16 +200,16 @@ class webapp_echo_html extends webapp_implementation
 		{
 			if (is_array($input = json_decode($webapp->request_header('Sign-In') ?? '', TRUE)))
 			{
-				$webapp->app('webapp_echo_json', ['signature' => NULL]);
-				if (static::form_sign_in($this->webapp)->fetch($account, $errors, $input))
+				$webapp->app('webapp_echo_json');
+				if (static::form_sign_in($this->webapp)->fetch($account, $webapp->app['error'], $input))
 				{
-					if ($user = $authenticate($account['username'], $account['password'], $webapp->time))
+					if ($auth = $authenticate($account['username'], $account['password'], $webapp->time))
 					{
-						$webapp->app['signature'] = $webapp->signature(...$user);
+						$webapp->app['signature'] = $webapp->signature(...$auth);
 					}
 					else
 					{
-						$webapp->app['errors'][] = 'Authorization failed';
+						$webapp->app['error'] = ['field' => 'username', 'message' => $webapp->app['errors'][] = 'Authorization failed'];
 					}
 				}
 				return $webapp->response_status(200);
@@ -220,16 +220,16 @@ class webapp_echo_html extends webapp_implementation
 if (this.style.pointerEvents !== 'none')
 {
 	const
-	data = Object.fromEntries(new FormData(this).entries()),
+	account = Object.fromEntries(new FormData(this).entries()),
 	fieldset = this.querySelectorAll('fieldset');
 	this.style.pointerEvents = 'none';
 	fieldset.forEach(field => field.disabled = true);
-	this.oninput = event => Object.keys(data).forEach(field => this[field].setCustomValidity(''));
-	fetch(this.action, {headers: {'Sign-In': JSON.stringify(data)}}).then(response => response.json())
-	.then(contents => contents.signature
-		? location.reload(document.cookie = `${this.dataset.storage}=${contents.signature}`)
-		: ((this[(/\[([^\]]+)\]/.exec(contents.errors[contents.errors.length - 1]) || [])[1]] || this.username)
-			.setCustomValidity(contents.errors.join('\n')), requestAnimationFrame(() => this.reportValidity())))
+	this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
+	fetch(this.action, {headers: {'Sign-In': JSON.stringify(account)}}).then(response => response.json())
+	.then(authorize => authorize.signature
+		? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature}`)
+		: (this[authorize.error.field].setCustomValidity(authorize.error.message),
+			requestAnimationFrame(() => this.reportValidity())))
 	.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
 }
 return false;
