@@ -226,7 +226,6 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		$this->set_header_nav();
 		$tags = array_map(strtolower(...), $this->webapp->fetch_tags->shortname(LOCALE));
 		$keyword = join(' ', array_filter(array_map(trim(...), explode(' ', strtolower(urldecode($keywords))))));
-		var_dump($keyword);
 		$this->add_meta_seo($keyword, $this->webapp['app_name']);
 		$conditions = ['name LIKE ?s', sprintf('%%%s%%', strtr($keyword, ' ', '%'))];
 		if ($tag = array_search($keyword, $tags))
