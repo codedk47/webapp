@@ -2,7 +2,6 @@
 const LOCALE = 'en';
 class webapp_router_news extends webapp_echo_html
 {
-	private string $origin = 'https://gonglidi.com';
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -68,7 +67,7 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		$element = $node->append('div', ['class' => 'videos']);
 		foreach ($pagination ? $videos->paging($index, $count) : $videos as $video)
 		{
-			$path = $this->origin . substr($video['poster'], 1, 18);
+			$path = $this->webapp->origin . substr($video['poster'], 1, 18);
 			$anchor = $element->append('a', [
 				'href' => "?news/watch,hash:{$video['hash']}",
 				'data-preview' => "{$path}/preview.mp4"]);
@@ -146,8 +145,8 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		if ($video = $this->webapp->fetch_videos[$hash])
 		{
 			$watch = $player->append('webapp-video', [
-				'data-poster' => $cover = $this->origin . substr($video['poster'], 1, 24) . '.jpg',
-				'data-m3u8' => $this->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
+				'data-poster' => $cover = $this->webapp->origin . substr($video['poster'], 1, 24) . '.jpg',
+				'data-m3u8' => $this->webapp->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
 				'oncanplay' => 'console.log(this)',
 				//'autoheight' => NULL,
 				//'autoplay' => NULL,
@@ -215,7 +214,7 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		// {
 		// 	$anchor = $relates->append('a', ['href' => "?news/watch,hash:{$relate['hash']}"]);
 		// 	$figure = $anchor->append('figure');
-		// 	$figure->append('img', ['loading' => 'lazy', 'src' => $this->origin . substr($relate['poster'], 1, 24) . '.jpg']);
+		// 	$figure->append('img', ['loading' => 'lazy', 'src' => $this->webapp->origin . substr($relate['poster'], 1, 24) . '.jpg']);
 		// 	$anchor->append('strong', $relate['name']);
 		// }
 
@@ -226,7 +225,7 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 	{
 		$this->set_header_nav();
 		$tags = array_map(strtolower(...), $this->webapp->fetch_tags->shortname(LOCALE));
-		$keyword = join(' ', array_filter(array_map(trim(...), explode(' ', strtolower(urldecode($keywords))))));
+		$keyword = join('%', array_filter(array_map(trim(...), explode(' ', strtolower(urldecode($keywords))))));
 		$this->add_meta_seo($keyword, $this->webapp['app_name']);
 		$conditions = ['name LIKE ?s', "%{$keyword}%"];
 		if ($tag = array_search($keyword, $tags))
@@ -243,8 +242,9 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		$this->add_div_videos($this->main, $result, $page);
 	}
 
-	function get_user()
+	function get_test()
 	{
+		$this->webapp->fetch_videos->actress();
 
 	}
 }

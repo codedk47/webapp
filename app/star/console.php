@@ -1,6 +1,7 @@
 <?php
 class webapp_router_console extends webapp_echo_html
 {
+	
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp, function(string $uid, string $pwd) use($webapp)
@@ -9,6 +10,7 @@ class webapp_router_console extends webapp_echo_html
 		});
 		$this->title('Console');
 		if (empty($this->auth)) return;
+		$this->script(['src' => '/webapp/app/star/base.js?v=w']);
 		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/app/star/base.css']);
 		$this->link_resources($webapp['app_resources']);
 		//$this->script(['src' => '/webapp/app/star/base.js?v=w']);
@@ -300,18 +302,8 @@ class webapp_router_console extends webapp_echo_html
 	function ad_seats():array
 	{
 		return [
-			0 => '开屏广告（全屏幕）',
-			1 => '首次弹窗（半屏幕）',
-			2 => '首页轮播 21:9',
-			3 => '播放视频 16:9',
-			4 => '滑动视频（全屏幕）',
-			
-			// 3 => '游戏轮播',
-			// 4 => '社区轮播',
-			// 5 => '个人中心',
-			// 6 => '弹窗广告',
+			0 => 'Pending'
 
-			9 => '导航图标 1:1'
 		];
 	}
 	function form_ad(webapp_html $html = NULL):webapp_form
@@ -359,8 +351,8 @@ class webapp_router_console extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats, $seat)
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell()->append('a', ['删除下面广告', 'href' => "?control/ad,seat:{$seat},hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
-			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?control/ad-update,hash:{$value['hash']}"]);
+			$table->cell()->append('a', ['删除下面广告', 'href' => "?console/ad,seat:{$seat},hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
+			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?console/ad-update,hash:{$value['hash']}"]);
 
 			$table->row();
 			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])
@@ -402,16 +394,16 @@ class webapp_router_console extends webapp_echo_html
 		}, $seats = $this->ad_seats(), $seat);
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->fieldset('封面', '字段', '信息');
-		$table->header('广告 %d 项', $table->count());
+		$table->header('Found %d item', $table->count());
 		unset($table->xml->tbody->tr[0]);
 
-		$table->bar->append('button', ['添加广告', 'onclick' => 'location.href="?control/ad-insert"']);
-		$table->bar->select(['' => '所有位置'] + $seats)
+		$table->bar->append('button', ['Post AD', 'onclick' => 'location.href="?console/ad-insert"']);
+		$table->bar->select(['' => 'All Seat'] + $seats)
 			->setattr(['onchange' => 'g({seat:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($seat);
 
-		$table->bar->append('button', ['刷新前端广告缓存',
-			'data-src' => '?control/flush,data:ads',
+		$table->bar->append('button', ['Flush AD',
+			'data-src' => '?console/flush,data:ads',
 			'data-method' => 'patch',
 			'data-bind' => 'click',
 			'style' => 'margin-left:.6rem;padding:.1rem']);
@@ -432,7 +424,7 @@ class webapp_router_console extends webapp_echo_html
 				'click' => 0,
 				'change' => 'sync'] + $ad)
 			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
-			$this->webapp->response_location('?control/ads');
+			$this->webapp->response_location('?console/ads');
 		}
 		else
 		{
@@ -470,7 +462,7 @@ class webapp_router_console extends webapp_echo_html
 			}
 			if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
 			{
-				$this->webapp->response_location('?control/ads');
+				$this->webapp->response_location('?console/ads');
 			}
 			return 200;
 		}
@@ -522,19 +514,19 @@ class webapp_router_console extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->tags(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
-			$table->cell()->append('a', ['删除', 'href' => "?control/tag,hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
+			$table->cell()->append('a', ['删除', 'href' => "?console/tag,hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['time']));
 			$table->cell($value['hash']);
 			$table->cell(number_format($value['click']));
 			$table->cell(base::tags_level[$value['level']]);
 			$table->cell($value['sort']);
-			$table->cell()->append('a', [$value['name'], 'href' => "?control/tag,hash:{$value['hash']}"]);
+			$table->cell()->append('a', [$value['name'], 'href' => "?console/tag,hash:{$value['hash']}"]);
 			
 		});
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->fieldset('删除', '创建时间', 'HASH', '点击', '类型', '排序', '名称');
 		$table->header('找到 %d 项', $table->count());
-		$table->bar->append('button', ['添加标签或分类', 'onclick' => 'location.href="?control/tag"']);
+		$table->bar->append('button', ['添加标签或分类', 'onclick' => 'location.href="?console/tag"']);
 
 		$table->bar->append('input', [
 			'type' => 'search',
@@ -657,7 +649,7 @@ class webapp_router_console extends webapp_echo_html
 		{
 			$table->row();
 			$table->cell()->append('a', ['删除',
-				'href' => "?control/subject,hash:{$value['hash']}",
+				'href' => "?console/subject,hash:{$value['hash']}",
 				'data-method' => 'delete',
 				'data-bind' => 'click'
 			]);
@@ -666,23 +658,23 @@ class webapp_router_console extends webapp_echo_html
 			$table->cell($value['hash']);
 			$table->cell($value['sort']);
 			$table->cell($classify[$value['type']] ?? NULL);
-			$table->cell()->append('a', [$value['name'], 'href' => "?control/subject,hash:{$value['hash']}"]);
+			$table->cell()->append('a', [$value['name'], 'href' => "?console/subject,hash:{$value['hash']}"]);
 			$table->cell(self::subject_styles[$value['style']] ?? $value['style']);
 			$table->cell()->append('a', ["{$value['fetch_method']}({$value['fetch_values']})",
-				'href' => "?control/videos,subject:{$value['hash']}"]);
+				'href' => "?console/videos,subject:{$value['hash']}"]);
 
 		}, $classify);
 		$table->paging($this->webapp->at(['page' => '']));
 
 		$table->fieldset('删除', '创建时间', '修改时间', 'HASH', '排序', '分类', '名称', '展示样式', '数据来源');
 		$table->header('找到 %d 项', $table->count());
-		$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?control/subject"']);
+		$table->bar->append('button', ['添加专题', 'onclick' => 'location.href="?console/subject"']);
 		$table->bar->select(['' => '全部分类', ...$classify])
 			->setattr(['onchange' => 'g({type:this.value||null})',
 				'style' => 'margin-left:.6rem;padding:.1rem'])->selected($type);
 
 		$table->bar->append('button', ['刷新前端专题缓存',
-			'data-src' => '?control/flush,data:subjects',
+			'data-src' => '?console/flush,data:subjects',
 			'data-method' => 'patch',
 			'data-bind' => 'click',
 			'style' => 'margin-left:.6rem;padding:.1rem']);
@@ -741,13 +733,13 @@ class webapp_router_console extends webapp_echo_html
 			$table->cell($this->webapp->hexip($value['lastip']));
 			$table->cell($value['uid']);
 			$table->cell($value['name']);
-			$table->cell()->append('a', ['详细', 'href' => "?control/uploader,uid:{$value['uid']}"]);
+			$table->cell()->append('a', ['详细', 'href' => "?console/uploader,uid:{$value['uid']}"]);
 		});
 		$table->paging($this->webapp->at(['page' => '']));
 
 		$table->fieldset('创建时间', '最后登录时间', '最后登录IP', 'UID', '名称', '详细');
 		$table->header('上传账号 %d 项', $table->count());
-		$table->bar->append('button', ['添加账号', 'onclick' => 'location.href="?control/uploader"']);
+		$table->bar->append('button', ['添加账号', 'onclick' => 'location.href="?console/uploader"']);
 
 	}
 	function form_uploader(webapp_html $html = NULL):webapp_form
@@ -819,12 +811,12 @@ class webapp_router_console extends webapp_echo_html
 			$form->echo($uploader);
 			$form->button('添加用户', 'button', [
 				'data-method' => 'post',
-				'data-src' => "?control/uploader-bind-create-user,uid:{$uploader['uid']}",
+				'data-src' => "?console/uploader-bind-create-user,uid:{$uploader['uid']}",
 				'data-dialog' => '{"nickname":"text"}',
 				'data-bind' => 'click']);
 			$form->button('删除该账号', 'button', [
 				'data-method' => 'delete',
-				'data-src' => "?control/uploader,uid:{$uploader['uid']}",
+				'data-src' => "?console/uploader,uid:{$uploader['uid']}",
 				'data-dialog' => '删除无法撤销',
 				'data-bind' => 'click']);
 		}
@@ -887,7 +879,7 @@ class webapp_router_console extends webapp_echo_html
 		// $form->button('从');
 		$form->button('增加1次分享')->setattr([
 			'data-method' => 'patch',
-			'data-src' => "?control/user-share,id:{$id}",
+			'data-src' => "?console/user-share,id:{$id}",
 			'data-bind' => 'click'
 		]);
 
@@ -996,7 +988,7 @@ class webapp_router_console extends webapp_echo_html
 			$table->row();
 
 			$table->cell($value['date']);
-			$table->cell()->append('a', [$value['id'], 'href' => "?control/user,id:{$value['id']}"]);
+			$table->cell()->append('a', [$value['id'], 'href' => "?console/user,id:{$value['id']}"]);
 			$table->cell(number_format($value['login']));
 			$table->cell(number_format($value['watch']));
 			$table->cell(number_format($value['share']));
@@ -1065,12 +1057,12 @@ class webapp_router_console extends webapp_echo_html
 			->selected($filter_sort);
 
 		$table->bar->append('button', ['所有用户分享数据',
-			'data-src' => '?control/user-share',
+			'data-src' => '?console/user-share',
 			'data-bind' => 'click',
 			'style' => 'margin-left:.6rem;padding:.1rem']);
 
 		$table->bar->append('button', ['今日用户分享数据',
-			'data-src' => '?control/user-share-today',
+			'data-src' => '?console/user-share-today',
 			'data-bind' => 'click',
 			'style' => 'margin-left:.6rem;padding:.1rem']);
 
@@ -1143,6 +1135,13 @@ class webapp_router_console extends webapp_echo_html
 	}
 
 	//========视频========
+	const video_sync = [
+		'waiting' => 'Waiting',
+		'slicing' => 'Slicing',
+		'exception' => 'Exception',
+		'finished' => 'Finished',
+		'allow' => 'Allow (show)',
+		'deny' => 'Deny (drop)'], video_type = ['h' => 'H', 'v' => 'V'];
 	function get_videos(string $search = NULL, int $page = 1)
 	{
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
@@ -1239,16 +1238,16 @@ class webapp_router_console extends webapp_echo_html
 			default => '`mtime` DESC'
 		} . ',hash ASC';
 		$tags = $this->webapp->fetch_tags->shortname();
-		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags)
+		$table = $this->main->table($this->webapp->mysql->videos(...$conds)->paging($page, 10), function($table, $value, $tags, $origin)
 		{
 			$ym = date('ym', $value['mtime']);
 
 			$table->row()['class'] = 'info';
-			$table->cell()->append('a', ["用户ID：{$value['userid']}", 'href' => "?control/videos,userid:{$value['userid']}"]);
-			$table->cell(['colspan' => 8])->append('a', [sprintf('上传时间：%s，最后修改时间：%s',
+			$table->cell()->append('a', ["UID：{$value['userid']}", 'href' => "?console/videos,userid:{$value['userid']}"]);
+			$table->cell(['colspan' => 8])->append('a', [sprintf('Uptime: %s, Changetime: %s',
 				date('Y-m-d\\TH:i:s', $value['mtime']),
 				date('Y-m-d\\TH:i:s', $value['ctime'])
-			), 'href' => "?control/video,hash:{$value['hash']}"]);
+			), 'href' => "?console/video,hash:{$value['hash']}"]);
 
 			$table->row();
 			$cover = $table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover']);
@@ -1256,37 +1255,37 @@ class webapp_router_console extends webapp_echo_html
 			$table->row();
 			$table->cell('HASH');
 			$table->cell($value['hash']);
-			$table->cell('类型');
-			$table->cell(base::video_type[$value['type']]);
-			$table->cell('时长');
+			$table->cell('Type');
+			$table->cell(static::video_type[$value['type']]);
+			$table->cell('Duration');
 			$table->cell(base::format_duration($value['duration']));
-			$table->cell('要求');
+			$table->cell('Require');
 			$table->cell(match (intval($value['require']))
 			{
-				-2 => '下架', -1 => '会员', 0 => '免费',
-				default => "{$value['require']} 金币"
+				-2 => 'Drop', -1 => 'Member', 0 => 'Free',
+				default => "{$value['require']} Coin"
 			});
 
 			$table->row();
-			$table->cell('状态');
+			$table->cell('State');
 			$syncnode = $table->cell();
 			$syncnode->append('span', $value['sync'] === 'waiting' && $value['tell'] < $value['size']
-				? '正在上传' : base::video_sync[$value['sync']]);
+				? 'Uploading' : static::video_sync[$value['sync']]);
 			$anchors = [];
 			if ($value['sync'] !== 'exception')
 			{
-				$anchors[] = ['设为异常',
-					'href' => "?control/video,hash:{$value['hash']},sync:exception",
+				$anchors[] = ['Exception',
+					'href' => "?console/video,hash:{$value['hash']},sync:exception",
 					'style' => 'color:maroon',
 					'data-method' => 'patch',
-					'data-dialog' => '设为异常后不可恢复',
+					'data-dialog' => 'Can\'t undo',
 					'data-bind' => 'click'
 				];
 			}
 			if (in_array($value['sync'], ['finished', 'allow'], TRUE))
 			{
-				$anchors[] = ['拒绝',
-					'href' => "?control/video,hash:{$value['hash']},sync:deny",
+				$anchors[] = ['Deny',
+					'href' => "?console/video,hash:{$value['hash']},sync:deny",
 					'style' => 'color:maroon',
 					'data-method' => 'patch',
 					'data-bind' => 'click'
@@ -1294,8 +1293,8 @@ class webapp_router_console extends webapp_echo_html
 			}
 			if (in_array($value['sync'], ['finished', 'deny'], TRUE))
 			{
-				$anchors[] = ['通过',
-					'href' => "?control/video,hash:{$value['hash']},sync:allow",
+				$anchors[] = ['Allow',
+					'href' => "?console/video,hash:{$value['hash']},sync:allow",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				];
@@ -1306,36 +1305,36 @@ class webapp_router_console extends webapp_echo_html
 				$syncnode->append('a', $anchor);
 			}
 
-			$table->cell('观看');
+			$table->cell('View');
 			$table->cell(number_format($value['view']));
-			$table->cell('点赞');
+			$table->cell('Like');
 			$table->cell(number_format($value['like']));
-			$table->cell('销量');
+			$table->cell('Sale');
 			$table->cell(number_format($value['sales']));
 
 			$table->row();
-			$table->cell('标签');
+			$table->cell('Tags');
 			$tagnode = $table->cell(['colspan' => 7, 'class' => 'tags'])->append('div');
 			foreach ($value['tags'] ? explode(',', $value['tags']) : [] as $tag)
 			{
 				if (isset($tags[$tag]))
 				{
-					$tagnode->append('a', [$tags[$tag], 'href' => "?control/videos,search:{$tag}"]);
+					$tagnode->append('a', [$tags[$tag], 'href' => "?console/videos,search:{$tag}"]);
 				}
 			}
 
 			$table->row();
-			$table->cell('名称');
+			$table->cell('Name');
 			$title = $table->cell(['colspan' => 7, 'class' => 'name'])->append('a', [htmlentities($value['name']), 'href' => "javascript:;"]);
 
 			if (in_array($value['sync'], ['finished', 'allow', 'deny'] ,TRUE))
 			{
 				$cover->append('img', [
 					'loading' => 'lazy',
-					'src' => "?/{$ym}/{$value['hash']}/cover?mask{$value['ctime']}",
+					'src' => $cover = "{$origin}/{$ym}/{$value['hash']}/cover.jpg",
 					'id' => "v{$value['hash']}",
-					'data-cover' => "?/{$ym}/{$value['hash']}/cover?mask{$value['ctime']}",
-					'data-playm3u8' => "?/{$ym}/{$value['hash']}/play?mask0000000000",
+					'data-cover' => $cover,
+					'data-playm3u8' => "{$origin}/{$ym}/{$value['hash']}/play.m3u8",
 					'onclick' => "view_video(this.dataset, {$value['preview']})",
 					'style' => 'object-fit: contain;'
 				]);
@@ -1346,10 +1345,13 @@ class webapp_router_console extends webapp_echo_html
 				$cover->append('img', ['src' => '/webapp/res/ps/loading.svg']);
 			}
 
-		}, $tags);
+		}, $tags, $this->webapp->origin);
+
+
+
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('封面（预览视频）', '信息');
-		$table->header('视频 %d 项', $table->count());
+		$table->fieldset(0, 1);
+		$table->header('Found %d item', $table->count());
 		unset($table->xml->tbody->tr[0]);
 
 		// $table->bar->append('input', [
@@ -1363,15 +1365,15 @@ class webapp_router_console extends webapp_echo_html
 			'type' => 'search',
 			'value' => $tag,
 			'style' => 'padding:2px;width:8rem',
-			'placeholder' => '标签用 “.” 间隔',
+			'placeholder' => 'Tag use “.” span',
 			'onkeydown' => 'event.keyCode==13&&g({tag:this.value||null,page:null})'
 		]);
 		$taglevels = $this->webapp->fetch_tags->levels();
 		
-		$table->bar->select(['' => '标签1', ...$taglevels])
+		$table->bar->select(['' => 'Tag1', ...$taglevels])
 			->setattr(['onchange' => 'g({tag:this.value||null})', 'style' => 'margin-left:.6rem;width:6rem;padding:2px'])
 			->selected($tagsearch[0] ?? NULL);
-		$table->bar->select(['' => '标签2', ...$taglevels])
+		$table->bar->select(['' => 'Tag2', ...$taglevels])
 			->setattr(['onchange' => 'g({tag:this.value?(this.previousElementSibling.value?`${this.previousElementSibling.value}.${this.value}`:this.value):this.previousElementSibling.value})', 'style' => 'margin-left:.6rem;width:6rem;padding:2px'])
 			->selected($tagsearch[1] ?? NULL);
 
@@ -1379,37 +1381,37 @@ class webapp_router_console extends webapp_echo_html
 			'type' => 'search',
 			'value' => $search,
 			'style' => 'margin-left:.6rem;padding:2px;width:16rem',
-			'placeholder' => '视频HASH或关键字按【Enter】搜索',
+			'placeholder' => 'Video HASH or keyword',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
-		$table->bar->select(['' => '全部状态', 'uploading' => '正在上传'] + base::video_sync)
+		$table->bar->select(['' => 'All State', 'uploading' => 'Uploading'] + static::video_sync)
 			->setattr(['onchange' => 'g({sync:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sync);
 		// $table->bar->select(['' => '要求', 'vip' => '会员', 'free' => '免费', 'coin' => '金币'])
 		// 	->setattr(['onchange' => 'g({require:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 		// 	->selected($require);
-		$table->bar->select(['' => '全部类型', 'notclassify' => '没有分类'] + base::video_type)
+		$table->bar->select(['' => 'All Type', 'notclassify' => '没有分类'] + static::video_type)
 			->setattr(['onchange' => 'g({type:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($type);
-		$table->bar->select(['' => '默认（入库降序）',
-			'ctime-desc' => '最后修改（降序）',
-			'view-desc' => '观看（降序）',
-			'like-desc' => '点赞（降序）',
-			'sales-desc' => '销量（降序）'])
+		$table->bar->select(['' => 'Into ▾',
+			'ctime-desc' => 'Change ▾',
+			'view-desc' => 'View ▴',
+			'like-desc' => 'Like ▾',
+			'sales-desc' => 'Sale ▾'])
 			->setattr(['onchange' => 'g({sort:this.value||null})', 'style' => 'margin-left:.6rem;padding:.1rem'])
 			->selected($sort);
 		// $table->bar->append('button', ['所有完成视频通过审核',
 		// 	'style' => 'margin-left:.6rem',
-		// 	'data-src' => '?control/video-all-finished-to-allow',
+		// 	'data-src' => '?console/video-all-finished-to-allow',
 		// 	'data-method' => 'patch',
 		// 	'data-bind' => 'click'
 		// ]);
-		$table->bar->append('button', ['清理异常',
+		$table->bar->append('button', ['Clear exception',
 			'style' => 'margin-left:.6rem',
-			'onclick' => 'location.href="?control/video-exception-clear"'
+			'onclick' => 'location.href="?console/video-exception-clear"'
 		]);
-		$table->bar->append('button', ['刷新前端专题影片缓存',
-			'data-src' => '?control/flush,data:subjectvideos',
+		$table->bar->append('button', ['Flush cache',
+			'data-src' => '?console/flush,data:subjectvideos',
 			'data-method' => 'patch',
 			'data-bind' => 'click',
 			'style' => 'margin-left:.6rem;padding:.1rem']);
@@ -1419,7 +1421,7 @@ class webapp_router_console extends webapp_echo_html
 	{
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js']);
-		$this->webapp->form_video($this->main, $hash)->xml['action'] .= ',goto:' . $this->webapp->url64_encode('?control/videos');
+		$this->webapp->form_video($this->main, $hash)->xml['action'] .= ',goto:' . $this->webapp->url64_encode('?console/videos');
 	}
 	function patch_video(string $hash, string $sync)
 	{
@@ -1540,13 +1542,13 @@ class webapp_router_console extends webapp_echo_html
 			$table->cell($prod[$value['vtid']] ?? '未知');
 			$table->cell([number_format($value['price']), 'style' => 'text-align:right']);
 			
-			$table->cell()->append('a', [$value['name'], 'href' => "?control/prod-update,hash:{$value['hash']}"]);
+			$table->cell()->append('a', [$value['name'], 'href' => "?console/prod-update,hash:{$value['hash']}"]);
 			$table->cell([number_format($value['sales']), 'style' => 'text-align:right']);
 			$table->cell([number_format($value['count']), 'style' => 'text-align:right']);
 			
 
 			$table->cell()->append('a', ['删除',
-				'href' => "?control/prod,hash:{$value['hash']}",
+				'href' => "?console/prod,hash:{$value['hash']}",
 				'data-method' => 'delete',
 				'data-bind' => 'click',
 				'data-dialog' => "删除 {$value['hash']} 确定？"
@@ -1557,7 +1559,7 @@ class webapp_router_console extends webapp_echo_html
 
 		$table->fieldset('创建时间', '修改时间', 'HASH', 'VTID', '单价（元）', '名称', '累计销量', '剩余数量', '删除');
 		$table->header('产品 %d 项', $table->count());
-		$table->bar->append('button', ['添加产品', 'onclick' => 'location.href="?control/prod-insert"']);
+		$table->bar->append('button', ['添加产品', 'onclick' => 'location.href="?console/prod-insert"']);
 
 	}
 	function delete_prod(string $hash)
@@ -1589,7 +1591,7 @@ class webapp_router_console extends webapp_echo_html
 				'sales' => 0,
 				'vtid' => $prod['vtid'] ? $prod['vtid'] : NULL] + $prod)
 			) {
-			$this->webapp->response_location('?control/prods');
+			$this->webapp->response_location('?console/prods');
 		}
 		else
 		{
@@ -1613,7 +1615,7 @@ class webapp_router_console extends webapp_echo_html
 		if ($this->form_prod()->fetch($prod) && $this->webapp->mysql->prods('WHERE hash=?s LIMIT 1', $hash)->update([
 			'ctime' => $this->webapp->time
 		] + $prod)) {
-			$this->webapp->response_location('?control/prods');
+			$this->webapp->response_location('?console/prods');
 		}
 		else
 		{
@@ -1663,20 +1665,20 @@ class webapp_router_console extends webapp_echo_html
 	// 	{
 	// 		$table->row();
 	// 		$table->cell()->append('a', ['删除',
-	// 			'href' => "?control/comment-simple,hash:{$value['hash']}",
+	// 			'href' => "?console/comment-simple,hash:{$value['hash']}",
 	// 			'style' => 'color:red',
 	// 			'data-dialog' => '删除后无法恢复',
 	// 			'data-method' => 'delete',
 	// 			'data-bind' => 'click']);
-	// 		$table->cell()->append('a', [$value['hash'], 'href' => "?control/comment,hash:{$value['hash']}"]);
-	// 		$table->cell()->append('a', [$value['userid'], 'href' => "?control/comments,userid:{$value['userid']}"]);
+	// 		$table->cell()->append('a', [$value['hash'], 'href' => "?console/comment,hash:{$value['hash']}"]);
+	// 		$table->cell()->append('a', [$value['userid'], 'href' => "?console/comments,userid:{$value['userid']}"]);
 	// 		$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 	// 		$table->cell(number_format($value['count']));
 	// 		$table->cell(number_format($value['view']));
 	// 		$table->cell()->append('a', [base::comment_type[$value['type']],
-	// 			'href' => "?control/comments,search:{$value['phash']}", 'target' => '_blank']);
+	// 			'href' => "?console/comments,search:{$value['phash']}", 'target' => '_blank']);
 	// 		$table->cell([$value['sort'],
-	// 			'data-src' => "?control/comment,hash:{$value['hash']}",
+	// 			'data-src' => "?console/comment,hash:{$value['hash']}",
 	// 			'data-method' => 'patch',
 	// 			'data-dialog' => '{"sort":"number"}',
 	// 			'data-value' => $value['sort'],
@@ -1687,13 +1689,13 @@ class webapp_router_console extends webapp_echo_html
 	// 		if ($value['check'] === 'pending')
 	// 		{
 	// 			$check->append('a', ['允许',
-	// 				'href' => "?control/comment,hash:{$value['hash']},field:check,value:allow",
+	// 				'href' => "?console/comment,hash:{$value['hash']},field:check,value:allow",
 	// 				'data-method' => 'patch',
 	// 				'data-bind' => 'click'
 	// 			]);
 	// 			$check->append('span', ' | ');
 	// 			$check->append('a', ['拒绝',
-	// 				'href' => "?control/comment,hash:{$value['hash']},field:check,value:deny",
+	// 				'href' => "?console/comment,hash:{$value['hash']},field:check,value:deny",
 	// 				'data-method' => 'patch',
 	// 				'data-bind' => 'click'
 	// 			]);
@@ -1742,7 +1744,7 @@ class webapp_router_console extends webapp_echo_html
 	// 	$table->fieldset('删除', 'HASH', '用户ID', '发布时间', '数量', '观看', '类型', '排序', '审核');
 	// 	$table->header('评论 %s 项', $table->count());
 	// 	$table->paging($this->webapp->at(['page' => '']));
-	// 	$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?control/comment_class"']);
+	// 	$table->bar->append('button', ['添加分类', 'onclick' => 'location.href="?console/comment_class"']);
 	// 	$table->bar->append('span', ['style' => 'margin-left:.6rem'])
 	// 		->select(['' => '全部分类'] + $this->webapp->select_topics())
 	// 		->setattr(['onchange' => 'g({phash:this.value||null})', 'style' => 'padding:.1rem'])->selected($phash);
@@ -1755,14 +1757,14 @@ class webapp_router_console extends webapp_echo_html
 
 	// 	$table->bar->append('button', ['删除该分类和话题以及所有帖子和评论',
 	// 		'style' => 'margin-left:.6rem',
-	// 		'data-src' => "?control/comment,hash:{$phash}",
+	// 		'data-src' => "?console/comment,hash:{$phash}",
 	// 		'data-method' => 'delete',
 	// 		'data-dialog' => '删除后不可恢复',
 	// 		'data-bind' => 'click'
 	// 	]);
 	// 	$table->bar->append('button', ['辅助UP主发布评论',
 	// 		'style' => 'margin-left:.6rem',
-	// 		'onclick' => 'location.href="?control/comment"'
+	// 		'onclick' => 'location.href="?console/comment"'
 	// 	]);
 	// }
 	// function post_comments(string $type)
@@ -1794,7 +1796,7 @@ class webapp_router_console extends webapp_echo_html
 	// 		'required' => NULL]);
 	// 	$form->field('phash', 'search', [
 	// 		'data-type' => 'reply',
-	// 		'data-action' => '?control/comments',
+	// 		'data-action' => '?console/comments',
 	// 		'placeholder' => '选择左边类型后输入关键字进行搜索选择',
 	// 		'oninput' => 'search_comment(this,this.parentElement.nextElementSibling)',
 	// 		'style' => 'width:24rem']);
@@ -1818,7 +1820,7 @@ class webapp_router_console extends webapp_echo_html
 	// 	]);
 	// 	$form->fieldset('视频');
 	// 	$form->field('video', 'search', [
-	// 		'data-action' => '?control/videos',
+	// 		'data-action' => '?console/videos',
 	// 		'placeholder' => '输入视频关键字进行搜索选择，勾选最多不超过100个视频',
 	// 		'oninput' => 'search_videos(this,this.parentElement.nextElementSibling.firstElementChild)',
 	// 		'style' => 'width:32rem']);
@@ -1944,7 +1946,7 @@ class webapp_router_console extends webapp_echo_html
 	// 			'check' => 'allow',
 	// 			'count' => 0,
 	// 			'content' => ''] + $data)) {
-	// 		$this->webapp->response_location('?control/comments');
+	// 		$this->webapp->response_location('?console/comments');
 	// 		return;
 	// 	}
 	// 	$this->main->append('h4', '话题发布失败！');
@@ -2011,7 +2013,7 @@ class webapp_router_console extends webapp_echo_html
 			$table->row();
 			$table->cell()->append('a', ['删除']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
-			$table->cell()->append('a', [$value['hash'], 'href' => "?control/channel,hash:{$value['hash']}"]);
+			$table->cell()->append('a', [$value['hash'], 'href' => "?console/channel,hash:{$value['hash']}"]);
 			$table->cell($value['type']);
 			$table->cell($value['rate']);
 			$table->cell($value['name']);
@@ -2020,7 +2022,7 @@ class webapp_router_console extends webapp_echo_html
 		}, $dpurl);
 		$table->fieldset('删除', '创建日期', '渠道ID', '类型', '比率', '名称', '地址', '落地页地址');
 		$table->header('渠道');
-		$table->bar->append('button', ['创建渠道', 'onclick' => 'location.href="?control/channel"']);
+		$table->bar->append('button', ['创建渠道', 'onclick' => 'location.href="?console/channel"']);
 	}
 	function form_channel(webapp_html $html = NULL):webapp_form
 	{
@@ -2159,15 +2161,15 @@ class webapp_router_console extends webapp_echo_html
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $value['time']));
 			$table->cell($value['hash']);
-			$table->cell()->append('a', [$value['userid'], 'href' => "?control/reports,search:{$value['userid']}"]);
-			$table->cell()->append('a', [$this->webapp->hexip($value['clientip']), 'href' => "?control/reports,clientip:{$value['clientip']}"]);
+			$table->cell()->append('a', [$value['userid'], 'href' => "?console/reports,search:{$value['userid']}"]);
+			$table->cell()->append('a', [$this->webapp->hexip($value['clientip']), 'href' => "?console/reports,clientip:{$value['clientip']}"]);
 
 			///$table->cell($value['promise']);
 			$cell = $table->cell();
 			if ($value['promise'] === 'pending')
 			{
 				$cell->append('a', ['解决',
-					'href' => "?control/report,promise:resolve,hash:{$value['hash']}",
+					'href' => "?console/report,promise:resolve,hash:{$value['hash']}",
 					'data-method' => 'patch',
 					'data-dialog' => '{"reply":"textarea"}',
 					'data-bind' => 'click']);
@@ -2175,7 +2177,7 @@ class webapp_router_console extends webapp_echo_html
 				$cell->append('span', ' | ');
 
 				$cell->append('a', ['拒绝',
-					'href' => "?control/report,promise:reject,hash:{$value['hash']}",
+					'href' => "?console/report,promise:reject,hash:{$value['hash']}",
 					'data-method' => 'patch',
 					'data-dialog' => '{"reply":"textarea"}',
 					'data-bind' => 'click']);
@@ -2266,7 +2268,7 @@ class webapp_router_console extends webapp_echo_html
 			$table->row();
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
 			$table->cell($value['hash']);
-			$table->cell()->append('a', [$value['userid'], 'href' => "?control/record-recharge,userid:{$value['userid']}"]);
+			$table->cell()->append('a', [$value['userid'], 'href' => "?console/record-recharge,userid:{$value['userid']}"]);
 			$table->cell($value['cid']);
 			$table->cell([number_format($value['fee']), 'style' => 'text-align:right']);
 			$table->cell($recordtype[$value['type']]);
@@ -2277,7 +2279,7 @@ class webapp_router_console extends webapp_echo_html
 				default => 'color:blue'
 			}]);
 			$table->cell()->append('a', ['回调记录',
-				'href' => "?control/record,hash:{$value['hash']},userid:{$value['userid']}",
+				'href' => "?console/record,hash:{$value['hash']},userid:{$value['userid']}",
 				'data-method' => 'patch',
 				'data-bind' => 'click',
 				'data-dialog' => '回调记录将纳入统计，确定回调记录？']);
@@ -2359,13 +2361,13 @@ class webapp_router_console extends webapp_echo_html
 			if ($value['result'] === 'pending')
 			{
 				$action->append('a', ['完成',
-					'href' => "?control/record-exchange-balance,hash:{$value['hash']},result:success",
+					'href' => "?console/record-exchange-balance,hash:{$value['hash']},result:success",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				]);
 				$action->append('span', ' | ');
 				$action->append('a', ['拒绝',
-					'href' => "?control/record-exchange-balance,hash:{$value['hash']},result:failure",
+					'href' => "?console/record-exchange-balance,hash:{$value['hash']},result:failure",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				]);
@@ -2430,13 +2432,13 @@ class webapp_router_console extends webapp_echo_html
 			if ($value['result'] === 'pending')
 			{
 				$action->append('a', ['允许提现',
-					'href' => "?control/record-exchange-game,hash:{$value['hash']},result:success",
+					'href' => "?console/record-exchange-game,hash:{$value['hash']},result:success",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				]);
 				$action->append('span', ' | ');
 				$action->append('a', ['退回分数',
-					'href' => "?control/record-exchange-game,hash:{$value['hash']},result:failure",
+					'href' => "?console/record-exchange-game,hash:{$value['hash']},result:failure",
 					'data-method' => 'patch',
 					'data-bind' => 'click'
 				]);

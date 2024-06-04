@@ -385,6 +385,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			'app_called'		=> FALSE,
 			'app_router'		=> 'webapp_router_',
 			'app_index'			=> 'home',
+			'app_help'			=> TRUE,
 			//Admin
 			'admin_username'	=> 'admin',
 			'admin_password'	=> 'nimda',
@@ -1129,38 +1130,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 		}
 		return 304;
 	}
-	function get_icons()
-	{
-		$this->app('webapp_echo_html')->title('Icons');
-		$this->app->xml->head->append('style')->cdata(<<<'CSS'
-main{
-	display: flex;
-	gap: .4rem;
-	flex-wrap: wrap;
-}
-main>a{
-	
-	display: flex;
-	align-items: center;
-}
-main>a:hover{
-	background-color: whitesmoke;
-}
-main>a>svg{
-	padding: .6rem;
-}
-main>a>span{
-	padding-right: .6rem;
-}
-CSS);
-		foreach (array_keys(webapp_svg::icons) as $name)
-		{
-			$anchor = $this->app->main->append('a', ['href' => 'javascript:;']);
-			$anchor->svg()->icon($name);
-			$anchor->append('span', $name);
-		}
-		$this->app->main['onclick'] = 'if(event.target instanceof HTMLSpanElement)navigator.clipboard.writeText(event.target.textContent)';
-	}
 	function get_manifests()
 	{
 		if ($this['manifests'])
@@ -1182,6 +1151,23 @@ CSS);
 			return 200;
 		}
 		return 304;
+	}
+	function get_help(string $method = 'index')
+	{
+		if ($this['app_help'] && class_exists('webapp_echo_help') === FALSE)
+		{
+			try
+			{
+				include 'ext/help/echo.php';
+				return $this->app('webapp_echo_help')->{$method}(...$this->query);
+			}
+			catch (Error)
+			{
+				unset($this->app);
+				return 500;
+			}
+		}
+		return 404;
 	}
 }
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Countable, Stringable

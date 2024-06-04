@@ -985,6 +985,13 @@ class base extends webapp
 			{
 				return isset($this[$hash]) && $this->redis->hIncrBy("videos:{$hash}", 'view', 1);
 			}
+			function actress()
+			{
+				
+				$this->root->extract('extdata');
+
+
+			}
 		};
 	}
 }

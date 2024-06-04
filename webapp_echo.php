@@ -150,10 +150,14 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	{
 		return array_is_list($this->getArrayCopy());
 	}
-	function error(string $error):void
+	function error(string|array $error):void
 	{
-		$this['errors'][] = $error;
+		$this['errors'][] = is_string($error)
+			? $this['error']['message'] = $error
+			: ($this['error'] = $error)['message'];
 	}
+
+
 	// function dialog(string|array $context, )
 	// {
 	// 	$this['dialog'] = $context;
@@ -167,6 +171,7 @@ class webapp_echo_html extends webapp_implementation
 {
 	use webapp_echo;
 	protected readonly array $auth;
+	protected NULL|string|webapp_html|webapp_echo_json $echo = NULL;
 	public readonly webapp_html $header, $aside, $main, $footer;
 	function __construct(public readonly webapp $webapp, callable $authenticate = NULL, string $storage = NULL)
 	{
@@ -241,6 +246,29 @@ JS;
 			$this->auth ??= [];
 		}
 	}
+	function __toString():string
+	{
+		return match (get_debug_type($this->echo))
+		{
+			'string' => $this->echo,
+			'webapp_html' => substr($this->document->saveHTML($this->echo->dom()), 10, -11),
+			'webapp_echo_json' => (string)$this->echo,
+			default => parent::__toString()
+		};
+	}
+	function echo(string $data):void
+	{
+		$this->webapp->response_content_type("text/plain; charset={$this->webapp['app_charset']}");
+		$this->echo = $data;
+	}
+	function json(array|object $data = []):webapp_echo_json
+	{
+		return $this->echo = $this->webapp->app('webapp_echo_json', $data);
+	}
+	// function template():webapp_html
+	// {
+	// 	return $this->echo = webapp_html::from($this->document->createElement('template'));
+	// }
 	function meta(array $attributes):webapp_html
 	{
 		return $this->xml->head->append('meta', $attributes);
@@ -492,7 +520,7 @@ class webapp_echo_masker extends webapp_echo_html
 			: 'Please upgrade system or device to continue');
 		return 200;
 	}
-	function json(array|object $data):webapp_echo_json
+	function json(array|object $data = []):webapp_echo_json
 	{
 		return $this->json = new webapp_echo_json($this->webapp, $data);
 	}

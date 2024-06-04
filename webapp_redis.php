@@ -387,6 +387,20 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 		}
 		return $content === NULL ? $this('GROUP BY ?a', $field)->select($field)->column($field) : $this->eval('?a=?s LIMIT 1', $field, $content)->fetch();
 	}
+	function extract(string $field)
+	{
+		foreach ($this->keys() as $key)
+		{
+		
+			
+			print_r($this->redis->hGet("{$this->tablename}:{$key}", $field));
+		}
+		//print_r( $this()->select($field)->column($field) );
+	}
+
+
+
+
 	function increment(string $primary, string $field, int $number = 1):bool
 	{
 		return is_int($this->redis->hIncrBy("{$this->tablename}:{$primary}", $field, $number))
