@@ -296,7 +296,7 @@ class webapp_router_console extends webapp_echo_html
 			'subjects' => $this->webapp->fetch_subjects->flush()->cache(),
 			'subjectvideos' => $this->webapp->get_subject_fetch('fore')
 		};
-		$this->json(['dialog' => '刷新完成！']);
+		$this->json(['dialog' => 'Finished']);
 	}
 	//========广告========
 	function ad_seats():array
