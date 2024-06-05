@@ -454,7 +454,7 @@ class webapp_router_console extends webapp_echo_html
 		if ($this->form_ad()->fetch($ad))
 		{
 			if (count($uploadedfile = $this->webapp->request_uploadedfile('ad'))
-				&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
+				&& $uploadedfile->move("{$this->webapp['ad_savedir']}/{$hash}")) {
 				$ad['change'] = 'sync';
 			}
 			else
