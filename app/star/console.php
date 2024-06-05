@@ -444,7 +444,7 @@ class webapp_router_console extends webapp_echo_html
 		{
 			$form = $this->form_ad($this->main);
 			$form->xml->fieldset->img['src'] = $ad['change'] === 'none'
-				? "{$this->webapp->origin}/news/{$ad['hash']}?{$value['ctime']}"
+				? "{$this->webapp->origin}/news/{$ad['hash']}?{$ad['ctime']}"
 				: '/webapp/res/ps/loading.svg';
 			$form->echo($ad);
 		}
