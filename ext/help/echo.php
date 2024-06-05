@@ -24,6 +24,7 @@ class webapp_echo_help extends webapp_echo_html
 				['Masker', '?help/index,class:webapp-echo-masker']
 			]],
 			['Mixed', [
+				['Request Uploadedfile', '?help/index,class:webapp-request-uploadedfile'],
 				['Client', '?help/index,class:webapp-client'],
 				['MySQL', '?help/index,class:webapp-mysql'],
 				['MySQL Table', '?help/index,class:webapp-mysql-table'],

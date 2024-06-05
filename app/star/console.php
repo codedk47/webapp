@@ -311,18 +311,18 @@ class webapp_router_console extends webapp_echo_html
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->fieldset->append('img', ['style' => 'width:32rem;height:18rem;object-fit:contain']);
 
-		$form->fieldset('广告图片 / 过期时间');
+		$form->fieldset('Picture / Expire');
 		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => 'image_preview(this,document.querySelector("form>fieldset>img"))']);
 		$form->field('expire', 'date', ['value' => date('Y-m-t')], fn($v, $i) => $i ? strtotime($v) : date('Y-m-d', $v));
 
-		$form->fieldset('展示位置 / 权重（越大越几率越大） / 名称');
+		$form->fieldset('Seat / Weight / Name');
 		$form->field('seat', 'select', ['options' => $this->ad_seats(), 'required' => NULL]);
 		$form->field('weight', 'number', ['min' => 0, 'max' => 255, 'value' => 1, 'required' => NULL]);
 		$form->field('name', 'text');
 
-		$form->fieldset('行为URL');
+		$form->fieldset('URL');
 		$form->field('acturl', 'text', [
-			'placeholder' => 'javascript 或者 url',
+			'placeholder' => 'JavaScript or URL',
 			'value' => 'javascript:;',
 			'maxlength' => 255,
 			'style' => 'width:40rem',
@@ -330,7 +330,7 @@ class webapp_router_console extends webapp_echo_html
 		]);
 
 		$form->fieldset();
-		$form->button('提交', 'submit');
+		$form->button('Submit', 'submit');
 
 		return $form;
 	}
@@ -351,8 +351,8 @@ class webapp_router_console extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->ads(...$conds)->paging($page), function($table, $value, $seats, $seat)
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell()->append('a', ['删除下面广告', 'href' => "?console/ad,seat:{$seat},hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
-			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?console/ad-update,hash:{$value['hash']}"]);
+			$table->cell()->append('a', ['Delete this AD', 'href' => "?console/ad,seat:{$seat},hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
+			$table->cell(['colspan' => 6])->append('a', ['Change this AD', 'href' => "?console/ad-update,hash:{$value['hash']}"]);
 
 			$table->row();
 			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])
@@ -363,26 +363,26 @@ class webapp_router_console extends webapp_echo_html
 			$table->row();
 			$table->cell('HASH');
 			$table->cell($value['hash']);
-			$table->cell('创建时间');
+			$table->cell('Create');
 			$table->cell(date('Y-m-d\\TH:i:s', $value['mtime']));
-			$table->cell('修改时间');
+			$table->cell('Change');
 			$table->cell(date('Y-m-d\\TH:i:s', $value['ctime']));
 
 			$table->row();
-			$table->cell('位置');
+			$table->cell('Seat');
 			$table->cell($seats[$value['seat']] ?? NULL);
-			$table->cell('展示权重');
+			$table->cell('Weight');
 			$table->cell($value['weight']);
-			$table->cell('过期时间');
+			$table->cell('Expire');
 			$table->cell([date('Y-m-d\\TH:i:s', $value['expire']),
 				'style' => $value['expire'] > $this->webapp->time ? 'color:green' : 'color:red']);
 
 			$table->row();
-			$table->cell('名称');
+			$table->cell('Name');
 			$table->cell($value['name']);
-			$table->cell('展示次数');
+			$table->cell('View');
 			$table->cell(number_format($value['view']));
-			$table->cell('点击次数');
+			$table->cell('Click');
 			$table->cell(number_format($value['click']));
 
 			$table->row();
@@ -423,19 +423,20 @@ class webapp_router_console extends webapp_echo_html
 				'view' => 0,
 				'click' => 0,
 				'change' => 'sync'] + $ad)
-			&& $uploadedfile->maskfile("{$this->webapp['ad_savedir']}/{$hash}")) {
-			$this->webapp->response_location('?console/ads');
+			&& $uploadedfile->move("{$this->webapp['ad_savedir']}/{$hash}")) {
+			$this->webapp->response_location("?console/ads,seat:{$ad['seat']}");
 		}
 		else
 		{
-			$this->main->append('h4', '广告插入失败！');
+			$this->main->append('h4', 'AD Insert failed!');
 		}
 	}
 	function delete_ad(string $hash, string $seat = NULL)
 	{
+		return $this->dialog('Not support delete');
 		$this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->delete() === 1
 			? $this->goto("/ads,seat:{$seat}")
-			: $this->dialog('广告删除失败！');
+			: $this->dialog('AD Delete failed!');
 	}
 	function get_ad_update(string $hash)
 	{
@@ -443,7 +444,7 @@ class webapp_router_console extends webapp_echo_html
 		{
 			$form = $this->form_ad($this->main);
 			$form->xml->fieldset->img['src'] = $ad['change'] === 'none'
-				? "?/news/{$ad['hash']}?mask{$ad['ctime']}"
+				? "/news/{$ad['hash']}"
 				: '/webapp/res/ps/loading.svg';
 			$form->echo($ad);
 		}
