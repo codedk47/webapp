@@ -358,7 +358,7 @@ class webapp_router_console extends webapp_echo_html
 			$table->cell(['rowspan' => 5, 'width' => '256', 'height' => '144', 'class' => 'cover'])
 				->append('img', ['loading' => 'lazy', 'src' => $value['change'] === 'sync'
 					? '/webapp/res/ps/loading.svg'
-					: "{$this->webapp->rorigin}/news/{$value['hash']}?{$value['ctime']}"]);
+					: "{$this->webapp->origin}/news/{$value['hash']}?{$value['ctime']}"]);
 
 			$table->row();
 			$table->cell('HASH');
@@ -444,7 +444,7 @@ class webapp_router_console extends webapp_echo_html
 		{
 			$form = $this->form_ad($this->main);
 			$form->xml->fieldset->img['src'] = $ad['change'] === 'none'
-				? "{$this->webapp->rorigin}/news/{$ad['hash']}?{$value['ctime']}"
+				? "{$this->webapp->origin}/news/{$ad['hash']}?{$value['ctime']}"
 				: '/webapp/res/ps/loading.svg';
 			$form->echo($ad);
 		}
