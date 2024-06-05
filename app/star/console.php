@@ -393,7 +393,7 @@ class webapp_router_console extends webapp_echo_html
 
 		}, $seats = $this->ad_seats(), $seat);
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('封面', '字段', '信息');
+		$table->fieldset(1, 2, 3);
 		$table->header('Found %d item', $table->count());
 		unset($table->xml->tbody->tr[0]);
 
@@ -463,13 +463,28 @@ class webapp_router_console extends webapp_echo_html
 			}
 			if ($this->webapp->mysql->ads('WHERE hash=?s LIMIT 1', $hash)->update($ad))
 			{
-				$this->webapp->response_location('?console/ads');
+				$this->webapp->response_location("?console/ads,seat:{$ad['seat']}");
 			}
 			return 200;
 		}
-		$this->main->append('h4', '广告更新失败！');
+		$this->main->append('h4', 'AD Update failed!');
 	}
 	//========标签========
+	const tags_level = [
+		0 => 'Classify',
+		1 => 'Globals',
+		2 => 'Pending',
+		3 => 'Extends',
+		4 => 'Append Trait',
+		5 => 'Role Types',
+		6 => 'Body Trait',
+		7 => 'Location',
+		8 => 'Clothing',
+		9 => 'Else mixed',
+		10 => 'Channels',
+		11 => 'Actors',
+		12 => 'Temporary'
+	];
 	function tag_types():array
 	{
 		return $this->webapp->mysql->tags('WHERE phash IS NULL ORDER BY sort DESC,hash ASC')->column('name', 'hash');
@@ -478,13 +493,13 @@ class webapp_router_console extends webapp_echo_html
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 
-		$form->fieldset('分类 / 标签名称（用 "," 间隔） / 排序（越大越靠前）');
-		$form->field('level', 'select', ['options' => base::tags_level, 'required' => NULL]);
+		$form->fieldset('Classify / Tagname（Use "," to separate） / Sort（Max to top）');
+		$form->field('level', 'select', ['options' => static::tags_level, 'required' => NULL]);
 		$form->field('name', 'text', ['style' => 'width:42rem', 'required' => NULL]);
 		$form->field('sort', 'number', ['min' => 0, 'max' => 255, 'value' => 0, 'required' => NULL]);
 
 		$form->fieldset();
-		$form->button('提交', 'submit');
+		$form->button('Submit', 'submit');
 		$form->xml['data-bind'] = 'submit';
 		return $form;
 	}
@@ -515,29 +530,29 @@ class webapp_router_console extends webapp_echo_html
 		$table = $this->main->table($this->webapp->mysql->tags(...$conds)->paging($page), function($table, $value)
 		{
 			$table->row();
-			$table->cell()->append('a', ['删除', 'href' => "?console/tag,hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
+			$table->cell()->append('a', ['Delete', 'href' => "?console/tag,hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['time']));
 			$table->cell($value['hash']);
 			$table->cell(number_format($value['click']));
-			$table->cell(base::tags_level[$value['level']]);
+			$table->cell(static::tags_level[$value['level']]);
 			$table->cell($value['sort']);
 			$table->cell()->append('a', [$value['name'], 'href' => "?console/tag,hash:{$value['hash']}"]);
 			
 		});
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->fieldset('删除', '创建时间', 'HASH', '点击', '类型', '排序', '名称');
-		$table->header('找到 %d 项', $table->count());
-		$table->bar->append('button', ['添加标签或分类', 'onclick' => 'location.href="?console/tag"']);
+		$table->fieldset('Delete', 'Create', 'HASH', 'Click', 'Type', 'Sort', 'Name');
+		$table->header('Found %d item', $table->count());
+		$table->bar->append('button', ['Append tag or classify', 'onclick' => 'location.href="?console/tag"']);
 
 		$table->bar->append('input', [
 			'type' => 'search',
 			'value' => $search,
 			'style' => 'margin-left:.6rem;padding:2px',
-			'placeholder' => '关键字【Enter】搜索',
+			'placeholder' => 'Type keyword',
 			'onkeydown' => 'event.keyCode==13&&g({search:this.value?urlencode(this.value):null,page:null})'
 		]);
 		$table->bar->append('span', ['style' => 'margin:0 .6rem'])
-			->select(['' => '全部类型'] + base::tags_level)
+			->select(['' => 'All Type'] + static::tags_level)
 			->setattr(['onchange' => 'g({level:this.value||null})', 'style' => 'padding:.1rem'])->selected($level);
 	}
 	function get_tag(string $hash = NULL)
