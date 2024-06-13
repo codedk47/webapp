@@ -572,8 +572,8 @@ class webapp_router_home extends webapp_echo_masker
 		$tags = explode(',', $video['tags']);
 		if (match ($this->webapp->request_country())
 		{
-			'US' => in_array('lqe2', $tags, TRUE),
-			'JP' => in_array('F2i7', $tags, TRUE),
+			'US', 'EU' => in_array('lqe2', $tags, TRUE),
+			'US', 'JP' => in_array('F2i7', $tags, TRUE),
 			default => FALSE
 		})
 		{
