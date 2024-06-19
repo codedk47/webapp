@@ -1,4 +1,8 @@
 <?php
+// nfs dir
+// nfs doc
+// European Union
+// get_access
 class webapp_ext_nfs_base extends webapp
 {
 	const

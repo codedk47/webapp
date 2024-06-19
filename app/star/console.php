@@ -17,7 +17,7 @@ class webapp_router_console extends webapp_echo_html
 		$this->nav([
 			['Home', '?console/home'],
 			['Ads', '?console/ads'],
-			['Tags', '?console/tags'],
+			//['Tags', '?console/tags'],
 			['Videos', '?console/videos'],
 			['Configs', '?console/configs'],
 			//['Reports', '?console/reports'],

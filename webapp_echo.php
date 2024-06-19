@@ -260,19 +260,19 @@ JS;
 			default => parent::__toString()
 		};
 	}
-	function echo(string $data):void
+	function echo(?string $data):void
 	{
-		$this->webapp->response_content_type("text/plain; charset={$this->webapp['app_charset']}");
+		$this->webapp->response_content_type(sprintf("text/%s; charset={$this->webapp['app_charset']}", $data === NULL ? 'html' : 'plain'));
 		$this->echo = $data;
 	}
 	function json(array|object $data = []):webapp_echo_json
 	{
 		return $this->echo = $this->webapp->app('webapp_echo_json', $data);
 	}
-	// function template():webapp_html
-	// {
-	// 	return $this->echo = webapp_html::from($this->document->createElement('template'));
-	// }
+	function frag():webapp_html
+	{
+		return $this->echo = webapp_html::from($this->document->createElement('template'));
+	}
 	function meta(array $attributes):webapp_html
 	{
 		return $this->xml->head->append('meta', $attributes);
