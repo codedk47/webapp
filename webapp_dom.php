@@ -727,11 +727,11 @@ class webapp_html extends webapp_xml
 	// {
 	// 	array_reduce(array_keys($values), fn($carry, $item) => "{$carry}{$values[$item]};", '')
 	// }
-	function labelinput(string $name, string $type, int|float|string $value, int|float|string $comment):static
+	function labelinput(string $name, string $type, int|float|string $value, int|float|string $comment = NULL):static
 	{
 		$node = $this->append('label');
 		$node->append('input', ['type' => $type, 'name' => $name, 'value' => $value]);
-		$node->text($comment);
+		is_string($comment) && $node->text($comment);
 		return $node;
 	}
 	

@@ -302,14 +302,29 @@ class base extends webapp
 		foreach ($this->mysql->videos('WHERE sync!="exception" && cover="change"') as $cover)
 		{
 			echo "{$cover['hash']} - ";
-			if (is_dir($syncdir = $this->path_video(TRUE, $cover)))
+			if (is_dir($syncdir = $this->path_video(TRUE, $cover)) || 1)
 			{
-				$savedir = $this->path_video(FALSE, $cover);
-				echo $this->maskfile("{$savedir}/cover.sb", "{$savedir}/cover")
-					&& copy("{$savedir}/cover.sb", "{$syncdir}/cover.sb")
-					&& copy("{$savedir}/cover", "{$syncdir}/cover")
-					&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $cover['hash'])->update([
-						'ctime' => $this->time(), 'cover' => 'finish']) === 1 ? "OK\n" : "NO\n";
+				$extdata = json_decode($cover['extdata'], TRUE);
+				if (isset($extdata['picture']))
+				{
+					if (copy("{$syncdir}/picture/{$extdata['picture']}", "{$syncdir}/cover.jpg"))
+					{
+						unset($extdata['picture']);
+						echo $this->mysql->videos('WHERE hash=?s LIMIT 1', $cover['hash'])->update([
+							'cover' => 'finish',
+							'extdata' => json_encode($extdata, JSON_UNESCAPED_UNICODE)
+						]) ? "OK\n" : "NO\n";
+					}
+				}
+				else
+				{
+					// $savedir = $this->path_video(FALSE, $cover);
+					// echo $this->maskfile("{$savedir}/cover.sb", "{$savedir}/cover")
+					// 	&& copy("{$savedir}/cover.sb", "{$syncdir}/cover.sb")
+					// 	&& copy("{$savedir}/cover", "{$syncdir}/cover")
+					// 	&& $this->mysql->videos('WHERE hash=?s LIMIT 1', $cover['hash'])->update([
+					// 		'ctime' => $this->time(), 'cover' => 'finish']) === 1 ? "OK\n" : "NO\n";
+				}
 				continue;
 			}
 			echo "WAITING\n";

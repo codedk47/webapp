@@ -784,7 +784,7 @@ class webapp_router_console extends webapp_echo_html
 			$table->cell('Name');
 			$title = $table->cell(['colspan' => 7, 'class' => 'name'])->append('a', [htmlentities($value['name']), 'href' => "javascript:;"]);
 
-			if (in_array($value['sync'], ['finished', 'allow', 'deny'] ,TRUE))
+			if ($value['cover'] === 'finish' && in_array($value['sync'], ['finished', 'allow', 'deny'] ,TRUE))
 			{
 				$cover->append('img', [
 					'loading' => 'lazy',
@@ -883,7 +883,11 @@ class webapp_router_console extends webapp_echo_html
 			'oncanplay' => 'this.firstElementChild.style.objectFit=this.height>this.width?"contain":"cover"',
 			'style' => 'width:600px;height:320px'
 		]);
-		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
+
+		$picture = $form->fieldset()->append('div', ['class' => 'picture']);
+		//$form->field('picture', 'radio');
+
+		//$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
 
 		//$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
 		// $change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
@@ -966,40 +970,56 @@ class webapp_router_console extends webapp_echo_html
 				: '/webapp/res/ps/loading.svg';
 			$play['data-m3u8'] = "{$this->webapp->origin}/{$ym}/{$video['hash']}/play.m3u8";
 
-
+			$url = "{$this->webapp->origin}/{$ym}/{$video['hash']}/picture";
+			$res = $this->webapp->open("{$url}/index.txt");
+			if ($res->status() === 200)
+			{
+				$pics = array_filter(explode("\n", $res->content()), fn($v) => strpos($v, '.jpg'));
+				if (count($pics) > 2)
+				{
+					$pics = array_slice($pics, 1, -1);
+				}
+				foreach ($pics as $pic)
+				{
+					$picture->labelinput('picture', 'radio', $pic)->append('img', ['src' => "{$url}/{$pic}"]);
+				}
+			}
 
 			$form->echo($video['extdata'] ? $video + json_decode($video['extdata'], TRUE) : $video);
 			$form->xml->append('script', 'document.querySelectorAll("ul.restag>li>label").forEach(label=>(label.onclick=()=>label.className=label.firstElementChild.checked?"checked":"")());');
 		}
 		return $form;
-
-
-
-		
-
-		$form->xml['method'] = 'patch';
-		$form->xml['onsubmit'] = 'return video_value(this)';
-		if ($form->echo && $hash && $this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->fetch($video))
+	}
+	function post_video(string $hash)
+	{
+		if ($this->form_video()->fetch($video, $error))
 		{
-			$form->xml['action'] .= $this->encrypt($video['hash']);
-			$ym = date('ym', $video['mtime']);
-			$play['data-poster'] = $video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE)
-				? "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}"
-				: '/webapp/res/ps/loading.svg';
-			$play['data-m3u8'] = "?/{$ym}/{$video['hash']}/play?mask{$video['ctime']}";
-
-			// $cover['src'] = $video['cover'] === 'finish' && in_array($video['sync'], ['finished','allow','deny'], TRUE)
-			// 	? "?/{$ym}/{$video['hash']}/cover?mask{$video['ctime']}"
-			// 	: '/webapp/res/ps/loading.svg';
-			$video['preview_start'] = $video['preview'] >> 16 & 0xffff;
-			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
-			//$change['data-uploadurl'] = "?video-cover/{$hash}";
-			//$change['data-key'] = bin2hex($this->random(8));
-
-
-			$form->echo($video['extdata'] ? $video + json_decode($video['extdata'], TRUE) : $video);
+			$updata = [
+				'name' => $video['name'],
+				'tags' => $video['tags'],
+				'extdata' => [
+					'issue' => $video['issue'],
+					'actor' => $video['actor'],
+					'publisher' => $video['publisher'],
+					'director' => $video['director'],
+					'series' => $video['series'],
+					'actress' => $video['actress']
+				]
+			];
+			$picture = $this->webapp->request_content()['picture'] ?? NULL;
+			if ($picture)
+			{
+				$updata['extdata']['picture'] = $picture;
+				$updata['cover'] = 'change';
+			}
+			$updata['extdata'] = json_encode($updata['extdata'], JSON_UNESCAPED_UNICODE);
+			if ($this->webapp->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update($updata))
+			{
+				$this->webapp->response_location('?console/videos');
+				return 200;
+			}
+			$this->main->append('h4', 'Video Update failed!');
 		}
-		return $form;
 	}
 	function get_video(string $hash)
 	{
