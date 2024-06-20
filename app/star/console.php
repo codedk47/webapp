@@ -788,7 +788,7 @@ class webapp_router_console extends webapp_echo_html
 			{
 				$cover->append('img', [
 					'loading' => 'lazy',
-					'src' => $cover = "{$origin}/{$ym}/{$value['hash']}/cover.jpg",
+					'src' => $cover = "{$origin}/{$ym}/{$value['hash']}/cover.jpg?{$value['ctime']}",
 					'id' => "v{$value['hash']}",
 					'data-cover' => $cover,
 					'data-playm3u8' => "{$origin}/{$ym}/{$value['hash']}/play.m3u8",
