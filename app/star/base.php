@@ -311,6 +311,7 @@ class base extends webapp
 					{
 						unset($extdata['picture']);
 						echo $this->mysql->videos('WHERE hash=?s LIMIT 1', $cover['hash'])->update([
+							'ctime' => $this->time(),
 							'cover' => 'finish',
 							'extdata' => json_encode($extdata, JSON_UNESCAPED_UNICODE)
 						]) ? "OK\n" : "NO\n";
