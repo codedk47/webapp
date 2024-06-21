@@ -71,7 +71,7 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 			$anchor = $element->append('a', [
 				'href' => "?news/watch,hash:{$video['hash']}",
 				'data-preview' => "{$path}/preview.mp4"]);
-			$anchor->figure("{$path}/cover.jpg");
+			$anchor->figure("{$path}/cover.jpg?{$video['ctime']}");
 			$anchor->append('strong', $video['name']);
 		}
 		if ($pagination && ($max = ceil($videos->count() / $count)) > 1)
