@@ -116,6 +116,11 @@ main.watch>div.player>webapp-video>video{
 	position: absolute;
 	inset: 0;
 }
+main.watch>div.player>strong{
+	display: block;
+	text-align: center;
+	padding: 9rem 0;
+}
 div.videoinfo{
 	display: flex;
 	gap: var(--webapp-gap);
