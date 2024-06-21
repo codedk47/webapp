@@ -120,6 +120,8 @@ main.watch>div.player>strong{
 	display: block;
 	text-align: center;
 	padding: 9rem 0;
+	background-color: black;
+	color: white;
 }
 div.videoinfo{
 	display: flex;

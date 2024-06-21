@@ -7,7 +7,7 @@ class webapp_router_news extends webapp_echo_html
 		parent::__construct($webapp);
 		
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
-		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=c1';
+		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=v2';
 		$this->xml->head->link[1]['type'] = 'image/jpeg';
 		$this->xml->head->link[1]['href'] = '/star/logo.jpg';
 
@@ -139,14 +139,15 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		$player = $this->main->append('div', ['class' => 'player']);
 		if ($video = $this->webapp->fetch_videos[$hash])
 		{
-			if (in_array($this->webapp->request_country(), ['US', 'CA', 'UK', 'EU', 'AU'], TRUE))
+			$cover = $this->webapp->origin . substr($video['poster'], 1, 24) . '.jpg';
+			if (in_array($this->webapp->request_country(), ['US', 'CA', 'UK', 'EU', 'AU'], TRUE) || 1)
 			{
 				$player->append('strong', 'Sorry, this video is not available in your region temporarily.');
 			}
 			else
 			{
 				$watch = $player->append('webapp-video', [
-					'data-poster' => $cover = $this->webapp->origin . substr($video['poster'], 1, 24) . '.jpg',
+					'data-poster' => $cover,
 					'data-m3u8' => $this->webapp->origin . substr($video['m3u8'], 1, 23) . '.m3u8',
 					'oncanplay' => 'console.log(this)',
 					//'autoheight' => NULL,
@@ -154,49 +155,50 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 					//'muted' => NULL,
 					'controls' => NULL
 				]);
-				$videoinfo = $player->append('div', ['class' => 'videoinfo']);
-				$videoinfo->append('strong', $video['name']);
-				$tags = [];
-				if ($video['tags'])
+			}
+			$videoinfo = $player->append('div', ['class' => 'videoinfo']);
+			$videoinfo->append('strong', $video['name']);
+			$tags = [];
+			if ($video['tags'])
+			{
+				$taginfo = $videoinfo->append('div', ['data-label' => 'Label:']);
+				foreach (explode(',', $video['tags']) as $tag)
 				{
-					$taginfo = $videoinfo->append('div', ['data-label' => 'Label:']);
-					foreach (explode(',', $video['tags']) as $tag)
+					if ($tag != 'lqe2' && isset($this->tags[$tag]))
 					{
-						if ($tag != 'lqe2' && isset($this->tags[$tag]))
-						{
-							$tags[$tag] = $this->tags[$tag];
-							$taginfo->append('a', [$this->tags[$tag], 'href' => 'javascript:;']);
-						}
-						
+						$tags[$tag] = $this->tags[$tag];
+						$taginfo->append('a', [$this->tags[$tag], 'href' => 'javascript:;']);
+					}
+					
+				}
+			}
+			$this->add_meta_seo(sprintf("%s - {$this->webapp['iphone_webcilp']['label']}", strtr($video['name'], '.', ' ')),
+				join(' ', array_values($tags)), image: $cover);
+			//影片信息（扩展数据）
+			if ($video['extdata'])
+			{
+				$extdata = array_filter(json_decode($video['extdata'], TRUE), trim(...));
+				isset($extdata['issue']) && $videoinfo->append('div', [$extdata['issue'], 'data-label' => 'Issue:']);
+	
+				isset($extdata['actor']) && $videoinfo->append('div', ['data-label' => 'Actor:'])
+					->append('a', [$extdata['actor'], 'href' => 'javascript:;']);
+				isset($extdata['publisher']) && $videoinfo->append('div', ['data-label' => 'Publisher:'])
+					->append('a', [$extdata['publisher'], 'href' => 'javascript:;']);
+				isset($extdata['director']) && $videoinfo->append('div', ['data-label' => 'Director:'])
+					->append('a', [$extdata['director'], 'href' => 'javascript:;']);
+				isset($extdata['series']) && $videoinfo->append('div', ['data-label' => 'Series:'])
+					->append('a', [$extdata['series'], 'href' => 'javascript:;']);
+	
+				if (isset($extdata['actress']))
+				{
+					$extinfo = $videoinfo->append('div', ['data-label' => 'Actress:']);
+					foreach (explode(',', $extdata['actress']) as $actress)
+					{
+						$extinfo->append('a', [$actress, 'href' => 'javascript:;']);
 					}
 				}
-				$this->add_meta_seo(sprintf("%s - {$this->webapp['iphone_webcilp']['label']}", strtr($video['name'], '.', ' ')),
-					join(' ', array_values($tags)), image: $cover);
-				//影片信息（扩展数据）
-				if ($video['extdata'])
-				{
-					$extdata = array_filter(json_decode($video['extdata'], TRUE), trim(...));
-					isset($extdata['issue']) && $videoinfo->append('div', [$extdata['issue'], 'data-label' => 'Issue:']);
-	
-					isset($extdata['actor']) && $videoinfo->append('div', ['data-label' => 'Actor:'])
-						->append('a', [$extdata['actor'], 'href' => 'javascript:;']);
-					isset($extdata['publisher']) && $videoinfo->append('div', ['data-label' => 'Publisher:'])
-						->append('a', [$extdata['publisher'], 'href' => 'javascript:;']);
-					isset($extdata['director']) && $videoinfo->append('div', ['data-label' => 'Director:'])
-						->append('a', [$extdata['director'], 'href' => 'javascript:;']);
-					isset($extdata['series']) && $videoinfo->append('div', ['data-label' => 'Series:'])
-						->append('a', [$extdata['series'], 'href' => 'javascript:;']);
-	
-					if (isset($extdata['actress']))
-					{
-						$extinfo = $videoinfo->append('div', ['data-label' => 'Actress:']);
-						foreach (explode(',', $extdata['actress']) as $actress)
-						{
-							$extinfo->append('a', [$actress, 'href' => 'javascript:;']);
-						}
-					}
-				}	
-			}
+			}	
+			
 		}
 		else
 		{
