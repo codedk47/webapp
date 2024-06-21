@@ -67,11 +67,10 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		$element = $node->append('div', ['class' => 'videos']);
 		foreach ($pagination ? $videos->paging($index, $count) : $videos as $video)
 		{
-			$path = $this->webapp->origin . substr($video['poster'], 1, 18);
 			$anchor = $element->append('a', [
 				'href' => "?news/watch,hash:{$video['hash']}",
-				'data-preview' => "{$path}/preview.mp4"]);
-			$anchor->figure("{$path}/cover.jpg?{$video['ctime']}");
+				'data-preview' => $this->webapp->origin . substr($video['poster'], 1, 18) . '/preview.mp4']);
+			$anchor->figure($this->webapp->origin . str_replace('?mask', '.jpg?', substr($video['poster'], 1)));
 			$anchor->append('strong', $video['name']);
 		}
 		if ($pagination && ($max = ceil($videos->count() / $count)) > 1)
