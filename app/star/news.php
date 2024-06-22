@@ -140,7 +140,7 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		if ($video = $this->webapp->fetch_videos[$hash])
 		{
 			$cover = $this->webapp->origin . substr($video['poster'], 1, 24) . '.jpg';
-			if (in_array($this->webapp->request_country(), ['US', 'CA', 'UK', 'EU', 'AU'], TRUE))
+			if (in_array($this->webapp->request_country(), ['US', 'CA', 'UK', 'NL', 'AU'], TRUE))
 			{
 				$player->append('strong', 'Sorry, this video is not available in your region temporarily.');
 			}

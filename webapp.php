@@ -377,7 +377,7 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	{
 		[$this->webapp, $this->configs] = [$this, $config + [
 			//Request
-			'request_method'	=> in_array($method = strtolower($io->request_method()), ['get', 'post', 'put', 'patch', 'delete', 'options'], TRUE) ? $method : 'get',
+			'request_method'	=> in_array($method = strtolower($io->request_method()), ['cli', 'get', 'post', 'put', 'patch', 'delete', 'options'], TRUE) ? $method : 'get',
 			'request_query'		=> $io->request_query(),
 			//Application
 			'app_hostname'		=> 'localhost',
