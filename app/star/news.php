@@ -140,8 +140,33 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		if ($video = $this->webapp->fetch_videos[$hash])
 		{
 			$cover = $this->webapp->origin . substr($video['poster'], 1, 24) . '.jpg';
-			if (in_array($this->webapp->request_country(), ['US', 'CA', 'UK', 'NL', 'AU'], TRUE))
-			{
+			if (in_array($this->webapp->request_country(), [
+				//北美
+				'CA',	//加拿大
+				'US',	//美国
+				//欧洲
+				'AT',	//奥地利
+				'BE',	//比利时
+				'CZ',	//捷克共和国
+				'DK',	//丹麦
+				'FI',	//芬兰
+				'FR',	//法国
+				'DE',	//德国
+				'IE',	//爱尔兰
+				'IT',	//意大利
+				'NL',	//荷兰
+				'NO',	//挪威
+				'PL',	//波兰
+				'PT',	//葡萄牙
+				'SK',	//斯洛伐克
+				'ES',	//西班牙
+				'SE',	//瑞典
+				'CH',	//瑞士
+				'GB',	//英国
+				//亚太
+				'AU',	//澳大利亚
+				'JP'	//日本
+			], TRUE)) {
 				$player->append('strong', 'Sorry, this video is not available in your region temporarily.');
 			}
 			else
