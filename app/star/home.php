@@ -572,8 +572,12 @@ class webapp_router_home extends webapp_echo_masker
 		$tags = explode(',', $video['tags']);
 		if (match ($this->webapp->request_country())
 		{
-			'US', 'CA', 'UK', 'AU' => in_array('lqe2', $tags, TRUE) || in_array('F2i7', $tags, TRUE),
-			'EU' => in_array('lqe2', $tags, TRUE),
+			//美国、加拿大、澳大利亚
+			'US', 'CA', 'AU' => in_array('lqe2', $tags, TRUE) || in_array('F2i7', $tags, TRUE),
+			//欧洲
+			'AT', 'BE', 'CZ', 'DK', 'FI', 'FR', 'DE', 'IE', 'IT', 'NL', 'NO',
+			'PL', 'PT', 'SK', 'ES', 'SE', 'CH', 'GB' => in_array('lqe2', $tags, TRUE),
+			//日本
 			'JP' => in_array('F2i7', $tags, TRUE),
 			default => FALSE
 		})
