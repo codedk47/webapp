@@ -129,10 +129,6 @@ class base extends webapp
 			if ($res->status() === 200)
 			{
 				$pics = array_filter(explode("\n", $res->content()), fn($v) => strpos($v, '.jpg'));
-				if (count($pics) > 2)
-				{
-					$pics = array_slice($pics, 1, -1);
-				}
 				foreach ($pics as $pic)
 				{
 					$picture->labelinput('picture', 'radio', $pic)->append('img', ['src' => "{$url}/{$pic}"]);
