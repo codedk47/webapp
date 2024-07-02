@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+#[\AllowDynamicProperties]
 class webapp_mysql extends mysqli implements IteratorAggregate
 {
 	public array $errors = [];

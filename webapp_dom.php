@@ -4,7 +4,8 @@ class webapp_xml extends SimpleXMLElement
 {
 	function webapp():?webapp
 	{
-		return $this->dom()->ownerDocument->webapp ?? NULL;
+		return webapp_implementation::$hooks[$this->dom()->ownerDocument] ?? NULL;
+		//return $this->dom()->ownerDocument->webapp ?? NULL;
 	}
 	function dom():DOMNode
 	{
@@ -919,16 +920,18 @@ class webapp_html extends webapp_xml
 }
 class webapp_implementation extends DOMImplementation implements Stringable
 {
+	static WeakMap $hooks;
 	public readonly webapp $webapp;
 	public readonly DOMDocument $document;
 	public webapp_xml $xml;
 	function __construct(string $type = 'html', string ...$params)
 	{
+		self::$hooks ??= new WeakMap;
 		$this(($this->document = $this->createDocument(qualifiedName: $type, doctype: $type === 'html'
 			|| $params ? $this->createDocumentType($type, ...$params) : NULL)) !== FALSE);
 		if (isset($this->webapp))
 		{
-			$this->document->webapp = &$this->webapp;
+			self::$hooks[$this->document] = $this->webapp;
 			$this->document->encoding = $this->webapp['app_charset'];
 		}
 	}
@@ -1265,7 +1268,7 @@ class webapp_form implements ArrayAccess
 	// 	return $form();
 	// }
 }
-class webapp_table implements Countable
+class webapp_table extends stdClass implements Countable
 {
 	public readonly array $paging;
 	public readonly webapp_html $xml, $tbody;

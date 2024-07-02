@@ -25,7 +25,7 @@ interface webapp_io
 	function response_content(string $data):bool;
 	function response_sendfile(string $filename):bool;
 }
-abstract class webapp implements ArrayAccess, Stringable, Countable
+abstract class webapp extends stdClass implements ArrayAccess, Stringable, Countable
 {
 	const version = '4.7.1a', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
 	public readonly self $webapp;
@@ -380,7 +380,6 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			'request_method'	=> in_array($method = strtolower($io->request_method()), ['cli', 'get', 'post', 'put', 'patch', 'delete', 'options'], TRUE) ? $method : 'get',
 			'request_query'		=> $io->request_query(),
 			//Application
-			'app_hostname'		=> 'localhost',
 			'app_charset'		=> 'utf-8',
 			'app_called'		=> FALSE,
 			'app_router'		=> 'webapp_router_',
@@ -399,7 +398,8 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 			'mysql_maptable'	=> 'webapp_maptable_',
 			'mysql_charset'		=> 'utf8mb4',
 			//Redis
-			
+			'redis_open'		=> ['127.0.0.1', 6379],
+			'redis_auth'		=> [],
 			//Captcha
 			'captcha_length'	=> 4,
 			'captcha_expire'	=> 99,
@@ -706,7 +706,9 @@ abstract class webapp implements ArrayAccess, Stringable, Countable
 	}
 	function redis():webapp_redis
 	{
-		return $this(new webapp_redis($this));
+		$redis = new webapp_redis($this, ...$this['redis_open']);
+		$this['redis_auth'] && $redis->auth($this['redis_auth']);
+		return $this($redis);
 	}
 	function locale():array
 	{

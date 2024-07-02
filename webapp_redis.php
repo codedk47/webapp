@@ -3,9 +3,9 @@ declare(strict_types=1);
 class webapp_redis extends Redis
 {
 	public array $errors = [];
-	function __construct(public readonly webapp $webapp)
+	function __construct(public readonly webapp $webapp, ...$open)
 	{
-		$this->pconnect('127.0.0.1', $post = 6379);
+		$this->pconnect(...$open ? $open : ['127.0.0.1', 6379]);
 	}
 	function clear(string|webapp_redis_table $table = NULL):void
 	{

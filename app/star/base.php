@@ -24,7 +24,8 @@ class base extends webapp
 			'oncanplay' => 'this.firstElementChild.style.objectFit=this.height>this.width?"contain":"cover"',
 			'style' => 'width:600px;height:320px'
 		]);
-		$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
+		$picture = $form->fieldset()->append('div', ['class' => 'picture']);
+		//$change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*']);
 
 		//$cover = $form->fieldset->append('img', ['style' => 'width:512px;height:288px']);
 		// $change = $form->fieldset()->append('input', ['type' => 'file', 'accept' => 'image/*',
@@ -120,6 +121,23 @@ class base extends webapp
 			$video['preview_end'] = ($video['preview'] & 0xffff) + $video['preview_start'];
 			//$change['data-uploadurl'] = "?video-cover/{$hash}";
 			//$change['data-key'] = bin2hex($this->random(8));
+
+
+			$origin = strstr($this->webapp['app_resources'][0], '/robots.txt', TRUE);
+			$url = "{$origin}/{$ym}/{$video['hash']}/picture";
+			$res = $this->webapp->open("{$url}/index.txt");
+			if ($res->status() === 200)
+			{
+				$pics = array_filter(explode("\n", $res->content()), fn($v) => strpos($v, '.jpg'));
+				if (count($pics) > 2)
+				{
+					$pics = array_slice($pics, 1, -1);
+				}
+				foreach ($pics as $pic)
+				{
+					$picture->labelinput('picture', 'radio', $pic)->append('img', ['src' => "{$url}/{$pic}"]);
+				}
+			}
 
 
 			$form->echo($video['extdata'] ? $video + json_decode($video['extdata'], TRUE) : $video);
@@ -237,6 +255,12 @@ class base extends webapp
 					$extdata[$field] = $extvalue;
 				}
 				unset($video[$field]);
+			}
+			$picture = $this->webapp->request_content()['picture'] ?? NULL;
+			if ($picture)
+			{
+				$extdata['picture'] = $picture;
+				$video['cover'] = 'change';
 			}
 			$video['extdata'] = $extdata ? json_encode($extdata, JSON_UNESCAPED_UNICODE) : NULL;
 			if ($this->mysql->videos('WHERE hash=?s LIMIT 1', $hash)->update($video) === 1)

@@ -31,9 +31,7 @@ class webapp_client implements Stringable, Countable
 		$this->ssl = $options['ssl'] ?? [
 			'verify_peer' => FALSE,
 			'verify_peer_name' => FALSE,
-			'allow_self_signed' => TRUE,
-			'security_level' => 2#cloudflare tls fingerprinting with need least level 2
-		];
+			'allow_self_signed' => TRUE];
 		$this->reconnect();
 	}
 	function __destruct()
@@ -735,6 +733,37 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 			return $result;
 		}
 		return ["tcp://127.0.0.1:{$port}", '127.0.0.1', '/'];
+	}
+
+	static function chrome(string $url):static
+	{
+		return new static($url, [
+			'autoretry' => 4,
+			'autojump' => 4,
+			'ssl' => [
+				'verify_peer' => FALSE,
+				'verify_peer_name' => FALSE,
+				'allow_self_signed' => TRUE,
+				'disable_compression' => TRUE,
+				'ciphers' => 'AES256,AES',
+				'security_level' => 3#cloudflare tls fingerprinting with need least level 2
+			],
+			'headers' => [
+				'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+				'Accept-Encoding' => 'gzip,deflate',
+				'Accept-Language' => 'zh-CN,zh;q=0.9,en;q=0.8',
+				'Connection' => 'keep-alive',
+				'Sec-Ch-Ua' => '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
+				'Sec-Ch-Ua-Mobile' => '?0',
+				'Sec-Ch-Ua-Platform' => '"Windows"',
+				'Sec-Fetch-Dest' => 'document',
+				'Sec-Fetch-Mode' => 'navigate',
+				'Sec-Fetch-Site' => 'none',
+				'Sec-Fetch-User' => '?1',
+				'Upgrade-Insecure-Requests' => '1',
+				'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
+			]
+		]);
 	}
 }
 class webapp_client_websocket extends webapp_client_http

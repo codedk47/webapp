@@ -2,6 +2,7 @@
 declare(strict_types=1);
 trait webapp_echo
 {
+	public array $errors = [];
 	public readonly webapp $webapp;
 	abstract function __construct(webapp $webapp);
 	abstract function __toString():string;
