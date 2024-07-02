@@ -334,6 +334,7 @@ class base extends webapp
 					if (copy("{$syncdir}/picture/{$extdata['picture']}", "{$syncdir}/cover.jpg"))
 					{
 						unset($extdata['picture']);
+						is_file("{$syncdir}/cover") && $this->maskfile("{$syncdir}/cover.jpg", "{$syncdir}/cover");
 						echo $this->mysql->videos('WHERE hash=?s LIMIT 1', $cover['hash'])->update([
 							'ctime' => $this->time(),
 							'cover' => 'finish',
