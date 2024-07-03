@@ -286,40 +286,40 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 			});
 			$anchor->append('strong', $content['name']);
 		}
-		// if ($pagination && ($max = ceil($videos->count() / $count)) > 1)
-		// {
-		// 	$index = max(1, $index);
-		// 	$url = $this->webapp->at(['page' => '']);
-		// 	$page = $node->append('div', ['class' => 'pages']);
-		// 	$show = 4;
-		// 	if ($max > $show)
-		// 	{
-		// 		$halved = intval($show * 0.5);
-		// 		$offset = min($max, max($index, $halved) + $halved);
-		// 		$ranges = range(max(1, $offset - $halved * 2 + 1), $offset);
-		// 		$index > 1 && $page->append('a', ['Top', 'href' => "{$url}1"]);
-		// 		foreach ($ranges as $i)
-		// 		{
-		// 			$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
-		// 			if ($i == $index)
-		// 			{
-		// 				$curr['class'] = 'selected';
-		// 			}
-		// 		}
-		// 		$index < $max && $page->append('a', ['End', 'href' => $url . $max]);
-		// 	}
-		// 	else
-		// 	{
-		// 		for ($i = 1; $i <= $max; ++$i)
-		// 		{
-		// 			$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
-		// 			if ($i === $index)
-		// 			{
-		// 				$curr['class'] = 'selected';
-		// 			}
-		// 		}
-		// 	}
-		// }
+		if ($pagination && ($max = ceil($item->count() / $count)) > 1)
+		{
+			$index = max(1, $index);
+			$url = $this->webapp->at(['page' => '']);
+			$page = $node->append('div', ['class' => 'pages']);
+			$show = 4;
+			if ($max > $show)
+			{
+				$halved = intval($show * 0.5);
+				$offset = min($max, max($index, $halved) + $halved);
+				$ranges = range(max(1, $offset - $halved * 2 + 1), $offset);
+				$index > 1 && $page->append('a', ['Top', 'href' => "{$url}1"]);
+				foreach ($ranges as $i)
+				{
+					$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
+					if ($i == $index)
+					{
+						$curr['class'] = 'selected';
+					}
+				}
+				$index < $max && $page->append('a', ['End', 'href' => $url . $max]);
+			}
+			else
+			{
+				for ($i = 1; $i <= $max; ++$i)
+				{
+					$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
+					if ($i === $index)
+					{
+						$curr['class'] = 'selected';
+					}
+				}
+			}
+		}
 
 
 		return $element;
