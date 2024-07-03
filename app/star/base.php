@@ -923,6 +923,7 @@ class base extends webapp
 				return [
 					'hash' => $data['hash'],
 					'name' => $data['name'],
+					'type' => $data['type'],
 					'style' => $data['style'],
 					'videos' => is_numeric($data['videos'])
 						? join($this->webapp->fetch_videos->with('FIND_IN_SET(?s,subjects)', $data['hash'])->keys(intval($data['videos'])))
@@ -932,6 +933,11 @@ class base extends webapp
 			{
 				return is_array($this[$subject]) ? $this->webapp->fetch_videos
 					->with('FIND_IN_SET(?s,subjects)', $subject)->cache()->paging($page) : new EmptyIterator;
+			}
+			function item(string $subject):iterable
+			{
+				return is_array($this[$subject]) ? $this->webapp->fetch_videos
+					->with('FIND_IN_SET(?s,subjects)', $subject)->cache() : new EmptyIterator;
 			}
 		};
 	}

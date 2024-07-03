@@ -382,8 +382,20 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	{
 		$result = $this->getIterator()->getIterator();
 		$fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
-		$result->paging = $this->paging;
-		return $result;
+		return new class($result, $this->paging) implements IteratorAggregate
+		{
+			function __construct(private readonly mysqli_result $result, public readonly array $paging)
+			{
+			}
+			function getIterator():mysqli_result
+			{
+				return $this->result;
+			}
+		};
+		// $result = $this->getIterator()->getIterator();
+		// $fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
+		// $result->paging = $this->paging;
+		// return $result;
 	}
 	// function result(array|string $fields = '*'):mysqli_result
 	// {

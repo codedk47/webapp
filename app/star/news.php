@@ -7,7 +7,7 @@ class webapp_router_news extends webapp_echo_html
 		parent::__construct($webapp);
 		
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
-		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=v2';
+		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=v4';
 		$this->xml->head->link[1]['type'] = 'image/jpeg';
 		$this->xml->head->link[1]['href'] = '/star/logo.jpg';
 
@@ -268,6 +268,82 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 			return 404;
 		}
 		$this->add_div_videos($this->main, $result, $page);
+	}
+
+
+	function add_div_item(webapp_html $node, string $type, iterable $item, int $index = 1, int $count = 30):webapp_html
+	{
+		$pagination = $item instanceof webapp_redis_table;
+		$element = $node->append('div', ['class' => "item {$type}"]);
+		foreach ($pagination ? $item->paging($index, $count) : $item as $content)
+		{
+			$anchor = $element->append('a', ['href' => "?news/subjects,hash:{$content['hash']}"]);
+			$anchor->figure(match($type)
+			{
+				'star' => "{$this->webapp->origin}/star/{$content['hash'][0]}/{$content['hash']}.jpg",
+				'chns' => "{$this->webapp->origin}/channels/{$content['hash']}.jpg",
+				default => ''
+			});
+			$anchor->append('strong', $content['name']);
+		}
+		// if ($pagination && ($max = ceil($videos->count() / $count)) > 1)
+		// {
+		// 	$index = max(1, $index);
+		// 	$url = $this->webapp->at(['page' => '']);
+		// 	$page = $node->append('div', ['class' => 'pages']);
+		// 	$show = 4;
+		// 	if ($max > $show)
+		// 	{
+		// 		$halved = intval($show * 0.5);
+		// 		$offset = min($max, max($index, $halved) + $halved);
+		// 		$ranges = range(max(1, $offset - $halved * 2 + 1), $offset);
+		// 		$index > 1 && $page->append('a', ['Top', 'href' => "{$url}1"]);
+		// 		foreach ($ranges as $i)
+		// 		{
+		// 			$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
+		// 			if ($i == $index)
+		// 			{
+		// 				$curr['class'] = 'selected';
+		// 			}
+		// 		}
+		// 		$index < $max && $page->append('a', ['End', 'href' => $url . $max]);
+		// 	}
+		// 	else
+		// 	{
+		// 		for ($i = 1; $i <= $max; ++$i)
+		// 		{
+		// 			$curr = $page->append('a', [$i, 'href' => "{$url}{$i}"]);
+		// 			if ($i === $index)
+		// 			{
+		// 				$curr['class'] = 'selected';
+		// 			}
+		// 		}
+		// 	}
+		// }
+
+
+		return $element;
+	}
+	function get_star(int $page = 1)
+	{
+		$this->set_header_nav();
+		$this->add_meta_seo('Star', $this->webapp['app_name']);
+		$this->add_div_item($this->main, 'star', $this->webapp->fetch_subjects->with('type="star"'), $page, 30);
+	}
+
+	function get_channels(int $page = 1)
+	{
+		$this->set_header_nav();
+		$this->add_meta_seo('Channels', $this->webapp['app_name']);
+		$this->add_div_item($this->main, 'chns', $this->webapp->fetch_subjects->with('type="chns"'), $page, 30);
+	}
+
+	function get_subjects(string $hash, int $page = 1)
+	{
+		$this->set_header_nav();
+		$this->add_meta_seo('Subject', $this->webapp['app_name']);
+		$this->add_div_videos($this->main, $this->webapp->fetch_subjects->item($hash), $page, 30);
+
 	}
 
 	function get_test()
