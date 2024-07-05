@@ -159,10 +159,19 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	}
 	function real_query(string $command, ...$values):bool
 	{
-		if (parent::real_query($this->format($command, ...$values)))
+		if (parent::real_query($query = $this->format($command, ...$values)))
 		{
 			return TRUE;
 		}
+		throw new mysqli_sql_exception("{$this->error}\n{$query}", $this->errno);
+		// try
+		// {
+		// 	return $this->store_result();
+		// }
+		// catch (Error)
+		// {
+		// 	throw new Error($this->error, $this->errno);
+		// }
 		$this->errors[] = $this->error;
 		return FALSE;
 	}

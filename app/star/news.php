@@ -328,14 +328,14 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 	{
 		$this->set_header_nav();
 		$this->add_meta_seo('Star', $this->webapp['app_name']);
-		$this->add_div_item($this->main, 'star', $this->webapp->fetch_subjects->with('type="star"'), $page, 30);
+		$this->add_div_item($this->main, 'star', $this->webapp->fetch_subjects->with('type="star" AND videos!=0'), $page, 12);
 	}
 
 	function get_channels(int $page = 1)
 	{
 		$this->set_header_nav();
 		$this->add_meta_seo('Channels', $this->webapp['app_name']);
-		$this->add_div_item($this->main, 'chns', $this->webapp->fetch_subjects->with('type="chns"'), $page, 30);
+		$this->add_div_item($this->main, 'chns', $this->webapp->fetch_subjects->with('type="chns" AND videos!=0'), $page, 12);
 	}
 
 	function get_subjects(string $hash, int $page = 1)

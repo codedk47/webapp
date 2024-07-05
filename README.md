@@ -1,5 +1,5 @@
 # webapp
-Only support PHP 8.1  
+Only support PHP 8.3  
 它是一个全局配置的I/O路由对象  
 它可以嵌入在常驻内存型PHP逻辑服务端运行  
 它可以嵌入在其他框架内运行并不影响其他框架行为  

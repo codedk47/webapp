@@ -473,6 +473,8 @@ class base extends webapp
 					'ends' => detect($video['name'], $subject['fetch_values'], str_ends_with(...)),
 					'contains' => detect($video['name'], $subject['fetch_values'], str_contains(...)),
 					'uploader' => in_array($video['userid'], $subject['fetch_values'], TRUE),
+					'chns' => str_contains(strtolower($video['name']), $subject['fetch_values'][0]),
+					'star' => str_contains(strtolower($video['name']), $subject['fetch_values'][0]),
 					default => FALSE
 				} && $values[] = $hash;
 			}
