@@ -2,12 +2,13 @@
 const LOCALE = 'en';
 class webapp_router_news extends webapp_echo_html
 {
+	private array $tags;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
 		
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
-		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=v4';
+		$this->xml->head->link['href'] = '/webapp/app/star/news.css?v=v6';
 		$this->xml->head->link[1]['type'] = 'image/jpeg';
 		$this->xml->head->link[1]['href'] = '/star/logo.jpg';
 
@@ -58,6 +59,10 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 		$search->append('a', ['href' => '?news/search,keywords:',
 			'onclick' => 'return !!void(location.href=this.href+this.previousElementSibling.value)'])
 			->svg(['fill' => 'white'])->icon('search', 24);
+		
+		$this->aside->append('a', ['Home', 'href' => '?news']);
+		$this->aside->append('a', ['Channels', 'href' => '?news/channels']);
+		$this->aside->append('a', ['Star', 'href' => '?news/star']);
 	}
 
 
@@ -222,31 +227,39 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 						$extinfo->append('a', [$actress, 'href' => 'javascript:;']);
 					}
 				}
-			}	
-			
+			}
+			$star = $this->webapp->fetch_subjects->star();
+			$chns = $this->webapp->fetch_subjects->chns();
+			if ($video['subjects'])
+			{
+				foreach (explode(',', $video['subjects']) as $subject)
+				{
+					if ($star instanceof webapp_redis_table && isset($star[$subject]) && $star[$subject]['type'] === 'star')
+					{
+						$star = $this->add_div_videos($this->main, $this->webapp->fetch_subjects->item($subject)->random(4))['class'] = 'playright';
+					}
+					if ($chns instanceof webapp_redis_table && isset($chns[$subject]) && $chns[$subject]['type'] === 'chns')
+					{
+						$chns = $this->add_div_videos($player, $this->webapp->fetch_subjects->item($subject)->random(16))['class'] = 'playleft';
+					}
+				}
+			}
+			if ($star instanceof webapp_redis_table)
+			{
+				$this->add_div_videos($this->main, $this->webapp->fetch_videos->random(4))['class'] = 'playright';
+			}
+			if ($chns instanceof webapp_redis_table)
+			{
+				$this->add_div_videos($player, $this->webapp->fetch_videos->random(16))['class'] = 'playleft';
+				
+			}
 		}
 		else
 		{
-			
 			$player->append('strong', 'The video you were watching is gone :(');
+			$this->add_div_videos($this->main, $this->webapp->fetch_videos->random(4))['class'] = 'playright';
+			$this->add_div_videos($player, $this->webapp->fetch_videos->random(16))['class'] = 'playleft';
 		}
-		
-		
-		$this->add_div_videos($player, $this->webapp->fetch_videos->with('FIND_IN_SET("lqe2",tags)')->paging(1, 8))['class'] = 'playleft';
-
-		$this->add_div_videos($this->main, $this->webapp->fetch_videos->with('FIND_IN_SET("lqe2",tags)')->paging(1, 10))['class'] = 'playright';
-
-		// $relates = $this->main->append('div', ['class' => 'relate']);
-		
-		// foreach ($this->webapp->fetch_videos->paging(1, 10) as $relate)
-		// {
-		// 	$anchor = $relates->append('a', ['href' => "?news/watch,hash:{$relate['hash']}"]);
-		// 	$figure = $anchor->append('figure');
-		// 	$figure->append('img', ['loading' => 'lazy', 'src' => $this->webapp->origin . substr($relate['poster'], 1, 24) . '.jpg']);
-		// 	$anchor->append('strong', $relate['name']);
-		// }
-
-		
 	}
 
 	function get_search(string $keywords, int $page = 1)
@@ -328,14 +341,14 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 	{
 		$this->set_header_nav();
 		$this->add_meta_seo('Star', $this->webapp['app_name']);
-		$this->add_div_item($this->main, 'star', $this->webapp->fetch_subjects->with('type="star" AND videos!=0'), $page, 12);
+		$this->add_div_item($this->main, 'star', $this->webapp->fetch_subjects->star(), $page, 12);
 	}
 
 	function get_channels(int $page = 1)
 	{
 		$this->set_header_nav();
 		$this->add_meta_seo('Channels', $this->webapp['app_name']);
-		$this->add_div_item($this->main, 'chns', $this->webapp->fetch_subjects->with('type="chns" AND videos!=0'), $page, 12);
+		$this->add_div_item($this->main, 'chns', $this->webapp->fetch_subjects->chns(), $page, 12);
 	}
 
 	function get_subjects(string $hash, int $page = 1)

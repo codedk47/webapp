@@ -102,6 +102,20 @@ body>div>header>span>a{
 	background-color: var(--webapp-edge);
 	padding-top: 2px;
 }
+aside{
+	padding: .4rem;
+	display: flex;
+	gap: .4rem;
+}
+aside>a{
+	overflow: hidden;
+	color: var(--webapp-background);
+	border: 1px solid var(--webapp-edge);
+	padding: .2rem var(--webapp-gapitem);
+	border-radius: var(--webapp-gapradius);
+	background-color: var(--webapp-hint);
+	white-space: nowrap;
+}
 
 main.watch{
 	display: grid;
@@ -162,6 +176,9 @@ div.playright{
 	padding: var(--webapp-gapitem);
 	gap: var(--webapp-gapitem);
 	grid-template-columns: 1fr;
+}
+div.playright{
+	align-content: flex-start;
 }
 div.videos>a,
 div.playleft>a,

@@ -941,6 +941,14 @@ class base extends webapp
 				return is_array($this[$subject]) ? $this->webapp->fetch_videos
 					->with('FIND_IN_SET(?s,subjects)', $subject)->cache() : new EmptyIterator;
 			}
+			function star():static
+			{
+				return $this->root->with('type="star" AND videos!=0');
+			}
+			function chns():static
+			{
+				return $this->root->with('type="chns" AND videos!=0');
+			}
 		};
 	}
 	//获取影片
@@ -967,7 +975,8 @@ class base extends webapp
 					'like' => $data['like'],
 					'tags' => $data['tags'],
 					'name' => $data['name'],
-					'extdata' => $data['extdata']
+					'extdata' => $data['extdata'],
+					'subjects' => $data['subjects']
 				];
 			}
 			function randtop(string $tag):iterable
