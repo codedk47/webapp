@@ -228,36 +228,46 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 					}
 				}
 			}
-			$star = $this->webapp->fetch_subjects->star();
-			$chns = $this->webapp->fetch_subjects->chns();
+			$show = ['star' => [], 'chns' => []];
 			if ($video['subjects'])
 			{
+				$star = $this->webapp->fetch_subjects->star();
+				$chns = $this->webapp->fetch_subjects->chns();
 				foreach (explode(',', $video['subjects']) as $subject)
 				{
-					if ($star instanceof webapp_redis_table && isset($star[$subject]) && $star[$subject]['type'] === 'star')
-					{
-						$star = $this->add_div_videos($this->main, $this->webapp->fetch_subjects->item($subject)->random(4))['class'] = 'playright';
-					}
-					if ($chns instanceof webapp_redis_table && isset($chns[$subject]) && $chns[$subject]['type'] === 'chns')
-					{
-						$chns = $this->add_div_videos($player, $this->webapp->fetch_subjects->item($subject)->random(16))['class'] = 'playleft';
+					if ($need = match (TRUE) {
+						isset($star[$subject]) => ['star', 6],
+						isset($chns[$subject]) => ['chns', 16],
+						default => []
+					}) {
+						foreach ($this->webapp->fetch_subjects->item($subject) as $content)
+						{
+							if (count($show[$need[0]]) < $need[1])
+							{
+								$show[$need[0]][] = $content;
+							}
+							else
+							{
+								break;
+							}
+						}
 					}
 				}
 			}
-			if ($star instanceof webapp_redis_table)
+			if ($need = (6 + 16) - (count($show['star']) + count($show['chns'])))
 			{
-				$this->add_div_videos($this->main, $this->webapp->fetch_videos->random(4))['class'] = 'playright';
+				foreach ($this->webapp->fetch_videos->random($need) as $content)
+				{
+					$show[count($show['star']) < 6 ? 'star' : 'chns'][] = $content;
+				}
 			}
-			if ($chns instanceof webapp_redis_table)
-			{
-				$this->add_div_videos($player, $this->webapp->fetch_videos->random(16))['class'] = 'playleft';
-				
-			}
+			$this->add_div_videos($this->main, new ArrayIterator($show['star']))['class'] = 'playright';
+			$this->add_div_videos($player, new ArrayIterator($show['chns']))['class'] = 'playleft';
 		}
 		else
 		{
 			$player->append('strong', 'The video you were watching is gone :(');
-			$this->add_div_videos($this->main, $this->webapp->fetch_videos->random(4))['class'] = 'playright';
+			$this->add_div_videos($this->main, $this->webapp->fetch_videos->random(6))['class'] = 'playright';
 			$this->add_div_videos($player, $this->webapp->fetch_videos->random(16))['class'] = 'playleft';
 		}
 	}
@@ -341,14 +351,14 @@ By clicking ENTER below, you certify that you are 18 years or older.']);
 	{
 		$this->set_header_nav();
 		$this->add_meta_seo('Star', $this->webapp['app_name']);
-		$this->add_div_item($this->main, 'star', $this->webapp->fetch_subjects->star(), $page, 12);
+		$this->add_div_item($this->main, 'star', $this->webapp->fetch_subjects->star(), $page, 30);
 	}
 
 	function get_channels(int $page = 1)
 	{
 		$this->set_header_nav();
 		$this->add_meta_seo('Channels', $this->webapp['app_name']);
-		$this->add_div_item($this->main, 'chns', $this->webapp->fetch_subjects->chns(), $page, 12);
+		$this->add_div_item($this->main, 'chns', $this->webapp->fetch_subjects->chns(), $page, 30);
 	}
 
 	function get_subjects(string $hash, int $page = 1)
