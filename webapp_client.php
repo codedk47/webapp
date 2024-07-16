@@ -54,7 +54,7 @@ class webapp_client implements Stringable, Countable
 	//缓冲区内容
 	function __toString():string
 	{
-		return stream_get_contents($this->buffer, ($length = count($this)) && rewind($this->buffer) ? $length : 0);
+		return stream_get_contents($this->buffer, ($length = self::count()) && rewind($this->buffer) ? $length : 0);
 	}
 	//缓冲区大小
 	function count():int
@@ -151,7 +151,7 @@ class webapp_client implements Stringable, Countable
 	//缓冲区到
 	function to($stream):bool
 	{
-		$length = count($this);
+		$length = self::count();
 		return stream_copy_to_stream($this->buffer,
 			is_resource($stream) ? $stream : fopen($stream, 'w'),
 			rewind($this->buffer) ? $length : 0) === $length;
@@ -214,24 +214,26 @@ class webapp_client implements Stringable, Countable
 		return '----WebApp' . bin2hex(random_bytes(16));
 	}
 }
-class webapp_client_smtp extends webapp_client
+class webapp_client_smtp extends webapp_client implements Countable
 {
+	private readonly string $boundary;
 	private array $dialog = [];
-	private string $username = 'anonymous@localhost', $boundary;
-	function __construct(string $socket, array $options = [])
+	private bool $accepted = FALSE;
+	private string $from = 'anonymous', $endchar = "\r\n.\r\n";
+	function __construct(string $url, array $options = [])
 	{
-		parent::__construct($socket, $options);
+		$parse = parse_url($url);
 		$this->boundary = static::boundary();
-		if ($this->readstat() === 220)
+		parent::__construct("{$parse['scheme']}://{$parse['host']}:{$parse['port']}", $options);
+		if (self::count() === 220)
 		{
-			$host = parse_url($socket)['host'];
-			array_key_exists('username', $options)
-				? $this("EHLO {$host}") === 250
+			$this->accepted = array_key_exists('user', $parse)
+				? $this("EHLO {$parse['host']}")
 					&& strpos(join($this->dialog), 'AUTH LOGIN')
-					&& $this('AUTH LOGIN') === 334
-					&& $this(base64_encode($this->username = $options['username'])) === 334
-					&& $this(base64_encode($options['password'] ?? '')) === 235
-				: $this("HELO {$host}") === 250;
+					&& $this('AUTH LOGIN', 334)
+					&& $this(base64_encode($this->from = $parse['user']), 334)
+					&& $this(base64_encode($parse['pass'] ?? ''), 235)
+				: $this("HELO {$parse['host']}");
 		}
 	}
 	function __destruct()
@@ -239,16 +241,17 @@ class webapp_client_smtp extends webapp_client
 		$this('QUIT');
 		parent::__destruct();
 	}
-	function __invoke(string $command):int
+	function __invoke(string $command, int $retval = 250):bool
 	{
 		$this->dialog[] = $command;
-		return $this->send("{$command}\r\n") ? $this->readstat() : -1;
+		$this->send("{$command}\r\n");
+		return self::count() === $retval;
 	}
 	function __debugInfo():array
 	{
 		return $this->dialog;
 	}
-	private function readstat():int
+	function count():int
 	{
 		while ($this->readline($content))
 		{
@@ -264,75 +267,101 @@ class webapp_client_smtp extends webapp_client
 	// function mailto(){}
 	// function maildata(){}
 	
-	function header(string $subject, string $to, string $from = ''):bool
-	{
-		return $this->echo(join("\r\n", [
-			'Date: ' . date('r'),
-			sprintf('Subject: =?UTF-8?B?%s?=', base64_encode($subject)),
-			sprintf('To: =?UTF-8?B?%s?=', base64_encode($to)),
-			'MIME-Version: 1.0',
-			'Content-type: multipart/mixed; boundary=' . $this->boundary,
-			"\r\n"
-		]));
-	}
-	function content(string $data, string $type = 'text/plain; charset=utf-8'):bool
-	{
-		return $this->echo(join("\r\n", [
-			"--{$this->boundary}",
-			'Content-type: ' . $type,
-			'',
-			$data,
-			'']));
-	}
-	function attach(string $filename, string $name = NULL)
-	{
-		return $this->echo(join("\r\n", [
-			"--{$this->boundary}",
-			"Content-Disposition: attachment; filename=\"cool.txt\"",
-			'Content-Transfer-Encoding: base64',
-			'',
-			base64_encode(file_get_contents($filename)),
-			'']));
-		//JVBEDi0xLjMKJcfsj6IKNSAwIG9iago8PC9MZW5ndGggNiAwIFIvRmlsdGVyIC9GbGF0
-	}
-	function sendto(string $mail)
-	{
-		$this("MAIL FROM: <{$this->username}>");
-		$this("RCPT TO: <{$mail}>");
-		$this('DATA');
-		//$this->push();
-		$this((string)$this);
-		$this("--{$this->boundary}--\r\n.\r\n");
-
-		print_r($this);
-
-		
-	}
-
-	
-	// function mailto(string $to, )
+	// function header(string $subject, string $to, string $from = ''):bool
 	// {
-	// 	$this("MAIL FROM: <{$this->username}>");
-
-
-	// 	$this('RCPT TO: <tonyone480@gmail.com>');
-
-
-	// 	$this('DATA');
-	// 	$this(join("\r\n",[
-	// 		'Subject: Test-message',
-	// 		'from: <'.$this->username.'>',
-	// 		'to: <tonyone480@gmail.com>',
+	// 	return $this->echo(join("\r\n", [
+	// 		'Date: ' . date('r'),
+	// 		sprintf('Subject: =?UTF-8?B?%s?=', base64_encode($subject)),
+	// 		sprintf('To: =?UTF-8?B?%s?=', base64_encode($to)),
 	// 		'MIME-Version: 1.0',
-	// 		'',
-	// 		'你好 gmail!!!',
-	// 		'.'
+	// 		"Content-type: multipart/mixed; boundary={$this->boundary}\r\n"
 	// 	]));
 	// }
-	// static function sendmail()
+	// function content(string $data, string $type = 'text/plain; charset=utf-8'):bool
 	// {
-		
+	// 	return $this->echo(join("\r\n", [
+	// 		"--{$this->boundary}",
+	// 		'Content-type: ' . $type,
+	// 		'',
+	// 		$data,
+	// 		'']));
 	// }
+	// function attach(string $filename, string $name = NULL)
+	// {
+	// 	return $this->echo(join("\r\n", [
+	// 		"--{$this->boundary}",
+	// 		"Content-Disposition: attachment; filename=\"cool.txt\"",
+	// 		'Content-Transfer-Encoding: base64',
+	// 		'',
+	// 		base64_encode(file_get_contents($filename)),
+	// 		'']));
+	// 	//JVBEDi0xLjMKJcfsj6IKNSAwIG9iago8PC9MZW5ndGggNiAwIFIvRmlsdGVyIC9GbGF0
+	// }
+	function sendline(string ...$contents):bool
+	{
+		return $this->echo(join("\r\n", $contents));
+	}
+	function mail(string|array $to, string $from = NULL):bool
+	{
+		foreach ([$from ?? $this->from, ...is_string($to) ? [$to] : $to] as $i => $command)
+		{
+			if ($this($i === 0 ? "MAIL FROM: <{$command}>" : "RCPT TO: <{$command}>") === FALSE)
+			{
+				return FALSE;
+			}
+		}
+		return TRUE;
+	}
+	function data(string|array $subject):bool
+	{
+		$data = [];
+		foreach (is_string($subject) ? ['subject' => $subject] : $subject as $key => $value)
+		{
+			$data[] = sprintf('%s: =?UTF-8?B?%s?=', ucfirst($key), base64_encode($value));
+		}
+		$data[] = 'MIME-Version: 1.0';
+		$data[] = "Content-type: multipart/mixed; boundary={$this->boundary}\r\n";
+		return $this('DATA', 354) && $this->sendline(...$data);
+	}
+	function content(string $data, ?string $type = NULL):bool
+	{
+		$type ??= 'text/plain; charset=utf-8';
+		return $this->sendline("\r\n--{$this->boundary}",
+			"Content-type: {$type}",
+			"Content-Transfer-Encoding: base64\r\n",
+			base64_encode($data));
+	}
+	function attach(mixed $data, string $filename = 'unknown'):bool
+	{
+		return $this->sendline("\r\n--{$this->boundary}", sprintf('Content-Disposition: attachment; filename="=?UTF-8?B?%s?="',
+			base64_encode($filename)), '') && match (TRUE)
+			{
+				is_bool($data) => $this->sendline($data ? 'True' : 'False'),
+				is_string($data) => $this->sendline("Content-Transfer-Encoding: base64\r\n", base64_encode($data)),
+				is_scalar($data) => $this->sendline($data),
+				is_resource($data) => $this->from($data),
+				default => FALSE
+			};
+	}
+	function end():bool
+	{
+		return $this->echo($this->endchar) && $this->push() && $this->clear();
+	}
+	function sendmail(string|array $to, string|array $subject, string $message, string $type = NULL, array $attachments = []):bool
+	{
+		while ($this->mail($to) && $this->data($subject) && $this->content($message, $type))
+		{
+			foreach ($attachments as $attach)
+			{
+				if ($this->attach(...is_array($attach) ? $attach : [$attach]) === FALSE)
+				{
+					break 2;
+				}
+			}
+			return $this->end();
+		}
+		return FALSE;
+	}
 }
 class webapp_client_http extends webapp_client implements ArrayAccess
 {

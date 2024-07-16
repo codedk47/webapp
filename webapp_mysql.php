@@ -46,7 +46,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 		}
 		catch (Error)
 		{
-			throw new mysqli_sql_exception("{$this->error}\n{$query}", $this->errno);
+			throw new mysqli_sql_exception($this->error, $this->errno);
 			//throw new Error($this->error, $this->errno);
 		}
 		//return $this->store_result();

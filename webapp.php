@@ -411,6 +411,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			'qrcode_maxdata'	=> 256,
 			//Misc
 			'copy_webapp'		=> 'Web Application v' . self::version,
+			'smtp_url'			=> 'ssl://user:pass@smtp.gmail.com:465',
 			'gzip_level'		=> -1,
 			'manifests'			=> [],]];
 		[$this->route, $this->entry] = method_exists($this, $route = sprintf('%s_%s', $this['request_method'],
@@ -714,7 +715,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return [];
 	}
-
+	function smtp(string $url = NULL):webapp_client_smtp
+	{
+		return new webapp_client_smtp($url ?? $this['smtp_url']);
+	}
 	//request
 	function request_header(string $name):?string
 	{

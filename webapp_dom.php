@@ -1025,7 +1025,9 @@ class webapp_form implements ArrayAccess
 	}
 	function offsetSet(mixed $offset, mixed $value):void
 	{
-
+		$this->fields[$offset] = is_array($value)
+			? $this->field($offset, attr: $value)
+			: $this->field($offset, (string)$value);
 	}
 	function offsetUnset(mixed $offset):void
 	{

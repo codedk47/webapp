@@ -266,7 +266,7 @@ div.item{
 	display: grid;
 	padding: var(--webapp-gapitem);
 	gap: var(--webapp-gapitem);
-	grid-template-columns: 1fr;
+	grid-template-columns: 1fr 1fr;
 }
 div.item>a{
 	display: block;
