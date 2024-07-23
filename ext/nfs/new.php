@@ -1,11 +1,11 @@
 <?php
-class webapp_nfs implements Stringable, Countable
+class webapp_nfs
 {
 	
-	function __construct(public readonly webapp $webapp, public readonly int $sort)
-	{
+	// function __construct(public readonly webapp $webapp, public readonly int $sort)
+	// {
 
-	}
+	// }
 	// function count():int
 	// {
 	// 	$this->webapp->mysql
@@ -31,9 +31,23 @@ class webapp_ext_nfs_base extends webapp
 		parent::__construct($config, $io);
 	}
 
-	function nfs(int $sort):webapp_nfs
+	function nfs(int $sort = 0):webapp_nfs
 	{
 		return $this->nfs[$sort &= 0xff] ??= new webapp_nfs($this, $sort);
 	}
-	
+	function get_view(int $sort = 0)
+	{
+		$this->app('webapp_echo_xml');
+
+		foreach ($this->mysql->videos->paging(1, 20) as $file)
+		{
+			$this->app->xml->append('file', [
+				'hash' => $file['hash'],
+				'size' => $file['size'],
+				'name' => $file['name']
+			])->cdata((string)$file['extdata']);
+			
+			
+		}
+	}
 }

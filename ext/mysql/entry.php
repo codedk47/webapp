@@ -609,7 +609,7 @@ CSS);
 					}
 					if ($field['after'])
 					{
-						$commands[0] .= $field['after'] === '.' ? 'first' : 'after ?a';
+						$commands[0] .= $field['after'] === '.' ? ' first' : ' after ?a';
 						$commands[] = $field['after'];
 					}
 					//print_r($commands);

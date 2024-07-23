@@ -981,6 +981,7 @@ class base extends webapp
 			}
 			function randtop(string $tag):iterable
 			{
+				//return new EmptyIterator;
 				if ($this->root->alloc($key, "randtop.{$tag}"))
 				{
 					$keys = $this->eval("FIND_IN_SET(?s,tags) {$this->sort} LIMIT 7", $tag)
