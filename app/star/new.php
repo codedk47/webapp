@@ -532,7 +532,6 @@ class webapp_router_new extends webapp_echo_html
 	function get_watch(string $hash)
 	{
 		$this->pv();
-		$this->add_meta_seo();
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js']);
 		$this->set_header_search();
@@ -675,7 +674,8 @@ class webapp_router_new extends webapp_echo_html
 				}
 			}
 		}
-
+		$this->add_meta_seo(sprintf("%s - {$this->webapp['iphone_webcilp']['label']}", strtr($video['name'], '.', ' ')),
+			join(' ', array_values($tags)), image: $poster);
 		//影片信息（扩展数据）
 		if ($video['extdata'])
 		{
