@@ -114,10 +114,13 @@ masker.then(() =>
 		btn.firstChild.onclick = () => videos.slide(true);
 		btn.lastChild.onclick = () => videos.slide(false);
 
-		document.onwheel = document.onkeydown = event => videos.slide(event.deltaY ? event.deltaY < 0 : event.key === 'ArrowUp');
-		
-
-
+		document.onwheel = document.onkeydown = event =>
+		{
+			if (event.deltaY || event.key === 'ArrowUp' || event.key === 'ArrowDown')
+			{
+				videos.slide(event.deltaY ? event.deltaY < 0 : event.key === 'ArrowUp');
+			}
+		};
 	}
 
 	document.querySelectorAll('blockquote[data-lazy]').forEach(element => masker.viewport(element).then(function lazy(element)
