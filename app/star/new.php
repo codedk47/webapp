@@ -16,8 +16,8 @@ class webapp_router_new extends webapp_echo_html
 		$this->title($webapp['app_name']);
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
-		$this->xml->head->link['href'] = '/webapp/app/star/home.css?v=lm';
-		$this->script(['src' => '/webapp/app/star/new.js?v=jk']);
+		$this->xml->head->link['href'] = '/webapp/app/star/new.css?v=lm';
+		$this->script(['src' => '/webapp/app/star/new.js?v=jg']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-W33CFKQCZS']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-W33CFKQCZS")');
@@ -139,7 +139,21 @@ class webapp_router_new extends webapp_echo_html
 		}
 		return $float;
 	}
+	function add_meta_seo(string $title = NULL, string $keywords = NULL, string $description = NULL, string $image = NULL)
+	{
+		$this->xml['prefix'] = 'og:https://ogp.me/ns#';
+		$this->title($title ??= $this->webapp['app_name']);
+		$this->meta(['name' => 'og:title', 'content' => $title]);
+		$this->meta(['name' => 'og:image', 'content' => $image ?? '/star/packer/logo.jpg']);
+		//$this->meta(['name' => 'og:description', 'content' => $description]);
 
+
+		$this->meta(['name' => 'og:type', 'content' => 'video.movie']);
+		$this->meta(['name' => 'og:url', 'content' => "https://{$this->webapp['app_website']}"]);
+
+		$this->meta(['name' => 'keywords', 'content' => $keywords ?? $this->webapp['iphone_webcilp']['displayname']]);
+		$this->meta(['name' => 'description', 'content' => $description ?? $this->webapp['iphone_webcilp']['description']]);
+	}
 	function add_slideshows_ads(webapp_html $node, int $seat, int $duration = 5):?webapp_html
 	{
 		return NULL;
@@ -358,6 +372,7 @@ class webapp_router_new extends webapp_echo_html
 	}
 	function get_home(string $type = '')
 	{
+		$this->add_meta_seo();
 		$this->pv();
 		$this->aside['class'] = 'classify';
 		$this->set_aside_classify('?new/home,type:', $type, [ '' => '最新'], $classify);
@@ -517,6 +532,7 @@ class webapp_router_new extends webapp_echo_html
 	function get_watch(string $hash)
 	{
 		$this->pv();
+		$this->add_meta_seo();
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js']);
 		$this->set_header_search();
@@ -753,6 +769,7 @@ class webapp_router_new extends webapp_echo_html
 			return;
 		}
 		$this->pv();
+		$this->add_meta_seo();
 		$this->script(['src' => '/webapp/res/js/hls.min.js']);
 		$this->script(['src' => '/webapp/res/js/video.js?v=m']);
 		$this->meta(['name' => 'theme-color', 'content' => 'black']);
@@ -790,6 +807,14 @@ class webapp_router_new extends webapp_echo_html
 
 		$this->footer->setattr('style', 'height:1rem');
 		//$this->set_footer_menu();
+		$button = $this->set_float_button();
+		$button->a[0]['href'] = $button->a[1]['href'] = 'javascript:;';
+
+		$button['style'] = 'bottom:50%';
+		$button->a[0]->svg->remove();
+		$button->a[0]->svg(['fill' => 'white'])->icon('arrow-up', 32);
+		$button->a[1]->svg->remove();
+		$button->a[1]->svg(['fill' => 'white'])->icon('arrow-down', 32);
 	}
 
 	function get_my()

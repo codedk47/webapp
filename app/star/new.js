@@ -107,6 +107,19 @@ masker.submit = form =>
 };
 masker.then(() =>
 {
+	const videos = document.querySelector('webapp-videos');
+	if (videos)
+	{
+		const btn = document.querySelector('div.float');
+		btn.firstChild.onclick = () => videos.slide(true);
+		btn.lastChild.onclick = () => videos.slide(false);
+
+		document.onwheel = document.onkeydown = event => videos.slide(event.deltaY ? event.deltaY < 0 : event.key === 'ArrowUp');
+		
+
+
+	}
+
 	document.querySelectorAll('blockquote[data-lazy]').forEach(element => masker.viewport(element).then(function lazy(element)
 	{
 		fetch(`${element.dataset.lazy}${element.dataset.page++}`).then(response => response.text()).then(content =>
@@ -124,6 +137,8 @@ masker.then(() =>
 			}
 		});
 	}));
+
+
 });
 // masker.init(() => masker.json('?home/init', data =>
 // {

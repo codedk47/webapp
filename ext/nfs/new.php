@@ -1,5 +1,5 @@
 <?php
-class webapp_nfs
+class webapp_nfs implements IteratorAggregate
 {
 	
 	// function __construct(public readonly webapp $webapp, public readonly int $sort)
@@ -10,9 +10,33 @@ class webapp_nfs
 	// {
 	// 	$this->webapp->mysql
 	// }
-	function storage(string $hash)
+	function getIterator():mysqli_result
+	{
+		//return $this->webapp->mysql->nfs('WHERE sort=?i', $this->sort)
+	}
+	function file():ArrayObject
 	{
 
+	}
+	function storage(string|array $hash, string $name, array $json = NULL, int $options = JSON_UNESCAPED_UNICODE):ArrayObject
+	{
+		return new class extends ArrayObject
+		{
+
+
+		};
+		$data = is_string($hash)
+			? [
+				'hash' => $hash,
+				'sort' => $this->sort,
+				'flag' => 0,
+				'size' => 0,
+				'name' => $name,
+				'json' => $json === NULL ? NULL : json_encode($json, $options)
+			]
+			: [
+
+			]
 	}
 	function storage_uploadfile(int $index, string $rename = NULL):bool
 	{
@@ -50,4 +74,5 @@ class webapp_ext_nfs_base extends webapp
 			
 		}
 	}
+	//function delete_file()
 }
