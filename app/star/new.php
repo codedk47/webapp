@@ -372,7 +372,7 @@ class webapp_router_new extends webapp_echo_html
 	}
 	function get_home(string $type = '')
 	{
-		$this->add_meta_seo();
+		$this->add_meta_seo('H狐狸 - 海量国产AV网红福利主播裸舞免费看 - hihuli.com');
 		$this->pv();
 		$this->aside['class'] = 'classify';
 		$this->set_aside_classify('?new/home,type:', $type, [ '' => '最新'], $classify);
