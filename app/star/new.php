@@ -543,6 +543,8 @@ class webapp_router_new extends webapp_echo_html
 			return 404;
 		}
 		$tags = explode(',', $video['tags']);
+		$poster = $this->webapp->origin . substr($video['poster'], 1, -15) . '.jpg';
+		$m3u8 = $this->webapp->origin . substr($video['m3u8'], 1, -15) . '.m3u8';
 		if (match ($this->webapp->request_country())
 		{
 			//美国、加拿大、澳大利亚
@@ -569,9 +571,6 @@ class webapp_router_new extends webapp_echo_html
 			// 	}
 				//$this->aside['style'] = 'position:sticky;top:0;z-index:9';
 
-				$poster = $this->webapp->origin . substr($video['poster'], 1, -15) . '.jpg';
-				$m3u8 = $this->webapp->origin . substr($video['m3u8'], 1, -15) . '.m3u8';
-				
 				//var_dump($m3u8);
 				$watch = $this->aside->append('webapp-video', [
 					'data-poster' => $poster,
