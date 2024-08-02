@@ -375,7 +375,7 @@ class webapp_router_new extends webapp_echo_html
 		$this->add_meta_seo('H狐狸 - 海量国产AV网红福利主播裸舞免费看 - hihuli.com');
 		$this->pv();
 		$this->aside['class'] = 'classify';
-		$this->set_aside_classify('?new/home,type:', $type, [ '' => '最新'], $classify);
+		$this->set_aside_classify('?new/home,type:', $type, [ '' => '最新', 'short' => '抖音'], $classify);
 		$this->aside->insert('aside', 'after')->setattr('style', join(';', [
 			'position: sticky',
 			'top: 2rem',
@@ -391,7 +391,18 @@ class webapp_router_new extends webapp_echo_html
 		$this->add_slideshows_ads($this->main, 2);
 		if (isset($classify[$type]) === FALSE)
 		{
-			$this->add_nav_ads($this->main, 9, '福利导航');
+			if ($type === 'short')
+			{
+			
+				$this->add_video_lists($this->main, $this->webapp->fetch_videos
+					->with('FIND_IN_SET("5IFq",tags) ORDER BY mtime DESC'), (int)($this->webapp->query['page'] ?? 1));
+				return;
+			}
+			else
+			{
+				$this->add_nav_ads($this->main, 9, '福利导航');
+			}
+			
 		}
 		$this->tags = $this->webapp->fetch_tags->shortname();
 		if ($this->webapp->fetch_subjects->unique('type', $type))
