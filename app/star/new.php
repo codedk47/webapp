@@ -9,6 +9,7 @@ class webapp_router_new extends webapp_echo_html
 	{
 		parent::__construct($webapp);
 		unset($this->xml->head->link[1], $this->xml->body->div['class']);
+		$this->xml['lang'] = 'zh';
 		$this->free = $webapp['app_free'];
 		$this->footer[0] = NULL;
 
@@ -149,7 +150,7 @@ class webapp_router_new extends webapp_echo_html
 
 
 		$this->meta(['name' => 'og:type', 'content' => 'video.movie']);
-		$this->meta(['name' => 'og:url', 'content' => "https://{$this->webapp['app_website']}"]);
+		$this->meta(['name' => 'og:url', 'content' => $this->webapp->request_origin()]);
 
 		$this->meta(['name' => 'keywords', 'content' => $keywords ?? $this->webapp['iphone_webcilp']['displayname']]);
 		$this->meta(['name' => 'description', 'content' => $description ?? $this->webapp['iphone_webcilp']['description']]);
