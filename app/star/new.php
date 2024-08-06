@@ -688,7 +688,7 @@ class webapp_router_new extends webapp_echo_html
 			}
 		}
 		$this->add_meta_seo(sprintf("%s - {$this->webapp['iphone_webcilp']['label']}", strtr($video['name'], '.', ' ')),
-			join(' ', $tagkeywords), image: $poster);
+			join(',', $tagkeywords), image: $poster);
 		//影片信息（扩展数据）
 		if ($video['extdata'])
 		{
