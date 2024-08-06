@@ -674,6 +674,7 @@ class webapp_router_new extends webapp_echo_html
 
 		//影片信息（标签）
 		$this->tags = $this->webapp->fetch_tags->shortname();
+		$tagkeywords = [];
 		if ($video['tags'])
 		{
 			$taginfo = $videoinfo->append('div', ['data-label' => '标签:']);
@@ -681,12 +682,13 @@ class webapp_router_new extends webapp_echo_html
 			{
 				if (isset($this->tags[$tag]))
 				{
+					$tagkeywords[] = $this->tags[$tag];
 					$taginfo->append('a', [$this->tags[$tag], 'href' => '?new/search,word:' . urlencode($this->tags[$tag])]);
 				}
 			}
 		}
 		$this->add_meta_seo(sprintf("%s - {$this->webapp['iphone_webcilp']['label']}", strtr($video['name'], '.', ' ')),
-			join(' ', array_values($tags)), image: $poster);
+			join(' ', $tagkeywords), image: $poster);
 		//影片信息（扩展数据）
 		if ($video['extdata'])
 		{
