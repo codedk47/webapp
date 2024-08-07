@@ -18,6 +18,7 @@ class webapp_router_new extends webapp_echo_html
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/new.css?v=lm';
+		$this->xml->head->append('link', ['rel' => 'icon', 'type' => 'image/x-icon', 'href' => '/favicon.ico']);
 		$this->script(['src' => '/webapp/app/star/new.js?v=lk']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-W33CFKQCZS']);
