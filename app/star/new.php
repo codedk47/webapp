@@ -67,7 +67,7 @@ class webapp_router_new extends webapp_echo_html
 	function set_header_search(?string $goback = 'javascript:history.back();', string $word = NULL):webapp_html
 	{
 		$this->header->insert('a', 'before')->setattr([
-			'下载狐狸APP，手机一键访问更便捷！',
+			'下载本站APP，看片不用翻墙哟！',
 			'href' => $this->webapp->fetch_configs('down_page'),
 			'style' => 'text-align:center;display:block;padding:var(--webapp-gapitem) 0'
 		]);
