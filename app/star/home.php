@@ -21,8 +21,8 @@ class webapp_router_home extends webapp_echo_masker
 		$this->xml->head->link['href'] = '/webapp/app/star/home.css?v=lm';
 		$this->script(['src' => '/webapp/app/star/home.js?v=jk']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
-		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-W33CFKQCZS']);
-		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-W33CFKQCZS")');
+		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-0XC7CP706X']);
+		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-0XC7CP706X")');
 	}
 	function init(bool $success)
 	{
