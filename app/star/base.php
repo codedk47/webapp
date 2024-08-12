@@ -303,6 +303,11 @@ class base extends webapp
 		}
 		//$json['dialog'] = '图片上传失败！';
 	}
+	function unmaskfile(string $src, string $dst):bool
+	{
+		$data = file_get_contents($src);
+		return file_put_contents($dst, $this->unmasker(substr($data, 0, 8), substr($data, 8))) !== FALSE;
+	}
 	//本地命令行运行同步记录
 	function get_sync_record()
 	{
@@ -363,9 +368,10 @@ class base extends webapp
 		{
 			echo "{$ad['hash']} - ",
 				is_file($image = "{$this['ad_savedir']}/{$ad['hash']}")
-				&& copy($image, "{$this['ad_syncdir']}/{$ad['hash']}")
+				&& copy($image, $tar = "{$this['ad_syncdir']}/{$ad['hash']}")
 				&& $this->mysql->ads('WHERE hash=?s LIMIT 1', $ad['hash'])
-					->update(['ctime' => $this->time(), 'change' => 'none']) === 1 ? "OK\n" : "NO\n";
+					->update(['ctime' => $this->time(), 'change' => 'none']) === 1
+				&& $this->unmaskfile($tar, "{$tar}.img") ? "OK\n" : "NO\n";
 		}
 		isset($ad) && $this->fetch_ads->flush();
 		// echo "----SYNC FACE----\n";

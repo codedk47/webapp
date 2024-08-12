@@ -163,9 +163,11 @@ class webapp_router_new extends webapp_echo_html
 	}
 	function add_slideshows_ads(webapp_html $node, int $seat, int $duration = 5):?webapp_html
 	{
-		return NULL;
+		
 		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
+			print_r($ads);
+			return NULL;
 			$this->webapp->mysql->ads('WHERE hash IN(?S)', array_column($ads, 'hash'))->update('`view`=`view`+1');
 			return $node->append('webapp-slideshows', [
 				'data-contents' => json_encode($ads, JSON_UNESCAPED_UNICODE),
