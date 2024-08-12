@@ -166,7 +166,7 @@ class webapp_router_new extends webapp_echo_html
 		
 		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
-			print_r($ads);
+			//print_r($ads);
 			return NULL;
 			$this->webapp->mysql->ads('WHERE hash IN(?S)', array_column($ads, 'hash'))->update('`view`=`view`+1');
 			return $node->append('webapp-slideshows', [
