@@ -124,18 +124,24 @@ class base extends webapp
 
 
 			$origin = strstr($this->webapp['app_resources'][0], '/robots.txt', TRUE);
-			$url = "{$origin}/{$ym}/{$video['hash']}/picture";
-			$res = $this->webapp->open("{$url}/index.txt");
-			if ($res->status() === 200)
+			if (isset($this->query['nop']))
 			{
-				$pics = array_filter(explode("\n", $res->content()), fn($v) => strpos($v, '.jpg'));
-				foreach ($pics as $pic)
+				$picture->remove();
+			}
+			else
+			{
+				$url = "{$origin}/{$ym}/{$video['hash']}/picture";
+				$res = $this->webapp->open("{$url}/index.txt");
+				if ($res->status() === 200)
 				{
-					$picture->labelinput('picture', 'radio', $pic)->append('img', ['src' => "{$url}/{$pic}"]);
+					$pics = array_filter(explode("\n", $res->content()), fn($v) => strpos($v, '.jpg'));
+					foreach ($pics as $pic)
+					{
+						$picture->labelinput('picture', 'radio', $pic)->append('img', ['src' => "{$url}/{$pic}"]);
+					}
 				}
 			}
-
-
+		
 			$form->echo($video['extdata'] ? $video + json_decode($video['extdata'], TRUE) : $video);
 		}
 		return $form;
