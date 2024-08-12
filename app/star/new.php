@@ -166,8 +166,10 @@ class webapp_router_new extends webapp_echo_html
 		
 		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
-			//print_r($ads);
-			return NULL;
+			foreach ($ads as &$ad)
+			{
+				$ad['picture'] = $this->webapp->origin . substr($ad['picture'], 1, -15) . '.img';
+			}
 			$this->webapp->mysql->ads('WHERE hash IN(?S)', array_column($ads, 'hash'))->update('`view`=`view`+1');
 			return $node->append('webapp-slideshows', [
 				'data-contents' => json_encode($ads, JSON_UNESCAPED_UNICODE),
@@ -180,9 +182,13 @@ class webapp_router_new extends webapp_echo_html
 	}
 	function add_nav_ads(webapp_html $node, int $seat, string $title = NULL):?webapp_html
 	{
-		return NULL;
+		
 		if ($ads = $this->webapp->fetch_ads->seat($seat))
 		{
+			foreach ($ads as &$ad)
+			{
+				$ad['picture'] = $this->webapp->origin . substr($ad['picture'], 1, -15) . '.img';
+			}
 			$this->webapp->mysql->ads('WHERE hash IN(?S)', array_column($ads, 'hash'))->update('`view`=`view`+1');
 			if ($title)
 			{
