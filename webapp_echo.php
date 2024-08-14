@@ -551,6 +551,46 @@ JS;
 		return 401;
 	}
 }
+class webapp_echo_sitemap extends webapp_echo_xml
+{
+	public readonly string $origin;
+	function __construct(webapp $webapp)
+	{
+		parent::__construct($webapp, 'urlset');
+		$this->xml['xmlns'] = 'http://www.sitemaps.org/schemas/sitemap/0.9';
+		$this->xml->comment($webapp['copy_webapp']);
+		$this->origin = $webapp->request_origin();
+	}
+	function url(string $loc, array $params = []):webapp_xml
+	{
+		$url = $this->xml->append('url');
+		$url->append('loc')->text($loc);
+		if ($params)
+		{
+			/*
+			<lastmod> - 可选，指定该<url>最后修改日期。采用W3C Datetime格式，一般使用YYYY-MM-DD格式省略时间部分。
+				需注意，这个值和http header中的If-Modified-Since (304)是相互独立的，搜索引擎会根据自身的实现分别取对应的值。
+			<changefreq> - 可选，指定<url>的大概更新频率。用于告诉搜索引擎大概多久重新抓取一次。
+				有效值有：always、hourly、daily、weekly、monthly、yearly、never。
+				awalys代表每次访问该网址都返回不一样的内容。never用于表示一个已归档的资源。
+				需注意的是，这里只是向搜索引擎告知网站资源的更新情况，而搜索引擎的实际抓取频率取决于搜索引擎自身的实现。另外Google不支持这个标签，Baidu支持。
+			<priority> - 可选，该<url>在网站中的比重，取值0.0-1.0之间。默认值为0.5。需注意该比重只是相对于当前网站下。另外Google不支持该标签，Baidu支持。
+			*/
+			foreach (['lastmod', 'changefreq', 'priority'] as $name)
+			{
+				isset($params[$name]) && $url->append($name)->text((string)$params[$name]);
+			}
+		}
+		return $url;
+	}
+	function path(string ...$gets)
+	{
+		foreach ($gets as $get)
+		{
+			$this->url($this->origin . $get);
+		}
+	}
+}
 /*
 class webapp_echo_xls extends webapp_echo_xml
 {
