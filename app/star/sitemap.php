@@ -17,7 +17,7 @@ class webapp_router_sitemap extends webapp_echo_sitemap
 	}
 	function get_video()
 	{
-		foreach ($this->webapp->mysql->videos as $video)
+		foreach ($this->webapp->mysql->videos('ORDER BY mtime DESC LIMIT 40000') as $video)
 		{
 			$this->path("/?new/watch,hash:{$video['hash']}");
 		}
