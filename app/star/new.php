@@ -22,7 +22,7 @@ class webapp_router_new extends webapp_echo_html
 		$this->script(['src' => '/webapp/app/star/new.js?v=lk']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-W33CFKQCZS']);
-		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-W33CFKQCZS")');
+		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-7BF2SJFFPC")');
 
 //      if ($this->webapp->request_cookie('adult') !== 'yes')
 // 		{
