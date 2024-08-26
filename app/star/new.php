@@ -2,7 +2,7 @@
 class webapp_router_new extends webapp_echo_html
 {
 	private readonly bool $free;
-	private readonly user $user;
+	private readonly ?user $user;
 	private readonly array $tags;
 	protected array $allow = ['get_splashscreen', 'post_create_account', 'get_init'];
 	function __construct(webapp $webapp)
@@ -17,9 +17,9 @@ class webapp_router_new extends webapp_echo_html
 		$this->title($webapp['app_name']);
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
-		$this->xml->head->link['href'] = '/webapp/app/star/new.css?v=lm';
+		$this->xml->head->link['href'] = '/webapp/app/star/new.css?v=vds';
 		$this->xml->head->append('link', ['rel' => 'icon', 'type' => 'image/x-icon', 'href' => '/favicon.ico']);
-		$this->script(['src' => '/webapp/app/star/new.js?v=lk']);
+		$this->script(['src' => '/webapp/app/star/new.js?v=hjk']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-7BF2SJFFPC']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-7BF2SJFFPC")');
@@ -34,7 +34,113 @@ class webapp_router_new extends webapp_echo_html
 // 			$adult->append('a', ['Enter', 'href' => 'javascript:;', 'onclick' => 'adulted(this.parentNode.remove())']);
 // 			$adult->append('a', ['No', 'href' => 'https://www.google.com/']);
 // 		}
+
+		$acc = $webapp->authorize($webapp->request_cookie('user'), fn($uid) => [$uid]);
+		if ($acc && $webapp->mysql->users('WHERE id=?s LIMIT 1', $acc[0])->fetch($user))
+		{
+			$this->user = new user($webapp, $acc);
+		}
+		else
+		{
+			$this->user = NULL;
+			if (str_starts_with(strtolower($webapp['request_query']), 'new/my'))
+			{
+				$this->xml->body->div['style'] = 'max-width:720px;margin:0 auto';
+				if ($acc = $webapp->authorize($signature = $webapp->query['signature'] ?? NULL, fn($uid) => [$uid]))
+				{
+					$webapp->mysql->users('WHERE id=?s LIMIT 1', $acc[0])->fetch($user) || $webapp->mysql->users->insert([
+						'id' => $acc[0],
+						'date' => date('Y-m-d', $webapp->time),
+						'mtime' => $webapp->time,
+						'ctime' => $webapp->time,
+						'login' => 0,
+						'watch' => 0,
+						'share' => 0,
+						'lasttime' => $webapp->time,
+						'lastip' => $webapp->iphex($webapp->request_ip(TRUE)),
+						'device' => 'pc',
+						'balance' => 0,
+						'expire' => 0,
+						'coin' => 0,
+						'ticket' => 0,
+						'fid' => 1,
+						'uid' => 0,
+						'cid' => '0000',
+						'nickname' => $acc[0],
+						'gender' => 'none',
+						'descinfo' => '',
+						'historys' => '',
+						'favorites' => '',
+						'followed_ids' => '',
+						'follower_num' => 0,
+						'video_num' => 0
+					]);
+					$form = new webapp_form($this->main);
+					$form->xml['onsubmit'] = 'return masker.signin(this);';
+					$form->field('signature')['value'] = $signature;
+					$form->fieldset();
+					$form->button('完成注册', 'submit');
+				}
+				else
+				{
+					$this->form_signup($this->main);
+				}
+				$webapp->response_status(401);
+			}
+
+		}
+
+
+
+		
+		
+		
+
+
     }
+
+	function form_signup(webapp_html $ctx = NULL):webapp_form
+	{
+		$form = new webapp_form($ctx ?? $this->webapp, '?new/signup');
+		$form->xml['class'] = 'd';
+		$form->xml['onsubmit'] = 'return masker.signup(this);';
+		$form->fieldset('请输电子邮件地址');
+		$form->field('email', 'email', ['placeholder' => '请输电子邮件地址进行注册', 'required' => NULL]);
+		$form->fieldset();
+		$form->captcha('请输入以下验证码');
+		$form->xml->fieldset[4]['style'] = 'display:block;text-align: center;';
+		$form->fieldset();
+		$form->button('用户注册', 'submit');
+		return $form;
+	}
+	function post_signup()
+	{
+		while ($this->form_signup()->fetch($signup, $error))
+		{
+			$signature = $this->webapp->signature($this->webapp->random_hash(TRUE), '');
+
+			if ($this->webapp->smtp->sendmail($signup['email'], '【H狐狸】登录验证码 - hihuli.com',
+"<pre style=\"font: 110% verdana, georgia, arial, sans-serif\">亲爱的[用户邮箱前缀]，
+
+感谢您访问【H狐狸】，您的登录验证码：<a href=\"https://hihuli.com/?new/my,signature:{$signature}\">点击完成注册</a>
+
+请在10分钟内使用该验证码完成登录。如果您没有请求此验证码，请忽略此邮件。
+
+祝您使用愉快！
+
+
+此致，
+【H狐狸】运营团队
+https://hihuli.com/</pre>", 'text/html; charset=utf-8') === FALSE) {
+				$error['message'] = '邮件系统繁忙请稍后再试！';
+			}
+			$error['message'] = '请去邮箱确收取认证邮件完成注册！';
+			break;
+		}
+		echo $error['message'];
+	}
+
+	
 
 	function pv():void
 	{
@@ -851,6 +957,7 @@ class webapp_router_new extends webapp_echo_html
 		//$this->pv();
 		$this->xml->body->div['class'] = 'my';
 		$this->set_header_title('个人中心');
+		$this->main->append('h2', '马上就来。。。');
         return;
 
 		$this->aside->append('img', ['src' => $qrurl = '?qrcode/' . $this->webapp->encrypt($this->user)]);

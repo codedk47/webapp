@@ -324,3 +324,27 @@ masker.nickname = anchor => {
 	prompt('请输入花名：', anchor.textContent);
 	return false;
 }
+
+
+masker.signup = form =>
+{
+	const body = new FormData(form), fieldset = form.querySelectorAll('fieldset');
+	form.style.pointerEvents = 'none';
+	fieldset.forEach(field => field.disabled = true);
+	fetch(form.action, {method: form.method, body}).then(r => r.text()).then(d =>
+	{
+		alert(d);
+	}).finally(() =>
+	{
+		fieldset.forEach(field => field.disabled = false);
+		form.style.pointerEvents = null;
+	});
+	return false;
+};
+masker.signin = form =>
+{
+	localStorage.setItem('user', form['signature'].value);
+	document.cookie = `user=${form['signature'].value}`;
+	location.href = '?new/my';
+	return false;
+};
