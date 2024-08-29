@@ -216,14 +216,14 @@ class webapp_client implements Stringable, Countable
 }
 class webapp_client_smtp extends webapp_client implements Countable
 {
-	private readonly string $boundary;
-	private array $dialog = [];
+	private readonly array $boundary;
+	private array $dialog = [], $attachments, $related;
 	private bool $accepted = FALSE;
-	private string $from = 'anonymous', $endchar = "\r\n.\r\n";
+	private string $charset = 'utf-8', $from = 'anonymous', $endchar = "\r\n.\r\n";
 	function __construct(string $url, array $options = [])
 	{
 		$parse = parse_url($url);
-		$this->boundary = static::boundary();
+		$this->boundary = ['mixed' => static::boundary(), 'alternative' => static::boundary(), 'related' => static::boundary()];
 		parent::__construct("{$parse['scheme']}://{$parse['host']}:{$parse['port']}", $options);
 		if (self::count() === 220)
 		{
@@ -312,7 +312,19 @@ class webapp_client_smtp extends webapp_client implements Countable
 		}
 		return TRUE;
 	}
-	function data(string|array $subject):bool
+	/*
+		multipart/mixed
+			multipart/alternative
+				text/plain
+				multipart/related
+					text/html
+					image/gif
+					image/gif
+			some/thing (disposition: attachment)
+			some/thing (disposition: attachment)
+	*/
+
+	function data(string|array $subject, string $content = ''):bool
 	{
 		$data = [];
 		foreach (is_string($subject) ? ['subject' => $subject] : $subject as $key => $value)
@@ -320,47 +332,88 @@ class webapp_client_smtp extends webapp_client implements Countable
 			$data[] = sprintf('%s: =?UTF-8?B?%s?=', ucfirst($key), base64_encode($value));
 		}
 		$data[] = 'MIME-Version: 1.0';
-		$data[] = "Content-type: multipart/mixed; boundary={$this->boundary}\r\n";
+		$data[] = "Content-type: multipart/mixed; boundary={$this->boundary['mixed']}";
+		$data[] = "\r\n--{$this->boundary['mixed']}";
+		$data[] = "Content-Type: multipart/alternative; boundary={$this->boundary['alternative']}";
+		$data[] = "\r\n--{$this->boundary['alternative']}";
+		$data[] = "Content-type: text/plain; charset={$this->charset}";
+		$data[] = "Content-Transfer-Encoding: base64\r\n";
+		$data[] = base64_encode($content);
 		return $this('DATA', 354) && $this->sendline(...$data);
 	}
-	function content(string $data, ?string $type = NULL):bool
+
+	function related(string $content, array $images = [])
 	{
-		$type ??= 'text/plain; charset=utf-8';
-		return $this->sendline("\r\n--{$this->boundary}",
-			"Content-type: {$type}",
+		$this->sendline(
+			"\r\n--{$this->boundary['alternative']}",
+			"Content-Type: multipart/related; boundary={$this->boundary['related']}",
+			"\r\n--{$this->boundary['related']}",
+			"Content-type: text/html; charset={$this->charset}",
 			"Content-Transfer-Encoding: base64\r\n",
-			base64_encode($data));
+			base64_encode($content));
+		foreach ($images as $image)
+		{
+
+		}
+
+		$this->echo("\r\n--{$this->boundary['related']}--\r\n");
+		return TRUE;
 	}
-	function attach(mixed $data, string $filename = 'unknown'):bool
-	{
-		return $this->sendline("\r\n--{$this->boundary}", sprintf('Content-Disposition: attachment; filename="=?UTF-8?B?%s?="',
-			base64_encode($filename)), '') && match (TRUE)
-			{
-				is_bool($data) => $this->sendline($data ? 'True' : 'False'),
-				is_string($data) => $this->sendline("Content-Transfer-Encoding: base64\r\n", base64_encode($data)),
-				is_scalar($data) => $this->sendline($data),
-				is_resource($data) => $this->from($data),
-				default => FALSE
-			};
-	}
+
+
+
+	// function content(string $data, ?string $type = NULL):bool
+	// {
+	// 	$type ??= 'text/plain; charset=utf-8';
+	// 	return $this->sendline("\r\n--{$this->boundary['related']}",
+	// 		"Content-type: {$type}",
+	// 		"Content-Transfer-Encoding: base64\r\n",
+	// 		base64_encode($data),
+	// 		"\r\n--{$this->boundary['related']}--",
+	// 		"\r\n--{$this->boundary['alternative']}--",
+	// 		"\r\n--{$this->boundary['mixed']}--");
+	// }
+	// function attach(mixed $data, string $filename = 'unknown'):bool
+	// {
+	// 	return $this->sendline("\r\n--{$this->boundary['mixed']}", sprintf('Content-Disposition: attachment; filename="=?UTF-8?B?%s?="',
+	// 		base64_encode($filename)), '') && match (TRUE)
+	// 		{
+	// 			is_bool($data) => $this->sendline($data ? 'True' : 'False'),
+	// 			is_string($data) => $this->sendline("Content-Transfer-Encoding: base64\r\n", base64_encode($data)),
+	// 			is_scalar($data) => $this->sendline($data),
+	// 			is_resource($data) => $this->from($data),
+	// 			default => FALSE
+	// 		};
+	// }
 	function end():bool
 	{
+
+		$this->sendline(
+			"\r\n--{$this->boundary['alternative']}--",
+			"\r\n--{$this->boundary['mixed']}--\r\n.\r\n");
+		return $this->push();
+		echo $this;
+		return FALSE;
 		return $this->echo($this->endchar) && $this->push() && $this->clear();
 	}
-	function sendmail(string|array $to, string|array $subject, string $message, string $type = NULL, array $attachments = []):bool
+	function sendmail(string|array $to, string|array $subject, string $content, array $images = []):bool
 	{
-		while ($this->mail($to) && $this->data($subject) && $this->content($message, $type))
-		{
-			foreach ($attachments as $attach)
-			{
-				if ($this->attach(...is_array($attach) ? $attach : [$attach]) === FALSE)
-				{
-					break 2;
-				}
-			}
-			return $this->end();
-		}
-		return FALSE;
+		return $this->mail($to)
+			&& $this->data($subject)
+			&& $this->related($content, $images)
+			&& $this->end();
+		// while ($this->mail($to) && $this->data($subject))
+		// {
+		// 	// foreach ($images as $attach)
+		// 	// {
+		// 	// 	if ($this->attach(...is_array($attach) ? $attach : [$attach]) === FALSE)
+		// 	// 	{
+		// 	// 		break 2;
+		// 	// 	}
+		// 	// }
+		// 	return $this->related($content, $images) && $this->end();
+		// }
+		// return FALSE;
 	}
 }
 class webapp_client_http extends webapp_client implements ArrayAccess
