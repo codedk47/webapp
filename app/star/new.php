@@ -131,7 +131,7 @@ class webapp_router_new extends webapp_echo_html
 
 此致，
 【H狐狸】运营团队
-https://hihuli.com/</pre>", 'text/html; charset=utf-8') === FALSE) {
+https://hihuli.com/</pre>") === FALSE) {
 				$error['message'] = '邮件系统繁忙请稍后再试！';
 			}
 			$error['message'] = '请去邮箱确收取认证邮件完成注册！';

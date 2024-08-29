@@ -339,7 +339,7 @@ class webapp_client_smtp extends webapp_client implements Countable
 		$data[] = "Content-type: text/plain; charset={$this->charset}";
 		$data[] = "Content-Transfer-Encoding: base64\r\n";
 		$data[] = base64_encode($content);
-		return $this('DATA', 354) && $this->sendline(...$data);
+		return $this('DATA', 354) && $this->clear() && $this->sendline(...$data);
 	}
 
 	function related(string $content, array $images = [])
@@ -385,35 +385,31 @@ class webapp_client_smtp extends webapp_client implements Countable
 	// 			default => FALSE
 	// 		};
 	// }
-	function end():bool
+	function end(bool $debug = FALSE):bool
 	{
-
-		$this->sendline(
+		$end = $this->sendline(
 			"\r\n--{$this->boundary['alternative']}--",
 			"\r\n--{$this->boundary['mixed']}--\r\n.\r\n");
-		return $this->push();
-		echo $this;
-		return FALSE;
-		return $this->echo($this->endchar) && $this->push() && $this->clear();
+		if ($debug)
+		{
+			echo $this;
+			return FALSE;
+		}
+		return $end && $this->push();
 	}
 	function sendmail(string|array $to, string|array $subject, string $content, array $images = []):bool
 	{
-		return $this->mail($to)
-			&& $this->data($subject)
-			&& $this->related($content, $images)
-			&& $this->end();
-		// while ($this->mail($to) && $this->data($subject))
-		// {
-		// 	// foreach ($images as $attach)
-		// 	// {
-		// 	// 	if ($this->attach(...is_array($attach) ? $attach : [$attach]) === FALSE)
-		// 	// 	{
-		// 	// 		break 2;
-		// 	// 	}
-		// 	// }
-		// 	return $this->related($content, $images) && $this->end();
-		// }
-		// return FALSE;
+		try
+		{
+			return $this->mail($to)
+				&& $this->data($subject)
+				&& $this->related($content, $images)
+				&& $this->end();
+		}
+		catch (Error)
+		{
+			return FALSE;
+		}
 	}
 }
 class webapp_client_http extends webapp_client implements ArrayAccess
