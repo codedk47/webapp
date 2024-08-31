@@ -104,6 +104,7 @@ class webapp_router_new extends webapp_echo_html
 		$form = new webapp_form($ctx ?? $this->webapp, '?new/signup');
 		$form->xml['class'] = 'd';
 		$form->xml['onsubmit'] = 'return masker.signup(this);';
+		
 		$form->fieldset('请输电子邮件地址');
 		$form->field('email', 'email', ['placeholder' => '请输电子邮件地址进行注册', 'required' => NULL]);
 		$form->fieldset();
@@ -111,6 +112,8 @@ class webapp_router_new extends webapp_echo_html
 		$form->xml->fieldset[4]['style'] = 'display:block;text-align: center;';
 		$form->fieldset();
 		$form->button('用户注册', 'submit');
+		$form->fieldset();
+		$form->button('商务联系')['onclick'] = "window.open('{$this->webapp['app_business']}')";
 		return $form;
 	}
 	function post_signup()
@@ -136,6 +139,10 @@ https://hihuli.com/</pre>") === FALSE) {
 			}
 			$error['message'] = '请去邮箱确收取认证邮件完成注册！';
 			break;
+		}
+		if (isset($error['field']) && $error['field'] === 'captcha_decrypt')
+		{
+			$error['message'] = '验证码错误！';
 		}
 		echo $error['message'];
 	}
@@ -956,7 +963,7 @@ https://hihuli.com/</pre>") === FALSE) {
         //
 		//$this->pv();
 		$this->xml->body->div['class'] = 'my';
-		$this->set_header_title('个人中心');
+		$this->set_header_title('个人中心', '?new');
 		$this->main->append('h2', '马上就来。。。');
         return;
 
