@@ -29,6 +29,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 {
 	const version = '4.7.1a', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
 	public readonly self $webapp;
+	//public readonly bool $index;
 	public readonly array $query;
 	public object|string $router;
 	public string $method;
@@ -423,6 +424,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		[&$this->router, &$this->method] = $this->route;
 		$this->query = preg_match_all('/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/', $this['request_query'],
 			$pattern, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL) ? array_column($pattern, 2, 1) : [];
+		//$this->index = !(isset($entry[1]) && strtolower($entry[1]) !== strtolower($this['app_index']));
 	}
 	function __destruct()
 	{
@@ -756,9 +758,9 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return sprintf('%s://%s', $this->request_scheme(), $this->request_host(), $path);
 	}
-	function request_entry():string
+	function request_entry(bool $route = FALSE):string
 	{
-		return $this->request_origin() . $this->io->request_entry();
+		return $this->request_origin() . $this->io->request_entry() . '?' . strstr("{$this['request_query']},", ',', TRUE);
 	}
 	function request_dir():string
 	{

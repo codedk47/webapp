@@ -553,18 +553,28 @@ JS;
 }
 class webapp_echo_sitemap extends webapp_echo_xml
 {
-	public readonly string $origin;
+	const xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9';
+	public readonly string $origin, $entry;
+	private string $tag = 'url';
+	private webapp_xml $loc;
+	public readonly array $google;
 	function __construct(webapp $webapp)
 	{
-		parent::__construct($webapp, 'urlset');
-		$this->xml['xmlns'] = 'http://www.sitemaps.org/schemas/sitemap/0.9';
-		$this->xml->comment($webapp['copy_webapp']);
 		$this->origin = $webapp->request_origin();
+		parent::__construct($webapp, 'urlset');
 	}
-	function url(string $loc, array $params = []):webapp_xml
+	function index():webapp_xml
 	{
-		$url = $this->xml->append('url');
-		$url->append('loc')->text($loc);
+		$this->tag = 'sitemap';
+		$newnode = $this->document->createElementNS(static::xmlns, 'sitemapindex');
+		$this->document->replaceChild($newnode, $this->document->documentElement);
+		//$this->document->replaceChildren($newnode);
+		return $this->xml = webapp_xml::from($newnode);
+	}
+	function loc(string $url, array $params = []):webapp_xml
+	{
+		$this->loc = $this->xml->append($this->tag);
+		$this->loc->append('loc', $url);
 		if ($params)
 		{
 			/*
@@ -578,17 +588,53 @@ class webapp_echo_sitemap extends webapp_echo_xml
 			*/
 			foreach (['lastmod', 'changefreq', 'priority'] as $name)
 			{
-				isset($params[$name]) && $url->append($name)->text((string)$params[$name]);
+				isset($params[$name]) && $this->loc->append($name)->text((string)$params[$name]);
 			}
 		}
-		return $url;
+		return $this->loc;
 	}
 	function path(string ...$gets)
 	{
 		foreach ($gets as $get)
 		{
-			$this->url($this->origin . $get);
+			$this->loc($this->origin . $get);
 		}
+	}
+	function google()
+	{
+		$this->google = [
+			'image:namespace' => 'http://www.google.com/schemas/sitemap-image/1.1',
+			'video:namespace' => 'http://www.google.com/schemas/sitemap-video/1.1'
+		];
+		foreach ($this->google as $qualified => $namespace)
+		{
+			$this->document->createAttributeNS($namespace, $qualified);
+		}
+	}
+	function google_image(string $image):webapp_xml
+	{
+		//https://developers.google.com/search/docs/crawling-indexing/sitemaps/image-sitemaps?hl=zh-cn
+		return $this->loc->addChild('image', namespace: $this->google['image:namespace'])->append('loc', $image);
+	}
+	function google_video(array $video):webapp_xml
+	{
+		//https://developers.google.com/search/docs/crawling-indexing/sitemaps/video-sitemaps?hl=zh-cn
+		$node = $this->loc->addChild('video', namespace: $this->google['video:namespace']);
+		foreach ($video as $key => $value)
+		{
+			if ($key === 'tag')
+			{
+				foreach ($value as $tag)
+				{
+					$node->append('tag')->cdata($tag);
+				}
+				continue;
+			}
+			in_array($key, ['title', 'description'], TRUE)
+				? $node->append($key)->cdata($value)
+				: $node->append($key, $value);
+		}
+		return $node;
 	}
 }
 /*

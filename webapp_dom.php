@@ -920,6 +920,7 @@ class webapp_html extends webapp_xml
 }
 class webapp_implementation extends DOMImplementation implements Stringable
 {
+	const xmlns = NULL;
 	static WeakMap $hooks;
 	public readonly webapp $webapp;
 	public readonly DOMDocument $document;
@@ -927,12 +928,13 @@ class webapp_implementation extends DOMImplementation implements Stringable
 	function __construct(string $type = 'html', string ...$params)
 	{
 		self::$hooks ??= new WeakMap;
-		$this(($this->document = $this->createDocument(qualifiedName: $type, doctype: $type === 'html'
+		$this(($this->document = $this->createDocument(static::xmlns, $type, $type === 'html'
 			|| $params ? $this->createDocumentType($type, ...$params) : NULL)) !== FALSE);
 		if (isset($this->webapp))
 		{
 			self::$hooks[$this->document] = $this->webapp;
 			$this->document->encoding = $this->webapp['app_charset'];
+			//$this->document->insertBefore(new DOMComment($this->webapp['copy_webapp']), $this->document->documentElement);
 		}
 	}
 	function __invoke(bool $loaded):bool
