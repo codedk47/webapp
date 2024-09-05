@@ -8,11 +8,12 @@ class webapp_router_sitemap extends webapp_echo_sitemap
 		{
 			$entry = $this->webapp->request_entry(TRUE);
 			$this->index();
-			$this->loc("{$entry},page:0");
+			$lastmod = date('Y-m-d', $this->webapp->fetch_videos->time());
+			$this->loc("{$entry},page:0", ['lastmod' => $lastmod]);
 			$index = ceil($this->webapp->mysql->videos->count() / 1000);
 			for ($i = 1; $i <= $index; ++$i)
 			{
-				$this->loc("{$entry},page:{$i}", ['lastmod' => date('Y-m-d')]);
+				$this->loc("{$entry},page:{$i}", ['lastmod' => $lastmod]);
 			}
 			return 200;
 		}
