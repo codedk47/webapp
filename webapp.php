@@ -760,7 +760,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function request_entry(bool $route = FALSE):string
 	{
-		return $this->request_origin() . $this->io->request_entry() . '?' . strstr("{$this['request_query']},", ',', TRUE);
+		return $this->request_origin() . $this->io->request_entry();
 	}
 	function request_dir():string
 	{

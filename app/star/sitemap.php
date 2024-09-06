@@ -6,7 +6,7 @@ class webapp_router_sitemap extends webapp_echo_sitemap
 	{
 		if ($page === NULL)
 		{
-			$entry = $this->webapp->request_entry(TRUE);
+			$entry = $this->webapp->request_entry() . '?' . strstr("{$this->webapp['request_query']},", ',', TRUE);
 			$this->index();
 			$lastmod = date('Y-m-d', $this->webapp->fetch_videos->time());
 			$this->loc("{$entry},page:0", ['lastmod' => $lastmod]);
