@@ -237,6 +237,19 @@ footer>div>a{
 footer>div>a>img{
 	width: 100%;
 }
+footer.entry{
+	background-color:rgb(224,54,147);
+	padding: 2rem 0;
+}
+footer.entry>a{
+	display: inline-block;
+	padding: .2rem 1rem;
+	background-color:rgba(255,179,197);
+	color:rgba(72,63,54);
+	text-decoration: none;
+	border-radius: .3rem;
+	border: 1px solid rgb(245,21,88);
+}
 CSS);
 $html->script(<<<'JS'
 async function masker(resource)
@@ -321,11 +334,13 @@ JS);
 				'target' => '_blank',
 				'onclick' => 'return dl(this)'])->append('img', ['src' => "/star/packer/pink/dl-{$this->type}.png"]);
 
-			$html->footer['style'] = 'background-color:white;height:10%';
+			//$html->footer['style'] = 'background-color:white;height:10%';
 			$html->xml->body->append('img', ['src' => $this->type === 'android'
 				? '/star/packer/tip-android.jpg'
 				: '/star/packer/tip-iphone.jpg',
 				'style' => 'width:100%']);
+			$html->footer->append('a', ['海外 Web 版入口', 'href' => 'https://hihuli.com/?new']);
+			$html->footer['class'] = 'entry';
 		}
 		else
 		{
@@ -334,6 +349,7 @@ JS);
 			$html->header->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])
 				->append('img', ['src' => '/star/packer/pink/tg.png']);
 		}
+		
 		$this->webapp->echo($html);
 	}
 }
