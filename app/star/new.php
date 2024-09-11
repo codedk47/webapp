@@ -17,7 +17,7 @@ class webapp_router_new extends webapp_echo_html
 		$this->title($webapp['app_name']);
 		$this->xml->head->meta[1]['content'] .= ',user-scalable=0';
 		$this->link_resources($webapp['app_resources']);
-		$this->xml->head->link['href'] = '/webapp/app/star/new.css?v=vds';
+		$this->xml->head->link['href'] = '/webapp/app/star/new.css?v=vd0';
 		$this->xml->head->append('link', ['rel' => 'icon', 'type' => 'image/x-icon', 'href' => '/favicon.ico']);
 		$this->script(['src' => '/webapp/app/star/new.js?v=hjk']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
@@ -236,8 +236,9 @@ https://hihuli.com/</pre>") === FALSE) {
 
 	function set_footer_menu():webapp_html
 	{
-		$this->footer->insert('div', 'before')->setattr([
-			"本站永久域名 {$this->webapp['app_website']} 回家不迷路！", 'class' => 'nav']);
+		$div = $this->footer->insert('div', 'before')->setattr(['class' => 'nav']);
+		$div->append('div', "本站永久域名 {$this->webapp['app_website']} 回家不迷路！");
+		$div->append('div', '海外 Web 版永久入口：hihuli.com');
 		
 		// ['style'] = 'height:4rem';
 		$this->footer['class'] = 'nav';
