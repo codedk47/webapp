@@ -241,7 +241,8 @@ footer.entry{
 	background-color:rgb(224,54,147);
 	padding: 2rem 0;
 }
-footer.entry>a{
+footer.entry>a,
+a.entry{
 	display: inline-block;
 	padding: .2rem 1rem;
 	background-color:rgba(255,179,197);
@@ -249,6 +250,12 @@ footer.entry>a{
 	text-decoration: none;
 	border-radius: .3rem;
 	border: 1px solid rgb(245,21,88);
+}
+a.entry{
+	position: absolute;
+	top:1rem;
+	left:50%;
+	font-size:2rem;
 }
 CSS);
 $html->script(<<<'JS'
@@ -348,6 +355,7 @@ JS);
 			$html->aside->append('img', ['src' => "?qrcode/{$encrypt}"]);
 			$html->header->append('a', ['href' => $this->webapp['app_business'], 'target' => '_blank'])
 				->append('img', ['src' => '/star/packer/pink/tg.png']);
+			$html->main->append('a', ['海外 Web 版入口', 'href' => 'https://hihuli.com/?new', 'class' => 'entry']);
 		}
 		
 		$this->webapp->echo($html);
