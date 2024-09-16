@@ -573,7 +573,8 @@ class webapp_router_home extends webapp_echo_masker
 		if (match ($this->webapp->request_country())
 		{
 			//美国、加拿大、澳大利亚
-			'US', 'CA', 'AU' => in_array('lqe2', $tags, TRUE) || in_array('F2i7', $tags, TRUE),
+			'US', 'CA', 'AU' => in_array('lqe2', $tags, TRUE),
+			//'US', 'CA', 'AU' => in_array('lqe2', $tags, TRUE) || in_array('F2i7', $tags, TRUE),
 			//欧洲
 			'AT', 'BE', 'CZ', 'DK', 'FI', 'FR', 'DE', 'IE', 'IT', 'NL', 'NO',
 			'PL', 'PT', 'SK', 'ES', 'SE', 'CH', 'GB' => in_array('lqe2', $tags, TRUE),
