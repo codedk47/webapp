@@ -179,11 +179,11 @@ https://hihuli.com/</pre>") === FALSE) {
 	}
 	function set_header_search(?string $goback = 'javascript:history.back();', string $word = NULL):webapp_html
 	{
-		$this->header->insert('a', 'before')->setattr([
-			'下载本站APP，看片不用翻墙哟！',
-			'href' => $this->webapp->fetch_configs('down_page'),
-			'style' => 'text-align:center;display:block;padding:var(--webapp-gapitem) 0'
-		]);
+		// $this->header->insert('a', 'before')->setattr([
+		// 	'下载本站APP，看片不用翻墙哟！',
+		// 	'href' => $this->webapp->fetch_configs('down_page'),
+		// 	'style' => 'text-align:center;display:block;padding:var(--webapp-gapitem) 0'
+		// ]);
 		$this->header['class'] = 'search';
 		$this->header->append('a', $goback === NULL
 			? ['href' => '?new', 'class' => 'logo']
@@ -501,7 +501,7 @@ https://hihuli.com/</pre>") === FALSE) {
 	}
 	function get_home(string $type = '')
 	{
-		$this->add_meta_seo('H狐狸 - 海量国产AV网红福利主播裸舞免费看 - hihuli.com');
+		$this->add_meta_seo('H狐狸 - 国产日本AV 网黄福利姬主播裸舞 流出泄露 黑料曝光 免费看  - hihuli.com');
 		$this->pv();
 		$this->aside['class'] = 'classify';
 		$this->set_aside_classify('?new/home,type:', $type, [ '' => '最新', 'short' => '抖音'], $classify);
