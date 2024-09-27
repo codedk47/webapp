@@ -677,7 +677,7 @@ https://hihuli.com/</pre>") === FALSE) {
 		$this->set_header_search();
 		$this->set_footer_menu();
 		$this->aside['class'] = 'watch';
-		if (empty($video = $this->webapp->fetch_videos[$hash]))
+		if (empty($video = $this->webapp->fetch_videos[$hash = strtoupper($hash)]))
 		{
 			$this->aside->append('strong', '您所观看的影片不见啦 :(');
 			return 404;
