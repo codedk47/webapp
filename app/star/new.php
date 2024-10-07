@@ -504,7 +504,8 @@ https://hihuli.com/</pre>") === FALSE) {
 		$this->add_meta_seo('H狐狸 - 国产日本AV 网黄福利姬主播裸舞 流出泄露 黑料曝光 免费看  - hihuli.com');
 		$this->pv();
 		$this->aside['class'] = 'classify';
-		$this->set_aside_classify('?new/home,type:', $type, [ '' => '最新', 'short' => '抖音'], $classify);
+		//$this->set_aside_classify('?new/home,type:', $type, [ '' => '最新', 'short' => '抖音'], $classify);
+		$this->set_aside_classify('?new/home,type:', $type, [ '' => '最新'], $classify);
 		$this->aside->insert('aside', 'after')->setattr('style', join(';', [
 			'position: sticky',
 			'top: 2rem',
@@ -878,6 +879,21 @@ https://hihuli.com/</pre>") === FALSE) {
 		{
 			$videos = [];
 			$tags = $this->webapp->fetch_tags->shortname();
+			if (match ($this->webapp->request_country())
+			{
+				//美国、加拿大、澳大利亚
+				'US', 'CA', 'AU' => in_array('lqe2', $tags, TRUE),
+				//'US', 'CA', 'AU' => in_array('lqe2', $tags, TRUE) || in_array('F2i7', $tags, TRUE),
+				//欧洲
+				'AT', 'BE', 'CZ', 'DK', 'FI', 'FR', 'DE', 'IE', 'IT', 'NL', 'NO',
+				'PL', 'PT', 'SK', 'ES', 'SE', 'CH', 'GB' => in_array('lqe2', $tags, TRUE),
+				//日本
+				'JP' => in_array('F2i7', $tags, TRUE),
+				default => FALSE
+			})
+
+
+			
 			foreach ($this->webapp->fetch_videos->with('type="v"')->random(9) as $video)
 			//foreach ($this->webapp->fetch_videos->with('type="v"')->paging($page, 6) as $video)
 			{
