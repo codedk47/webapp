@@ -19,7 +19,7 @@ class webapp_router_new extends webapp_echo_html
 		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/new.css?v=vd0';
 		$this->xml->head->append('link', ['rel' => 'icon', 'type' => 'image/x-icon', 'href' => '/favicon.ico']);
-		$this->script(['src' => '/webapp/app/star/new.js?v=hjk']);
+		$this->script(['src' => '/webapp/app/star/new.js?v=q2']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-7BF2SJFFPC']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-7BF2SJFFPC")');
@@ -34,11 +34,11 @@ class webapp_router_new extends webapp_echo_html
 // 			$adult->append('a', ['Enter', 'href' => 'javascript:;', 'onclick' => 'adulted(this.parentNode.remove())']);
 // 			$adult->append('a', ['No', 'href' => 'https://www.google.com/']);
 // 		}
-
+		
 		$acc = $webapp->authorize($webapp->request_cookie('user'), fn($uid) => [$uid]);
 		if ($acc && $webapp->mysql->users('WHERE id=?s LIMIT 1', $acc[0])->fetch($user))
 		{
-			$this->user = new user($webapp, $acc);
+			$this->user = new user($webapp, $user);
 		}
 		else
 		{
@@ -982,8 +982,10 @@ https://hihuli.com/</pre>") === FALSE) {
 		//$this->pv();
 		$this->xml->body->div['class'] = 'my';
 		$this->set_header_title('个人中心', '?new');
-		$this->main->append('h2', '马上就来。。。');
-        return;
+		// $this->main->append('h2', '马上就来。。。');
+		// print_r($this->user);
+        // return;
+		
 
 		$this->aside->append('img', ['src' => $qrurl = '?qrcode/' . $this->webapp->encrypt($this->user)]);
 		$info = $this->aside->append('div');
@@ -992,21 +994,21 @@ https://hihuli.com/</pre>") === FALSE) {
 		$info->append('a', [$this->user['nickname'], 'href' => 'javascript:;', 'data-label' => '花名：',
 			'onclick' => 'return masker.nickname(this)']);
 		$info->append('a', ['点击保存二维码', 'href' => "{$qrurl},type:png,filename:{$this->user->id}.png", 'target' => '_blank', 'data-label' => '凭证：']);
-
+		
 		$anchors = $this->main->append('div', ['class' => 'listmenu']);
 		//$anchors->append('a', ['每日观影剩余次数', 'href' => 'javascript:;', 'data-right' => ($count = count($this->user)) === -1 ? '无限' : "{$count} 次"]);
 		$anchors->append('a', ['商务洽谈', 'href' => $this->webapp['app_business'], 'target' => '_blank', 'data-right' => 'Telegram']);
 		$anchors->append('a', ['官方交流', 'href' => $this->webapp['app_community'], 'target' => '_blank', 'data-right' => 'Telegram']);
 
-		$anchors->append('a', ['输入邀请码',
-			'href' => '?new/my-invite,code:',
-			'style' => 'color:var(--webapp-primary);font-weight:bold',
-			'onclick' => 'return !masker.prompt(this.textContent).then(value=>masker.json(this.href+value.replace(/[^0-9A-Z]/ig,"")))',
-			'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
-		$anchors->append('a', ['分享链接',
-			'href' => '?new/my-shareurl',
-			'style' => 'color:var(--webapp-primary);font-weight:bold',
-			'data-right' => "{$this->user['share']} 次"]);
+		// $anchors->append('a', ['输入邀请码',
+		// 	'href' => '?new/my-invite,code:',
+		// 	'style' => 'color:var(--webapp-primary);font-weight:bold',
+		// 	'onclick' => 'return !masker.prompt(this.textContent).then(value=>masker.json(this.href+value.replace(/[^0-9A-Z]/ig,"")))',
+		// 	'data-right' => $this->user['iid'] ? '已领取' : '未领取']);
+		// $anchors->append('a', ['分享链接',
+		// 	'href' => '?new/my-shareurl',
+		// 	'style' => 'color:var(--webapp-primary);font-weight:bold',
+		// 	'data-right' => "{$this->user['share']} 次"]);
 
 		$anchors->append('a', ['收藏记录', 'href' => '?new/my-favorites', 'data-right' => count($this->user->favorites())]);
 		$anchors->append('a', ['历史记录', 'href' => '?new/my-historys', 'data-right' => count($this->user->historys())]);

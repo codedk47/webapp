@@ -1,6 +1,6 @@
 const
     promise = new Promise(resolve => addEventListener('DOMContentLoaded', event => resolve())),
-    masker = resource => fetch(resource);
+    masker = fetch;
 masker.then = callback => promise.then(callback);
 
 
@@ -278,7 +278,7 @@ masker.shortchanged = videos =>
 };
 masker.confirm = (content, context) => new Promise((resolve, reject) => confirm(content) ? resolve(context) : reject(context));
 masker.prompt = (title, value) => new Promise((resolve, reject) => (value = prompt(title, value)) === null ? reject() : resolve(value));
-masker.clear = action => masker.confirm('清除后不可恢复！').then(() => masker.json(`?home/my-clear,action:${action}`));
+masker.clear = action => masker.confirm('清除后不可恢复！').then(() => masker.json(`?new/my-clear,action:${action}`));
 masker.change = (element, field, value) => masker.prompt(title, value).then(value => {
 
 	masker.json()
