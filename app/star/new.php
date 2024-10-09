@@ -704,6 +704,10 @@ https://hihuli.com/</pre>") === FALSE) {
 		else
 		{
 			$this->aside['data-type'] .= $video['type'];
+			if ($this->user)
+			{
+				$this->user->watched($hash) || $this->user->watch($hash);
+			}
 			//$this->user->watched($hash) || $this->user->watch($hash);
 			// if ($this->user->count())
 			// {
