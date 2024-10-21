@@ -894,7 +894,7 @@ https://hihuli.com/</pre>") === FALSE) {
 				//日本
 				'JP' => in_array('F2i7', $tags, TRUE),
 				default => FALSE
-			})
+			}) return;
 
 
 			
