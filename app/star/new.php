@@ -24,6 +24,14 @@ class webapp_router_new extends webapp_echo_html
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-7BF2SJFFPC']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-7BF2SJFFPC")');
 
+		$this->xml->body->append('script', [
+			'type' => 'text/javascript',
+			'src' => 'https://bngprm.com/promo.php?c=813969&type=video_slider&name=julie_belle&frequency=43200000'
+		]);
+
+
+
+
 //      if ($this->webapp->request_cookie('adult') !== 'yes')
 // 		{
 // 			$this->xml->body->div['style'] = 'filter:blur(var(--webapp-gapitem))';
