@@ -24,11 +24,14 @@ class webapp_router_new extends webapp_echo_html
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-7BF2SJFFPC']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-7BF2SJFFPC")');
 
-		$this->webapp->response_cookie('bcvstool', '', 0);
-		$this->xml->body->append('script', [
-			'type' => 'text/javascript',
-			'src' => 'https://bngprm.com/promo.php?c=813969&type=video_slider&name=julie_belle&frequency=43200000'
+		$this->script([
+			'id' => 'SCSpotScript',
+			'src' => 'https://creative.rmhfrtnd.com/widgets/Spot/lib.js'
 		]);
+		
+
+
+
 
 
 
@@ -245,6 +248,20 @@ https://hihuli.com/</pre>") === FALSE) {
 
 	function set_footer_menu():webapp_html
 	{
+
+
+		$this->xml->body->insert('script', 'after')->cdata('(new StripchatSpot({"autoplay":"allInFocus","closeButtonDelay":0,"autoclose":0,"userId":"6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975"})).mount(document.body)');
+		$div = $this->main->insert('iframe', 'before')->setattr([
+			'width' => '100%',
+			'height' => '230px',
+			'style' => 'display:block',
+			'marginWidth' => 0,
+			'marginHeight' => 0,
+			'frameBorder' => 'no',
+			'src' => 'https://creative.rmhfrtnd.com/widgets/v4/MobileSlider?autoplay=onHover&tag=girls&userId=6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975'
+		
+		]);
+
 		$div = $this->footer->insert('div', 'before')->setattr(['class' => 'nav']);
 		$div->append('div', "本站永久域名 {$this->webapp['app_website']} 回家不迷路！");
 		$div->append('div', '海外 Web 版永久入口：hihuli.com');
