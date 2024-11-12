@@ -250,7 +250,7 @@ https://hihuli.com/</pre>") === FALSE) {
 	{
 
 
-		$this->xml->body->insert('script', 'after')->cdata('(new StripchatSpot({"autoplay":"allInFocus","closeButtonDelay":0,"autoclose":0,"userId":"6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975"})).mount(document.body)');
+		// $this->xml->body->insert('script', 'after')->cdata('(new StripchatSpot({"autoplay":"allInFocus","closeButtonDelay":0,"autoclose":0,"userId":"6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975"})).mount(document.body)');
 		$div = $this->main->insert('iframe', 'before')->setattr([
 			'width' => '100%',
 			'height' => '230px',
