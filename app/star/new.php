@@ -258,7 +258,7 @@ https://hihuli.com/</pre>") === FALSE) {
 			'marginWidth' => 0,
 			'marginHeight' => 0,
 			'frameBorder' => 'no',
-			'src' => 'https://creative.rmhfrtnd.com/widgets/v4/MobileSlider?autoplay=onHover&animation=simple&tag=girls%2Fchinese&userId=6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975'
+			'src' => 'https://creative.rmhfrtnd.com/widgets/v4/MobileSlider?autoplay=onHover&animation=simple&titleTextColor=ffffff&tag=girls%2Fchinese&userId=6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975'
 		
 		]);
 
