@@ -19,7 +19,7 @@ class webapp_router_new extends webapp_echo_html
 		$this->link_resources($webapp['app_resources']);
 		$this->xml->head->link['href'] = '/webapp/app/star/new.css?v=vd0';
 		$this->xml->head->append('link', ['rel' => 'icon', 'type' => 'image/x-icon', 'href' => '/favicon.ico']);
-		$this->script(['src' => '/webapp/app/star/new.js?v=q2']);
+		$this->script(['src' => '/webapp/app/star/new.js?v=ca1']);
 		$this->script(['src' => '/webapp/res/js/slideshows.js?v=w']);
 		$this->script(['src' => 'https://www.googletagmanager.com/gtag/js?id=G-7BF2SJFFPC']);
 		$this->script('window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-7BF2SJFFPC")');
@@ -248,13 +248,6 @@ https://hihuli.com/</pre>") === FALSE) {
 
 	function set_footer_menu():webapp_html
 	{
-		// $this->xml->body->append('iframe', [
-		// 	'class' => 'ss',
-			
-
-		// ]);
-
-		$this->xml->body->insert('script', 'after')->cdata('(new StripchatSpot({"autoplay":"allInFocus","closeButtonDelay":0,"autoclose":0,"userId":"6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975"})).mount(document.body.firstChild)');
 		$div = $this->main->insert('iframe', 'before')->setattr([
 			'width' => '100%',
 			'height' => '230px',
