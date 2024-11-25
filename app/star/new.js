@@ -24,6 +24,7 @@ addEventListener("DOMContentLoaded", event =>
 					sessionStorage.setItem('ca', 1);
 					document.onclick = null;
 					anchor.click();
+					open('https://bongacams8.com/track?v=2&c=813969');
 					event.stopPropagation();
 					event.preventDefault();
 					return false;
