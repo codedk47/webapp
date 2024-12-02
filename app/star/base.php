@@ -123,7 +123,7 @@ class base extends webapp
 			//$change['data-key'] = bin2hex($this->random(8));
 
 
-			$origin = strstr($this->webapp['app_resources'][1], '/robots.txt', TRUE);
+			$origin = strstr($this->webapp['app_resources'][0], '/robots.txt', TRUE);
 			if (isset($this->query['nop']))
 			{
 				$picture->remove();
