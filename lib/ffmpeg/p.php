@@ -11,11 +11,11 @@ class ffmpeg implements Stringable
 	{
 		
 
-		var_dump(sprintf('%s ' . array_shift($parameters), static::ffmpeg, ...$parameters));
-		return 0;
-		// exec(sprintf('%s %s', static::ffmpeg, $command), $results, $retval);
-		// $output = join(PHP_EOL, $results);
-		// return $retval;
+		// var_dump(sprintf('%s ' . array_shift($parameters), static::ffmpeg, ...$parameters));
+		// return 0;
+		exec(sprintf('%s ' . array_shift($parameters), static::ffmpeg, ...$parameters), $results, $retval);
+		$output = join(PHP_EOL, $results);
+		return $retval;
 	}
 	// static function download_m3u8_as()
 	// {

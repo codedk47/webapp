@@ -255,7 +255,8 @@ https://hihuli.com/</pre>") === FALSE) {
 			'marginWidth' => 0,
 			'marginHeight' => 0,
 			'frameBorder' => 'no',
-			'src' => 'https://creative.rmhfrtnd.com/widgets/v4/MobileSlider?autoplay=onHover&thumbType=avatar&hideTitle=1&animation=simple&tag=girls%2Fchinese%2Cgirls%2Fteens%2Cgirls%2Fyoung&userId=6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975'
+			'src' => 'https://creative.rmhfrtnd.com/widgets/v4/Universal?autoplay=onHover&thumbsMargin=2&gridRows=1&gridColumns=2&responsive=0&tag=girls%2Fchinese&userId=6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975'
+			//'src' => 'https://creative.rmhfrtnd.com/widgets/v4/MobileSlider?autoplay=onHover&thumbType=avatar&hideTitle=1&animation=simple&tag=girls%2Fchinese%2Cgirls%2Fteens%2Cgirls%2Fyoung&userId=6f68933faadb49f81113ff69bd4dcaf5ac8946341c330a445694c53487108975'
 		
 		]);
 
