@@ -139,6 +139,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return static::hash(static::random(16), $care);
 	}
+	static function serial_hash():string
+	{
+
+	}
 	static function random_weights(array $items, string $key = 'weight'):array
 	{
 		if ($items)
