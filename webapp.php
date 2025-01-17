@@ -350,7 +350,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function maskdata(string $source):string
 	{
-		
 		$bin = static::random(8);
 		$key = array_map(ord(...), str_split($bin));
 		$length = strlen($source);
