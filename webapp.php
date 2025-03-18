@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require 'webapp_filter.php';
 require 'webapp_client.php';
 require 'webapp_dom.php';
 require 'webapp_echo.php';
@@ -348,35 +349,48 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			//: 'javascript:Function(atob(\''. base64_encode($code) .'\'))();';
 
 	}
-	static function maskdata(string $source):string
+	static function masker($stream, string &$key = NULL, bool $merged = FALSE)
 	{
-		$bin = static::random(8);
-		$key = array_map(ord(...), str_split($bin));
-		$length = strlen($source);
-		for ($i = 0; $i < $length; ++$i)
-		{
-			$source[$i] = chr(ord($source[$i]) ^ $key[$i % 8]);
-			//$source[$i] = chr($key[$i % 8] = ord($source[$i]) ^ $key[$i % 8]);
-		}
-		return $bin . $source;
+		$key ??= static::random(8);
+		return is_resource(is_string($stream) ? $stream = fopen($stream, 'r') : $stream)
+			&& is_resource(stream_filter_append($stream, 'webapp.filter_mask.encode', STREAM_FILTER_READ,
+				$merged ? $key : array_map(ord(...), str_split($key)))) ? $stream : NULL;
 	}
-	static function maskfile(string $source, string $destination):bool
+	static function unmasker($stream, string $key = NULL)
 	{
-		return file_put_contents($destination, static::maskdata($data = file_get_contents($source))) === strlen($data) + 8;
+		return is_resource(is_string($stream) ? $stream = fopen($stream, 'r') : $stream)
+			&& is_resource(stream_filter_append($stream, 'webapp.filter_mask.decode', STREAM_FILTER_READ,
+				$key ? array_map(ord(...), str_split($key)) : NULL)) ? $stream : NULL;
 	}
-	static function unmasker(string $binkey, string $bindata):?string
+	static function maskfile($from, $to, string &$key = NULL, bool $merged = FALSE):bool
 	{
-		if (count($key = array_map(ord(...), str_split($binkey))) > 7)
-		{
-			$length = strlen($bindata);
-			for ($i = 0; $i < $length; ++$i)
-			{
-				$bindata[$i] = chr(ord($bindata[$i]) ^ $key[$i % 8]);
-				//$bindata[$i] = chr($key[$i % 8] ^ $key[$i % 8] = ord($bindata[$i]));
-			}
-			return $bindata;
-		}
-		return NULL;
+		return is_resource($stream = static::masker($from, $key, TRUE))
+			&& is_resource(is_string($to) ? $to = fopen($to, 'w') : $to)
+			&& stream_copy_to_stream($stream, $to) !== FALSE
+			&& feof($stream);
+	}
+	static function maskdata(string $data, string &$key = NULL, bool $merged = FALSE):?string
+	{
+		return is_resource($stream = fopen('php://memory', 'w+'))
+			&& fwrite($stream, $data) === strlen($data)
+			&& is_resource(static::masker($stream, $key, $merged))
+			&& rewind($stream)
+			&& is_string($result = stream_get_contents($stream)) ? $result : NULL;
+	}
+	static function unmaskfile($from, $to, string $key = NULL):bool
+	{
+		return is_resource($stream = static::unmasker($from, $key))
+			&& is_resource(is_string($to) ? $to = fopen($to, 'w') : $to)
+			&& stream_copy_to_stream($stream, $to) !== FALSE
+			&& feof($stream);
+	}
+	static function unmaskdata(string $data, string $key = NULL):?string
+	{
+		return is_resource($stream = fopen('php://memory', 'w+'))
+			&& fwrite($stream, $data) === strlen($data)
+			&& is_resource(static::unmasker($stream, $key))
+			&& rewind($stream)
+			&& is_string($result = stream_get_contents($stream)) ? $result : NULL;
 	}
 	function __construct(array $config = [], private readonly webapp_io $io = new webapp_stdio)
 	{

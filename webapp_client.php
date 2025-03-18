@@ -1,23 +1,5 @@
 <?php
 declare(strict_types=1);
-class webapp_client_debug extends php_user_filter
-{
-	//注意：过滤流在内部读取时只能过滤一个队列，这是一个BUG？
-	function filter($in, $out, &$consumed, $closing):int
-	{
-		echo "\r\n", $consumed === NULL
-			? '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>'
-			: '<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<',
-			"\r\n";
-		while ($bucket = stream_bucket_make_writeable($in))
-		{
-			$consumed += $bucket->datalen;
-			stream_bucket_append($out, $bucket);
-			echo quoted_printable_encode($bucket->data);
-		}
-		return PSFS_PASS_ON;
-	}
-}
 class webapp_client implements Stringable, Countable
 {
 	public array $errors = [];
@@ -64,11 +46,7 @@ class webapp_client implements Stringable, Countable
 	//调试
 	function debug(int $filter = STREAM_FILTER_WRITE/* STREAM_FILTER_ALL */):void
 	{
-		if (in_array('webapp_client_debug', stream_get_filters(), TRUE) === FALSE)
-		{
-			stream_filter_register('webapp_client_debug', 'webapp_client_debug');
-			stream_filter_append($this->client, 'webapp_client_debug', $filter);
-		}
+		stream_filter_append($this->client, 'webapp.filter_debug', $filter);
 	}
 	//重连
 	function reconnect(int $retry = 0):bool

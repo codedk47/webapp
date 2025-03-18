@@ -418,6 +418,30 @@ JS;
 		return $form;
 	}
 }
+class webapp_echo_admin extends webapp_echo_html
+{
+	public array $nav = [], $submenu = [];
+	function __construct(webapp $webapp)
+	{
+		parent::__construct($webapp, function(string $uid, string $pwd) use($webapp)
+		{
+			return $uid === $webapp['admin_username'] && $pwd === $webapp['admin_password'] ? [$uid, $pwd] : [];
+		});
+		$this->title('Admin');
+		if ($this->auth)
+		{
+			$this->nav && $this->nav($this->nav);
+			if (isset($this->submenu[$this->webapp->method]))
+			{
+				foreach ($this->submenu[$this->webapp->method] as $submenu)
+				{
+					$this->aside->append('a', [$submenu[0], 'href' => $submenu[1]]);
+				}
+			}
+		}
+		return empty($this->auth);
+	}
+}
 class webapp_echo_masker extends webapp_echo_html
 {
 	public readonly bool $initiated;

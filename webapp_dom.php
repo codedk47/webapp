@@ -843,6 +843,19 @@ class webapp_html extends webapp_xml
 	// 	$node['class'] = 'webapp-button';
 	// 	return $node;
 	// }
+	function displayarray(array $contents, bool $fold = FALSE)
+	{
+		$table = new webapp_table($this);
+
+		foreach ($contents as $name => $value)
+		{
+			$row = $table->row();
+			$row->append('td', $name);
+			$row->append('td', is_array($value)
+				? json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : $value);
+		}
+		//return ()->displayarray($contents, $fold);
+	}
 	function figure(string $source, string $caption = NULL):static
 	{
 		$figure = $this->append('figure');
