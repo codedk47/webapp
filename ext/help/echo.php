@@ -25,7 +25,11 @@ class webapp_echo_help extends webapp_echo_html
 			]],
 			['Mixed', [
 				['Request Uploadedfile', '?help/index,class:webapp-request-uploadedfile'],
+				['Filter DebBUG', '?help/index,class:webapp-filter-debug'],
+				['Filter Mask', '?help/index,class:webapp-filter-mask'],
 				['Client', '?help/index,class:webapp-client'],
+				['Client HTTP', '?help/index,class:webapp-client-http'],
+				['Client WebSocket', '?help/index,class:webapp-client-websocket'],
 				['MySQL', '?help/index,class:webapp-mysql'],
 				['MySQL Table', '?help/index,class:webapp-mysql-table'],
 				['Redis', '?help/index,class:webapp-redis'],

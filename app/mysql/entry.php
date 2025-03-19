@@ -1,6 +1,6 @@
 <?php
-require 'webapp/webapp_stdio.php';
-class webapp_ext_mysql_entry extends webapp
+require '../../webapp_stdio.php';
+new class extends webapp
 {
 	private readonly array $connect;
 	function __construct()
@@ -861,4 +861,4 @@ CSS);
 		$table->fieldset(...['kill', ...$fields]);
 		$table->header('Processlist');
 	}
-}
+};
