@@ -12,6 +12,9 @@ new class extends webapp
 
 	function get_home()
 	{
+		$this->echo_html('asd', function(){
 
+			
+		});
 	}
 };

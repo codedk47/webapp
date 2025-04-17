@@ -630,9 +630,21 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				? (is_bool($replace[$key]) ? $carry : "{$carry},{$key}:{$replace[$key]}")
 				: "{$carry},{$key}", $router ?? strstr("?{$this['request_query']},", ',', TRUE));
 	}
-	function echo_html():webapp_echo_html
+	function echo_xml(string $type = 'webapp', string ...$params):webapp_echo_xml
 	{
-		$this->app('webapp_echo_html');
+		return $this->app('webapp_echo_xml', $type, ...$params);
+	}
+	function echo_json(array|object $data = []):webapp_echo_json
+	{
+		return $this->app('webapp_echo_json', $data);
+	}
+	function echo_html(string $title = NULL, callable $authenticate = NULL):webapp_echo_html
+	{
+		$this->app('webapp_echo_html', $authenticate);
+		is_string($title) && $this->app->title($title);
+		return $this->app;
+
+		
 	}
 	function admin(?string $signature = NULL):array
 	{

@@ -227,23 +227,23 @@ class webapp_echo_html extends webapp_implementation
 			$form = static::form_sign_in($this->main);
 			$form->xml['data-storage'] = $storage;
 			$form->xml['onsubmit'] = <<<'JS'
-if (this.style.pointerEvents !== 'none')
-{
-	const
-	account = Object.fromEntries(new FormData(this).entries()),
-	fieldset = this.querySelectorAll('fieldset');
-	this.style.pointerEvents = 'none';
-	fieldset.forEach(field => field.disabled = true);
-	this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
-	fetch(this.action, {headers: {'Sign-In': JSON.stringify(account)}}).then(response => response.json())
-	.then(authorize => authorize.signature
-		? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature}`)
-		: (this[authorize.error.field].setCustomValidity(authorize.error.message),
-			requestAnimationFrame(() => this.reportValidity())))
-	.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
-}
-return false;
-JS;
+			if (this.style.pointerEvents !== 'none')
+			{
+				const
+				account = Object.fromEntries(new FormData(this).entries()),
+				fieldset = this.querySelectorAll('fieldset');
+				this.style.pointerEvents = 'none';
+				fieldset.forEach(field => field.disabled = true);
+				this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
+				fetch(this.action, {headers: {'Sign-In': JSON.stringify(account)}}).then(response => response.json())
+				.then(authorize => authorize.signature
+					? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature}`)
+					: (this[authorize.error.field].setCustomValidity(authorize.error.message),
+						requestAnimationFrame(() => this.reportValidity())))
+				.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
+			}
+			return false;
+			JS;
 			$webapp->response_status(401);
 		}
 		else
@@ -315,34 +315,36 @@ JS;
 	{
 		$this->script("const {$name}=" . json_encode($variables, JSON_UNESCAPED_UNICODE));
 	}
+
 	// function addstyle(string $rule):DOMText
 	// {
 	// 	return ($this->style ??= $this->xml->head->append('style', ['media' => 'all']))->text($rule);
 	// }
-// 	function wallpaper()
-// 	{
-// 		$this->script(['src' => '/webapp/res/js/tgwallpaper.min.js']);
-// 		$wallpaper = $this->xml->body->insert('div', 'first')->setattr(['style' => 'position:fixed;z-index:-1;top:0;left:0;right:0;bottom:0;']);
-// 		$wallpaper->append('canvas', [
-// 			'id'=>"wallpaper",
-// 			'width' => 50,
-// 			'height' => 50,
-// 			'data-colors' => 'dbddbb,6ba587,d5d88d,88b884',
-// 			'style' => 'position:absolute;width:100%;height:100%'
-// 		]);
-// 		$wallpaper->append('div', [
-// 			'style' => 'position:absolute;width:100%;height:100%;background-image:url(/webapp/res/ps/pattern-telegram.svg);mix-blend-mode: overlay;opacity:.4'
-// 		]);
-// 		$this->xml->body->append('script', <<<JS
-// const wallpaper = document.getElementById('wallpaper');
-// if (wallpaper)
-// {
-// 	TWallpaper.init(wallpaper);
-// 	TWallpaper.animate(true);
-// 	TWallpaper.update();
-// }
-// JS);
-// 	}
+	// function wallpaper()
+	// {
+	// 	$this->script(['src' => '/webapp/res/js/tgwallpaper.min.js']);
+	// 	$wallpaper = $this->xml->body->insert('div', 'first')->setattr(['style' => 'position:fixed;z-index:-1;top:0;left:0;right:0;bottom:0;']);
+	// 	$wallpaper->append('canvas', [
+	// 		'id'=>"wallpaper",
+	// 		'width' => 50,
+	// 		'height' => 50,
+	// 		'data-colors' => 'dbddbb,6ba587,d5d88d,88b884',
+	// 		'style' => 'position:absolute;width:100%;height:100%'
+	// 	]);
+	// 	$wallpaper->append('div', [
+	// 		'style' => 'position:absolute;width:100%;height:100%;background-image:url(/webapp/res/ps/pattern-telegram.svg);mix-blend-mode: overlay;opacity:.4'
+	// 	]);
+	// 	$this->xml->body->append('script', <<<JS
+	// 	const wallpaper = document.getElementById('wallpaper');
+	// 	if (wallpaper)
+	// 	{
+	// 		TWallpaper.init(wallpaper);
+	// 		TWallpaper.animate(true);
+	// 		TWallpaper.update();
+	// 	}
+	// 	JS);
+	// }
+
 	function nav(array $link):webapp_html
 	{
 		$node = $this->header->append('nav', ['class' => 'webapp']);
@@ -556,22 +558,22 @@ class webapp_echo_masker extends webapp_echo_html
 	function sign_in()
 	{
 		static::form_sign_in($this->main)->xml['onsubmit'] = <<<'JS'
-if (this.style.pointerEvents !== 'none')
-{
-	const data = Object.fromEntries(new FormData(this).entries());
-	this.style.pointerEvents = 'none';
-	this.querySelectorAll('fieldset').forEach(element => element.disabled = true);
-	masker(this.action, {headers: {'Sign-In': JSON.stringify(data)}}).then(response => response.json()).then(data =>
-	{
-		data.errors.length && alert(data.errors.join('\n'));
-		data.signature && masker.authorization(data.signature).then(() => location.reload());
-	}).finally(() => {
-		this.style.pointerEvents = null;
-		this.querySelectorAll('fieldset').forEach(element => element.disabled = false);
-	});
-}
-return false;
-JS;
+		if (this.style.pointerEvents !== 'none')
+		{
+			const data = Object.fromEntries(new FormData(this).entries());
+			this.style.pointerEvents = 'none';
+			this.querySelectorAll('fieldset').forEach(element => element.disabled = true);
+			masker(this.action, {headers: {'Sign-In': JSON.stringify(data)}}).then(response => response.json()).then(data =>
+			{
+				data.errors.length && alert(data.errors.join('\n'));
+				data.signature && masker.authorization(data.signature).then(() => location.reload());
+			}).finally(() => {
+				this.style.pointerEvents = null;
+				this.querySelectorAll('fieldset').forEach(element => element.disabled = false);
+			});
+		}
+		return false;
+		JS;
 		return 401;
 	}
 }
