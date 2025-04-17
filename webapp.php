@@ -630,6 +630,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				? (is_bool($replace[$key]) ? $carry : "{$carry},{$key}:{$replace[$key]}")
 				: "{$carry},{$key}", $router ?? strstr("?{$this['request_query']},", ',', TRUE));
 	}
+	function echo_html():webapp_echo_html
+	{
+		$this->app('webapp_echo_html')
+	}
 	function admin(?string $signature = NULL):array
 	{
 		return static::authorize(func_num_args() ? $signature : $this->request_cookie($this['admin_cookie']), $this->authenticate(...));
