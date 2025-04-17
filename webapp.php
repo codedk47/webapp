@@ -632,7 +632,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function echo_html():webapp_echo_html
 	{
-		$this->app('webapp_echo_html')
+		$this->app('webapp_echo_html');
 	}
 	function admin(?string $signature = NULL):array
 	{
