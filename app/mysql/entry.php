@@ -6,8 +6,14 @@ new class extends webapp
 	function __construct()
 	{
 		parent::__construct(['admin_cookie' => 'mysql']);
-		if ($this->allow($this)) return;
-		if ($this->not_sign_in()) return;
+
+
+		//print_r($this->auth);
+
+
+
+		// if ($this->allow($this)) return;
+		// if ($this->not_sign_in()) return;
 
 
 		$this->connect = is_string($host = $this->request_cookie_decrypt('mysql_connect'))
@@ -46,9 +52,9 @@ new class extends webapp
 	}
 	function html():webapp_echo_html
 	{
-		$this->app('webapp_echo_html')->title('MySQL');
-		$this->app->script(['src' => '/webapp/res/js/wa.js']);
-		$this->app->nav([
+		$this->echo_html('MySQL');
+		$this->echo->script(['src' => '/webapp/res/js/wa.js']);
+		$this->echo->nav([
 			['Home', '?'],
 			['Console', '?console'],
 			// ['Microsoft', [
@@ -66,43 +72,43 @@ new class extends webapp
 			['Status', '?status'],
 			['Processlist', '?processlist'],
 		]);
-		$this->app->xml->head->append('style')->cdata(<<<CSS
-dialog>footer{
-	margin-top: 1rem;
-}
-dialog>form>fieldset{
-	border: none;
-	margin: 0;
-	padding: 0;
-}
-table[class*=-multiline] td>a,
-table[class*=-multiline] td>span{
-	display: block;
-}
-table[class*=-multiline] td>span:empty::before{
-	content: 'NULL';
-	color: var(--webapp-hint);
-}
-table[class|=webapp]>thead div[class*=-bar]>a{
-	padding: 0 .4rem;
-}
-table[class|=webapp]>tbody[class=viewdata]>tr:nth-child(even){
-	background-color: linen;
-}
-table[class|=webapp]>tbody[class=viewdata]>tr>td>span{
-	display: inline-block;
-	overflow: hidden;
-	max-width: 10rem;
-	text-overflow: ellipsis;
-}
-CSS);
+		$this->echo->xml->head->append('style')->cdata(<<<CSS
+		dialog>footer{
+			margin-top: 1rem;
+		}
+		dialog>form>fieldset{
+			border: none;
+			margin: 0;
+			padding: 0;
+		}
+		table[class*=-multiline] td>a,
+		table[class*=-multiline] td>span{
+			display: block;
+		}
+		table[class*=-multiline] td>span:empty::before{
+			content: 'NULL';
+			color: var(--webapp-hint);
+		}
+		table[class|=webapp]>thead div[class*=-bar]>a{
+			padding: 0 .4rem;
+		}
+		table[class|=webapp]>tbody[class=viewdata]>tr:nth-child(even){
+			background-color: linen;
+		}
+		table[class|=webapp]>tbody[class=viewdata]>tr>td>span{
+			display: inline-block;
+			overflow: hidden;
+			max-width: 10rem;
+			text-overflow: ellipsis;
+		}
+		CSS);
 		if ($this->method !== 'get_home')
 		{
-			$this->app->aside->select(array_combine($this->charsets, $this->charsets))->setattr([
+			$this->echo->aside->select(array_combine($this->charsets, $this->charsets))->setattr([
 				'onchange' => 'location.replace(`?console/${this.value}`)',
 				'class' => 'webapp-button'])->selected($this->charset);
 
-			$ul = $this->app->aside->append('ul', ['class' => 'webapp-select']);
+			$ul = $this->echo->aside->append('ul', ['class' => 'webapp-select']);
 			foreach ($this->databases as $name)
 			{
 				$node = $ul->append('li');
@@ -118,11 +124,11 @@ CSS);
 			}
 		}
 
-		return $this->app;
+		return $this->echo;
 	}
 	function json():webapp_echo_json
 	{
-		return $this->app('webapp_echo_json');
+		return $this->echo_json();
 	}
 	function tables(bool $status):array
 	{
@@ -169,14 +175,14 @@ CSS);
 	}
 	function post_console()
 	{
-		$this->json;
+		$this->echo_json();
 		if ($this->form_console($this)->fetch($console))
 		{
 			if (strlen($console['createdb'])
 				&& $this->mysql->real_query('CREATE DATABASE ?a', $console['createdb'])
 				&& $this->mysql->select_db($console['createdb'])) {
 				$this->response_cookie('mysql_database', $console['createdb']);
-				$this->json->goto('?database');
+				$this->echo->goto('?database');
 			}
 			if (strlen($console['command']))
 			{
@@ -197,25 +203,25 @@ CSS);
 
 	function delete_database()
 	{
-		$this->json;
+		$this->echo_json();
 		$this->mysql->real_query('DROP DATABASE ?a', $this->database)
-			&& $this->json->goto('?database');
+			&& $this->echo->goto('?database');
 	}
 	function patch_database()
 	{
-		$this->json;
+		$this->echo_json();
 		is_array($data = $this->request_content())
 			&& array_key_exists('tablename', $data)
 			&& is_string($data['tablename'])
 			&& strlen($data['tablename'])
 			&& $this->mysql->real_query('CREATE TABLE ?a(`hash` char(12) NOT NULL, PRIMARY KEY (`hash`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4', $data['tablename'])
-			&& $this->json->goto('?table/' . $this->url64_encode($data['tablename']));
+			&& $this->echo->goto('?table/' . $this->url64_encode($data['tablename']));
 	}
 
 	//截断表（全部）
 	function patch_truncate(string $name = NULL)
 	{
-		$this->json->goto(is_string($name) ? "?table/{$name}" : '?database');
+		$this->echo->goto(is_string($name) ? "?table/{$name}" : '?database');
 		foreach (is_string($name)
 			? (is_string($tablename = $this->url64_decode($name)) ? [$tablename] : [])
 			: $this->tables(FALSE) as $tablename) {
@@ -225,7 +231,7 @@ CSS);
 	//删除表（全部）
 	function delete_table(string $name = NULL)
 	{
-		$this->json->goto('?database');
+		$this->echo->goto('?database');
 		foreach (is_string($name)
 			? (is_string($tablename = $this->url64_decode($name)) ? [$tablename] : [])
 			: $this->tables(FALSE) as $tablename) {
@@ -235,13 +241,13 @@ CSS);
 
 	function patch_table(string $name)
 	{
-		$this->json->goto();
+		$this->echo->goto();
 		$tablename = $this->url64_decode($name);
 		foreach ($this->request_content() as $field => $value)
 		{
 			if ($field === 'rename')
 			{
-				$this->json['goto'] = '?table/' . $this->url64_encode($value);
+				$this->echo['goto'] = '?table/' . $this->url64_encode($value);
 				$this->mysql->real_query('ALTER TABLE ?a ?? ?a', $tablename, $field, $value);
 			}
 			else
@@ -261,11 +267,11 @@ CSS);
 	{
 		if (is_string($name))
 		{
-			$this->json;
+			$this->echo_json();
 			if (is_string($database = $this->url64_decode($name)) && $this->mysql->select_db($database))
 			{
 				$this->response_cookie('mysql_database', $database);
-				$this->json->goto('?database');
+				$this->echo->goto('?database');
 			}
 			return;
 		}
@@ -511,7 +517,7 @@ CSS);
 
 		$table->xml['style'] = 'margin-bottom:1rem';
 		
-		$table = $this->app->main->table($this->mysql->show('INDEX FROM ?a', $tablename)->result($fields), function(webapp_table $table, array $field, string $name)
+		$table = $this->echo->main->table($this->mysql->show('INDEX FROM ?a', $tablename)->result($fields), function(webapp_table $table, array $field, string $name)
 		{
 			$table->row();
 			$table->cell()->append('a', ['Delete',
@@ -650,25 +656,25 @@ CSS);
 	//创建字段
 	function post_field(string $table)
 	{
-		$this->json;
+		$this->echo_json();
 		$this->form_field($this, $table)->input($commands)
 			&& $this->mysql->real_query(...$commands)
-			&& $this->json->goto("?table/{$table}");
+			&& $this->echo->goto("?table/{$table}");
 	}
 	//删除字段
 	function delete_field(string $table, string $field)
 	{
-		$this->json;
+		$this->echo_json();
 		$this->mysql->real_query('ALTER TABLE ?a DROP ?a', $this->url64_decode($table), $this->url64_decode($field))
-			&& $this->json->goto("?table/{$table}");
+			&& $this->echo->goto("?table/{$table}");
 	}
 	//修改字段
 	function patch_field(string $table, string $field)
 	{
-		$this->json;
+		$this->echo_json();
 		$this->form_field($this, $table, $field)->input($commands)
 			&& $this->mysql->real_query(...$commands)
-			&& $this->json->goto("?table/{$table}");
+			&& $this->echo->goto("?table/{$table}");
 	}
 	//查看字段
 	function get_field(string $table, string $field = NULL)
@@ -679,7 +685,7 @@ CSS);
 
 	function post_alter(string $table, string $field, string $type)
 	{
-		$this->json;
+		$this->echo_json();
 		if ($this->mysql->real_query(...['ALTER TABLE ?a ADD ' . match ($type)
 		{
 			'index' => 'INDEX(?a)',
@@ -687,15 +693,15 @@ CSS);
 			default => 'PRIMARY KEY(?a)'
 		}, $this->url64_decode($table), $this->url64_decode($field)])) {
 
-			$this->json->goto("?table/{$table}");
+			$this->echo->goto("?table/{$table}");
 		}
 	}
 	function delete_alter(string $table, string $field)
 	{
-		$this->json;
+		$this->echo_json();
 		if ($this->mysql->real_query('ALTER TABLE ?a DROP INDEX ?a',
 			$this->url64_decode($table), $this->url64_decode($field))) {
-			$this->json->goto("?table/{$table}");
+			$this->echo->goto("?table/{$table}");
 		}
 	}
 
@@ -765,35 +771,35 @@ CSS);
 	//增加数据
 	function post_data(string $table)
 	{
-		$this->json;
+		$this->echo_json();
 		$form = $this->form_data($this, $table);
 		if ($form->fetch($data))
 		{
 			$model = $this->mysql->table($form->table);
 			if ($model->insert($data))
 			{
-				$this->json->goto(sprintf('?data/%s,primary:%s', $table, $this->url64_encode($data[$model->primary])));
+				$this->echo->goto(sprintf('?data/%s,primary:%s', $table, $this->url64_encode($data[$model->primary])));
 			}
 		}
 	}
 	//删除数据
 	function delete_data(string $table, string $primary)
 	{
-		$this->json;
+		$this->echo_json();
 		$model = $this->mysql->table($this->url64_decode($table));
 		$model->delete('WHERE ?a=?s LIMIT 1', $model->primary, $this->url64_decode($primary)) === 1
-			&& $this->json->goto();
+			&& $this->echo->goto();
 	}
 	//修改数据
 	function patch_data(string $table, string $primary)
 	{
-		$this->json;
+		$this->echo_json();
 		$form = $this->form_data($this, $table);
 		if ($form->fetch($data))
 		{
 			$model = $this->mysql->table($form->table);
 			$model('WHERE ?a=?s LIMIT 1', $model->primary, $this->url64_decode($primary))->update($data) === 1
-				&& $this->json->goto(sprintf('?data/%s,primary:%s', $table, $this->url64_encode($data[$model->primary])));
+				&& $this->echo->goto(sprintf('?data/%s,primary:%s', $table, $this->url64_encode($data[$model->primary])));
 		}
 	}
 	//查看数据
@@ -847,7 +853,7 @@ CSS);
 	{
 		if (is_int($id))
 		{
-			$this->json;
+			$this->echo_json();
 			$this->mysql->kill($id);
 			$this->response_location('?processlist');
 			return 302;

@@ -490,7 +490,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 						}
 						$status = $tracert->invoke($router, ...$this->entry);
 					}
-					$tracing = property_exists($this, 'app') ? $this->app : $method ?? $router;
+					$tracing = property_exists($this, 'echo') ? $this->echo : $method ?? $router;
 					if ($tracing !== $this && $tracing instanceof Stringable)
 					{
 					 	$this->echo((string)$tracing);
@@ -587,10 +587,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return property_exists($this, 'buffer') ? ftell($this->buffer) : 0;
 	}
-	final function app(string $name, mixed ...$params):object
-	{
-		return $this($this->app = new $name($this, ...$params));
-	}
+	// final function app(string $name, mixed ...$params):object
+	// {
+	// 	return $this($this->echo = new $name($this, ...$params));
+	// }
 	final function break(Closure|array $router, mixed ...$params):void
 	{
 		[$this->route[0], $this->route[1]] = [$router, '__invoke'];
@@ -630,26 +630,29 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				? (is_bool($replace[$key]) ? $carry : "{$carry},{$key}:{$replace[$key]}")
 				: "{$carry},{$key}", $router ?? strstr("?{$this['request_query']},", ',', TRUE));
 	}
+	// function echo_object(string|object $instance, mixed ...$params):object
+	// {
+	// 	return $this($this->echo = is_string($instance) ? new ${"$instance"}($this, ...$params) : $instance);
+	// }
 	function echo_xml(string $type = 'webapp', string ...$params):webapp_echo_xml
 	{
-		return $this->app('webapp_echo_xml', $type, ...$params);
+		return $this->echo = new webapp_echo_xml($this, $type, ...$params);
+	}
+	function echo_svg(array $attributes = []):webapp_echo_svg
+	{
+		return $this->echo = new webapp_echo_svg($this, $attributes);
 	}
 	function echo_json(array|object $data = []):webapp_echo_json
 	{
-		return $this->app('webapp_echo_json', $data);
+		return $this($this->echo = new webapp_echo_json($this, $data));
 	}
 	function echo_html(string $title = NULL, callable $authenticate = NULL):webapp_echo_html
 	{
-		$this->app('webapp_echo_html', $authenticate);
-		is_string($title) && $this->app->title($title);
-		return $this->app;
+		$this->echo = new webapp_echo_html($this, $authenticate);
+		is_string($title) && $this->echo->title($title);
+		return $this->echo;
+	}
 
-		
-	}
-	function admin(?string $signature = NULL):array
-	{
-		return static::authorize(func_num_args() ? $signature : $this->request_cookie($this['admin_cookie']), $this->authenticate(...));
-	}
 	function authenticate(string $username, string $password, int $signtime, string $additional):array
 	{
 		return $signtime > static::time(-$this['admin_expire'])
@@ -657,12 +660,37 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			&& $password === $this['admin_password']
 				? [$username, $password, $additional] : [];
 	}
-	function authorization(Closure $authenticate = NULL):array
+	function auth(?callable $authenticate = NULL, string $storage = NULL):array
 	{
-		return $authenticate
-			? static::authorize($this->request_authorization(), $authenticate)
-			: $this->admin($this->request_authorization());
+		return static::authorize($this->request_authorization($type)
+			?? $this->request_cookie($storage ?? $this['admin_cookie']), $authenticate
+			?? $this->authenticate(...));
 	}
+
+
+	// function request_authorized(callable $authenticate = NULL, string $storage = NULL)
+	// {
+	// 	$this->request_auth_cookie($this['admin_cookie']);
+	// 	$this->request_authorization($type)
+	// }
+
+	// function admin(?string $signature = NULL):array
+	// {
+	// 	return static::authorize(func_num_args() ? $signature : $this->request_cookie($this['admin_cookie']), $this->authenticate(...));
+	// }
+	// function authenticate(string $username, string $password, int $signtime, string $additional):array
+	// {
+	// 	return $signtime > static::time(-$this['admin_expire'])
+	// 		&& $username === $this['admin_username']
+	// 		&& $password === $this['admin_password']
+	// 			? [$username, $password, $additional] : [];
+	// }
+	// function authorization(Closure $authenticate = NULL):array
+	// {
+	// 	return $authenticate
+	// 		? static::authorize($this->request_authorization(), $authenticate)
+	// 		: $this->admin($this->request_authorization());
+	// }
 	function authorized(string $additional = NULL):array
 	{
 		return ['Authorization' => 'Bearer ' . static::signature($this['admin_username'], $this['admin_password'], $additional)];
@@ -884,7 +912,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function response_uploading(string $uploadurl, int $offset = 0):void
 	{
-		$this->app('webapp_echo_json', ['uploadurl' => $uploadurl, 'offset' => $offset]);
+		$this->echo_json(['uploadurl' => $uploadurl, 'offset' => $offset]);
 	}
 
 	// function request_cond(string $name = 'cond'):array
@@ -1009,39 +1037,39 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		$this->response_header('Etag', $hash = '"' . ($needhash ? static::hash($etag, TRUE) : $etag) . '"');
 		return $this->request_header('If-None-Match') !== $hash;
 	}
-	function not_sign_in(callable $authenticate = NULL, string $method = NULL):bool
-	{
-		if (method_exists(...$this->route))
-		{
-			if (static::authorize($this->request_cookie($this['admin_cookie']), $authenticate ??= $this->authenticate(...)))
-			{
-				return FALSE;
-			}
-			$method ??= $this['app_index'];
-			if ($this->method === "post_{$method}")
-			{
-				$this->app('webapp_echo_json', ['signature' => NULL]);
-				if (webapp_echo_html::form_sign_in($this)->fetch($sign)
-					&& static::authorize($signature = static::signature($sign['username'], $sign['password']), $authenticate)) {
-					$this->response_cookie($this['admin_cookie'], $this->app['signature'] = $signature);
-					$this->response_status(200);
-					$this->response_refresh(0);
-					return FALSE;
-				}
-				$this->app['errors'][] = 'Sign in failed';
-			}
-			else
-			{
-				if ($this->method === "get_{$method}")
-				{
-					$this->app('webapp_echo_html')->title('Sign In');
-					webapp_echo_html::form_sign_in($this->app->main);
-				}
-			}
-			$this->response_status(401);
-		}
-		return TRUE;
-	}
+	// function not_sign_in(callable $authenticate = NULL, string $method = NULL):bool
+	// {
+	// 	if (method_exists(...$this->route))
+	// 	{
+	// 		if (static::authorize($this->request_cookie($this['admin_cookie']), $authenticate ??= $this->authenticate(...)))
+	// 		{
+	// 			return FALSE;
+	// 		}
+	// 		$method ??= $this['app_index'];
+	// 		if ($this->method === "post_{$method}")
+	// 		{
+	// 			$this->app('webapp_echo_json', ['signature' => NULL]);
+	// 			if (webapp_echo_html::form_sign_in($this)->fetch($sign)
+	// 				&& static::authorize($signature = static::signature($sign['username'], $sign['password']), $authenticate)) {
+	// 				$this->response_cookie($this['admin_cookie'], $this->app['signature'] = $signature);
+	// 				$this->response_status(200);
+	// 				$this->response_refresh(0);
+	// 				return FALSE;
+	// 			}
+	// 			$this->app['errors'][] = 'Sign in failed';
+	// 		}
+	// 		else
+	// 		{
+	// 			if ($this->method === "get_{$method}")
+	// 			{
+	// 				$this->app('webapp_echo_html')->title('Sign In');
+	// 				webapp_echo_html::form_sign_in($this->app->main);
+	// 			}
+	// 		}
+	// 		$this->response_status(401);
+	// 	}
+	// 	return TRUE;
+	// }
 	function allow(string|self $router, string ...$methods):bool
 	{
 		return $this->router === $router
@@ -1115,7 +1143,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			{
 				[$type, $data] = ['error', (string)$error];
 			}
-			$this->app('webapp_echo_xml')->xml->setattr(['type' => $type])->cdata($data);
+			$this->echo_xml()->xml->setattr(['type' => $type])->cdata($data);
 			return 200;
 		}
 		return 401;
@@ -1154,7 +1182,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				in_array($type, ['png', 'jpeg'], TRUE)
 					? $this->response_content_type("image/{$type}")
 						|| webapp_image::qrcode($draw, $this['qrcode_size'])->{$type}($this->buffer)
-					: $this->app('webapp_echo_svg')->xml->qrcode($draw, $this['qrcode_size']);
+					: $this->echo_svg()->xml->qrcode($draw, $this['qrcode_size']);
 				$filename && $this->response_content_download($filename);
 				return 200;
 			}
@@ -1167,7 +1195,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		$this->response_cache_control('private, max-age=86400');
 		if ($this->nonematch($this->request_ip(), TRUE))
 		{
-			$this->app('webapp_echo_svg')->xml->logo();
+			$this->echo_svg()->xml->logo();
 			return 200;
 		}
 		return 304;
@@ -1178,7 +1206,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		{
 			//https://developer.mozilla.org/zh-CN/docs/Web/Progressive_web_apps
 			//https://developer.mozilla.org/zh-CN/docs/Web/Manifest
-			$this->app('webapp_echo_json', $this['manifests']);
+			$this->echo_json($this['manifests']);
 			return 200;
 		}
 		return 404;
@@ -1201,11 +1229,12 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			try
 			{
 				include 'ext/help/echo.php';
-				return $this->app('webapp_echo_help')->{$method}(...$this->query);
+				$this->echo = new webapp_echo_help($this);
+				return $this->echo->{$method}(...$this->query);
 			}
 			catch (Error)
 			{
-				unset($this->app);
+				unset($this->echo);
 				return 500;
 			}
 		}

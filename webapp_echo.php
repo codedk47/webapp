@@ -206,20 +206,22 @@ class webapp_echo_html extends webapp_implementation
 			&$node->header, &$node->aside, &$node->main,
 			$node->append('footer', $webapp['copy_webapp'])];
 
+
+			//$webapp->auth($authenticate)
 		if ($authenticate && empty($this->auth = $webapp->authorize($webapp->request_cookie($storage ??= $webapp['admin_cookie']), $authenticate)))
 		{
 			if (is_array($input = json_decode($webapp->request_header('Sign-In') ?? '', TRUE)))
 			{
-				$webapp->app('webapp_echo_json');
+				$this->json();
 				if (static::form_sign_in($this->webapp)->fetch($account, input: $input))
 				{
 					if ($auth = $authenticate($account['username'], $account['password'], $webapp->time))
 					{
-						$webapp->app['signature'] = $webapp->signature(...$auth);
+						$this->echo['signature'] = $webapp->signature(...$auth);
 					}
 					else
 					{
-						$webapp->app['errors'][] = 'Authorization failed';
+						$this->echo['errors'][] = 'Authorization failed';
 					}
 				}
 				return $webapp->response_status(200);
@@ -268,7 +270,7 @@ class webapp_echo_html extends webapp_implementation
 	}
 	function json(array|object $data = []):webapp_echo_json
 	{
-		return $this->echo = $this->webapp->app('webapp_echo_json', $data);
+		return $this->echo = $this->webapp->echo_json($data);
 	}
 	function frag():webapp_html
 	{
