@@ -5,25 +5,22 @@ new class extends webapp
 	private readonly array $connect;
 	function __construct()
 	{
-		parent::__construct(['admin_cookie' => 'mysql']);
-
-
-		//print_r($this->auth);
-
-
-
-		// if ($this->allow($this)) return;
-		// if ($this->not_sign_in()) return;
-
-
-		$this->connect = is_string($host = $this->request_cookie_decrypt('mysql_connect'))
-			? json_decode($host, TRUE) : [$this['mysql_hostname'], $this['mysql_username'], $this['mysql_password']];
-		if (in_array($this->method, ['get_home', 'post_home']) === FALSE && $this->mysql->connect_errno)
+		parent::__construct();
+		if ($this->auth)
 		{
-			$this->response_location('?');
-			$this->response_status(302);
-			return;
+			$this->connect = is_string($host = $this->request_cookie_decrypt('mysql_connect'))
+				? json_decode($host, TRUE) : [$this['mysql_hostname'], $this['mysql_username'], $this['mysql_password']];
+			if (in_array($this->method, ['get_home', 'post_home']) === FALSE && $this->mysql->connect_errno)
+			{
+				$this->response_location('?');
+				$this->response_status(302);
+				return;
+			}
 		}
+	}
+	function authenticate()
+	{
+		return $this->admin(...func_get_args());
 	}
 	function mysql(...$commands):webapp_mysql
 	{

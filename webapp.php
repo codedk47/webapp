@@ -443,6 +443,19 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		$this->query = preg_match_all('/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/', $this['request_query'],
 			$pattern, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL) ? array_column($pattern, 2, 1) : [];
 		//$this->index = !(isset($entry[1]) && strtolower($entry[1]) !== strtolower($this['app_index']));
+	
+
+		if (method_exists($this, 'authenticate'))
+		{
+			$this->auth = [];
+			if (method_exists(...$this->route)
+				&& in_array($this->method, ['get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests']) === FALSE
+				&& empty($this->auth = $this->auth($this->authenticate(...)))) {
+				$this->router === $this && $this->method === "get_{$this['app_index']}"
+					? $this->echo_html('Authenticate', $this)
+					: $this->response_status(401);
+			}
+		}
 	}
 	function __destruct()
 	{
@@ -646,25 +659,36 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return $this($this->echo = new webapp_echo_json($this, $data));
 	}
-	function echo_html(string $title = NULL, callable $authenticate = NULL):webapp_echo_html
+	function echo_html(string $title = NULL, callable|webapp $authenticate = NULL, string $storage = NULL):webapp_echo_html
 	{
-		$this->echo = new webapp_echo_html($this, $authenticate);
+		$this->echo = new webapp_echo_html($this, $authenticate, $storage);
 		is_string($title) && $this->echo->title($title);
 		return $this->echo;
 	}
 
-	function authenticate(string $username, string $password, int $signtime, string $additional):array
+	function admin(string $username, string $password, int $signtime, string $additional = NULL):array
 	{
 		return $signtime > static::time(-$this['admin_expire'])
 			&& $username === $this['admin_username']
 			&& $password === $this['admin_password']
 				? [$username, $password, $additional] : [];
 	}
-	function auth(?callable $authenticate = NULL, string $storage = NULL):array
+	function auth(callable $authenticate = NULL, string $storage = NULL):array
 	{
 		return static::authorize($this->request_authorization($type)
 			?? $this->request_cookie($storage ?? $this['admin_cookie']), $authenticate
-			?? $this->authenticate(...));
+			?? $this->admin(...));
+	}
+	function allow(string|self $router, string ...$methods):bool
+	{
+		return $this->router === $router
+			&& in_array($this->method, $router === $this ? [
+				'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
+	}
+	function not_auth()
+	{
+
+		in_array($this->method, ['get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests']);
 	}
 
 
@@ -1036,45 +1060,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		$this->response_header('Etag', $hash = '"' . ($needhash ? static::hash($etag, TRUE) : $etag) . '"');
 		return $this->request_header('If-None-Match') !== $hash;
-	}
-	// function not_sign_in(callable $authenticate = NULL, string $method = NULL):bool
-	// {
-	// 	if (method_exists(...$this->route))
-	// 	{
-	// 		if (static::authorize($this->request_cookie($this['admin_cookie']), $authenticate ??= $this->authenticate(...)))
-	// 		{
-	// 			return FALSE;
-	// 		}
-	// 		$method ??= $this['app_index'];
-	// 		if ($this->method === "post_{$method}")
-	// 		{
-	// 			$this->app('webapp_echo_json', ['signature' => NULL]);
-	// 			if (webapp_echo_html::form_sign_in($this)->fetch($sign)
-	// 				&& static::authorize($signature = static::signature($sign['username'], $sign['password']), $authenticate)) {
-	// 				$this->response_cookie($this['admin_cookie'], $this->app['signature'] = $signature);
-	// 				$this->response_status(200);
-	// 				$this->response_refresh(0);
-	// 				return FALSE;
-	// 			}
-	// 			$this->app['errors'][] = 'Sign in failed';
-	// 		}
-	// 		else
-	// 		{
-	// 			if ($this->method === "get_{$method}")
-	// 			{
-	// 				$this->app('webapp_echo_html')->title('Sign In');
-	// 				webapp_echo_html::form_sign_in($this->app->main);
-	// 			}
-	// 		}
-	// 		$this->response_status(401);
-	// 	}
-	// 	return TRUE;
-	// }
-	function allow(string|self $router, string ...$methods):bool
-	{
-		return $this->router === $router
-			&& in_array($this->method, $router === $this ? [
-				'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
 	}
 	private function remote_encode_value(NULL|bool|int|float|string|array|webapp_xml $value):array
 	{

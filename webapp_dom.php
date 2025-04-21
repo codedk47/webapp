@@ -1109,9 +1109,9 @@ class webapp_form implements ArrayAccess
 			else
 			{
 				$errors = &($this->context)(new stdClass)->errors;
-				if (isset($this->context->app) && $this->context->app instanceof ArrayObject)
+				if (isset($this->context->echo) && $this->context->echo instanceof ArrayObject)
 				{
-					$error = &$this->context->app['error'];
+					$error = &$this->context->echo['error'];
 				}
 				$input ??= is_string($content = $this->context->request_maskdata())
 					? json_decode($content, TRUE)

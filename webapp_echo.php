@@ -151,11 +151,20 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	{
 		return array_is_list($this->getArrayCopy());
 	}
-	function error(string|array $error):void
+	function error(Error|string|array $message, string $field = NULL):void
 	{
-		$this['errors'][] = is_string($error)
-			? $this['error']['message'] = $error
-			: ($this['error'] = $error)['message'];
+		$this['error'] = match (TRUE)
+		{
+			$message instanceof Error =>
+			[
+				'message' => $this['errors'][] = $message->getMessage(),
+				'code' => $message->getCode(),
+				'file' => $message->getFile(),
+				'line' => $message->getLine(),
+				'trace' => $message->getTraceAsString()],
+			is_string($message) => $field ? ['message' => $this['errors'][] = $message, 'field' => $field] : ['message' => $message],
+			default => isset($message['message']) ? ['message' => $this['errors'][] = $message] : $message
+		};
 	}
 	// function dialog(string|array $context, )
 	// {
@@ -175,10 +184,10 @@ class webapp_echo_json extends ArrayObject implements Stringable
 class webapp_echo_html extends webapp_implementation
 {
 	use webapp_echo;
-	protected readonly array $auth;
+	public readonly array $auth;
 	protected NULL|string|webapp_html|webapp_echo_json $echo = NULL;
 	public readonly webapp_html $header, $aside, $main, $footer;
-	function __construct(public readonly webapp $webapp, callable $authenticate = NULL, string $storage = NULL)
+	function __construct(public readonly webapp $webapp, callable|webapp $authenticate = NULL, ?string $storage = NULL)
 	{
 		//https://validator.w3.org/nu/#textarea
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
@@ -205,12 +214,10 @@ class webapp_echo_html extends webapp_implementation
 		[$this->header, $this->aside, $this->main, $this->footer] = [
 			&$node->header, &$node->aside, &$node->main,
 			$node->append('footer', $webapp['copy_webapp'])];
-
-
-			//$webapp->auth($authenticate)
-		if ($authenticate && empty($this->auth = $webapp->authorize($webapp->request_cookie($storage ??= $webapp['admin_cookie']), $authenticate)))
-		{
-			if (is_array($input = json_decode($webapp->request_header('Sign-In') ?? '', TRUE)))
+		if ($authenticate && empty($this->auth = $authenticate === $webapp
+			? [$webapp->auth, $authenticate = $webapp->authenticate(...), $storage ??= $webapp['admin_cookie']][0]
+			: $this->webapp->auth($authenticate, $storage ??= $webapp['admin_cookie']))) {
+			if (is_array($input = json_decode(rawurldecode($webapp->request_header('Sign-In') ?? ''), TRUE)))
 			{
 				$this->json();
 				if (static::form_sign_in($this->webapp)->fetch($account, input: $input))
@@ -221,7 +228,7 @@ class webapp_echo_html extends webapp_implementation
 					}
 					else
 					{
-						$this->echo['errors'][] = 'Authorization failed';
+						$this->echo->error('Authorization failed', 'username');
 					}
 				}
 				return $webapp->response_status(200);
@@ -237,9 +244,9 @@ class webapp_echo_html extends webapp_implementation
 				this.style.pointerEvents = 'none';
 				fieldset.forEach(field => field.disabled = true);
 				this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
-				fetch(this.action, {headers: {'Sign-In': JSON.stringify(account)}}).then(response => response.json())
+				fetch(this.action, {headers: {'Sign-In': encodeURI(JSON.stringify(account))}}).then(response => response.json())
 				.then(authorize => authorize.signature
-					? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature}`)
+					? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature};path=/`)
 					: (this[authorize.error.field].setCustomValidity(authorize.error.message),
 						requestAnimationFrame(() => this.reportValidity())))
 				.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);

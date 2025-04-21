@@ -10,7 +10,8 @@ new class extends webapp
 		parent::echo_html('Tools');
 		$this->echo->nav([
 			['Home', '?'],
-			['QRCode', '?make-qrcode']
+			['QRCode', '?make-qrcode'],
+			['HTTP', '?http-test'],
 		]);
 		return $this->echo;
 	}
@@ -46,4 +47,6 @@ new class extends webapp
 		webapp_image::qrcode(static::qrcode($content, $this['qrcode_ecc']), $this['qrcode_size'])->png();
 
 	}
+
+
 };
