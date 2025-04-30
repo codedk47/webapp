@@ -5,7 +5,7 @@ new class extends webapp
 	private readonly array $connect;
 	function __construct()
 	{
-		parent::__construct();
+		parent::__construct(['admin_cookie' => 'mysql']);
 		if ($this->auth)
 		{
 			$this->connect = is_string($host = $this->request_cookie_decrypt('mysql_connect'))

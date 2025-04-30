@@ -449,7 +449,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		{
 			$this->auth = [];
 			if (method_exists(...$this->route)
-				&& in_array($this->method, ['get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests']) === FALSE
+				&& in_array($this->method, ['get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', 'get_masker']) === FALSE
 				&& empty($this->auth = $this->auth($this->authenticate(...)))) {
 				$this->router === $this && $this->method === "get_{$this['app_index']}"
 					? $this->echo_html('Authenticate', $this)
@@ -679,17 +679,13 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			?? $this->request_cookie($storage ?? $this['admin_cookie']), $authenticate
 			?? $this->admin(...));
 	}
-	function allow(string|self $router, string ...$methods):bool
-	{
-		return $this->router === $router
-			&& in_array($this->method, $router === $this ? [
-				'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
-	}
-	function not_auth()
-	{
+	// function allow(string|self $router, string ...$methods):bool
+	// {
+	// 	return $this->router === $router
+	// 		&& in_array($this->method, $router === $this ? [
+	// 			'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
+	// }
 
-		in_array($this->method, ['get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests']);
-	}
 
 
 	// function request_authorized(callable $authenticate = NULL, string $storage = NULL)
@@ -1199,7 +1195,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	function get_masker()
 	{
 		$this->response_content_type('text/javascript');
-		//$this->response_sendfile(__DIR__ . '/res/js/masker.js');
+		return $this->response_sendfile(__DIR__ . '/res/js/masker.js');
 		if ($this->nonematch(self::version, TRUE))
 		{
 			$this->response_sendfile(__DIR__ . '/res/js/masker.js');

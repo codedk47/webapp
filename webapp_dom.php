@@ -684,6 +684,14 @@ class webapp_html extends webapp_xml
 	// {
 	// 	return $this->append('img', ['src' => $src]);
 	// }
+	// function dataset(array $attributes):static
+	// {
+	// 	foreach ($attributes as $key => $value)
+	// 	{
+	// 		$this["data-{$key}"] = $value;
+	// 	}
+	// 	return $this;
+	// }
 	function progress(float $value = 0, float $max = 1):static
 	{
 		return $this->append('progress', ['value' => $value, 'max' => $max]);

@@ -1,5 +1,5 @@
 //Core by ZERONETA
-//不要压缩先观察一段
+//不要压缩先观察一段时间
 ;export default ((global, undefined)=>
 {
 	const//JavaScript 标准库 let's go ES6
@@ -295,7 +295,7 @@
 					Number(row[column] >> 48n & 255n),
 					Number(row[column] >> 56n & 255n)));
 				return result;
-			}, []).substring(0, c / 8));
+			}, []).slice(0, c / 8));
 		};
 	}
 

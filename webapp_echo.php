@@ -197,6 +197,7 @@ class webapp_echo_html extends webapp_implementation
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
 		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/res/ps/webapp.css', 'media' => 'all']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
+		$this->script(['type' => 'module', 'src' => '/webapp/res/js/webapp.js']);
 		if ($webapp['manifests'])
 		{
 			$this->link(['rel' => 'manifest', 'href' => '?manifests']);
@@ -291,11 +292,11 @@ class webapp_echo_html extends webapp_implementation
 	{
 		return $this->xml->head->append('link', $attributes);
 	}
-	function script(array|string $context):void
+	function script(array|string $context):webapp_html
 	{
-		is_array($context)
-			? $this->xml->head->append('script', $context)
-			: $this->xml->head->append('script')->cdata($context);
+		$script = $this->xml->head->append('script');
+		$script->{is_array($context) ? 'setattr' : 'cdata'}($context);
+		return $script;
 	}
 	function title(string $title):void
 	{
@@ -455,22 +456,21 @@ class webapp_echo_admin extends webapp_echo_html
 }
 class webapp_echo_masker extends webapp_echo_html
 {
-	public readonly bool $initiated;
+	public readonly bool $init;
 	public readonly webapp_html $sw;
-	public ?webapp_echo_json $json;
-	private ?DOMNode $template = NULL;
 	protected array $allow = ['get_splashscreen'];
-	function __construct(webapp $webapp)
+	function __construct(webapp $webapp, callable|webapp $authenticate = NULL, ?string $storage = NULL)
 	{
-		parent::__construct($webapp);
+		parent::__construct($webapp, $authenticate, $storage);
 		//$this->template = $this->document;
-		/*
+
+		/* $this->meta(['name' => 'apple-mobile-web-app-capable', 'content' => 'yes']);
 		Sets whether a web application runs in full-screen mode.
 		If content is set to yes, the web application runs in full-screen mode; otherwise, it does not. The default behavior is to use Safari to display web content.
 		You can determine whether a webpage is displayed in full-screen mode using the window.navigator.standalone read-only Boolean JavaScript property.
 		*/
-		//$this->meta(['name' => 'apple-mobile-web-app-capable', 'content' => 'yes']);
-		/*
+
+		/* $this->meta(['name' => 'apple-mobile-web-app-status-bar-style', 'content' => 'black']);
 		Sets the style of the status bar for a web application.
 		This meta tag has no effect unless you first specify full-screen mode as described in apple-apple-mobile-web-app-capable.
 		If content is set to default, the status bar appears normal.
@@ -479,91 +479,88 @@ class webapp_echo_masker extends webapp_echo_html
 		If set to default or black, the web content is displayed below the status bar.
 		If set to black-translucent, the web content is displayed on the entire screen, partially obscured by the status bar. The default value is default.
 		*/
-		//$this->meta(['name' => 'apple-mobile-web-app-status-bar-style', 'content' => 'black']);
-		/*
+		
+		/* $this->meta(['name' => 'format-detection', 'content' => 'telephone=no']);
 		Enables or disables automatic detection of possible phone numbers in a webpage in Safari on iOS.
 		By default, Safari on iOS detects any string formatted like a phone number and makes it a link that calls the number. Specifying telephone=no disables this feature.
 		*/
-		//$this->meta(['name' => 'format-detection', 'content' => 'telephone=no']);
-		$this->sw = $this->xml->head->append('script', ['fetchpriority' => 'high', 'src' => '?masker']);
-		// $webapp->request_header('Sec-Fetch-Dest') === 'document'
-		// $webapp->request_header('Sec-Fetch-Mode') === 'navigate'
-		// $webapp->request_header('Sec-Fetch-Site') === 'none'
-		if ($this->initiated = $webapp->request_header('Service-Worker') !== 'masker')
+		$this->sw = $this->script(['fetchpriority' => 'high', 'src' => '?masker']);
+		if ($this->init = $webapp->request_header('Service-Worker') !== 'masker')
 		{
 			unset($this->xml->head->link);
-			if (preg_match('/iphone os (\d+)/i', $webapp->request_device(), $iphone) && $iphone[1] < 15)
-			{
-				unset($this->xml->head->script);
-				$webapp->break($this->init(...), FALSE);
-			}
-			else
-			{
-				// $this->aside->append('textarea', [join(array_map(fn($k, $v) =>
-				// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
-				// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
-				$this->sw['data-reload'] = "?{$webapp['request_query']}";
-				if (method_exists($this, 'get_splashscreen'))
-				{
-					$this->sw['data-splashscreen'] = sprintf('?%s/splashscreen', substr(static::class, strlen($webapp['app_router'])));
-				}
-				$webapp->break($this->init(...), TRUE);
-			}
+			$this->sw['data-reload'] = "?{$webapp['request_query']}";
+			$webapp->break($this->init(...), $webapp->request_device());
+
+
+
+
+
+			// if (preg_match('/iphone os (\d+)/i', $webapp->request_device(), $iphone) && $iphone[1] < 15)
+			// {
+			// 	unset($this->xml->head->script);
+			// 	$webapp->break($this->init(...));
+			// }
+			// else
+			// {
+			// 	// $this->aside->append('textarea', [join(array_map(fn($k, $v) =>
+			// 	// 	in_array($k, ['Accept', 'Cookie', 'User-Agent'], TRUE) ? '' : "{$k}: {$v}\n",
+			// 	// 	array_keys($getallheaders = getallheaders()), array_values($getallheaders))), 'rows' => 20, 'cols' => 80]);
+			// 	$this->sw['data-reload'] = "?{$webapp['request_query']}";
+			// 	// if (method_exists($this, 'get_splashscreen'))
+			// 	// {
+			// 	// 	$this->sw['data-splashscreen'] = sprintf('?%s/splashscreen', substr(static::class, strlen($webapp['app_router'])));
+			// 	// }
+			// 	$webapp->break($this->init(...), TRUE);
+			// }
 		}
 		else
 		{
-			if (in_array($webapp->method, $this->allow, TRUE)) return;
-			if (method_exists($this, 'authorization'))
-			{
-				if (empty($webapp->authorization($this->authorization(...))))
-				{
-					if (is_array($input = json_decode($webapp->request_header('Sign-In') ?? '', TRUE)))
-					{
-						$webapp($this->json(['signature' => NULL], TRUE));
-						if (static::form_sign_in($this->webapp)->fetch($account, $errors, $input))
-						{
-							if ($user = $this->authorization($account['username'], $account['password'], $webapp->time, 'signature'))
-							{
-								$this->json['signature'] = $webapp->signature(...$user);
-							}
-							else
-							{
-								$this->json['errors'][] = 'Authorization failed';
-							}
-						}
-						$webapp->response_status(200);
-					}
-					else
-					{
-						$webapp->break($this->sign_in(...));
-					}
-				}
-			}
+			// if (in_array($webapp->method, $this->allow, TRUE)) return;
+			// if (method_exists($this, 'authorization'))
+			// {
+			// 	if (empty($webapp->authorization($this->authorization(...))))
+			// 	{
+			// 		if (is_array($input = json_decode($webapp->request_header('Sign-In') ?? '', TRUE)))
+			// 		{
+			// 			$webapp($this->json(['signature' => NULL], TRUE));
+			// 			if (static::form_sign_in($this->webapp)->fetch($account, $errors, $input))
+			// 			{
+			// 				if ($user = $this->authorization($account['username'], $account['password'], $webapp->time, 'signature'))
+			// 				{
+			// 					$this->json['signature'] = $webapp->signature(...$user);
+			// 				}
+			// 				else
+			// 				{
+			// 					$this->json['errors'][] = 'Authorization failed';
+			// 				}
+			// 			}
+			// 			$webapp->response_status(200);
+			// 		}
+			// 		else
+			// 		{
+			// 			$webapp->break($this->sign_in(...));
+			// 		}
+			// 	}
+			// }
 		}
 	}
-	function template():webapp_html
-	{
-		return webapp_html::from($this->template = $this->document->createElement('template'));
-	}
+
 	function __toString():string
 	{
-		return $this->initiated ? parent::__toString() : $this->webapp->response_maskdata(
-			isset($this->json) ? (string)$this->json : ($this->template
-				? substr($this->document->saveHTML($this->template), 10, -11)
-				: $this->document->saveHTML($this->document)));
+		return $this->init
+			? parent::__toString()
+			: [(string)$this->webapp->maskdata(parent::__toString(), $key),
+				$this->webapp->response_header('Masker-Key', bin2hex($key))][0];
 	}
-	function init(bool $success)
+	function init(string $ua)
 	{
 		$this->title('Initializing');
-		$this->main->text($success
-			? 'Enable JavaScript and cookies to continue'
-			: 'Please upgrade system or device to continue');
+		$this->main->text(preg_match('/iphone os (\d+)/i', $ua, $iphone) && $iphone[1] < 15
+			? 'Please upgrade system or device to continue'
+			: 'Enable JavaScript and cookies to continue');
 		return 200;
 	}
-	function json(array|object $data = []):webapp_echo_json
-	{
-		return $this->json = new webapp_echo_json($this->webapp, $data);
-	}
+
 	function sign_in()
 	{
 		static::form_sign_in($this->main)->xml['onsubmit'] = <<<'JS'

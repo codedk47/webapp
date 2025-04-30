@@ -1,59 +1,5 @@
 if (self.window)
 {
-	const script = document.currentScript, init = new Promise(resolve =>
-	{
-		const init = new Promise(resolve => navigator.serviceWorker.ready.then(registration =>
-		{
-			const message = new MessageChannel;
-			message.port1.onmessage = () =>
-			{
-				if ('reload' in script.dataset)
-				{
-					sessionStorage.setItem('init', JSON.stringify(script.dataset));
-					return location.replace(script.dataset.reload);
-				}
-				const init = JSON.parse(sessionStorage.getItem('init'));
-				if (init)
-				{
-					sessionStorage.removeItem('init');
-					if (init.splashscreen)
-					{
-						masker.open(init.splashscreen);
-					}
-					resolve(init);
-				}
-				setTimeout(function aws(){fetch('/ping').then(r => setTimeout(aws, 1000));}, 1000);
-			};
-			registration.active.postMessage([localStorage.getItem('token'),
-				(/DID\/(\w{16})/.exec(navigator.userAgent) || [null]).pop(),
-				(/CID\/(\w{4})/.exec(navigator.userAgent) || [null]).pop()], [message.port2]);
-			navigator.serviceWorker.addEventListener('message', event => origin.then(result =>
-				registration.active.postMessage({pid: event.data, result})));
-			navigator.serviceWorker.startMessages();
-		}));
-		addEventListener('DOMContentLoaded', () =>
-		{
-			navigator.serviceWorker.ready.then(registration => resolve([registration.active, init]));
-			addEventListener('load', () => navigator.serviceWorker.register(script.src, {scope: location.pathname}));
-		});
-	}), origin = new Promise(resolve => init.then(() =>
-	{
-		const resources = Array.from(document.querySelectorAll([
-			'link[rel=dns-prefetch]',
-			'link[rel=preconnect]'].join(','))).map(link => link.href);
-		if (resources.length)
-		{
-			if (resources.includes(sessionStorage.getItem('origin')))
-			{
-				return resolve(new URL(sessionStorage.getItem('origin')).origin);
-			}
-			const controller = new AbortController;
-			Promise.any(resources.map(url =>
-				fetch(url, {cache: 'no-cache', signal: controller.signal}))).then(response =>
-					controller.abort(sessionStorage.setItem('origin', response.url) || resolve(new URL(response.url).origin)));
-		}
-		addEventListener('offline', () => sessionStorage.removeItem('origin'));
-	}));
 	function masker(resource, options = {})
 	{
 		if (options.body)
@@ -78,39 +24,54 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
-	masker.then = callback => init.then(([sw]) => callback(sw));
-	masker.init = callback => init.then(([, init]) => init.then(callback));
-	masker.homescreen = callback => init.then(() => callback(matchMedia('(display-mode: standalone)').matches));
-	masker.authorization = signature => masker.then(active => active.postMessage([localStorage.setItem('token', signature) || localStorage.getItem('token')]));
-	masker.open = resources => init.then(() =>
+	const script = document.currentScript, sw = navigator.serviceWorker.register(script.src, {scope: location.pathname})
+	.then(registration => navigator.serviceWorker.ready.then(registration)).then(registration =>
 	{
-		const frame = document.createElement('iframe');
-		frame.src = resources;
-		frame.style.cssText = [
-			'position: fixed',
-			'inset: 0',
-			'width: 100%',
-			'height: 100%',
-			'border: none'
-		].join(';');
-		document.body.appendChild(frame).contentWindow.addEventListener('message', event =>
+		navigator.serviceWorker.addEventListener('message', event =>
 		{
-			switch (event.data)
+			//console.log('windows m', event);
+			if (typeof event.data === 'string')
 			{
-				case 'close': return document.body.removeChild(frame);
+				switch (event.data)
+				{
+					case 'pong':
+						setTimeout(() => registration.active.postMessage('ping'), 1000);
+						break;
+					default:
+						console.log(event.data);
+						location.replace(script.dataset.reload);
+				}
+				
 			}
+			
 		});
-		frame.focus();
-		return frame;
+		navigator.serviceWorker.startMessages();
+
+
+		registration.active.postMessage('reload' in script.dataset ? 'init' : 'ping');
 	});
+
+
+
+	//masker.authorization
+	
+	// const a = '#abcdefabcdefabcdef', s = a.match(/^#([0-f]{16})?/);
+	// console.log( s, s[1].match(/[0-f]{2}/g).map(v => parseInt(v, 16)) );
+
 }
 else
 {
+	const headers = {'Service-Worker': 'masker'};
 	async function request(resource, options)
 	{
-		const response = await fetch(resource, options instanceof Object ? options : null), key = response.headers.get('mask-key')
-			? response.headers.get('mask-key').match(/[0-f]{2}/gi).map(value => parseInt(value, 16))
-			: (options && /\?mask\d{10}$/i.test(response.url) ? [] : null);
+		// if (resource instanceof Request && resource.url.indexOf('#') > 0)
+		// {
+		// 	console.log(resource, resource.url = resource.url.substring(0, resource.url.indexOf('#')))
+		// }
+		
+		const response = await fetch(resource, options instanceof Object ? options : null), key = response.headers.get('masker-key')
+			? response.headers.get('masker-key').match(/[0-f]{2}/gi).map(value => parseInt(value, 16))
+			: options;
 		if (Array.isArray(key))
 		{
 			const reader = response.body.getReader(), buffer = [];
@@ -143,10 +104,10 @@ else
 					//console.log('keyloaded finish')
 					read.value = read.value.slice(i);
 				}
-				//console.log('payload...')
+				//console.log(key, 'payload...')
 				for (let i = 0; i < read.value.length; ++i)
 				{
-					read.value[i] ^= key[offset++ % 8];
+					read.value[i] = key[offset % 8] ^ (key[offset++ % 8] = read.value[i]);
 				}
 				buffer[buffer.length] = read.value;
 			}
@@ -154,83 +115,54 @@ else
 		}
 		return response;
 	}
-	let pid = 0, passive = true;
-	const pending = new Map, headers = {'Service-Worker': 'masker'}, origin = event =>
-		clients.get(event.clientId).then(client => new Promise((resolve, reject) =>
-			client ? (pending.set(++pid, {resolve, reject}), client.postMessage(pid)) : reject()));
+	
 	addEventListener('message', event =>
 	{
-		if (Array.isArray(event.data))
+		if (typeof event.data === 'string')
 		{
-			const [token, did, cid] = event.data;
-			if (event.ports.length ? passive : true)
+			let data = 'init';
+			switch (event.data)
 			{
-				if (token)
-				{
-					headers.Authorization = `Bearer ${token}`;
-				}
-				else
-				{
-					delete headers.Authorization;
-				}
+				case 'ping':
+					data = 'pong';
+					break;
 			}
-			if (event.ports.length)
-			{
-				if (did)
-				{
-					headers['Device-Id'] = did;
-				}
-				if (cid)
-				{
-					headers['Channel-Id'] = cid;
-				}
-				passive = event.ports[0].postMessage(null);
-			}
+			return event.source.postMessage(data);
 		}
-		else
-		{
-			const promise = pending.get(event.data.pid);
-			if (promise)
-			{
-				pending.delete(event.data.pid);
-				'error' in event.data
-					? promise.reject(event.data.error)
-					: promise.resolve(event.data.result);
-			}
-		}
+
+
 	});
-	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated', even if
-	// there are still previous incarnations of this service worker registration active.
-	addEventListener('install', event => event.waitUntil(skipWaiting()));
-	// Claim any clients immediately, so that the page will be under SW control without reloading.
-	addEventListener('activate', event => event.waitUntil(clients.claim()));
+
+
 
 	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
 	{
 		if (response) return response;
+		const url = new URL(event.request.url);
+
+
+
+
+		// const req = masker
+		// 	? [event.request.url.substring(0, event.request.url.indexOf('#')), []]
+		// 	: [event.request, {priority: 'high', headers: Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}];
+
+		///\?mask\d*$/i.test(event.request.url)
+		//event.request.url.startsWith(location.origin)
+		if (url.hash.startsWith('#!'))
+		{
+			return request(event.request.url, []);
+		}
 		if (event.request.url.startsWith(location.origin))
 		{
-			const url = new URL(event.request.url);
 			if (url.pathname === location.pathname)
 			{
-				return url.search.startsWith('?/')
-					? origin(event).then(origin =>
-						request(`${origin}${url.search.substring(1)}`, true), () =>
-							new Response(null, {status: 404, headers: {'Cache-Control': 'no-store'}}))
-					: request(...[event.request, ...passive ? [] : [{priority: 'high', headers:
-						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}]]);
+				return request(event.request, {priority: 'high', headers:
+					Object.assign(Object.fromEntries(event.request.headers.entries()), headers)});
 			}
-			switch (url.pathname)
-			{
-				case '/favicon.ico':
-					return fetch('/webapp/favicon.ico');
-				case '/ping':
-					return new Response(null);
-					return Response.json({});
-				default:
-					return request(event.request, true);
-			}
+			//do something here
 		}
 		return fetch(event.request);
 	})));
+
 }
