@@ -187,6 +187,47 @@ class webapp_echo_html extends webapp_implementation
 	public readonly array $auth;
 	protected NULL|string|webapp_html|webapp_echo_json $echo = NULL;
 	public readonly webapp_html $header, $aside, $main, $footer;
+
+	function auth(?array $data, callable $authenticate, string $storage):int
+	{
+		if (is_array($data))
+		{
+			$this->json();
+			if (static::form_sign_in($this->webapp)->fetch($account, input: $data))
+			{
+				if ($auth = $authenticate($account['username'], $account['password'], $this->webapp->time))
+				{
+					$this->echo['signature'] = $this->webapp->signature(...$auth);
+				}
+				else
+				{
+					$this->echo->error('Authorization failed', 'username');
+				}
+			}
+			return 200;
+		}
+		$form = static::form_sign_in($this->main);
+		$form->xml['data-storage'] = $storage;
+		$form->xml['onsubmit'] = <<<'JS'
+		if (this.style.pointerEvents !== 'none')
+		{
+			const
+			account = Object.fromEntries(new FormData(this).entries()),
+			fieldset = this.querySelectorAll('fieldset');
+			this.style.pointerEvents = 'none';
+			fieldset.forEach(field => field.disabled = true);
+			this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
+			fetch(this.action, {headers: {'Sign-In': encodeURI(JSON.stringify(account))}}).then(response => response.json())
+			.then(authorize => authorize.signature
+				? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature};path=/`)
+				: (this[authorize.error.field].setCustomValidity(authorize.error.message),
+					requestAnimationFrame(() => this.reportValidity())))
+			.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
+		}
+		return false;
+		JS;
+		return 401;
+	}
 	function __construct(public readonly webapp $webapp, callable|webapp $authenticate = NULL, ?string $storage = NULL)
 	{
 		//https://validator.w3.org/nu/#textarea
@@ -198,19 +239,7 @@ class webapp_echo_html extends webapp_implementation
 		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => '/webapp/res/ps/webapp.css', 'media' => 'all']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
 		$this->script(['type' => 'module', 'src' => '/webapp/res/js/webapp.js']);
-		if ($webapp['manifests'])
-		{
-			$this->link(['rel' => 'manifest', 'href' => '?manifests']);
-			//$this->script(['src' => '?service-workers', 'defer' => NULL]);
-		}
-		else
-		{
-			//$mask && $this->script(['src' => '?service-workers', 'defer' => NULL]);
-		}
-		
-		//$head->append('script', ['type' => 'module', 'src' => '/webapp/res/js/webkit.js']);
-		//$this->script(['src' => '/webapp/res/js/webapp.js']);
-		//$this->script('import $ from "/webapp/res/js/webkit.js";');
+		$webapp['manifests'] && $this->link(['rel' => 'manifest', 'href' => '?manifests']);
 		$node = $this->xml->append('body')->append('div', ['class' => 'webapp-grid']);
 		[$this->header, $this->aside, $this->main, $this->footer] = [
 			&$node->header, &$node->aside, &$node->main,
@@ -218,43 +247,8 @@ class webapp_echo_html extends webapp_implementation
 		if ($authenticate && empty($this->auth = $authenticate === $webapp
 			? [$webapp->auth, $authenticate = $webapp->authenticate(...), $storage ??= $webapp['admin_cookie']][0]
 			: $this->webapp->auth($authenticate, $storage ??= $webapp['admin_cookie']))) {
-			if (is_array($input = json_decode(rawurldecode($webapp->request_header('Sign-In') ?? ''), TRUE)))
-			{
-				$this->json();
-				if (static::form_sign_in($this->webapp)->fetch($account, input: $input))
-				{
-					if ($auth = $authenticate($account['username'], $account['password'], $webapp->time))
-					{
-						$this->echo['signature'] = $webapp->signature(...$auth);
-					}
-					else
-					{
-						$this->echo->error('Authorization failed', 'username');
-					}
-				}
-				return $webapp->response_status(200);
-			}
-			$form = static::form_sign_in($this->main);
-			$form->xml['data-storage'] = $storage;
-			$form->xml['onsubmit'] = <<<'JS'
-			if (this.style.pointerEvents !== 'none')
-			{
-				const
-				account = Object.fromEntries(new FormData(this).entries()),
-				fieldset = this.querySelectorAll('fieldset');
-				this.style.pointerEvents = 'none';
-				fieldset.forEach(field => field.disabled = true);
-				this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
-				fetch(this.action, {headers: {'Sign-In': encodeURI(JSON.stringify(account))}}).then(response => response.json())
-				.then(authorize => authorize.signature
-					? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature};path=/`)
-					: (this[authorize.error.field].setCustomValidity(authorize.error.message),
-						requestAnimationFrame(() => this.reportValidity())))
-				.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
-			}
-			return false;
-			JS;
-			$webapp->response_status(401);
+			$webapp->response_status($this->auth(json_decode(rawurldecode(
+				$webapp->request_header('Sign-In') ?? ''), TRUE), $authenticate, $storage));
 		}
 		else
 		{
@@ -435,10 +429,7 @@ class webapp_echo_admin extends webapp_echo_html
 	public array $nav = [], $submenu = [];
 	function __construct(webapp $webapp)
 	{
-		parent::__construct($webapp, function(string $uid, string $pwd) use($webapp)
-		{
-			return $uid === $webapp['admin_username'] && $pwd === $webapp['admin_password'] ? [$uid, $pwd] : [];
-		});
+		parent::__construct($webapp, $webapp->admin(...));
 		$this->title('Admin');
 		if ($this->auth)
 		{
@@ -458,10 +449,11 @@ class webapp_echo_masker extends webapp_echo_html
 {
 	public readonly bool $init;
 	public readonly webapp_html $sw;
-	protected array $allow = ['get_splashscreen'];
+	//protected array $allow = ['get_splashscreen'];
 	function __construct(webapp $webapp, callable|webapp $authenticate = NULL, ?string $storage = NULL)
 	{
 		parent::__construct($webapp, $authenticate, $storage);
+		$this->xml->head->meta[1]['content'] .= ',maximum-scale=1,user-scalable=0';
 		//$this->template = $this->document;
 
 		/* $this->meta(['name' => 'apple-mobile-web-app-capable', 'content' => 'yes']);
@@ -491,6 +483,9 @@ class webapp_echo_masker extends webapp_echo_html
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			$webapp->break($this->init(...), $webapp->request_device());
 
+			
+
+			//$this->sw['data-splashscreen']
 
 
 
@@ -515,6 +510,9 @@ class webapp_echo_masker extends webapp_echo_html
 		}
 		else
 		{
+			$this->footer[0] = '';
+
+
 			// if (in_array($webapp->method, $this->allow, TRUE)) return;
 			// if (method_exists($this, 'authorization'))
 			// {
@@ -552,7 +550,7 @@ class webapp_echo_masker extends webapp_echo_html
 			: [(string)$this->webapp->maskdata(parent::__toString(), $key),
 				$this->webapp->response_header('Masker-Key', bin2hex($key))][0];
 	}
-	function init(string $ua)
+	function init(string $ua):int
 	{
 		$this->title('Initializing');
 		$this->main->text(preg_match('/iphone os (\d+)/i', $ua, $iphone) && $iphone[1] < 15
@@ -560,6 +558,24 @@ class webapp_echo_masker extends webapp_echo_html
 			: 'Enable JavaScript and cookies to continue');
 		return 200;
 	}
+	function splashscreen(string $cover, string $skip = 'SKIP', int $cd = 4, bool $auto = FALSE)
+	{
+		$body = $this->xml->body;
+		$body['style'] = "height:100vh;background:url({$cover})white no-repeat center/100% 100%";
+		$auto = $auto ? 'true' : 'false';
+		$this->script("masker.skipsplashscreen('{$skip}',{$cd},{$auto})");
+		unset($body->div);
+	}
+	function get_splashscreen()
+	{
+		$this->script('masker.close()');
+		return 200;
+	}
+	function get_authorization()
+	{
+
+	}
+
 
 	function sign_in()
 	{

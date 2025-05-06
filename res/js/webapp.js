@@ -1,5 +1,5 @@
 "use strict";
-globalThis.webapp = import('./webkit.js').then(function({default: $})
+const webapp = import('./webkit.js').then(function({default: $})
 {
 	const dialog = $.dialog(true);
 	//dialog.target.className = 'webapp';
@@ -70,3 +70,4 @@ globalThis.webapp = import('./webkit.js').then(function({default: $})
 
 	return globalThis.$ = $;
 });
+addEventListener('DOMContentLoaded', () => webapp.then(window.webapp));

@@ -24,40 +24,123 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
-	const script = document.currentScript, sw = navigator.serviceWorker.register(script.src, {scope: location.pathname})
-	.then(registration => navigator.serviceWorker.ready.then(registration)).then(registration =>
+	//addEventListener('DOMContentLoaded', ()=> console.log('DOMContentLoaded'));
+	const script = document.currentScript, init = new Promise(resolve =>
 	{
-		navigator.serviceWorker.addEventListener('message', event =>
+		//addEventListener('DOMContentLoaded', ()=> console.log('DOMContentLoaded1111'));
+		navigator.serviceWorker.register(script.src, {scope: location.pathname})
+		.then(registration => navigator.serviceWorker.ready.then(registration))
+		.then(registration =>
 		{
-			//console.log('windows m', event);
-			if (typeof event.data === 'string')
+			navigator.serviceWorker.addEventListener('message', event =>
 			{
-				switch (event.data)
+				//console.log('windows m', event);
+				if (typeof event.data === 'string')
 				{
-					case 'pong':
-						setTimeout(() => registration.active.postMessage('ping'), 1000);
-						break;
-					default:
-						console.log(event.data);
-						location.replace(script.dataset.reload);
+					switch (event.data)
+					{
+						case 'pong':
+							setTimeout(() => registration.active.postMessage('ping'), 1000);
+							break;
+						default:
+							console.log(event.data);
+							location.replace(script.dataset.reload);
+					}
+					
 				}
 				
+			});
+			navigator.serviceWorker.startMessages();
+			if ('reload' in script.dataset)
+			{
+				sessionStorage.setItem('init', JSON.stringify(script.dataset));
+				registration.active.postMessage('init');
+			}
+			else
+			{
+				//console.log('sw load')
+				const init = JSON.parse(sessionStorage.getItem('init'));
+				if (init)
+				{
+					masker.open(`?${(location.search.match(/\?(\w+)/) || ['home']).pop()}/splashscreen`);
+					sessionStorage.removeItem('init');
+					resolve(init);
+				}
+				registration.active.postMessage('ping');
+				callbacks.forEach(callback => callback());
 			}
 			
-		});
-		navigator.serviceWorker.startMessages();
-
-
-		registration.active.postMessage('reload' in script.dataset ? 'init' : 'ping');
-	});
-
-
-
-	//masker.authorization
 	
-	// const a = '#abcdefabcdefabcdef', s = a.match(/^#([0-f]{16})?/);
-	// console.log( s, s[1].match(/[0-f]{2}/g).map(v => parseInt(v, 16)) );
+	
+			// registration.active.postMessage('reload' in script.dataset ? 'init' : 'ping');
+			// if (self.name !== 'masker')
+			// {
+			// 	self.name = 'masker';
+			// 	resolve(123)
+			// }
+			
+				
+			
+		});
+	}), callbacks = [];
+	masker.then = callback => callbacks[callbacks.length] = callback;
+	masker.init = callback => init.then(callback);
+	masker.open = url => init.then(() =>
+	{
+		const frame = document.createElement('iframe');
+		frame.src = url;
+		frame.style.cssText = [
+			'position: fixed',
+			'inset: 0',
+			'width: 100%',
+			'height: 100%',
+			'border: none',
+			'background: red'
+		].join(';');
+		document.body.appendChild(frame).contentWindow.addEventListener('message', event =>
+		{
+			switch (event.data)
+			{
+				case 'close': return document.body.removeChild(frame);
+			}
+		});
+		frame.focus();
+		return frame;
+	});
+	masker.close = () => postMessage('close');
 
+	
+	masker.skipsplashscreen = (skip = 'SKIP', second = 4, auto = false) => masker.then(() =>
+	{
+		const anchor = document.createElement('a');
+		anchor.style.cssText = [
+			'position: fixed',
+			'top: 1rem',
+			'right: 1rem',
+			'width: 6rem',
+			'color: white',
+			'padding: .4rem 0',
+			'text-align: center',
+			'font-family: Consolas',
+			'border-radius: .4rem',
+			'background-color: rgba(0, 0, 0, .6)'
+		].join(';');
+		function cd()
+		{
+			if (second > 0)
+			{
+				anchor.textContent = `${skip} ${second--}`;
+				setTimeout(cd, 1000);
+			}
+			else
+			{
+				anchor.href = 'javascript:masker.close();';
+				anchor.textContent = skip;
+				auto && masker.close();
+			}
+		}
+		cd(document.body.appendChild(anchor));
+	});
 }
 else
 {
