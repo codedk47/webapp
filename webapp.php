@@ -444,7 +444,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			$pattern, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL) ? array_column($pattern, 2, 1) : [];
 		//$this->index = !(isset($entry[1]) && strtolower($entry[1]) !== strtolower($this['app_index']));
 	
-
 		if (method_exists($this, 'authenticate'))
 		{
 			$this->auth = [];
@@ -562,7 +561,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				return $this->{$name} = $loader->invoke($this);
 			}
 		}
-		return $this->mysql->{$name};
+		return NULL;
 	}
 	final function __invoke(object $object):object
 	{

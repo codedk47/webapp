@@ -187,48 +187,8 @@ class webapp_echo_html extends webapp_implementation
 	public readonly array $auth;
 	protected NULL|string|webapp_html|webapp_echo_json $echo = NULL;
 	public readonly webapp_html $header, $aside, $main, $footer;
-
-	function auth(?array $data, callable $authenticate, string $storage):int
-	{
-		if (is_array($data))
-		{
-			$this->json();
-			if (static::form_sign_in($this->webapp)->fetch($account, input: $data))
-			{
-				if ($auth = $authenticate($account['username'], $account['password'], $this->webapp->time))
-				{
-					$this->echo['signature'] = $this->webapp->signature(...$auth);
-				}
-				else
-				{
-					$this->echo->error('Authorization failed', 'username');
-				}
-			}
-			return 200;
-		}
-		$form = static::form_sign_in($this->main);
-		$form->xml['data-storage'] = $storage;
-		$form->xml['onsubmit'] = <<<'JS'
-		if (this.style.pointerEvents !== 'none')
-		{
-			const
-			account = Object.fromEntries(new FormData(this).entries()),
-			fieldset = this.querySelectorAll('fieldset');
-			this.style.pointerEvents = 'none';
-			fieldset.forEach(field => field.disabled = true);
-			this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
-			fetch(this.action, {headers: {'Sign-In': encodeURI(JSON.stringify(account))}}).then(response => response.json())
-			.then(authorize => authorize.signature
-				? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature};path=/`)
-				: (this[authorize.error.field].setCustomValidity(authorize.error.message),
-					requestAnimationFrame(() => this.reportValidity())))
-			.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
-		}
-		return false;
-		JS;
-		return 401;
-	}
-	function __construct(public readonly webapp $webapp, callable|webapp $authenticate = NULL, ?string $storage = NULL)
+	
+	function __construct(public readonly webapp $webapp, callable|webapp $authenticate = NULL, ?string $storage = NULL, callable $auth = NULL)
 	{
 		//https://validator.w3.org/nu/#textarea
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
@@ -244,16 +204,69 @@ class webapp_echo_html extends webapp_implementation
 		[$this->header, $this->aside, $this->main, $this->footer] = [
 			&$node->header, &$node->aside, &$node->main,
 			$node->append('footer', $webapp['copy_webapp'])];
-		if ($authenticate && empty($this->auth = $authenticate === $webapp
-			? [$webapp->auth, $authenticate = $webapp->authenticate(...), $storage ??= $webapp['admin_cookie']][0]
-			: $this->webapp->auth($authenticate, $storage ??= $webapp['admin_cookie']))) {
-			$webapp->response_status($this->auth(json_decode(rawurldecode(
-				$webapp->request_header('Sign-In') ?? ''), TRUE), $authenticate, $storage));
-		}
-		else
+		if ($authenticate)
 		{
-			$this->auth ??= [];
+			$auth ??= function(?array $data, callable $authenticate, string $storage):int
+			{
+				if (is_array($data))
+				{
+					$this->json();
+					if (static::form_sign_in($this->webapp)->fetch($account, input: $data))
+					{
+						if ($auth = $authenticate($account['username'], $account['password'], $this->webapp->time))
+						{
+							$this->echo['signature'] = $this->webapp->signature(...$auth);
+						}
+						else
+						{
+							$this->echo->error('Authorization failed', 'username');
+						}
+					}
+					return 200;
+				}
+				$form = static::form_sign_in($this->main);
+				$form->xml['onsubmit'] = 'return $.authsignin(this,authorize=>authorize.signature?location.reload(document.cookie=`${this.dataset.storage}=${authorize.signature};path=/`):(this[authorize.error.field].setCustomValidity(authorize.error.message),requestAnimationFrame(()=>this.reportValidity())))';
+				$form->xml['data-storage'] = $storage;
+				// $form->xml['onsubmit'] = <<<'JS'
+				// if (this.style.pointerEvents !== 'none')
+				// {
+				// 	const
+				// 	account = Object.fromEntries(new FormData(this).entries()),
+				// 	fieldset = this.querySelectorAll('fieldset');
+				// 	this.style.pointerEvents = 'none';
+				// 	fieldset.forEach(field => field.disabled = true);
+				// 	this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
+				// 	fetch(this.action, {headers: {'Sign-In': encodeURI(JSON.stringify(account))}}).then(response => response.json())
+				// 	.then(authorize => authorize.signature
+				// 		? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature};path=/`)
+				// 		: (this[authorize.error.field].setCustomValidity(authorize.error.message),
+				// 			requestAnimationFrame(() => this.reportValidity())))
+				// 	.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
+				// }
+				// return false;
+				// JS;
+				return 401;
+			};
+			$storage ??= $webapp['admin_cookie'];
+			if (empty($this->auth = $authenticate === $webapp
+				? [$webapp->auth, $authenticate = $webapp->authenticate(...)][0]
+				: $this->webapp->auth($authenticate, $storage))) {
+				$webapp->response_status($auth(json_decode(rawurldecode(
+					$webapp->request_header('Sign-In') ?? ''), TRUE), $authenticate, $storage));
+			}
 		}
+		$this->auth ??= [];
+
+		// if ($authenticate && empty($this->auth = $authenticate === $webapp
+		// 	? [$webapp->auth, $authenticate = $webapp->authenticate(...), $storage ??= $webapp['admin_cookie']][0]
+		// 	: $this->webapp->auth($authenticate, $storage ??= $webapp['admin_cookie']))) {
+		// 	$webapp->response_status($this->auth(json_decode(rawurldecode(
+		// 		$webapp->request_header('Sign-In') ?? ''), TRUE), $authenticate, $storage));
+		// }
+		// else
+		// {
+		// 	$this->auth ??= [];
+		// }
 	}
 	function __toString():string
 	{
@@ -452,7 +465,7 @@ class webapp_echo_masker extends webapp_echo_html
 	//protected array $allow = ['get_splashscreen'];
 	function __construct(webapp $webapp, callable|webapp $authenticate = NULL, ?string $storage = NULL)
 	{
-		parent::__construct($webapp, $authenticate, $storage);
+		parent::__construct($webapp, ...strtolower($webapp->method) === 'get_splashscreen' ? [] : [$authenticate, $storage]);
 		$this->xml->head->meta[1]['content'] .= ',maximum-scale=1,user-scalable=0';
 		//$this->template = $this->document;
 

@@ -36,10 +36,7 @@ new class extends webapp
 	function __construct()
 	{
 		parent::__construct();
-		for ($i=21;$i<=30;++$i)
-		{
-			echo "100005,7" . str_pad($i,5,0,STR_PAD_LEFT)."\n";
-		}
+
 
 
 		//$this->maskfile('D:/wmhp/work/photo.jpg', 'D:/wmhp/work/photo.jpg.mask', $key, TRUE);

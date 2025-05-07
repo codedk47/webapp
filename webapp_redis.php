@@ -7,6 +7,11 @@ class webapp_redis extends Redis
 	{
 		$this->pconnect(...$open ? $open : ['127.0.0.1', 6379]);
 	}
+	function dosevasive(int $count):bool
+	{
+		//'redis_dosevasive'	=> 7, //Number of requests per second per IP that will result in denial of service
+		return TRUE;
+	}
 	function clear(string|webapp_redis_table $table = NULL):void
 	{
 		if ($table)
