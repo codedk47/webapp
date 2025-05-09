@@ -1,0 +1,9 @@
+tbody.ads>tr>td:first-child{
+	text-align: center;
+}
+tbody.ads>tr>td>img:first-child{
+	width: 256px;
+	height: 144px;
+	border: black 1px solid;
+	object-fit: contain;
+}

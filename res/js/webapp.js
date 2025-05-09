@@ -68,6 +68,7 @@ const webapp = import('./webkit.js').then(function({default: $})
 		}
 	});
 
+	$.previewimage = (input, element) => element.src = URL.createObjectURL(input.files[0]);
 
 	$.authsignin = (element, callback) =>
 	{

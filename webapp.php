@@ -30,7 +30,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 {
 	const version = '4.7.1a', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
 	public readonly self $webapp;
-	//public readonly bool $index;
 	public readonly array $query;
 	public object|string $router;
 	public string $method;
@@ -140,9 +139,9 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return static::hash(static::random(16), $care);
 	}
-	static function serial_hash():string
+	static function serial_hash(bool $care, string $prefix = 'W', int $limit = 12):string
 	{
-
+		return substr($prefix . static::random_hash($care), 0, $limit);
 	}
 	static function random_weights(array $items, string $key = 'weight'):array
 	{
@@ -443,16 +442,14 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		$this->query = preg_match_all('/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/', $this['request_query'],
 			$pattern, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL) ? array_column($pattern, 2, 1) : [];
 		//$this->index = !(isset($entry[1]) && strtolower($entry[1]) !== strtolower($this['app_index']));
-	
 		if (method_exists($this, 'authenticate'))
 		{
 			$this->auth = [];
 			if (method_exists(...$this->route)
 				&& in_array($this->method, ['get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', 'get_masker']) === FALSE
 				&& empty($this->auth = $this->auth($this->authenticate(...)))) {
-				$this->router === $this && $this->method === "get_{$this['app_index']}"
-					? $this->echo_html('Authenticate', $this)
-					: $this->response_status(401);
+				//$this->router === $this && $this->method === "get_{$this['app_index']}"
+				$this->method === "get_{$this['app_index']}" ? $this->echo_html('Authenticate', $this) : $this->response_status(401);
 			}
 		}
 	}
@@ -658,10 +655,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return $this($this->echo = new webapp_echo_json($this, $data));
 	}
-	function echo_html(string $title = NULL, callable|webapp $authenticate = NULL, string $storage = NULL):webapp_echo_html
+	function echo_html(string $title = NULL, webapp|string $authenticate = NULL):webapp_echo_html
 	{
-		$this->echo = new webapp_echo_html($this, $authenticate, $storage);
-		is_string($title) && $this->echo->title($title);
+		$this->echo = new webapp_echo_html($this, $authenticate);
+		//is_string($title) && $this->echo->title($title);
 		return $this->echo;
 	}
 
@@ -672,7 +669,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			&& $password === $this['admin_password']
 				? [$username, $password, $additional] : [];
 	}
-	function auth(callable $authenticate = NULL, string $storage = NULL):array
+	function auth(callable $authenticate = NULL, ?string $storage = NULL):array
 	{
 		return static::authorize($this->request_authorization($type)
 			?? $this->request_cookie($storage ?? $this['admin_cookie']), $authenticate
@@ -1224,7 +1221,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Countable, Stringable
 {
 	private array $uploadedfiles;
-	function __construct(public readonly webapp $webapp, private readonly string $name, array $uploadedfiles, int $maximum = NULL)
+	function __construct(public readonly webapp $webapp, private readonly string $name, array $uploadedfiles, ?int $maximum = NULL)
 	{
 		$this->uploadedfiles = array_slice($uploadedfiles, 0, $maximum);
 	}

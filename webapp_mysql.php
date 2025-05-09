@@ -183,7 +183,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return boolval($this('SELECT @@autocommit')->value());
 	}
-	function sync(callable $submit, ...$params):bool
+	function sync(callable $submit, &...$params):bool
 	{
 		return $this->autocommit(FALSE) && [($result = $submit(...$params) && $this->commit())
 			|| $this->rollback(), $this->autocommit(TRUE)] ? $result : FALSE;

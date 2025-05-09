@@ -94,8 +94,7 @@ if (self.window)
 			'inset: 0',
 			'width: 100%',
 			'height: 100%',
-			'border: none',
-			'background: red'
+			'border: none'
 		].join(';');
 		document.body.appendChild(frame).contentWindow.addEventListener('message', event =>
 		{
