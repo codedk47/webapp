@@ -45,9 +45,10 @@ class webapp_nfs_amazon_s3 extends webapp_client_http implements webapp_nfs_acce
 		$this->headers(['Authorization' => "AWS {$this->access_key}:{$signature}", 'Date' => $date, 'x-amz-acl' => 'public-read']);
 		return parent::request($method, $path, $body, $type);
 	}
-	function put(string $filename, string $source):bool
+	function put(string $filename, $stream):bool
 	{
-		return is_file($source) && $this->request('PUT', $filename, fopen($source, 'r'), 'application/octet-stream') && $this->status() === 200;
+		return (is_resource($stream) || is_file($source)) && $this->request('PUT',
+			$filename, $stream, 'application/octet-stream') && $this->status() === 200;
 	}
 	function delete(string $filename):bool
 	{
@@ -108,126 +109,82 @@ class webapp_nfs implements IteratorAggregate, Countable
 	{
 		return "/{$this->sort}/" . substr(chunk_split($hash, 3, '/'), 0, 15);
 	}
-	function create(string|array $value, NULL|array|string $extdata = NULL, bool $folder = FALSE):?string
+	function create(array $data, bool $folder = FALSE):?string
 	{
-		if (is_string($value))
-		{
-			$value = ['name' => $value];
-		}
-		if ($folder)
-		{
-			$value['hash'] = $this->serial_hash(FALSE, 'W');
-		}
 		return $this->webapp->mysql->{$this->webapp::tablename}->insert([
-			'hash' => $hash = $value['hash'] ?? $this->webapp->random_hash(FALSE),
+			'hash' => $hash = $folder ? $this->webapp->serial_hash(FALSE, 'W') : (array_key_exists('hash', $data)
+				&& preg_match('/^[0-9A-V]{12}/', $data['hash']) ? $data['hash'] : $this->webapp->random_hash(FALSE)),
 			'sort' => $this->sort,
-			//'uid' => $this->uid,
-			't0' => $this->webapp->time,
-			't1' => $this->webapp->time,
-			'size' => $value['size'] ?? 0,
-			'views' => $value['views'] ?? 0,
-			'likes' => $value['likes'] ?? 0,
-			'shares' => $value['shares'] ?? 0,
-			'name' => $value['name'] ?? '',
-			'node' => $value['node'] ?? NULL,
-			'extdata' => ($extdata ??= $value['extdata'] ?? NULL)
-				? (is_array($extdata) ? json_encode($extdata, JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE) : $extdata) : NULL
-		]) ? $hash : NULL;
-	}
-	// function delete(string $hash):bool
-	// {
-	// 	return $this('`hash`=?s', $hash)->delete()
-	// }
-	function create_folder(string $name, NULL|array|string $extdata = NULL):?string
-	{
-		return $this->create($name, $extdata, TRUE);
-	}
-	function create_uploadedfile(string $name, ?string $savename = NULL, NULL|array|string $extdata = NULL):?string
-	{
-		$uploadedfile = $this->webapp->request_uploadedfile($name, 1);
-		return $this->webapp->mysql->sync(fn(&$hash) => $uploadedfile->count()
-			&& is_string($hash = $this->create($savename ? ['name' => $savename] + $uploadedfile[0] : $uploadedfile[0], $extdata))
-			&& $this->webapp->access->put($this->filename($hash), $uploadedfile[0]['file']), $hash) ? $hash : NULL;
-	}
-	function create_uploadedfiles(string $name, int $maximum = NULL):array
-	{
-		$success = [];
-		foreach ($this->webapp->request_uploadedfile($name, $maximum) as $uploadedfile)
-		{
-			print_r($uploadedfile);
-		}
-		return $success;
-	}
-
-
-
-
-	function callback(string $hash, string $method, string $query, $body = NULL)
-	{
-		$this('hash=?s LIMIT 1', $hash)->fetch($data);
-
-		$callback = $this->callbacks[$data['site']] ??= new webapp_client_http($this->sites[$data['site']]['original'], $options = [
-			'headers' => ['Authorization' => 'Bearer ' . $this->webapp->signature($this->sites[$data['site']]['username'], 
-				$this->sites[$data['site']]['password'], $data['site'])]]);
-
-
-
-		$callback->request($method, "{$this->sites[$data['site']]['callback']}?{$query}", $body);
-
-		var_dump($callback->path);
-
-		//$callback->request($method, "{$callback->path}?{$query}");
-
-		//var_dump("{$callback->path}?{$query}");
-
-		//var_dump( $this->sites[$data['site']]['callback'] );
-		var_dump($callback->content());
+			't0' => $t0 = $this->webapp->time(),
+			't1' => $t0,
+			'size' => $data['size'] ?? 0,
+			'views' => $data['views'] ?? 0,
+			'likes' => $data['likes'] ?? 0,
+			'shares' => $data['shares'] ?? 0,
+			'name' => $data['name'] ?? '',
+			'node' => $data['node'] ?? NULL,
+			'extdata' => isset($data['extdata']) && is_array($data['extdata']) ? json_encode(
+				$data['extdata'], JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE) : $data['extdata'] ?? NULL]) ? $hash : NULL;
 	}
 	function delete(string $hash):bool
 	{
-		$this->callback($hash, 'DELETE', "file/{$hash}");
-
-
-
-		return TRUE;
+		return $this('`hash`=?s LIMIT 1', $hash)->delete() === 1;
+	}
+	function update(string $hash, array $data = []):bool
+	{
+		$file = ['t1' => $this->webapp->time()];
+		foreach (['size', 'views', 'likes', 'shares', 'name', 'node'] as $field)
+		{
+			if (array_key_exists($field, $data))
+			{
+				$file[$field] = $data[$field];
+			}
+		}
+		if (array_key_exists('extdata', $data))
+		{
+			$file['extdata'] = is_array($data['extdata']) ? json_encode(
+				$data['extdata'], JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE) : $data['extdata'];
+		}
+		return $this('hash=?s LIMIT 1', $hash)->update($file) === 1;
+	}
+	function fetch(string $hash, ?array &$data = NULL, ?array &$extdata = NULL):bool
+	{
+		if ($this('`hash`=?s LIMIT 1', $hash)->fetch($data))
+		{
+			if ($data['extdata'] && func_num_args() > 2)
+			{
+				$extdata = json_decode($data['extdata'], TRUE);
+			}
+			return TRUE;
+		}
+		return FALSE;
 	}
 	function rename(string $hash, string $newname):bool
 	{
-		return $this('hash=?s', $hash)->update(['ut' => $this->webapp->time(), 'name' => $newname]) === 1;
+		return $this('hash=?s', $hash)->update(['t1' => $this->webapp->time(), 'name' => $newname]) === 1;
 	}
-
-
-
-
-
-	function storage(string|array $hash, string $name, array $json = NULL, int $options = JSON_UNESCAPED_UNICODE):ArrayObject
+	function delete_file(string $hash):bool
 	{
-		// return new class extends ArrayObject
-		// {
-
-
-		// };
-		// $data = is_string($hash)
-		// 	? [
-		// 		'hash' => $hash,
-		// 		'sort' => $this->sort,
-		// 		'flag' => 0,
-		// 		'size' => 0,
-		// 		'name' => $name,
-		// 		'json' => $json === NULL ? NULL : json_encode($json, $options)
-		// 	]
-		// 	: [
-
-		// 	]
+		return $this->webapp->mysql->sync(fn() => $this->delete($hash) && $this->webapp->access->delete($this->filename($hash)));
 	}
-	function storage_uploadfile(int $index, string $rename = NULL):bool
+	function create_folder(string $name):?string
 	{
+		return $this->create(['name' => $name], TRUE);
 	}
-	function storage_localfile(string $filename, string $rename = NULL):bool
+	function create_uploadedfile(string $name, array $data = [], bool $mask = FALSE):?string
 	{
+		$uploadedfile = $this->webapp->request_uploadedfile($name);
+		return $this->webapp->mysql->sync(fn(&$hash) => $uploadedfile->count()
+			&& is_string($hash = $this->create($data + $uploadedfile()))
+			&& $this->webapp->access->put($this->filename($hash), $uploadedfile->open(0, $mask)), $hash) ? $hash : NULL;
 	}
-	function storage_netfile(string $url, string $rename = NULL):bool
-	{}
+	function update_uploadedfile(string $hash, array $data = [], string $name = NULL, bool $mask = FALSE):bool
+	{
+		return $name && count($uploadedfile = $this->webapp->request_uploadedfile($name))
+			? $this->webapp->mysql->sync(fn() => $this->update($hash, $data + $uploadedfile[0])
+				&& $this->webapp->access->put($this->filename($hash), $uploadedfile->open(0, $mask)))
+			: $this->update($hash, $data);
+	}
 }
 
 class webapp_ext_nfs_base extends webapp
@@ -263,6 +220,11 @@ class webapp_ext_nfs_base extends webapp
 	function nfs(int $sort = 0):webapp_nfs
 	{
 		return $this->nfs[$sort &= 0xff] ??= new webapp_nfs($this, $sort);
+	}
+	function src(int $sort, string $hash, int $t1 = 0, bool $mask = FALSE):string
+	{
+		return sprintf("{$this->readorigin}/{$sort}%s?{$t1}%s", $this->filename($hash), $mask ? '#!' : '');
+
 	}
 
 	// function put(string $filename, string $source):bool

@@ -23,18 +23,18 @@ class webapp_router_admin extends webapp_echo_admin
 	}
 
 	const ad_type = [
-		0 => '开屏广告（全屏幕）',
+		0 => '开屏（全屏幕）',
 		1 => '首次弹窗（半屏幕）',
-		2 => '首页轮播 21:9',
-		3 => '播放视频 16:9',
-		4 => '滑动视频（全屏幕）',
-		
+		2 => '横幅',
+		3 => '导航图标 1:1',
+		4 => '轮播 21:9',
+
+		// 3 => '播放视频 16:9',
+		// 4 => '滑动视频（全屏幕）',
 		// 3 => '游戏轮播',
 		// 4 => '社区轮播',
 		// 5 => '个人中心',
 		// 6 => '弹窗广告',
-
-		9 => '导航图标 1:1'
 	];
 	function form_ad(webapp_html $html = NULL):webapp_form
 	{
@@ -69,21 +69,24 @@ class webapp_router_admin extends webapp_echo_admin
 		$this->json();
 		if ($this->form_ad()->fetch($data))
 		{
-
-			var_dump( $this->webapp->nfs(0)->create_uploadedfile('ad', NULL, $data) );
-			print_r($data);
-
-			//$this->webapp->nfs(0)->create_uploadedfiles('ad');
-
-			// $ad = $this->webapp->request_uploadedfile('ad');
-
-			// print_r($ad);
+			if ($hash)
+			{
+				$this->webapp->nfs(0)->update_uploadedfile($hash, ['name' => $data['name'], 'extdata' => $data], 'ad', TRUE);
+			}
+			else
+			{
+				$this->webapp->nfs(0)->create_uploadedfile('ad', ['name' => $data['name'], 'extdata' => $data], TRUE);
+			}
 		}
 	}
 	function get_ad(string $hash = NULL)
 	{
 		$form = $this->form_ad($this->main);
-		//$this->webapp->ad[$hash]
+		if ($hash && $this->webapp->nfs(0)->fetch($hash, $data, $extdata))
+		{
+			$form->xml->fieldset->img['src'] = $this->webapp->readorigin . $this->webapp->nfs(0)->filename($hash) . "?{$data['t1']}#!";
+			$form->echo($extdata);
+		}
 	}
 	function get_ads()
 	{
@@ -93,11 +96,11 @@ class webapp_router_admin extends webapp_echo_admin
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
 			$table->cell()->append('a', ['删除下面广告', 'href' => "?admin/ad,hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
-			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?control/ad-update,hash:{$value['hash']}"]);
+			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?admin/ad,hash:{$value['hash']}"]);
 
 			$table->row();
 			$table->cell(['rowspan' => 5])
-				->append('img', ['loading' => 'lazy', 'src' => $this->webapp->readorigin . $value['path']]);
+				->append('img', ['loading' => 'lazy', 'src' => $this->webapp->readorigin . $value['path'] . '#!' ]);
 
 			$table->row();
 			$table->cell('HASH');

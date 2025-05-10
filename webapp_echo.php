@@ -187,8 +187,7 @@ class webapp_echo_html extends webapp_implementation
 	public readonly array $auth;
 	protected NULL|string|webapp_html|webapp_echo_json $echo = NULL;
 	public readonly webapp_html $header, $aside, $main, $footer;
-	public array $allow = [];
-	function __construct(public readonly webapp $webapp, webapp|string $authenticate = NULL)
+	function __construct(public readonly webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
 		//https://validator.w3.org/nu/#textarea
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
@@ -216,9 +215,9 @@ class webapp_echo_html extends webapp_implementation
 			default => parent::__toString()
 		};
 	}
-	final function initauth(webapp|string $context):void
+	final function initauth(webapp|string $context, string ...$allow):void
 	{
-		if (in_array(strtolower($this->webapp->method), $this->allow) === FALSE)
+		if (in_array(strtolower($this->webapp->method), $allow) === FALSE)
 		{
 			[$this->auth, $authenticate, $storage] = is_string($context)
 				? [$this->webapp->auth($this->authenticate(...), $context), $this->authenticate(...), $context]
@@ -248,6 +247,7 @@ class webapp_echo_html extends webapp_implementation
 			}
 			return 200;
 		}
+		$this->title('Authenticate');
 		$form = static::form_sign_in($this->main);
 		$form->xml['onsubmit'] = 'return $.authsignin(this,authorize=>authorize.signature?location.reload(document.cookie=`${this.dataset.storage}=${authorize.signature};path=/`):(this[authorize.error.field].setCustomValidity(authorize.error.message),requestAnimationFrame(()=>this.reportValidity())))';
 		$form->xml['data-storage'] = $storage;
@@ -439,8 +439,7 @@ class webapp_echo_masker extends webapp_echo_html
 	public readonly bool $init;
 	public readonly array $auth;
 	public readonly webapp_html $sw;
-	public array $allow = ['get_splashscreen'];
-	function __construct(webapp $webapp, webapp|string $authenticate = NULL)
+	function __construct(webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
 		parent::__construct($webapp);
 		//$this->template = $this->document;
@@ -476,7 +475,7 @@ class webapp_echo_masker extends webapp_echo_html
 		else
 		{
 			$this->xml->head->meta[1]['content'] .= ',maximum-scale=1,user-scalable=0';
-			$authenticate && $this->initauth($authenticate);
+			$authenticate && $this->initauth($authenticate, 'get_splashscreen', ...$allow);
 		}
 	}
 	function __toString():string
@@ -508,43 +507,16 @@ class webapp_echo_masker extends webapp_echo_html
 		$this->script('masker.close()');
 		return 200;
 	}
-	function get_authorization()
-	{
-
-	}
-
-
-	function sign_in()
-	{
-		static::form_sign_in($this->main)->xml['onsubmit'] = <<<'JS'
-		if (this.style.pointerEvents !== 'none')
-		{
-			const data = Object.fromEntries(new FormData(this).entries());
-			this.style.pointerEvents = 'none';
-			this.querySelectorAll('fieldset').forEach(element => element.disabled = true);
-			masker(this.action, {headers: {'Sign-In': JSON.stringify(data)}}).then(response => response.json()).then(data =>
-			{
-				data.errors.length && alert(data.errors.join('\n'));
-				data.signature && masker.authorization(data.signature).then(() => location.reload());
-			}).finally(() => {
-				this.style.pointerEvents = null;
-				this.querySelectorAll('fieldset').forEach(element => element.disabled = false);
-			});
-		}
-		return false;
-		JS;
-		return 401;
-	}
 }
 class webapp_echo_admin extends webapp_echo_masker
 {
 	public array $nav = [], $submenu = [];
-	function __construct(webapp $webapp, webapp|string $storage = NULL)
+	function __construct(webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
-		parent::__construct($webapp, $storage ?? $webapp['admin_cookie']);
-		$this->title('Admin');
+		parent::__construct($webapp, $authenticate ?? $webapp['admin_cookie'], ...$allow);
 		if ($this->auth)
 		{
+			$this->title('Admin');
 			$this->nav && $this->nav($this->nav);
 			if (isset($this->submenu[$this->webapp->method]))
 			{

@@ -441,15 +441,14 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		[&$this->router, &$this->method] = $this->route;
 		$this->query = preg_match_all('/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/', $this['request_query'],
 			$pattern, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL) ? array_column($pattern, 2, 1) : [];
-		//$this->index = !(isset($entry[1]) && strtolower($entry[1]) !== strtolower($this['app_index']));
 		if (method_exists($this, 'authenticate'))
 		{
 			$this->auth = [];
 			if (method_exists(...$this->route)
 				&& in_array($this->method, ['get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', 'get_masker']) === FALSE
 				&& empty($this->auth = $this->auth($this->authenticate(...)))) {
-				//$this->router === $this && $this->method === "get_{$this['app_index']}"
-				$this->method === "get_{$this['app_index']}" ? $this->echo_html('Authenticate', $this) : $this->response_status(401);
+				($this->router === $this || $this->router === $this['app_router'] . $this['app_index'])
+					&& $this->method === "get_{$this['app_index']}" ? $this->echo_html(authenticate: $this) : $this->response_status(401);
 			}
 		}
 	}
@@ -658,7 +657,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	function echo_html(string $title = NULL, webapp|string $authenticate = NULL):webapp_echo_html
 	{
 		$this->echo = new webapp_echo_html($this, $authenticate);
-		//is_string($title) && $this->echo->title($title);
+		is_string($title) && $this->echo->title($title);
 		return $this->echo;
 	}
 
@@ -902,11 +901,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		// 	default => $this->io->request_content()
 		// };
 	}
-	function request_uploadedfile(string $name, int $maximum = NULL):webapp_request_uploadedfile
+	function request_uploadedfile(string $name, int $maximum = 1):webapp_request_uploadedfile
 	{
-		return array_key_exists($name, $this->uploadedfiles ??= $this->io->request_uploadedfile())
-			&& $this->uploadedfiles[$name] instanceof webapp_request_uploadedfile ? $this->uploadedfiles[$name]
-			: $this->uploadedfiles[$name] = new webapp_request_uploadedfile($this, $name, $this->uploadedfiles[$name] ?? [], $maximum);
+		static $uploadedfile = $this->io->request_uploadedfile();
+		return $this->uploadedfiles[$name] ??= new webapp_request_uploadedfile($this, $name, $uploadedfile, $maximum);
 	}
 	function request_maskdata():?string
 	{
@@ -1218,20 +1216,24 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		return 404;
 	}
 }
-class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Countable, Stringable
+class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Stringable, Countable
 {
 	private array $uploadedfiles;
-	function __construct(public readonly webapp $webapp, private readonly string $name, array $uploadedfiles, ?int $maximum = NULL)
+	function __construct(public readonly webapp $webapp, private readonly string $name, array $uploadedfiles, int $maximum = 1)
 	{
-		$this->uploadedfiles = array_slice($uploadedfiles, 0, $maximum);
+		$this->uploadedfiles = array_slice($uploadedfiles[$name] ?? [], 0, $maximum);
+	}
+	function __debugInfo():array
+	{
+		return iterator_to_array($this);
 	}
 	function __toString():string
 	{
 		return $this->name;
 	}
-	function __debugInfo():array
+	function __invoke(int $index = 0):array
 	{
-		return iterator_to_array($this);
+		return ['hash' => $this->webapp->hashfile($this->uploadedfiles[$index]['file'])] + $this->uploadedfiles[$index];
 	}
 	function offsetExists(mixed $key):bool
 	{
@@ -1239,12 +1241,7 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 	}
 	function offsetGet(mixed $key):mixed
 	{
-		if ($this->offsetExists($key))
-		{
-			$this->uploadedfiles[$key]['hash'] ??= $this->webapp->hashfile($this->uploadedfiles[$key]['file']);
-			return $this->uploadedfiles[$key];
-		}
-		return [];
+		return $this->uploadedfiles[$key] ?? NULL;
 	}
 	function offsetSet(mixed $key, mixed $value):void
 	{
@@ -1252,48 +1249,50 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 	function offsetUnset(mixed $key):void
 	{
 	}
-	function getIterator():Traversable
-	{
-		for ($i = 0; $i < count($this); ++$i)
-		{
-			yield $this[$i];
-		}
-	}
 	function count():int
 	{
 		return count($this->uploadedfiles);
 	}
-	function filename(int $index = 0):string
+	function getIterator():Traversable
 	{
-		return $this->uploadedfiles[$index]['file'];
-	}
-	function column(string $key):array
-	{
-		return array_column($key === 'hash' ? $this->__debugInfo() : $this->uploadedfiles, $key);
-	}
-	function size():int
-	{
-		return array_sum($this->column('size'));
-	}
-	function open(int $index = 0)
-	{
-		return fopen($this->uploadedfiles[$index]['file'], 'r');
-	}
-	function content(int $index = 0):string
-	{
-		return file_get_contents($this->uploadedfiles[$index]['file']);
-	}
-	function move(string $filename, int $index = 0)
-	{
-		if ($this->offsetExists($index)
-			&& ((is_uploaded_file($this->uploadedfiles[$index]['file'])
-				&& move_uploaded_file($this->uploadedfiles[$index]['file'], $filename))
-				|| rename($this->uploadedfiles[$index]['file'], $filename))) {
-			$this->uploadedfiles[$index]['file'] = $filename;
-			return TRUE;
+		for ($i = 0; $i < count($this); ++$i)
+		{
+			yield $this($i);
 		}
-		return FALSE;
 	}
+
+	// function filename(int $index = 0):string
+	// {
+	// 	return $this->uploadedfiles[$index]['file'];
+	// }
+	// function column(string $key):array
+	// {
+	// 	return array_column($key === 'hash' ? $this->__debugInfo() : $this->uploadedfiles, $key);
+	// }
+	// function size():int
+	// {
+	// 	return array_sum($this->column('size'));
+	// }
+	function open(int $index = 0, bool $mask = FALSE)
+	{
+		$file = fopen($this->uploadedfiles[$index]['file'], 'r');
+		return $mask ? $this->webapp->masker($file, $key, TRUE) : $file;
+	}
+	// function content(int $index = 0):string
+	// {
+	// 	return file_get_contents($this->uploadedfiles[$index]['file']);
+	// }
+	// function move(string $filename, int $index = 0)
+	// {
+	// 	if ($this->offsetExists($index)
+	// 		&& ((is_uploaded_file($this->uploadedfiles[$index]['file'])
+	// 			&& move_uploaded_file($this->uploadedfiles[$index]['file'], $filename))
+	// 			|| rename($this->uploadedfiles[$index]['file'], $filename))) {
+	// 		$this->uploadedfiles[$index]['file'] = $filename;
+	// 		return TRUE;
+	// 	}
+	// 	return FALSE;
+	// }
 	
 	// function movefile(int $index, string $filename):bool
 	// {
@@ -1338,20 +1337,20 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Cou
 	// 	}
 	// 	return TRUE;
 	// }
-	function maskfile(string $filename, int $index = 0):bool
-	{
-		if ($this->offsetExists($index) && $this->webapp->maskfile($this->uploadedfiles[$index]['file'], $filename))
-		{
-			$this->uploadedfiles[$index]['file'] = $filename;
-			return TRUE;
-		}
-		return FALSE;
-	}
-	function post(string $url):webapp_client_http
-	{
-		return webapp_client_http::open($url, ['method' => 'POST',
-			'headers' => $this->webapp->authorized(),
-			'type' => 'multipart/form-data',
-			'data' => [$this->name => $this]]);
-	}
+	// function maskfile(string $filename, int $index = 0):bool
+	// {
+	// 	if ($this->offsetExists($index) && $this->webapp->maskfile($this->uploadedfiles[$index]['file'], $filename))
+	// 	{
+	// 		$this->uploadedfiles[$index]['file'] = $filename;
+	// 		return TRUE;
+	// 	}
+	// 	return FALSE;
+	// }
+	// function post(string $url):webapp_client_http
+	// {
+	// 	return webapp_client_http::open($url, ['method' => 'POST',
+	// 		'headers' => $this->webapp->authorized(),
+	// 		'type' => 'multipart/form-data',
+	// 		'data' => [$this->name => $this]]);
+	// }
 }
