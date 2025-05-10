@@ -196,8 +196,8 @@ class webapp_echo_html extends webapp_implementation
 		$this->meta(['charset' => $webapp['app_charset']]);
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
-		$this->stylesheet('/webapp/res/ps/webapp.css');
-		$this->script(['type' => 'module', 'src' => '/webapp/res/js/webapp.js']);
+		$this->stylesheet('/webapp/static/ps/webapp.css');
+		$this->script(['type' => 'module', 'src' => '/webapp/static/js/webapp.js']);
 		$webapp['manifests'] && $this->link(['rel' => 'manifest', 'href' => '?manifests']);
 		$node = $this->xml->append('body')->append('div', ['class' => 'webapp-grid']);
 		[$this->header, $this->aside, $this->main, $this->footer] = [
@@ -336,7 +336,7 @@ class webapp_echo_html extends webapp_implementation
 	// }
 	// function wallpaper()
 	// {
-	// 	$this->script(['src' => '/webapp/res/js/tgwallpaper.min.js']);
+	// 	$this->script(['src' => '/webapp/static/js/tgwallpaper.min.js']);
 	// 	$wallpaper = $this->xml->body->insert('div', 'first')->setattr(['style' => 'position:fixed;z-index:-1;top:0;left:0;right:0;bottom:0;']);
 	// 	$wallpaper->append('canvas', [
 	// 		'id'=>"wallpaper",
@@ -346,7 +346,7 @@ class webapp_echo_html extends webapp_implementation
 	// 		'style' => 'position:absolute;width:100%;height:100%'
 	// 	]);
 	// 	$wallpaper->append('div', [
-	// 		'style' => 'position:absolute;width:100%;height:100%;background-image:url(/webapp/res/ps/pattern-telegram.svg);mix-blend-mode: overlay;opacity:.4'
+	// 		'style' => 'position:absolute;width:100%;height:100%;background-image:url(/webapp/static/ps/pattern-telegram.svg);mix-blend-mode: overlay;opacity:.4'
 	// 	]);
 	// 	$this->xml->body->append('script', <<<JS
 	// 	const wallpaper = document.getElementById('wallpaper');

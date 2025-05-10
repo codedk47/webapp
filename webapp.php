@@ -68,15 +68,15 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 // 		}
 // 		return $status;
 // 	}
-	static function lib(string $filename)
+	static function libary(string $filename)
 	{
 		return array_key_exists($name = strtolower($filename), static::$libary)
 			? static::$libary[$name]
-			: static::$libary[$name] = require __DIR__ . "/lib/{$name}";
+			: static::$libary[$name] = require __DIR__ . "/libary/{$name}";
 	}
 	static function qrcode(string $content, int $level = 0):IteratorAggregate&Countable
 	{
-		return static::lib('qrcode/interface.php')($content, $level);
+		return static::libary('qrcode/interface.php')($content, $level);
 	}
 	static function time(int $offset = 0):int
 	{
@@ -330,7 +330,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		//simplified_text
 		//convert_simplified_chinese
-		return webapp::lib('hanzi/interface.php')($content);
+		return webapp::libary('hanzi/interface.php')($content);
 	}
 	static function filenameescape(string $basename):string
 	{
@@ -338,7 +338,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function build_test_router(bool $dataurl = FALSE, ...$urls):string
 	{
-		$code = stream_get_line(fopen(__DIR__ . '/res/js/test_router.js', 'r'), 0xffff, "\n");
+		$code = stream_get_line(fopen(__DIR__ . '/static/js/test_router.js', 'r'), 0xffff, "\n");
 		$code = str_replace('{ERRORPAGE}', array_shift($urls), $code);
 		$code = str_replace('{BASE64URLS}', base64_encode(join(',', $urls)), $code);
 		return $dataurl
@@ -421,7 +421,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			//Captcha
 			'captcha_length'	=> 4,
 			'captcha_expire'	=> 99,
-			'captcha_params'	=> [210, 86, __DIR__ . '/res/fonts/ArchitectsDaughter_R.ttf', 28],
+			'captcha_params'	=> [210, 86, __DIR__ . '/static/fonts/ArchitectsDaughter_R.ttf', 28],
 			//QRCode
 			'qrcode_echo'		=> TRUE,
 			'qrcode_ecc'		=> 0,
@@ -1189,10 +1189,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	function get_masker()
 	{
 		$this->response_content_type('text/javascript');
-		return $this->response_sendfile(__DIR__ . '/res/js/masker.js');
+		return $this->response_sendfile(__DIR__ . '/static/js/masker.js');
 		if ($this->nonematch(self::version, TRUE))
 		{
-			$this->response_sendfile(__DIR__ . '/res/js/masker.js');
+			$this->response_sendfile(__DIR__ . '/static/js/masker.js');
 			return 200;
 		}
 		return 304;
