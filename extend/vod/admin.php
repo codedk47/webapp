@@ -84,7 +84,8 @@ class webapp_router_admin extends webapp_echo_admin
 		$form = $this->form_ad($this->main);
 		if ($hash && $this->webapp->nfs(0)->fetch($hash, $data, $extdata))
 		{
-			$form->xml->fieldset->img['src'] = $this->webapp->readorigin . $this->webapp->nfs(0)->filename($hash) . "?{$data['t1']}#!";
+			$form->xml->fieldset->img['src'] = $this->webapp->src($data, '#!');
+			//$this->webapp->readorigin . $this->webapp->nfs(0)->filename($hash) . "?{$data['t1']}#!";
 			$form->echo($extdata);
 		}
 	}
@@ -100,7 +101,7 @@ class webapp_router_admin extends webapp_echo_admin
 
 			$table->row();
 			$table->cell(['rowspan' => 5])
-				->append('img', ['loading' => 'lazy', 'src' => $this->webapp->readorigin . $value['path'] . '#!' ]);
+				->append('img', ['loading' => 'lazy', 'src' => $this->webapp->src($value, '#!')]);
 
 			$table->row();
 			$table->cell('HASH');

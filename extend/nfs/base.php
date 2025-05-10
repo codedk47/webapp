@@ -1,12 +1,12 @@
 <?php
 interface webapp_nfs_access
 {
-	function put(string $filename, string $source):bool;
+	function put(string $filename, $source):bool;
 	function delete(string $filename):bool;
 }
 class webapp_nfs_standard_io extends webapp_client_http implements webapp_nfs_access
 {
-	function put(string $filename, string $source):bool
+	function put(string $filename, $source):bool
 	{
 		return FALSE;
 	}
@@ -18,7 +18,7 @@ class webapp_nfs_standard_io extends webapp_client_http implements webapp_nfs_ac
 class webapp_nfs_cloudflare_r2 extends webapp_client_http implements webapp_nfs_access
 {
 	#https://developers.cloudflare.com/r2/tutorials/postman/
-	function put(string $filename, string $source):bool
+	function put(string $filename, $source):bool
 	{
 		return FALSE;
 	}
@@ -58,24 +58,9 @@ class webapp_nfs_amazon_s3 extends webapp_client_http implements webapp_nfs_acce
 class webapp_nfs implements IteratorAggregate, Countable
 {
 	//private ?string $uid = NULL;
-	private array $callbacks = [], $sites;
-
+	//private array $callbacks = [], $sites;
 	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort)
 	{
-
-		// foreach ($sites as $site)
-		// {
-		// 	$urls = parse_url($site);
-		// 	$this->sites[] = [
-		// 		'original' => $original = "{$urls['scheme']}://{$urls['host']}" . (isset($urls['port']) ? ":{$urls['port']}" : ''),
-		// 		'callback' => $urls['path'],
-		// 		'username' => $urls['user'] ?? $this->webapp['admin_username'],
-		// 		'password' => $urls['pass'] ?? $this->webapp['admin_password']
-		// 	];
-	
-		// }
-		// print_r($this->sites);
-		
 	}
 	function __invoke(...$conditions):webapp_mysql_table
 	{
@@ -90,7 +75,7 @@ class webapp_nfs implements IteratorAggregate, Countable
 	{
 		foreach ($this(...$conditions) as $file)
 		{
-			$file['path'] = $this->filename($file['hash']) . "?{$file['t1']}";
+			//$file['path'] = $this->filename($file['hash']) . "?{$file['t1']}";
 			//print_r( str_split($a['hash'], 3) );
 
 
@@ -191,6 +176,7 @@ class webapp_ext_nfs_base extends webapp
 {
 	const tablename = 'nfs';
 	private array $nfs = [];
+	public string $origin = 'http://localhost';
 	static function createtable(webapp_mysql $mysql):bool
 	{
 		return $mysql->real_query(<<<'SQL'
@@ -205,6 +191,7 @@ class webapp_ext_nfs_base extends webapp
 			`shares` bigint unsigned NOT NULL,
 			`name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
 			`node` char(12) CHARACTER SET ascii COLLATE ascii_general_ci DEFAULT NULL,
+			`key` binary(16) DEFAULT NULL COMMENT 'masker',
 			`extdata` json DEFAULT NULL,
 			PRIMARY KEY (`hash`),
 			KEY `type` (`hash`(1)),
@@ -221,9 +208,10 @@ class webapp_ext_nfs_base extends webapp
 	{
 		return $this->nfs[$sort &= 0xff] ??= new webapp_nfs($this, $sort);
 	}
-	function src(int $sort, string $hash, int $t1 = 0, bool $mask = FALSE):string
+	function src(array $file, string $suffix = NULL):string
 	{
-		return sprintf("{$this->readorigin}/{$sort}%s?{$t1}%s", $this->filename($hash), $mask ? '#!' : '');
+		$hash = substr(chunk_split($file['hash'], 3, '/'), 0, 15);
+		return "{$this->origin}/{$file['sort']}/{$hash}?{$file['t1']}{$suffix}";
 
 	}
 
