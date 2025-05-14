@@ -10,9 +10,13 @@ class webapp_router_admin extends webapp_echo_admin
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
+		if ($this->init)
+		{
+			$this->webapp->origin($this);
+		}
 		if ($this->auth)
 		{
-			$this->stylesheet('/webapp/ext/vod/admin.css');
+			$this->stylesheet('/webapp/extend/vod/admin.css');
 		}
 	}
 
@@ -43,10 +47,10 @@ class webapp_router_admin extends webapp_echo_admin
 
 		$form->fieldset('广告图片 / 展示位置');
 		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => '$.previewimage(this,document.querySelector("form>fieldset>img"))']);
-		$form->field('seat', 'select', ['options' => static::ad_type, 'required' => NULL]);
+		$form->field('type', 'select', ['options' => static::ad_type, 'required' => NULL]);
 
-		$form->fieldset('行为URL');
-		$form->field('acturl', 'text', [
+		$form->fieldset('跳转网址');
+		$form->field('jumpurl', 'text', [
 			'placeholder' => 'javascript 或者 url',
 			'value' => 'javascript:;',
 			'maxlength' => 255,
@@ -84,24 +88,27 @@ class webapp_router_admin extends webapp_echo_admin
 		$form = $this->form_ad($this->main);
 		if ($hash && $this->webapp->nfs(0)->fetch($hash, $data, $extdata))
 		{
-			$form->xml->fieldset->img['src'] = $this->webapp->src($data, '#!');
+			$form->xml->fieldset->img['src'] = $this->webapp->src($data);
 			//$this->webapp->readorigin . $this->webapp->nfs(0)->filename($hash) . "?{$data['t1']}#!";
 			$form->echo($extdata);
 		}
 	}
-	function get_ads()
+	function get_ads(int $page = 1)
 	{
-		$ads = $this->webapp->nfs(0);
-		
-		$table = $this->main->table($ads, function($table, $value)
+		$cond = $this->webapp->cond();
+		$cond_type = $cond->query('type', 'extdata->"$.type"=?s');
+		$cond->append('ORDER BY extdata->"$.weight" DESC, hash ASC');
+
+
+		$table = $this->main->table($cond($this->webapp->nfs(0))->paging($page, 6), function($table, $value)
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell()->append('a', ['删除下面广告', 'href' => "?admin/ad,hash:{$value['hash']}", 'data-method' => 'delete', 'data-bind' => 'click']);
+			$table->cell()->append('a', ['删除下面广告', 'href' => "?admin/ad,hash:{$value['hash']}", 'data-method' => 'delete']);
 			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?admin/ad,hash:{$value['hash']}"]);
 
 			$table->row();
 			$table->cell(['rowspan' => 5])
-				->append('img', ['loading' => 'lazy', 'src' => $this->webapp->src($value, '#!')]);
+				->append('img', ['loading' => 'lazy', 'src' => $this->webapp->src($value)]);
 
 			$table->row();
 			$table->cell('HASH');
@@ -114,7 +121,7 @@ class webapp_router_admin extends webapp_echo_admin
 			$extdata = json_decode($value['extdata'], TRUE);
 			$table->row();
 			$table->cell('位置');
-			$table->cell(static::ad_type[$extdata['seat']] ?? NULL);
+			$table->cell(static::ad_type[$extdata['type']] ?? NULL);
 			$table->cell('展示权重');
 			$table->cell($extdata['weight']);
 			$table->cell('过期时间');
@@ -131,15 +138,15 @@ class webapp_router_admin extends webapp_echo_admin
 
 			$table->row();
 			$table->cell('URL');
-			$table->cell(['colspan' => 5])->append('a', [$extdata['acturl'], 'href' => $extdata['acturl']]);
+			$table->cell(['colspan' => 5])->append('a', [$extdata['jumpurl'], 'href' => $extdata['jumpurl'], 'target' => '_blank']);
 		});
 		$table->tbody['class'] = 'ads';
 		$table->header('广告');
-		//$table->fieldset('asdasd');
+		$table->paging($this->webapp->at(['page' => '']));
 
 
 		$table->bar->append('button', ['创建', 'onclick' => 'location.assign("?admin/ad")']);
-		$table->bar->select(['' => '全部类型'] + static::ad_type)->selected(1)['onchange'] = '$.at({type:this.value})';
+		$table->bar->select(['' => '全部类型'] + static::ad_type)->selected($cond_type)['onchange'] = '$.at({type:this.value||null})';
 		//$table->bar->select(static::ad_type)->selected(1)['onchange'] = '$.at({type:this.value})';
 
 	}
@@ -147,5 +154,6 @@ class webapp_router_admin extends webapp_echo_admin
 	function get_users()
 	{
 		$this->main->append('h2', 'User system are under development');
+		$this->main->append('img', ['src' => '/0/dwdadawd.jpg']);
 	}
 }

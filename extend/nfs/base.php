@@ -33,22 +33,48 @@ class webapp_nfs_amazon_s3 extends webapp_client_http implements webapp_nfs_acce
 	private readonly string $bucket_name, $access_key, $secret_key;
 	function __construct(string $region, array $options = ['BucketName', 'AWSAccessKeyId', 'YourSecretAccessKey'])
 	{
-		parent::__construct("https://s3.{$region}.amazonaws.com");
+		parent::__construct("https://{$options[0]}.s3.{$region}.amazonaws.com");
 		$this->bucket_name = '/' . array_shift($options);
 		[$this->access_key, $this->secret_key] = $options;
 	}
 	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
 	{
 		$date = date(DATE_RFC2822);
-		$path = $this->bucket_name . $path;
-		$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-amz-acl:public-read\n{$path}", $this->secret_key, TRUE));
+		$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-amz-acl:public-read\n{$this->bucket_name}{$path}", $this->secret_key, TRUE));
 		$this->headers(['Authorization' => "AWS {$this->access_key}:{$signature}", 'Date' => $date, 'x-amz-acl' => 'public-read']);
 		return parent::request($method, $path, $body, $type);
 	}
 	function put(string $filename, $stream):bool
 	{
-		return (is_resource($stream) || is_file($source)) && $this->request('PUT',
-			$filename, $stream, 'application/octet-stream') && $this->status() === 200;
+		return is_resource($stream) && $this->request('PUT', $filename,
+			$stream, 'application/octet-stream') && $this->status() === 200;
+	}
+	function delete(string $filename):bool
+	{
+		return $this->request('DELETE', $filename) && $this->status() === 204;
+	}
+}
+class webapp_nfs_aliyun_oss extends webapp_client_http implements webapp_nfs_access
+{
+	#https://help.aliyun.com/zh/oss/developer-reference/overview-24
+	private readonly string $bucket_name, $access_key, $secret_key;
+	function __construct(string $region, array $options = ['BucketName', 'AccessKeyID', 'AccessKeySecret'])
+	{
+		parent::__construct("https://{$options[0]}.{$region}.aliyuncs.com");
+		$this->bucket_name = '/' . array_shift($options);
+		[$this->access_key, $this->secret_key] = $options;
+	}
+	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
+	{
+		$date = gmdate(DATE_RFC7231);
+		$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-oss-acl:public-read\n{$this->bucket_name}{$path}", $this->secret_key, TRUE));
+		$this->headers(['Authorization' => "OSS {$this->access_key}:{$signature}", 'Date' => $date, 'x-oss-acl' => 'public-read']);
+		return parent::request($method, $path, $body, $type);
+	}
+	function put(string $filename, $stream):bool
+	{
+		return is_resource($stream) && $this->request('PUT', $filename,
+			$stream, 'application/octet-stream') && $this->status() === 200;
 	}
 	function delete(string $filename):bool
 	{
@@ -58,37 +84,61 @@ class webapp_nfs_amazon_s3 extends webapp_client_http implements webapp_nfs_acce
 class webapp_nfs implements IteratorAggregate, Countable
 {
 	//private ?string $uid = NULL;
-	//private array $callbacks = [], $sites;
+	public array $paging = [];
+	private readonly webapp_mysql_table $table;
+	//private readonly webapp_redis_table $cache;
 	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort)
 	{
 	}
-	function __invoke(...$conditions):webapp_mysql_table
+	function __invoke(...$conditions):static
 	{
-		return $this->webapp->mysql->{$this->webapp::tablename}('WHERE sort=?i' . ($conditions
-			? ' AND ' . array_shift($conditions) : ''), $this->sort, ...$conditions);
+		static $table = $this->table ??= $this->webapp->mysql->{$this->webapp::tablename};
+		$table('WHERE sort=?i' . ($conditions ? (preg_match('/^\s*(order|group)\s+by\s+/i',
+			$append = array_shift($conditions)) ? " {$append}" : " AND {$append}") : ''), $this->sort, ...$conditions);
+		return $this;
 	}
 	function count():int
 	{
-		return count($this());
+		return count($this()->table);
 	}
-	function getIterator(...$conditions):Traversable
+	function getIterator():Traversable
 	{
-		foreach ($this(...$conditions) as $file)
+		foreach ($this->table as $file)
 		{
-			//$file['path'] = $this->filename($file['hash']) . "?{$file['t1']}";
-			//print_r( str_split($a['hash'], 3) );
-
-
-			//$a['url'] = "{$this->sites[0]['original']}/{$a['sort']}/{$a['hash']}";
-
 			yield $file;
 		}
-		//return $this($folder ? 'site IS NULL' : 'site IS NOT NULL');
-		//return $this->webapp->mysql->nfs('WHERE sort=?i', $this->sort)
 	}
+	private function primary(string $hash):webapp_mysql_table
+	{
+		return $this('`hash`=?s LIMIT 1', $hash)->table;
+	}
+	function search(string|array $context, ...$conditions)
+	{
+		if (is_string($context))
+		{
+			return $this($context, ...$conditions);
+		}
+		$cond = [[]];
+		foreach ($context as $key => $value)
+		{
+			$cond[0][] = "extdata->\"$.{$key}\"=?s";
+			$cond[] = $value;
+		}
+		if ($conditions)
+		{
+			$cond[0][] = array_shift($conditions);
+			array_push($cond, $conditions);
+		}
+		$cond[0] = join(' AND ', $cond[0]);
+		return $this(...$cond);
+	}
+
+
 	function paging(int $index, int $rows = 21, bool $overflow = FALSE):static
 	{
-		
+		static $table = $this->table ??= $this->webapp->mysql->{$this->webapp::tablename};
+		$this->paging = $table->paging($index, $rows, $overflow)->paging;
+		return $this;
 	}
 	function filename(string $hash):string
 	{
@@ -96,7 +146,8 @@ class webapp_nfs implements IteratorAggregate, Countable
 	}
 	function create(array $data, bool $folder = FALSE):?string
 	{
-		return $this->webapp->mysql->{$this->webapp::tablename}->insert([
+		static $table = $this->table ??= $this->webapp->mysql->{$this->webapp::tablename};
+		return $table->insert([
 			'hash' => $hash = $folder ? $this->webapp->serial_hash(FALSE, 'W') : (array_key_exists('hash', $data)
 				&& preg_match('/^[0-9A-V]{12}/', $data['hash']) ? $data['hash'] : $this->webapp->random_hash(FALSE)),
 			'sort' => $this->sort,
@@ -107,18 +158,19 @@ class webapp_nfs implements IteratorAggregate, Countable
 			'likes' => $data['likes'] ?? 0,
 			'shares' => $data['shares'] ?? 0,
 			'name' => $data['name'] ?? '',
+			'key' => $data['key'] ?? NULL,
 			'node' => $data['node'] ?? NULL,
 			'extdata' => isset($data['extdata']) && is_array($data['extdata']) ? json_encode(
 				$data['extdata'], JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE) : $data['extdata'] ?? NULL]) ? $hash : NULL;
 	}
 	function delete(string $hash):bool
 	{
-		return $this('`hash`=?s LIMIT 1', $hash)->delete() === 1;
+		return $this->primary($hash)->delete() === 1;
 	}
 	function update(string $hash, array $data = []):bool
 	{
 		$file = ['t1' => $this->webapp->time()];
-		foreach (['size', 'views', 'likes', 'shares', 'name', 'node'] as $field)
+		foreach (['size', 'views', 'likes', 'shares', 'name', 'node', 'key'] as $field)
 		{
 			if (array_key_exists($field, $data))
 			{
@@ -130,11 +182,11 @@ class webapp_nfs implements IteratorAggregate, Countable
 			$file['extdata'] = is_array($data['extdata']) ? json_encode(
 				$data['extdata'], JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE) : $data['extdata'];
 		}
-		return $this('hash=?s LIMIT 1', $hash)->update($file) === 1;
+		return $this->primary($hash)->update($file) === 1;
 	}
 	function fetch(string $hash, ?array &$data = NULL, ?array &$extdata = NULL):bool
 	{
-		if ($this('`hash`=?s LIMIT 1', $hash)->fetch($data))
+		if ($this->primary($hash)->fetch($data))
 		{
 			if ($data['extdata'] && func_num_args() > 2)
 			{
@@ -146,7 +198,7 @@ class webapp_nfs implements IteratorAggregate, Countable
 	}
 	function rename(string $hash, string $newname):bool
 	{
-		return $this('hash=?s', $hash)->update(['t1' => $this->webapp->time(), 'name' => $newname]) === 1;
+		return $this->primary($hash)->update(['t1' => $this->webapp->time(), 'name' => $newname]) === 1;
 	}
 	function delete_file(string $hash):bool
 	{
@@ -158,17 +210,27 @@ class webapp_nfs implements IteratorAggregate, Countable
 	}
 	function create_uploadedfile(string $name, array $data = [], bool $mask = FALSE):?string
 	{
+		$key = $mask ? $this->webapp->random(8) : NULL;
 		$uploadedfile = $this->webapp->request_uploadedfile($name);
 		return $this->webapp->mysql->sync(fn(&$hash) => $uploadedfile->count()
-			&& is_string($hash = $this->create($data + $uploadedfile()))
-			&& $this->webapp->access->put($this->filename($hash), $uploadedfile->open(0, $mask)), $hash) ? $hash : NULL;
+			&& is_string($hash = $this->create(['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile()))
+			&& $this->webapp->access->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)), $hash) ? $hash : NULL;
 	}
 	function update_uploadedfile(string $hash, array $data = [], string $name = NULL, bool $mask = FALSE):bool
 	{
+		$key = $mask ? $this->webapp->random(8) : NULL;
 		return $name && count($uploadedfile = $this->webapp->request_uploadedfile($name))
-			? $this->webapp->mysql->sync(fn() => $this->update($hash, $data + $uploadedfile[0])
-				&& $this->webapp->access->put($this->filename($hash), $uploadedfile->open(0, $mask)))
+			? $this->webapp->mysql->sync(fn() => $this->update($hash, ['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile[0])
+				&& $this->webapp->access->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)))
 			: $this->update($hash, $data);
+	}
+	function views(string $hash):bool
+	{
+		return $this->primary($hash)->update('`views`=`views`+1') === 1;
+	}
+	function likes(string $hash):bool
+	{
+		return $this->primary($hash)->update('`likes`=`likes`+1') === 1;
 	}
 }
 
@@ -208,12 +270,13 @@ class webapp_ext_nfs_base extends webapp
 	{
 		return $this->nfs[$sort &= 0xff] ??= new webapp_nfs($this, $sort);
 	}
-	function src(array $file, string $suffix = NULL):string
+	function src(array $file, string $name = NULL):string
 	{
-		$hash = substr(chunk_split($file['hash'], 3, '/'), 0, 15);
-		return "{$this->origin}/{$file['sort']}/{$hash}?{$file['t1']}{$suffix}";
-
+		$hash = chunk_split($file['hash'], 3, '/');
+		$hash .= $name ?? [$file['t1'], $hash[15] = '?'][0];
+		return "{$this->origin}/{$file['sort']}/{$hash}#{$file['key']}";
 	}
+
 
 	// function put(string $filename, string $source):bool
 	// {

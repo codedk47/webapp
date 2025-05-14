@@ -9,8 +9,9 @@ class webapp_redis extends Redis
 	}
 	function dosevasive(int $count):bool
 	{
-		//'redis_dosevasive'	=> 7, //Number of requests per second per IP that will result in denial of service
-		return TRUE;
+		$deny = $this->incr($key = $this->webapp->request_ip()) > $count;
+		$this->expire($key, $deny ? 10 : 2);
+		return $deny;
 	}
 	function clear(string|webapp_redis_table $table = NULL):void
 	{

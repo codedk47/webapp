@@ -12,8 +12,8 @@ interface webapp_io
 	function request_ip():string;
 	function request_scheme():string;
 	function request_method():string;
-	function request_entry():string;
 	function request_query():string;
+	function request_into():string;
 	function request_header(string $name):?string;
 	function request_cookie(string $name):?string;
 	function request_content():string;
@@ -31,6 +31,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	const version = '4.7.1a', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
 	public readonly self $webapp;
 	public readonly array $query;
+	public readonly string $into;
 	public object|string $router;
 	public string $method;
 	private array $errors = [], $cookies = [], $headers = [], $uploadedfiles, $configs, $route, $entry;
@@ -393,7 +394,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function __construct(array $config = [], private readonly webapp_io $io = new webapp_stdio)
 	{
-		[$this->webapp, $this->configs] = [$this, $config + [
+		[$this->webapp, $this->into, $this->configs] = [$this, $io->request_into(), $config + [
 			//Request
 			'request_method'	=> in_array($method = strtolower($io->request_method()), ['cli', 'get', 'post', 'put', 'patch', 'delete', 'options'], TRUE) ? $method : 'get',
 			'request_query'		=> $io->request_query(),
@@ -680,7 +681,12 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 		&& in_array($this->method, $router === $this ? [
 	// 			'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
 	// }
-
+	function routname():string
+	{
+		return substr(...is_string($this->router)
+			? [$this->router, strlen($this['app_router'])]
+			: [$this->method, strlen($this['request_method']) + 1]);
+	}
 
 
 	// function request_authorized(callable $authenticate = NULL, string $storage = NULL)
@@ -784,6 +790,45 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		}
 		return $this($mysql);
 	}
+	function cond(...$conditions):object
+	{
+		return new class($this->query, $conditions)
+		{
+			private array $cond = [], $values = [], $append = [];
+			function __construct(private readonly array $query, $conditions)
+			{
+				if ($conditions)
+				{
+					$cond[] = array_shift($conditions);
+					$values = $conditions;
+				}
+			}
+			function __invoke(callable $object):object
+			{
+				$cond = join(' AND ', $this->cond);
+				if ($this->append)
+				{
+					$cond = trim($cond . ' ' . join(',', $this->append));
+				}
+				return $cond ? $object($cond, ...$this->values) : $object;
+			}
+			function query(string $name, string $cond, callable $format = NULL, &$retval = NULL):?string
+			{
+				if (isset($this->query[$name]))
+				{
+					$this->cond[] = $cond;
+					$value = $this->query[$name];
+					$retval = $this->values[] = is_callable($format) ? $format($value) : $value;
+					return $value;
+				}
+				return NULL;
+			}
+			function append(string $cond):void
+			{
+				$this->append[] = $cond;
+			}
+		};
+	}
 	function redis():webapp_redis
 	{
 		$redis = new webapp_redis($this, ...$this['redis_open']);
@@ -835,14 +880,14 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return sprintf('%s://%s', $this->request_scheme(), $this->request_host(), $path);
 	}
-	function request_entry(bool $route = FALSE):string
-	{
-		return $this->request_origin() . $this->io->request_entry();
-	}
-	function request_dir():string
-	{
-		return dirname($this->request_entry());
-	}
+	// function request_entry(bool $route = FALSE):string
+	// {
+	// 	return $this->request_origin() . $this->io->request_entry();
+	// }
+	// function request_dir():string
+	// {
+	// 	return dirname($this->request_entry());
+	// }
 	function request_cookie(string $name):?string
 	{
 		return $this->io->request_cookie($name);
@@ -876,30 +921,30 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function request_content(?string $format = NULL):array|string|webapp_xml
 	{
-		if (in_array($format ??= $this->request_content_type(), ['application/x-www-form-urlencoded', 'multipart/form-data']))
-		{
-			return $this->io->request_formdata();
-		}
-		$content = is_string($key = $this->request_header('Mask-Key'))
-			? $this->unmasker(hex2bin($key), $this->io->request_content())
-			: $this->io->request_content();
-		return match ($format)
-		{
-			'application/json' => json_decode($content, TRUE),
-			'application/xml' => static::xml($content),
-			default => $content
-		};
+		// if (in_array($format ??= $this->request_content_type(), ['application/x-www-form-urlencoded', 'multipart/form-data']))
+		// {
+		// 	return $this->io->request_formdata();
+		// }
+		// $content = is_string($key = $this->request_header('Mask-Key'))
+		// 	? $this->unmasker(hex2bin($key), $this->io->request_content())
+		// 	: $this->io->request_content();
+		// return match ($format)
+		// {
+		// 	'application/json' => json_decode($content, TRUE),
+		// 	'application/xml' => static::xml($content),
+		// 	default => $content
+		// };
 		// $content = is_string($key = $this->request_header('Mask-Key'))
 		// 	? $this->unmasker(hex2bin($key), $this->io->request_content())
 		// 	: 
-		// return match ($format ?? $this->request_content_type())
-		// {
-		// 	'application/x-www-form-urlencoded',
-		// 	'multipart/form-data' => $this->io->request_formdata(),
-		// 	'application/json' => json_decode($this->io->request_content(), TRUE),
-		// 	'application/xml' => static::xml($this->io->request_content()),
-		// 	default => $this->io->request_content()
-		// };
+		return match ($format ?? $this->request_content_type())
+		{
+			'application/x-www-form-urlencoded',
+			'multipart/form-data' => $this->io->request_formdata(),
+			'application/json' => json_decode($this->io->request_content(), TRUE),
+			'application/xml' => static::xml($this->io->request_content()),
+			default => $this->io->request_content()
+		};
 	}
 	function request_uploadedfile(string $name, int $maximum = 1):webapp_request_uploadedfile
 	{
@@ -1203,7 +1248,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		{
 			try
 			{
-				include 'ext/help/echo.php';
+				include 'extend/help/echo.php';
 				$this->echo = new webapp_echo_help($this);
 				return $this->echo->{$method}(...$this->query);
 			}
@@ -1273,10 +1318,10 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	// {
 	// 	return array_sum($this->column('size'));
 	// }
-	function open(int $index = 0, bool $mask = FALSE)
+	function open(int $index = 0, bool $mask = FALSE, ?string &$key = NULL, bool $merged = FALSE)
 	{
 		$file = fopen($this->uploadedfiles[$index]['file'], 'r');
-		return $mask ? $this->webapp->masker($file, $key, TRUE) : $file;
+		return $mask ? $this->webapp->masker($file, $key, $merged) : $file;
 	}
 	// function content(int $index = 0):string
 	// {

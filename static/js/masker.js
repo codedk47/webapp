@@ -1,5 +1,50 @@
 if (self.window)
 {
+	const script = document.currentScript, sw = navigator.serviceWorker.register(script.src,{scope:
+		location.pathname}).then(() => navigator.serviceWorker.ready.then(registration => registration.active)),
+		init = new Promise(resolve => addEventListener('DOMContentLoaded', () => sw.then(active => {
+			const handle =
+			{
+				ping: countdown => setTimeout(() => active.postMessage(['ping', countdown]), countdown * 1000),
+				error: message => {
+					const main = document.querySelector('main');
+					if (main)
+					{
+						main.style.cssText = 'white-space:pre';
+						main.textContent = message;
+					}
+				},
+				message: content => alert(content),
+				reload: url => location.replace(url)
+			};
+			navigator.serviceWorker.addEventListener('message', event =>
+			{
+				//console.log('Global Window Message', event.data);
+				handle[event.data.shift()](...event.data);
+			});
+			navigator.serviceWorker.startMessages();
+			if ('reload' in script.dataset)
+			{
+				const data = Object.fromEntries(Object.entries(script.dataset));
+				sessionStorage.setItem('init', JSON.stringify(data));
+				data.token = localStorage.getItem('token')
+				data.origin = Array.from(document.querySelectorAll('link[rel=preconnect]'))
+					.map(link => `${link.href}/${link.dataset.file || 'robots.txt'}`);
+				active.postMessage(data);
+			}
+			else
+			{
+				const init = JSON.parse(sessionStorage.getItem('init'));
+				if (init)
+				{
+					init.splashscreen && masker.open(init.splashscreen);
+					sessionStorage.removeItem('init');
+					resolve(init);
+				}
+				active.postMessage(['ping', 4]);
+				callbacks.forEach(callback => callback());
+			}
+		}))), callbacks = [];
 	function masker(resource, options = {})
 	{
 		if (options.body)
@@ -24,65 +69,6 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
-	//addEventListener('DOMContentLoaded', ()=> console.log('DOMContentLoaded'));
-	const script = document.currentScript, init = new Promise(resolve =>
-	{
-		//addEventListener('DOMContentLoaded', ()=> console.log('DOMContentLoaded1111'));
-		navigator.serviceWorker.register(script.src, {scope: location.pathname})
-		.then(registration => navigator.serviceWorker.ready.then(registration))
-		.then(registration =>
-		{
-			navigator.serviceWorker.addEventListener('message', event =>
-			{
-				//console.log('windows m', event);
-				if (typeof event.data === 'string')
-				{
-					switch (event.data)
-					{
-						case 'pong':
-							setTimeout(() => registration.active.postMessage('ping'), 1000);
-							break;
-						default:
-							console.log(event.data);
-							location.replace(script.dataset.reload);
-					}
-					
-				}
-				
-			});
-			navigator.serviceWorker.startMessages();
-			if ('reload' in script.dataset)
-			{
-				sessionStorage.setItem('init', JSON.stringify(script.dataset));
-				registration.active.postMessage('init');
-			}
-			else
-			{
-				//console.log('sw load')
-				const init = JSON.parse(sessionStorage.getItem('init'));
-				if (init)
-				{
-					masker.open(`?${(location.search.match(/\?(\w+)/) || ['home']).pop()}/splashscreen`);
-					sessionStorage.removeItem('init');
-					resolve(init);
-				}
-				registration.active.postMessage('ping');
-				callbacks.forEach(callback => callback());
-			}
-			
-	
-	
-			// registration.active.postMessage('reload' in script.dataset ? 'init' : 'ping');
-			// if (self.name !== 'masker')
-			// {
-			// 	self.name = 'masker';
-			// 	resolve(123)
-			// }
-			
-				
-			
-		});
-	}), callbacks = [];
 	masker.then = callback => callbacks[callbacks.length] = callback;
 	masker.init = callback => init.then(callback);
 	masker.open = url => init.then(() =>
@@ -107,8 +93,9 @@ if (self.window)
 		return frame;
 	});
 	masker.close = () => postMessage('close');
+	masker.token = token => sw.then(active => (token ? localStorage.setItem('token', token)
+		: localStorage.removeItem('token'), active.postMessage({token})));
 
-	
 	masker.skipsplashscreen = (skip = 'SKIP', second = 4, auto = false) => masker.then(() =>
 	{
 		const anchor = document.createElement('a');
@@ -140,10 +127,12 @@ if (self.window)
 		}
 		cd(document.body.appendChild(anchor));
 	});
+	masker.clickad = anchor => anchor.dataset.hash ? navigator.sendBeacon('?clickad', anchor.dataset.hash) : true;
 }
 else
 {
-	const headers = {'Service-Worker': 'masker'};
+	let confirm;
+	const cachename = location.search.substring(location.search.indexOf('/')), headers = {}, origin = new Promise(resolve => confirm = resolve);
 	async function request(resource, options)
 	{
 		// if (resource instanceof Request && resource.url.indexOf('#') > 0)
@@ -197,54 +186,102 @@ else
 		}
 		return response;
 	}
-	
+	//addEventListener('install', event => event.waitUntil(caches.open(cachename)));
 	addEventListener('message', event =>
 	{
-		if (typeof event.data === 'string')
+		//console.log('Service Worker Message', event.data);
+		if (Object.prototype.toString.call(event.data) === '[object Object]')
 		{
-			let data = 'init';
-			switch (event.data)
+			['token', 'cid', 'did'].forEach(name => {
+				if (name in event.data)
+				{
+					if (typeof event.data[name] === 'string')
+					{
+						name === 'token'
+							? headers.Authorization = `Bearer ${event.data[name]}`
+							: headers[name] = event.data[name];
+					}
+					else
+					{
+						delete headers[name === 'token' ? 'Authorization' : name];
+					}
+				}
+			});
+			if (typeof event.data.reload === 'string')
 			{
-				case 'ping':
-					data = 'pong';
-					break;
+				const controller = new AbortController, speedtest = event.data.origin.length ? Promise.any(event.data.origin.map(url =>
+					fetch(url, {cache: 'no-cache', signal: controller.signal}).then(response => response.blob().then(() =>
+						controller.abort(new URL(response.url).origin)).then(() => controller.signal.reason)))) : Promise.resolve(location.origin);
+				setTimeout(() => controller.abort('Connection to origin timed out'), 4786);
+				function reject(error, message)
+				{
+					//unregister()
+					delete headers['Service-Worker'];
+					event.source.postMessage(['error', error]);
+					message && event.source.postMessage(['message', message]);
+				}
+
+				function resolve(url)
+				{
+					speedtest.then(origin =>
+					{
+						//console.log('resolve')
+						headers['Service-Worker'] = 'masker';
+						event.source.postMessage(['reload', url]);
+						confirm(origin);
+					}, error => reject(error.toString(), controller.signal.reason));
+				}
+				return typeof event.data.init === 'string' ? request(event.data.init, {method: 'POST', headers: {'Service-Worker': 'masker'},
+					body: JSON.stringify(event.data)}).then(response =>response.text()).then(text => {
+					try {
+						const data = JSON.parse(text);
+						//console.log(data);
+						if (data.error)
+						{
+							return reject(data.error.message);
+						}
+						typeof data.token === 'string' && void(headers.Authorization = `Bearer ${data.token}`);
+						'message' in data && event.source.postMessage(['message', data.message]);
+						resolve('redirect' in data ? data.redirect : event.data.reload);
+					} catch(error) {
+						event.source.postMessage(['error', text.trim()]);
+					}
+				}) : resolve(event.data.reload);
 			}
-			return event.source.postMessage(data);
+			return;
 		}
-
-
+		event.source.postMessage(event.data);
 	});
-
-
-
-	addEventListener('fetch', event => event.respondWith(caches.match(event.request).then(response =>
+	addEventListener('fetch', async event => event.respondWith(caches.open(cachename).then(cache => caches.match(event.request).then(response =>
 	{
-		if (response) return response;
-		const url = new URL(event.request.url);
-
-
-
-
-		// const req = masker
-		// 	? [event.request.url.substring(0, event.request.url.indexOf('#')), []]
-		// 	: [event.request, {priority: 'high', headers: Object.assign(Object.fromEntries(event.request.headers.entries()), headers)}];
-
-		///\?mask\d*$/i.test(event.request.url)
-		//event.request.url.startsWith(location.origin)
-		if (url.hash.startsWith('#!'))
+		if (response)
 		{
-			return request(event.request.url, []);
+			return console.log(`form cache ${event.request.url}`), response;
 		}
-		if (event.request.url.startsWith(location.origin))
+		const url = new URL(event.request.url), key = /^#[0-9a-f]{16}$|^#!$/.test(url.hash)
+			? (url.hash.startsWith('#!') ? [] : url.hash.match(/[0-9a-f]{2}/g).map(key => parseInt(key, 16))) : null;
+		if (url.origin === location.origin)
 		{
-			if (url.pathname === location.pathname)
+			switch (true)
 			{
-				return request(event.request, {priority: 'high', headers:
-					Object.assign(Object.fromEntries(event.request.headers.entries()), headers)});
+				case url.pathname === location.pathname:
+					return request(event.request, {priority: 'high', cache: 'no-cache', headers:
+						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)});
+				case /^\/[0-9]{1,3}/.test(url.pathname):
+					return origin.then(origin => origin + url.pathname).then(url => request(url, key).then(response =>
+						response.ok ? cache.put(event.request, response.clone()).then(() => response) : response));
+				default:
+					//do something here
 			}
-			//do something here
+		}
+		else
+		{
+			if (Array.isArray(key))
+			{
+				return request(event.request.url, key);
+			}
 		}
 		return fetch(event.request);
-	})));
+	}))));
 
 }

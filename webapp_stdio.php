@@ -16,13 +16,13 @@ if (PHP_SAPI === 'cli')
 		{
 			return isset($_SERVER['argv'][1]) && strlen($method = explode('?', $_SERVER['argv'][1], 2)[0]) ? $method : 'cli';
 		}
-		function request_entry():string
-		{
-			return "/{$_SERVER['SCRIPT_NAME']}";
-		}
 		function request_query():string
 		{
 			return isset($_SERVER['argv'][1]) && is_string($query = strstr($_SERVER['argv'][1], '?')) ? substr($query, 1) : '';
+		}
+		function request_into():string
+		{
+			return "/{$_SERVER['SCRIPT_NAME']}";
 		}
 		function request_header(string $name):?string
 		{
@@ -86,13 +86,13 @@ else
 		{
 			return $_SERVER['REQUEST_METHOD'];
 		}
-		function request_entry():string
-		{
-			return $_SERVER['SCRIPT_NAME'];
-		}
 		function request_query():string
 		{
 			return $_SERVER['QUERY_STRING'] ?? '';
+		}
+		function request_into():string
+		{
+			return $_SERVER['SCRIPT_NAME'];
 		}
 		function request_header(string $name):?string
 		{

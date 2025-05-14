@@ -162,7 +162,7 @@ class webapp_echo_json extends ArrayObject implements Stringable
 				'file' => $message->getFile(),
 				'line' => $message->getLine(),
 				'trace' => $message->getTraceAsString()],
-			is_string($message) => $field ? ['message' => $this['errors'][] = $message, 'field' => $field] : ['message' => $message],
+			is_string($message) => $field ? ['message' => $this['errors'][] = $message, 'field' => $field] : ['message' => $this['errors'][] = $message],
 			default => isset($message['message']) ? ['message' => $this['errors'][] = $message] : $message
 		};
 	}
@@ -171,14 +171,17 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	// 	$this['dialog'] = $context;
 	// }
 	// function warning(){}
-	// function message(){}
+	// 
 	// function confirm(){}
 	// function prompt(){}
 	// function form(){}
-
-	function goto(string $url = NULL):void
+	function message(string $content):void
 	{
-		$this['goto'] = $url;
+		$this['message'] = $content;
+	}
+	function redirect(string $url):void
+	{
+		$this['redirect'] = $url;
 	}
 }
 class webapp_echo_html extends webapp_implementation
@@ -278,7 +281,7 @@ class webapp_echo_html extends webapp_implementation
 	}
 	function json(array|object $data = []):webapp_echo_json
 	{
-		return $this->echo = $this->webapp->echo_json($data);
+		return $this->echo = ($this->webapp)(new webapp_echo_json($this->webapp, $data));
 	}
 	function frag():webapp_html
 	{
@@ -292,9 +295,9 @@ class webapp_echo_html extends webapp_implementation
 	{
 		return $this->xml->head->append('link', $attributes);
 	}
-	function stylesheet(string $filename, string $media = 'all')
+	function stylesheet(string $filename, string $media = 'all'):webapp_html
 	{
-		$this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => $filename, $media]);
+		return $this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => $filename, 'media' => $media]);
 	}
 	function script(array|string $context):webapp_html
 	{
@@ -439,6 +442,7 @@ class webapp_echo_masker extends webapp_echo_html
 	public readonly bool $init;
 	public readonly array $auth;
 	public readonly webapp_html $sw;
+	//public array $initdata = [];
 	function __construct(webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
 		parent::__construct($webapp);
@@ -464,18 +468,25 @@ class webapp_echo_masker extends webapp_echo_html
 		Enables or disables automatic detection of possible phone numbers in a webpage in Safari on iOS.
 		By default, Safari on iOS detects any string formatted like a phone number and makes it a link that calls the number. Specifying telephone=no disables this feature.
 		*/
-		$this->sw = $this->script(['fetchpriority' => 'high', 'src' => '?masker']);
+		$this->sw = $this->script(['fetchpriority' => 'high', 'src' => "?masker{$webapp->into}"]);
 		if ($this->init = $webapp->request_header('Service-Worker') !== 'masker')
 		{
 			$this->auth = [];
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
-			$webapp->break($this->init(...), $webapp->request_device());
-			unset($this->xml->head->link);
+			//$this->sw['data-router'] = $webapp->routname;
+			$this->sw['data-init'] = "?{$webapp->routname}/init";
+			$this->sw['data-splashscreen'] = "?{$webapp->routname}/splashscreen";
+
+			$ua = $webapp->request_device();
+			$this->sw['data-cid'] = $this->fetch_cid($ua);
+			$this->sw['data-did'] = $this->fetch_did($ua);
+			$webapp->break($this->init(...), $ua);
+			unset($this->xml->head->link, $this->xml->head->script[0]);
 		}
 		else
 		{
 			$this->xml->head->meta[1]['content'] .= ',maximum-scale=1,user-scalable=0';
-			$authenticate && $this->initauth($authenticate, 'get_splashscreen', ...$allow);
+			$authenticate && $this->initauth($authenticate, 'post_init', 'get_splashscreen', ...$allow);
 		}
 	}
 	function __toString():string
@@ -493,20 +504,42 @@ class webapp_echo_masker extends webapp_echo_html
 			: 'Enable JavaScript and cookies to continue');
 		return 200;
 	}
-	function splashscreen(string $cover, string $skip = 'SKIP', int $cd = 4, bool $auto = FALSE)
+	function post_init():int
+	{
+		$this->json();
+		return 200;
+	}
+	function splashscreen(string $cover, string $jumpurl, string $skip = 'SKIP', int $cd = 4, bool $auto = FALSE, string $hash = NULL):webapp_html
 	{
 		$body = $this->xml->body;
-		$body['style'] = "height:100vh;background:url({$cover})white no-repeat center/100% 100%";
+		$body->append('a', [
+			'href' => $jumpurl,
+			'onclick' => 'return masker.clickad(this), masker.close()',
+			'target' => '_blank',
+			'style' => "display:block;height:100vh;background:url({$cover})white no-repeat center/100% 100%",
+			'data-hash' => $hash]);
 		$auto = $auto ? 'true' : 'false';
 		$this->script("masker.skipsplashscreen('{$skip}',{$cd},{$auto})");
 		unset($body->div);
+		return $body;
 	}
-	function get_splashscreen()
+	function get_splashscreen():int
 	{
 		unset($this->xml->head->link, $this->xml->head->title, $this->xml->body->div);
 		$this->script('masker.close()');
 		return 200;
 	}
+	function fetch_cid(string $ua):?string
+	{
+		return preg_match('/cid\/([0-9a-z]{4})/i', $ua, $matches) ? $matches[1]
+			: (($cid = $this->webapp->query['cid'] ?? NULL) && preg_match('/^[0-9a-z]{4}$/i', $cid) ? $cid : NULL);
+	}
+	function fetch_did(string $ua):?string
+	{
+		return preg_match('/cid\/([0-9a-z]{16})/i', $ua, $matches) ? $matches[1]
+			: (($did = $this->webapp->query['did'] ?? NULL) && preg_match('/^[0-9a-z]{16}$/i', $did) ? $did : NULL);
+	}
+
 }
 class webapp_echo_admin extends webapp_echo_masker
 {
@@ -514,6 +547,10 @@ class webapp_echo_admin extends webapp_echo_masker
 	function __construct(webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
 		parent::__construct($webapp, $authenticate ?? $webapp['admin_cookie'], ...$allow);
+		if ($this->init)
+		{
+			unset($this->sw['data-splashscreen']);
+		}
 		if ($this->auth)
 		{
 			$this->title('Admin');

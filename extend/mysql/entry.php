@@ -50,7 +50,7 @@ new class extends webapp
 	function html():webapp_echo_html
 	{
 		$this->echo_html('MySQL');
-		$this->echo->script(['src' => '/webapp/res/js/wa.js']);
+		$this->echo->script(['src' => '/webapp/static/js/wa.js']);
 		$this->echo->nav([
 			['Home', '?'],
 			['Console', '?console'],
@@ -127,6 +127,10 @@ new class extends webapp
 	{
 		return $this->echo_json();
 	}
+	function goto(string $url):void
+	{
+		$this->echo['goto'] = $url;
+	}
 	function tables(bool $status):array
 	{
 		return $status ? $this->mysql->show('TABLE STATUS')->all() : array_column($this->mysql->show('TABLES')->all(MYSQLI_NUM), 0);
@@ -179,7 +183,7 @@ new class extends webapp
 				&& $this->mysql->real_query('CREATE DATABASE ?a', $console['createdb'])
 				&& $this->mysql->select_db($console['createdb'])) {
 				$this->response_cookie('mysql_database', $console['createdb']);
-				$this->echo->goto('?database');
+				$this->goto('?database');
 			}
 			if (strlen($console['command']))
 			{
@@ -202,7 +206,7 @@ new class extends webapp
 	{
 		$this->echo_json();
 		$this->mysql->real_query('DROP DATABASE ?a', $this->database)
-			&& $this->echo->goto('?database');
+			&& $this->goto('?database');
 	}
 	function patch_database()
 	{
@@ -212,13 +216,13 @@ new class extends webapp
 			&& is_string($data['tablename'])
 			&& strlen($data['tablename'])
 			&& $this->mysql->real_query('CREATE TABLE ?a(`hash` char(12) NOT NULL, PRIMARY KEY (`hash`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4', $data['tablename'])
-			&& $this->echo->goto('?table/' . $this->url64_encode($data['tablename']));
+			&& $this->goto('?table/' . $this->url64_encode($data['tablename']));
 	}
 
 	//截断表（全部）
 	function patch_truncate(string $name = NULL)
 	{
-		$this->echo->goto(is_string($name) ? "?table/{$name}" : '?database');
+		$this->goto(is_string($name) ? "?table/{$name}" : '?database');
 		foreach (is_string($name)
 			? (is_string($tablename = $this->url64_decode($name)) ? [$tablename] : [])
 			: $this->tables(FALSE) as $tablename) {
@@ -228,7 +232,7 @@ new class extends webapp
 	//删除表（全部）
 	function delete_table(string $name = NULL)
 	{
-		$this->echo->goto('?database');
+		$this->goto('?database');
 		foreach (is_string($name)
 			? (is_string($tablename = $this->url64_decode($name)) ? [$tablename] : [])
 			: $this->tables(FALSE) as $tablename) {
@@ -238,7 +242,7 @@ new class extends webapp
 
 	function patch_table(string $name)
 	{
-		$this->echo->goto();
+		$this->goto();
 		$tablename = $this->url64_decode($name);
 		foreach ($this->request_content() as $field => $value)
 		{
@@ -268,7 +272,7 @@ new class extends webapp
 			if (is_string($database = $this->url64_decode($name)) && $this->mysql->select_db($database))
 			{
 				$this->response_cookie('mysql_database', $database);
-				$this->echo->goto('?database');
+				$this->goto('?database');
 			}
 			return;
 		}
@@ -656,14 +660,14 @@ new class extends webapp
 		$this->echo_json();
 		$this->form_field($this, $table)->input($commands)
 			&& $this->mysql->real_query(...$commands)
-			&& $this->echo->goto("?table/{$table}");
+			&& $this->goto("?table/{$table}");
 	}
 	//删除字段
 	function delete_field(string $table, string $field)
 	{
 		$this->echo_json();
 		$this->mysql->real_query('ALTER TABLE ?a DROP ?a', $this->url64_decode($table), $this->url64_decode($field))
-			&& $this->echo->goto("?table/{$table}");
+			&& $this->goto("?table/{$table}");
 	}
 	//修改字段
 	function patch_field(string $table, string $field)
@@ -671,7 +675,7 @@ new class extends webapp
 		$this->echo_json();
 		$this->form_field($this, $table, $field)->input($commands)
 			&& $this->mysql->real_query(...$commands)
-			&& $this->echo->goto("?table/{$table}");
+			&& $this->goto("?table/{$table}");
 	}
 	//查看字段
 	function get_field(string $table, string $field = NULL)
@@ -690,7 +694,7 @@ new class extends webapp
 			default => 'PRIMARY KEY(?a)'
 		}, $this->url64_decode($table), $this->url64_decode($field)])) {
 
-			$this->echo->goto("?table/{$table}");
+			$this->goto("?table/{$table}");
 		}
 	}
 	function delete_alter(string $table, string $field)
@@ -698,7 +702,7 @@ new class extends webapp
 		$this->echo_json();
 		if ($this->mysql->real_query('ALTER TABLE ?a DROP INDEX ?a',
 			$this->url64_decode($table), $this->url64_decode($field))) {
-			$this->echo->goto("?table/{$table}");
+			$this->goto("?table/{$table}");
 		}
 	}
 
@@ -775,7 +779,7 @@ new class extends webapp
 			$model = $this->mysql->table($form->table);
 			if ($model->insert($data))
 			{
-				$this->echo->goto(sprintf('?data/%s,primary:%s', $table, $this->url64_encode($data[$model->primary])));
+				$this->goto(sprintf('?data/%s,primary:%s', $table, $this->url64_encode($data[$model->primary])));
 			}
 		}
 	}
@@ -785,7 +789,7 @@ new class extends webapp
 		$this->echo_json();
 		$model = $this->mysql->table($this->url64_decode($table));
 		$model->delete('WHERE ?a=?s LIMIT 1', $model->primary, $this->url64_decode($primary)) === 1
-			&& $this->echo->goto();
+			&& $this->goto();
 	}
 	//修改数据
 	function patch_data(string $table, string $primary)
@@ -796,7 +800,7 @@ new class extends webapp
 		{
 			$model = $this->mysql->table($form->table);
 			$model('WHERE ?a=?s LIMIT 1', $model->primary, $this->url64_decode($primary))->update($data) === 1
-				&& $this->echo->goto(sprintf('?data/%s,primary:%s', $table, $this->url64_encode($data[$model->primary])));
+				&& $this->goto(sprintf('?data/%s,primary:%s', $table, $this->url64_encode($data[$model->primary])));
 		}
 	}
 	//查看数据
