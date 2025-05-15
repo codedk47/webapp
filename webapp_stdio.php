@@ -8,6 +8,10 @@ if (PHP_SAPI === 'cli')
 		{
 			return '127.0.0.1';
 		}
+		function request_time():int
+		{
+			return $_SERVER['REQUEST_TIME'];
+		}
 		function request_scheme():string
 		{
 			return 'php';
@@ -77,6 +81,10 @@ else
 		function request_ip():string
 		{
 			return $_SERVER['REMOTE_ADDR'];
+		}
+		function request_time():int
+		{
+			return $_SERVER['REQUEST_TIME'];
 		}
 		function request_scheme():string
 		{

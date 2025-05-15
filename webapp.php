@@ -10,6 +10,7 @@ class_exists('Redis') && require 'webapp_redis.php';
 interface webapp_io
 {
 	function request_ip():string;
+	function request_time():int;
 	function request_scheme():string;
 	function request_method():string;
 	function request_query():string;
@@ -364,7 +365,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function maskfile($from, $to, string &$key = NULL, bool $merged = FALSE):bool
 	{
-		return is_resource($stream = static::masker($from, $key, TRUE))
+		return is_resource($stream = static::masker($from, $key, $merged))
 			&& is_resource(is_string($to) ? $to = fopen($to, 'w') : $to)
 			&& stream_copy_to_stream($stream, $to) !== FALSE
 			&& feof($stream);
@@ -848,22 +849,21 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return $this->io->request_header($name);
 	}
-	function request_authorization(&$type = NULL):?string
-	{
-		return is_string($authorization = $this->request_header('Authorization'))
-			? ([$type] = explode(' ', $authorization, 2))[1] ?? $type : NULL;
-	}
-	function request_country():?string
-	{
-		//CF-IPCountry
-		return $this->request_header('CF-IPCountry') ?? NULL;
-	}
 	function request_ip(bool $proxy = FALSE):string
 	{
 		//CF-Connecting-IP
 		return $proxy && ($ip = $this->request_header('X-Forwarded-For'))
 			? current(explode(',', $ip))
 			: $this->io->request_ip();
+	}
+	function request_country():?string
+	{
+		//CF-IPCountry
+		return $this->request_header('CF-IPCountry') ?? NULL;
+	}
+	function request_time():int
+	{
+		return $this->io->request_time();
 	}
 	function request_scheme():string
 	{
@@ -888,6 +888,11 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// {
 	// 	return dirname($this->request_entry());
 	// }
+	function request_authorization(&$type = NULL):?string
+	{
+		return is_string($authorization = $this->request_header('Authorization'))
+			? ([$type] = explode(' ', $authorization, 2))[1] ?? $type : NULL;
+	}
 	function request_cookie(string $name):?string
 	{
 		return $this->io->request_cookie($name);

@@ -16,7 +16,7 @@ class webapp_router_home extends webapp_echo_masker
 			$this->script(['src' => '/webapp/static/js/slideshows.js']);
 			$this->stylesheet('/webapp/extend/vod/home.css');
 			
-			$this->link(['rel' => 'prefetch', 'href' => '/webapp/static/js/player.js', 'as' => 'script']);
+			
 
 		}
 		// if ($this->webapp->redis->dosevasive(20))
@@ -104,11 +104,9 @@ class webapp_router_home extends webapp_echo_masker
 
 				$anchor = $element->append('a', [
 					'href' => $ad['jumpurl'],
+					'target' => '_blank',
 					'onclick' => 'return masker.clickad(this)',
-					'data-hash' => $ad['hash']
-				
-				
-				]);
+					'data-hash' => $ad['hash']]);
 				$anchor->figure($ad['src']);
 				$anchor->append('strong', $ad['name']);
 			}
@@ -133,12 +131,40 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return NULL;
 	}
+	function draw_videos_lists(webapp_html $node,
+		string|iterable $videos,
+		int $display = 0,
+		string $title = NULL,
+		string $anchor = NULL,
+		string $action = '更多 >>')
+		{
 
+
+
+
+
+		$element = $node->append('div', ['class' => "grid-t{$display}"]);
+		foreach ($videos as $video)
+		{
+			$anchor = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
+			$figure = $anchor->figure($video['poster'], 1);
+			$anchor->append('strong', htmlentities($video['name']));
+		}
+		
+
+	
+
+
+	}
 
 
 
 	function get_home()
 	{
+		$this->link(['rel' => 'prefetch', 'href' => '/webapp/static/js/hls.min.js', 'as' => 'script']);
+		$this->link(['rel' => 'prefetch', 'href' => '/webapp/static/js/video.js', 'as' => 'script']);
+
+
 		$this->title('导航');
 		$this->draw_header_index('asdasd');
 
@@ -156,21 +182,122 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		$this->title('视频');
 		$this->draw_ad_slideshows($this->main);
+
+
+		$this->webapp->nfs_videos->fetch('6SJCS02B7LJ8', $data);
+
+		$this->draw_videos_lists($this->main, [$data]);
+
+
+
 		$this->draw_footer();
 	}
-	function get_short()
+	function get_short(int $page = 0)
 	{
+		if ($page)
+		{
+			$videos = [];
+			foreach ($this->webapp->nfs($this->webapp::VOD_VIDEO)('sort=1') as $video)
+			{
+				$videos[] = [
+					'hash' => $video['hash'],
+					'name' => $video['name'],
+					'm3u8' => strstr($this->webapp->src($video, 'play.m3u8'), '#', TRUE),
+					'poster' => $this->webapp->src($video, "cover?{$video['t1']}"),
+					'watched' => 0,
+					'liked' => 0,
+					'favorited' => 0,
+					'tags' => []
+				];
+
+				
+		
+			}
+
+
+
+			// $tags = $this->webapp->fetch_tags->shortname();
+			// foreach ($this->webapp->fetch_videos->with('type="v"')->random(9) as $video)
+			// //foreach ($this->webapp->fetch_videos->with('type="v"')->paging($page, 6) as $video)
+			// {
+			// 	$tagdata = [];
+			// 	foreach ($video['tags'] ? explode(',', $video['tags']) : [] as $taghash)
+			// 	{
+			// 		if (isset($tags[$taghash]))
+			// 		{
+			// 			$tagdata[$taghash] = $tags[$taghash];
+			// 		}
+			// 	}
+			// 	$videos[] = [
+			// 		'hash' => $video['hash'],
+			// 		'name' => $video['name'],
+			// 		//'m3u8' => $video['m3u8'],
+			// 		//'m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', $video['m3u8']),
+			// 		'm3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', '@' . substr($video['m3u8'], 1)),
+			// 		'poster' => $video['poster'],
+			// 		'watched' => $this->user->watched($video['hash']),
+			// 		'liked' => $this->user->liked($video['hash']),
+			// 		'favorited' => $this->user->favorited($video['hash']),
+			// 		'tags' => $tagdata
+			// 	];
+			// }
+			$this->json($videos);
+			return;
+		}
 		$this->title('抖音');
+		$this->script(['src' => '/webapp/static/js/hls.min.js']);
+		$this->script(['src' => '/webapp/static/js/video.js']);
+		$template = $this->main->append('webapp-videos', [
+			//'onchange' => 'masker.shortchanged(this)',
+			'data-fetch' => '?home/short,page:',
+			'data-page' => 1,
+			//'autoplay' => NULL,
+			'controls' => NULL,
+			//'muted' => NULL
+		])->append('template');
+
+
+		$this->draw_footer();
+	}
+	function get_watch(string $hash)
+	{
+		if ($this->webapp->nfs_videos->fetch($hash, $video) === FALSE)
+		{
+
+		}
+		$this->title($video['name']);
+		$this->draw_header_name($video['name']);
+		$this->script(['src' => '/webapp/static/js/hls.min.js']);
+		$this->script(['src' => '/webapp/static/js/video.js']);
+
+		//print_r($video);
+
+		$element = $this->aside->append('webapp-video', [
+			'data-poster' => $video['poster'],
+			'data-m3u8' => $video['m3u8'],
+			//'data-m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', '@' . substr($video['m3u8'], 1)),
+			//'oncanplay' => 'masker.canplay(this)',
+			//'autoheight' => NULL,
+			'autoplay' => NULL,
+			//'muted' => NULL,
+			'controls' => NULL
+		]);
+		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
+		$videoinfo->append('strong', htmlentities($video['name']));
+
+		
+		//$this->aside->append()
+
+
+
+
+
+		
 		$this->draw_footer();
 	}
 	function get_news()
 	{
 		$this->title('新闻');
-		$this->draw_footer();
-	}
-	function get_watch(string $hash)
-	{
-		$this->draw_header_name('asdasdasd');
 		$this->draw_footer();
 	}
 }

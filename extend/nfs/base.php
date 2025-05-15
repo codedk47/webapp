@@ -1,47 +1,38 @@
 <?php
-interface webapp_nfs_access
+class webapp_nfs_client extends webapp_client_http
 {
-	function put(string $filename, $source):bool;
-	function delete(string $filename):bool;
-}
-class webapp_nfs_standard_io extends webapp_client_http implements webapp_nfs_access
-{
-	function put(string $filename, $source):bool
+	private readonly Closure $auth;
+	private readonly string $username, $password, $bucket;
+	function __construct(string $api, string ...$options)
 	{
-		return FALSE;
-	}
-	function delete(string $filename):bool
-	{
-		return FALSE;
-	}
-}
-class webapp_nfs_cloudflare_r2 extends webapp_client_http implements webapp_nfs_access
-{
-	#https://developers.cloudflare.com/r2/tutorials/postman/
-	function put(string $filename, $source):bool
-	{
-		return FALSE;
-	}
-	function delete(string $filename):bool
-	{
-		return FALSE;
-	}
-}
-class webapp_nfs_amazon_s3 extends webapp_client_http implements webapp_nfs_access
-{
-	#https://docs.aws.amazon.com/AmazonS3/latest/API/RESTAuthentication.html
-	private readonly string $bucket_name, $access_key, $secret_key;
-	function __construct(string $region, array $options = ['BucketName', 'AWSAccessKeyId', 'YourSecretAccessKey'])
-	{
-		parent::__construct("https://{$options[0]}.s3.{$region}.amazonaws.com");
-		$this->bucket_name = '/' . array_shift($options);
-		[$this->access_key, $this->secret_key] = $options;
+		parent::__construct(current([$url, $this->auth] = match ($api)
+		{
+			#https://developers.cloudflare.com/r2/tutorials/postman/
+			'cloudflare_r2' => [],
+			#https://docs.aws.amazon.com/AmazonS3/latest/API/RESTAuthentication.html
+			'amazon_s3' => ["https://{$options[2]}.s3.{$options[3]}.amazonaws.com", function(string $method, string $path, string $type = NULL)
+			{
+				$date = date(DATE_RFC2822);
+				$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-amz-acl:public-read\n/{$this->bucket}{$path}", $this->password, TRUE));
+				return ['Authorization' => "AWS {$this->username}:{$signature}", 'Date' => $date, 'x-amz-acl' => 'public-read'];
+			}],
+			#https://help.aliyun.com/zh/oss/developer-reference/overview-24
+			'aliyun_oss' => ["https://{$options[2]}.{$options[3]}.aliyuncs.com", function(string $method, string $path, string $type = NULL)
+			{
+				$date = gmdate(DATE_RFC7231);
+				$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-oss-acl:public-read\n/{$this->bucket}{$path}", $this->password, TRUE));
+				return ['Authorization' => "OSS {$this->username}:{$signature}", 'Date' => $date, 'x-oss-acl' => 'public-read'];
+			}],
+			default => [$api, function(string $method, string $path)
+			{
+				return ['Authorization' => 'Bearer ' . webapp::signature($this->username, $this->password, webapp::hash($method . $path, TRUE) . $this->bucket)];
+			}]
+		}), ['autoretry' => 2, 'autojump' => 1]);
+		[$this->username, $this->password, $this->bucket] = $options;
 	}
 	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
 	{
-		$date = date(DATE_RFC2822);
-		$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-amz-acl:public-read\n{$this->bucket_name}{$path}", $this->secret_key, TRUE));
-		$this->headers(['Authorization' => "AWS {$this->access_key}:{$signature}", 'Date' => $date, 'x-amz-acl' => 'public-read']);
+		$this->headers(($this->auth)($method, $path, $type));
 		return parent::request($method, $path, $body, $type);
 	}
 	function put(string $filename, $stream):bool
@@ -53,104 +44,130 @@ class webapp_nfs_amazon_s3 extends webapp_client_http implements webapp_nfs_acce
 	{
 		return $this->request('DELETE', $filename) && $this->status() === 204;
 	}
-}
-class webapp_nfs_aliyun_oss extends webapp_client_http implements webapp_nfs_access
-{
-	#https://help.aliyun.com/zh/oss/developer-reference/overview-24
-	private readonly string $bucket_name, $access_key, $secret_key;
-	function __construct(string $region, array $options = ['BucketName', 'AccessKeyID', 'AccessKeySecret'])
+	function upload_directory(string $dir, string $path):bool
 	{
-		parent::__construct("https://{$options[0]}.{$region}.aliyuncs.com");
-		$this->bucket_name = '/' . array_shift($options);
-		[$this->access_key, $this->secret_key] = $options;
-	}
-	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
-	{
-		$date = gmdate(DATE_RFC7231);
-		$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-oss-acl:public-read\n{$this->bucket_name}{$path}", $this->secret_key, TRUE));
-		$this->headers(['Authorization' => "OSS {$this->access_key}:{$signature}", 'Date' => $date, 'x-oss-acl' => 'public-read']);
-		return parent::request($method, $path, $body, $type);
-	}
-	function put(string $filename, $stream):bool
-	{
-		return is_resource($stream) && $this->request('PUT', $filename,
-			$stream, 'application/octet-stream') && $this->status() === 200;
-	}
-	function delete(string $filename):bool
-	{
-		return $this->request('DELETE', $filename) && $this->status() === 204;
+		foreach (scandir($dir) as $file)
+		{
+			if (is_file("{$dir}/{$file}"))
+			{
+				if (is_resource($stream = fopen("{$dir}/{$file}", 'r'))
+					&& $this->put("{$path}/{$file}", $stream)
+					&& fclose($stream)) {
+					continue;
+				}
+				return FALSE;
+			}
+		}
+		return TRUE;
 	}
 }
-class webapp_nfs implements IteratorAggregate, Countable
+class webapp_nfs implements Countable, IteratorAggregate
 {
 	//private ?string $uid = NULL;
 	public array $paging = [];
+	private array $conditions = [];
 	private readonly webapp_mysql_table $table;
 	//private readonly webapp_redis_table $cache;
-	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort)
+	private readonly Closure $format;
+	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort, Closure $format = NULL)
 	{
+		$this->format = $format ?? fn($data) => $data;
+		//$this->format = function(){return [];};
 	}
 	function __invoke(...$conditions):static
 	{
-		static $table = $this->table ??= $this->webapp->mysql->{$this->webapp::tablename};
-		$table('WHERE sort=?i' . ($conditions ? (preg_match('/^\s*(order|group)\s+by\s+/i',
-			$append = array_shift($conditions)) ? " {$append}" : " AND {$append}") : ''), $this->sort, ...$conditions);
+		$this->conditions = $conditions;
+		return $this;
+		// if ($syntax = array_shift($conditions))
+		// {
+		// 	if (preg_match('/^\s*(order|group)\s+by\s+/i', $syntax))
+		// 	{
+		// 		$this->append[] = $syntax;
+		// 	}
+		// 	else
+		// 	{
+		// 		$this->cond[0][] = $syntax;
+		// 	}
+			
+		// 	array_push($this->cond, ...$conditions);
+		// }
+		// print_r($this->cond);
+
+
+		// $this->table ??= $this->webapp->mysql->{$this->webapp::tablename};
+		// ($this->table)('WHERE sort=?i' . ($conditions ? (preg_match('/^\s*(order|group)\s+by\s+/i',
+		// 	$append = array_shift($conditions)) ? " {$append}" : " AND {$append}") : ''), $this->sort, ...$conditions);
 		return $this;
 	}
-	function count():int
+	function count(string &$cond = NULL):int
 	{
-		return count($this()->table);
+		return $this->table()->count($cond);
 	}
 	function getIterator():Traversable
 	{
-		foreach ($this->table as $file)
+		foreach ($this->table() as $file)
 		{
-			yield $file;
+			yield ($this->format)($file);
 		}
+	}
+	private function table():webapp_mysql_table
+	{
+		$cond = ['WHERE `sort`=?i', $this->sort];
+		if ($syntax = array_shift($this->conditions))
+		{
+			$cond[0] .= (preg_match('/^\s*(order|group)\s+by\s+/i', $syntax) ? ' ' : ' AND ') . $syntax;
+			array_push($cond, ...array_splice($this->conditions, 0));
+		}
+		return $this->webapp->mysql->{$this->webapp::tablename}(...$cond);
 	}
 	private function primary(string $hash):webapp_mysql_table
 	{
-		return $this('`hash`=?s LIMIT 1', $hash)->table;
+		return $this('`hash`=?s LIMIT 1', $hash)->table();
 	}
-	function search(string|array $context, ...$conditions)
-	{
-		if (is_string($context))
-		{
-			return $this($context, ...$conditions);
-		}
-		$cond = [[]];
-		foreach ($context as $key => $value)
-		{
-			$cond[0][] = "extdata->\"$.{$key}\"=?s";
-			$cond[] = $value;
-		}
-		if ($conditions)
-		{
-			$cond[0][] = array_shift($conditions);
-			array_push($cond, $conditions);
-		}
-		$cond[0] = join(' AND ', $cond[0]);
-		return $this(...$cond);
-	}
+	// function search(string|array $context, ...$conditions)
+	// {
+	// 	if (is_string($context))
+	// 	{
+	// 		return $this($context, ...$conditions);
+	// 	}
+	// 	$cond = [[]];
+	// 	foreach ($context as $key => $value)
+	// 	{
+	// 		$cond[0][] = "extdata->\"$.{$key}\"=?s";
+	// 		$cond[] = $value;
+	// 	}
+	// 	if ($conditions)
+	// 	{
+	// 		$cond[0][] = array_shift($conditions);
+	// 		array_push($cond, $conditions);
+	// 	}
+	// 	$cond[0] = join(' AND ', $cond[0]);
+	// 	return $this(...$cond);
+	// }
 
 
 	function paging(int $index, int $rows = 21, bool $overflow = FALSE):static
 	{
-		static $table = $this->table ??= $this->webapp->mysql->{$this->webapp::tablename};
-		$this->paging = $table->paging($index, $rows, $overflow)->paging;
-		return $this;
+		$conditions = $this->conditions;
+		$this->paging['count'] = $this->count($this->paging['cond']);
+		$this->paging['max'] = ceil($this->paging['count'] / $rows = abs($rows));
+		$this->paging['index'] = max(1, $overflow ? $index : min($index, $this->paging['max']));
+		$this->paging['skip'] = ($this->paging['index'] - 1) * $rows;
+		$this->paging['rows'] = $rows;
+		$conditions[0] .= " LIMIT {$this->paging['skip']},{$rows}";
+		return $this(...$conditions);
 	}
 	function filename(string $hash):string
 	{
 		return "/{$this->sort}/" . substr(chunk_split($hash, 3, '/'), 0, 15);
 	}
-	function create(array $data, bool $folder = FALSE):?string
+	function create(array $data, int $type = 0):?string
 	{
-		static $table = $this->table ??= $this->webapp->mysql->{$this->webapp::tablename};
-		return $table->insert([
-			'hash' => $hash = $folder ? $this->webapp->serial_hash(FALSE, 'W') : (array_key_exists('hash', $data)
-				&& preg_match('/^[0-9A-V]{12}/', $data['hash']) ? $data['hash'] : $this->webapp->random_hash(FALSE)),
+		return $this->webapp->mysql->{$this->webapp::tablename}->insert([
+			'hash' => $hash = array_key_exists('hash', $data) && preg_match(
+				'/^[0-9A-V]{12}$/', $data['hash']) ? $data['hash'] : $this->webapp->random_hash(FALSE),
 			'sort' => $this->sort,
+			'type' => $type,
 			't0' => $t0 = $this->webapp->time(),
 			't1' => $t0,
 			'size' => $data['size'] ?? 0,
@@ -184,14 +201,11 @@ class webapp_nfs implements IteratorAggregate, Countable
 		}
 		return $this->primary($hash)->update($file) === 1;
 	}
-	function fetch(string $hash, ?array &$data = NULL, ?array &$extdata = NULL):bool
+	function fetch(string $hash, ?array &$data = NULL):bool
 	{
-		if ($this->primary($hash)->fetch($data))
+		if ($this->primary($hash)->fetch($rawdata))
 		{
-			if ($data['extdata'] && func_num_args() > 2)
-			{
-				$extdata = json_decode($data['extdata'], TRUE);
-			}
+			$data = ($this->format)($rawdata);
 			return TRUE;
 		}
 		return FALSE;
@@ -200,37 +214,46 @@ class webapp_nfs implements IteratorAggregate, Countable
 	{
 		return $this->primary($hash)->update(['t1' => $this->webapp->time(), 'name' => $newname]) === 1;
 	}
+	function create_tree(string $name, ?array $extdata = NULL):?string
+	{
+		return $this->create(['name' => $name, 'extdata' => $extdata]);
+	}
 	function delete_file(string $hash):bool
 	{
-		return $this->webapp->mysql->sync(fn() => $this->delete($hash) && $this->webapp->access->delete($this->filename($hash)));
-	}
-	function create_folder(string $name):?string
-	{
-		return $this->create(['name' => $name], TRUE);
+		return $this->webapp->mysql->sync(fn() => $this->delete($hash) && $this->webapp->client->delete($this->filename($hash)));
 	}
 	function create_uploadedfile(string $name, array $data = [], bool $mask = FALSE):?string
 	{
 		$key = $mask ? $this->webapp->random(8) : NULL;
 		$uploadedfile = $this->webapp->request_uploadedfile($name);
 		return $this->webapp->mysql->sync(fn(&$hash) => $uploadedfile->count()
-			&& is_string($hash = $this->create(['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile()))
-			&& $this->webapp->access->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)), $hash) ? $hash : NULL;
+			&& is_string($hash = $this->create(['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile(), 1))
+			&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)), $hash) ? $hash : NULL;
 	}
 	function update_uploadedfile(string $hash, array $data = [], string $name = NULL, bool $mask = FALSE):bool
 	{
 		$key = $mask ? $this->webapp->random(8) : NULL;
 		return $name && count($uploadedfile = $this->webapp->request_uploadedfile($name))
 			? $this->webapp->mysql->sync(fn() => $this->update($hash, ['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile[0])
-				&& $this->webapp->access->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)))
+				&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)))
 			: $this->update($hash, $data);
 	}
-	function views(string $hash):bool
+	function upload_directory(string $dir, string $hash):bool
 	{
-		return $this->primary($hash)->update('`views`=`views`+1') === 1;
+		return $this->webapp->client->upload_directory($dir, $this->filename($hash));
 	}
-	function likes(string $hash):bool
+
+	function views(string $hash, int $incr = 1):bool
 	{
-		return $this->primary($hash)->update('`likes`=`likes`+1') === 1;
+		return $this->primary($hash)->update('`views`=`views`+?i', $incr) === 1;
+	}
+	function likes(string $hash, int $incr = 1):bool
+	{
+		return $this->primary($hash)->update('`likes`=`likes`+?i', $incr) === 1;
+	}
+	function shares(string $hash, int $incr = 1):bool
+	{
+		return $this->primary($hash)->update('`shares`=`shares`+?i', $incr) === 1;
 	}
 }
 
@@ -245,6 +268,7 @@ class webapp_ext_nfs_base extends webapp
 		CREATE TABLE ?a (
 			`hash` char(12) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
 			`sort` tinyint unsigned NOT NULL,
+			`type` tinyint unsigned NOT NULL COMMENT '0:tree,1:file,2:mixed',
 			`t0` int unsigned NOT NULL COMMENT 'insert time',
 			`t1` int unsigned NOT NULL COMMENT 'update time',
 			`size` bigint unsigned NOT NULL,
@@ -256,19 +280,21 @@ class webapp_ext_nfs_base extends webapp
 			`key` binary(16) DEFAULT NULL COMMENT 'masker',
 			`extdata` json DEFAULT NULL,
 			PRIMARY KEY (`hash`),
-			KEY `type` (`hash`(1)),
 			KEY `sort` (`sort`),
+			KEY `type` (`type`),
 			KEY `node` (`node`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 		SQL, static::tablename);
 	}
-	function access():webapp_nfs_access
+	function client():webapp_nfs_client
 	{
-		return new webapp_nfs_standard_io('http://localhost', [$this['admin_username'], $this['admin_password']]);
+		// return new webapp_nfs_client('amazon_s3', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
+		// return new webapp_nfs_client('aliyun_oss', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
+		return new webapp_nfs_client('http://localhost', [$this['admin_username'], $this['admin_password'], 'D:/']);
 	}
-	function nfs(int $sort = 0):webapp_nfs
+	function nfs(int $sort = 0, Closure $format = NULL):webapp_nfs
 	{
-		return $this->nfs[$sort &= 0xff] ??= new webapp_nfs($this, $sort);
+		return $this->nfs[$sort &= 0xff] ??= new webapp_nfs($this, $sort, $format);
 	}
 	function src(array $file, string $name = NULL):string
 	{
@@ -276,6 +302,7 @@ class webapp_ext_nfs_base extends webapp
 		$hash .= $name ?? [$file['t1'], $hash[15] = '?'][0];
 		return "{$this->origin}/{$file['sort']}/{$hash}#{$file['key']}";
 	}
+
 
 
 	// function put(string $filename, string $source):bool

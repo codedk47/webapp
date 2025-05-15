@@ -516,7 +516,8 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		$this->paging['skip'] = ($this->paging['index'] - 1) * $rows;
 		$this->paging['rows'] = $rows;
 		$this->fields = $fields;
-		return $this(join(' ', [$this->paging['cond'], 'LIMIT', "{$this->paging['skip']},{$rows}"]));
+		return $this("{$this->paging['cond']} LIMIT {$this->paging['skip']},{$rows}");
+		//return $this(join(' ', [$this->paging['cond'], 'LIMIT', "{$this->paging['skip']},{$rows}"]));
 	}
 	// function column(string ...$keys):array
 	// {

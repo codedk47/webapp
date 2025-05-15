@@ -86,11 +86,10 @@ class webapp_router_admin extends webapp_echo_admin
 	function get_ad(string $hash = NULL)
 	{
 		$form = $this->form_ad($this->main);
-		if ($hash && $this->webapp->nfs(0)->fetch($hash, $data, $extdata))
+		if ($hash && $this->webapp->nfs_ads->fetch($hash, $data))
 		{
 			$form->xml->fieldset->img['src'] = $this->webapp->src($data);
-			//$this->webapp->readorigin . $this->webapp->nfs(0)->filename($hash) . "?{$data['t1']}#!";
-			$form->echo($extdata);
+			$form->echo($data);
 		}
 	}
 	function get_ads(int $page = 1)
@@ -100,7 +99,7 @@ class webapp_router_admin extends webapp_echo_admin
 		$cond->append('ORDER BY extdata->"$.weight" DESC, hash ASC');
 
 
-		$table = $this->main->table($cond($this->webapp->nfs(0))->paging($page, 6), function($table, $value)
+		$table = $this->main->table($cond($this->webapp->nfs_ads)->paging($page, 6), function($table, $value)
 		{
 			$table->row()['style'] = 'background-color:var(--webapp-hint)';
 			$table->cell()->append('a', ['删除下面广告', 'href' => "?admin/ad,hash:{$value['hash']}", 'data-method' => 'delete']);
@@ -118,15 +117,14 @@ class webapp_router_admin extends webapp_echo_admin
 			$table->cell('修改时间');
 			$table->cell(date('Y-m-d\\TH:i:s', $value['t1']));
 
-			$extdata = json_decode($value['extdata'], TRUE);
 			$table->row();
 			$table->cell('位置');
-			$table->cell(static::ad_type[$extdata['type']] ?? NULL);
+			$table->cell(static::ad_type[$value['type']] ?? NULL);
 			$table->cell('展示权重');
-			$table->cell($extdata['weight']);
+			$table->cell($value['weight']);
 			$table->cell('过期时间');
-			$table->cell([date('Y-m-d\\TH:i:s', $extdata['expire']),
-				'style' => $extdata['expire'] > $this->webapp->time ? 'color:green' : 'color:red']);
+			$table->cell([date('Y-m-d\\TH:i:s', $value['expire']),
+				'style' => $value['expire'] > $this->webapp->time ? 'color:green' : 'color:red']);
 
 			$table->row();
 			$table->cell('名称');
@@ -138,7 +136,7 @@ class webapp_router_admin extends webapp_echo_admin
 
 			$table->row();
 			$table->cell('URL');
-			$table->cell(['colspan' => 5])->append('a', [$extdata['jumpurl'], 'href' => $extdata['jumpurl'], 'target' => '_blank']);
+			$table->cell(['colspan' => 5])->append('a', [$value['jumpurl'], 'href' => $value['jumpurl'], 'target' => '_blank']);
 		});
 		$table->tbody['class'] = 'ads';
 		$table->header('广告');
