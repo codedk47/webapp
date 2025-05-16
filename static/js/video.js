@@ -1,4 +1,4 @@
-//document.head.appendChild(document.createElement('script')).src = '/webapp/res/js/hls.min.js';
+//document.head.appendChild(document.createElement('script')).src = '/webapp/static/js/hls.min.js';
 document.head.appendChild(document.createElement('style')).textContent = `
 webapp-video{
 	display: block;

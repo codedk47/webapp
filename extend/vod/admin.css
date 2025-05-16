@@ -1,9 +1,21 @@
-tbody.ads>tr>td:first-child{
-	text-align: center;
+tr.title{
+	background-color: gainsboro;
 }
-tbody.ads>tr>td>img:first-child{
-	width: 256px;
-	height: 144px;
-	border: black 1px solid;
+
+.cover{
+	background-color: whitesmoke;
+}
+.cover>figure{
+	margin: 0;
+	width: 100%;
+	padding-bottom: 56.25%;
+	position: relative;
+	overflow: hidden;
+}
+.cover>figure>img{
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
 	object-fit: contain;
 }

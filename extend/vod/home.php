@@ -25,15 +25,23 @@ class webapp_router_home extends webapp_echo_masker
 		// 	return $this->webapp->response_status(403);
 		// }
 	}
+	function init(string $ua):int
+	{
+		$this->title('初始化..');
+		$this->main['style'] = 'white-space:pre;';
+		$this->main->text('初始化网络服务进程，保护隐私安全，请稍等..');
+		$this->main->text("\n如果长时间没有反应，请更新你的设备\n");
+		$this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'http://chrome.google.com/']);
+		return 200;
+	}
 	function post_init():int
 	{
 		$this->json();
-		// $this->echo['data'] = $this->webapp->request_content('application/json');
-		//$this->echo->error('你的访问被拒绝');
-		//$this->echo->redirect('asdasdawdawd');
-		//$this->echo->message('ddddd');
-		// var_dump(123);
-		// print_r($this->webapp->request_content());
+		//print_r($this->webapp->request_content('application/json'));
+		//$data = $this->webapp->request_content('application/json');
+		//$this->echo->error('禁止访问');
+		//$this->echo->message('提示消息');
+		//$this->echo->redirect('https://volunteer.cdn-go.cn/404/latest/404.html');
 		return 200;
 	}
 	function get_splashscreen():int
@@ -43,7 +51,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$ad = $this->webapp->random_weights($ad);
 			$this->splashscreen($ad['src'], $ad['jumpurl'], '跳过', 4, TRUE, $ad['hash']);
-			$this->webapp->nfs(0)->views($ad['hash']);
+			$this->webapp->nfs_ads->views($ad['hash']);
 			return 200;
 		}
 		return parent::get_splashscreen();
@@ -74,12 +82,16 @@ class webapp_router_home extends webapp_echo_masker
 		$this->footer->append('a', ['导航', 'href' => '?home/home']);
 		$this->footer->append('a', ['视频', 'href' => '?home/video']);
 		$this->footer->append('a', ['抖音', 'href' => '?home/short']);
-		$this->footer->append('a', ['新闻', 'href' => '?home/news']);
+		$this->footer->append('a', ['搜索', 'href' => '?home/search']);
 		
+	}
+	function fetch_ads(int $type = 0):array
+	{
+		return iterator_to_array($this->webapp->nfs_ads->search('$.type=?s AND $.expire>?i ORDER BY $.weight DESC', $type, $this->webapp->time));
 	}
 	function draw_ad_banner(webapp_html $node):?webapp_html
 	{
-		if ($ads = $this->webapp->fetch_ad(2))
+		if ($ads = $this->fetch_ads(2))
 		{
 			$element = $node->append('div', ['class' => 'grid-banner']);
 			foreach ($ads as $ad)
@@ -94,7 +106,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function draw_ad_navicon(webapp_html $node, string $name = NULL):void
 	{
-		if ($ads = $this->webapp->fetch_ad(3))
+		if ($ads = $this->fetch_ads(3))
 		{
 			is_string($name) && $node->append('div', ['class' => 'titles'])->append('strong', $name);
 			
@@ -114,7 +126,7 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function draw_ad_slideshows(webapp_html $node, int $duration = 5, string $clickad = '')
 	{
-		if ($ads = $this->webapp->fetch_ad(4))
+		if ($ads = $this->fetch_ads(4))
 		{
 			//masker.lognews(`?home/news,hash:${this.current.hash}`)
 			//$this->webapp->mysql->ads('WHERE hash IN(?S)', array_column($ads, 'hash'))->update('`view`=`view`+1');
@@ -197,21 +209,15 @@ class webapp_router_home extends webapp_echo_masker
 		if ($page)
 		{
 			$videos = [];
-			foreach ($this->webapp->nfs($this->webapp::VOD_VIDEO)('sort=1') as $video)
+			foreach ($this->webapp->nfs_videos as $video)
 			{
-				$videos[] = [
-					'hash' => $video['hash'],
-					'name' => $video['name'],
-					'm3u8' => strstr($this->webapp->src($video, 'play.m3u8'), '#', TRUE),
-					'poster' => $this->webapp->src($video, "cover?{$video['t1']}"),
-					'watched' => 0,
-					'liked' => 0,
-					'favorited' => 0,
-					'tags' => []
-				];
-
-				
-		
+				$videos[] = $video;
+				// $videos[] = [
+				// 	'hash' => $video['hash'],
+				// 	'name' => $video['name'],
+				// 	'm3u8' => strstr($this->webapp->src($video, 'play.m3u8'), '#', TRUE),
+				// 	'poster' => $this->webapp->src($video, "cover?{$video['t1']}"),
+				// ];
 			}
 
 
@@ -241,12 +247,15 @@ class webapp_router_home extends webapp_echo_masker
 			// 		'tags' => $tagdata
 			// 	];
 			// }
+			
 			$this->json($videos);
+			unset($this->echo['errors']);
 			return;
 		}
 		$this->title('抖音');
 		$this->script(['src' => '/webapp/static/js/hls.min.js']);
 		$this->script(['src' => '/webapp/static/js/video.js']);
+		$this->xml->body->div['class'] = 'short';
 		$template = $this->main->append('webapp-videos', [
 			//'onchange' => 'masker.shortchanged(this)',
 			'data-fetch' => '?home/short,page:',
@@ -295,9 +304,9 @@ class webapp_router_home extends webapp_echo_masker
 		
 		$this->draw_footer();
 	}
-	function get_news()
+	function get_search(string $content = NULL)
 	{
-		$this->title('新闻');
+		$this->title('搜索');
 		$this->draw_footer();
 	}
 }

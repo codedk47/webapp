@@ -5,7 +5,15 @@ class webapp_router_admin extends webapp_echo_admin
 		['首页', '?admin'],
 		['广告', '?admin/ads'],
 		['视频', '?admin/videos'],
-		['用户', '?admin/users'],
+		// ['标签', '?admin/tags'],
+		// ['演员', '?admin/actors'],
+		// ['专题', '?admin/subjects'],
+		// ['视频扩展', [
+		// 	['标签', '?admin/tags'],
+		// 	['演员', '?admin/actors'],
+		// 	['专题', '?admin/subjects'],
+		// ]],
+		// ['用户', '?admin/users'],
 	], $submenu = [];
 	function __construct(webapp $webapp)
 	{
@@ -99,47 +107,45 @@ class webapp_router_admin extends webapp_echo_admin
 		$cond->append('ORDER BY extdata->"$.weight" DESC, hash ASC');
 
 
-		$table = $this->main->table($cond($this->webapp->nfs_ads)->paging($page, 6), function($table, $value)
+		$table = $this->main->table($cond($this->webapp->nfs_ads)->paging($page, 8), function($table, $value)
 		{
-			$table->row()['style'] = 'background-color:var(--webapp-hint)';
-			$table->cell()->append('a', ['删除下面广告', 'href' => "?admin/ad,hash:{$value['hash']}", 'data-method' => 'delete']);
-			$table->cell(['colspan' => 6])->append('a', ['修改下面信息', 'href' => "?admin/ad,hash:{$value['hash']}"]);
-
+			$table->row()['class'] = 'title';
+			$table->cell()->append('a', ['删除这个广告', 'href' => "?admin/ad,hash:{$value['hash']}", 'data-method' => 'delete']);
+			$table->cell(['colspan' => 6])->append('a', [$value['jumpurl'], 'href' => $value['jumpurl'], 'target' => '_blank']);
+			
 			$table->row();
-			$table->cell(['rowspan' => 5])
-				->append('img', ['loading' => 'lazy', 'src' => $this->webapp->src($value)]);
+			$table->cell(['rowspan' => 5, 'class' => 'cover', 'style' => 'min-width:235px'])->figure($value['src']);
 
 			$table->row();
 			$table->cell('HASH');
-			$table->cell($value['hash']);
-			$table->cell('创建时间');
+			$table->cell()->append('a', [$value['hash'], 'href' => "?admin/ad,hash:{$value['hash']}"]);
+			$table->cell('创建');
 			$table->cell(date('Y-m-d\\TH:i:s', $value['t0']));
-			$table->cell('修改时间');
+			$table->cell('修改');
 			$table->cell(date('Y-m-d\\TH:i:s', $value['t1']));
 
 			$table->row();
 			$table->cell('位置');
 			$table->cell(static::ad_type[$value['type']] ?? NULL);
-			$table->cell('展示权重');
+			$table->cell('权重');
 			$table->cell($value['weight']);
-			$table->cell('过期时间');
+			$table->cell('到期');
 			$table->cell([date('Y-m-d\\TH:i:s', $value['expire']),
 				'style' => $value['expire'] > $this->webapp->time ? 'color:green' : 'color:red']);
 
 			$table->row();
-			$table->cell('名称');
-			$table->cell($value['name']);
-			$table->cell('展示次数');
+			$table->cell('展示');
 			$table->cell(number_format($value['views']));
-			$table->cell('点击次数');
+			$table->cell('点击');
 			$table->cell(number_format($value['likes']));
+			$table->cell('大小');
+			$table->cell(number_format($value['size']));
 
 			$table->row();
-			$table->cell('URL');
-			$table->cell(['colspan' => 5])->append('a', [$value['jumpurl'], 'href' => $value['jumpurl'], 'target' => '_blank']);
+			$table->cell('名称');
+			$table->cell([$value['name'], 'colspan' => 5]);
 		});
-		$table->tbody['class'] = 'ads';
-		$table->header('广告');
+		$table->header('找到 %d 个广告', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
 
 
@@ -148,7 +154,120 @@ class webapp_router_admin extends webapp_echo_admin
 		//$table->bar->select(static::ad_type)->selected(1)['onchange'] = '$.at({type:this.value})';
 
 	}
-	function get_videos(){}
+
+
+	function form_video(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+		$form->fieldset['class'] = 'cover';
+		$form->fieldset['style'] = 'width:30rem';
+
+		$form->fieldset->figure('about:blank');
+
+		$form->fieldset('影片封面');
+		$form->field('cover', 'file', ['accept' => 'image/*']);
+
+		$form->fieldset('影片名称');
+		$form->field('name', 'textarea', ['style' => 'width:60rem', 'rows' => 3, 'required' => NULL]);
+
+		$form->fieldset('要求：会员:-1、免费:0、金币>0，预览时间段');
+		$form->field('require', 'number', [
+			'value' => 0,
+			'min' => -1,
+			'style' => 'width:13rem',
+			'placeholder' => '要求',
+			'required' => NULL
+		]);
+		$form->field('preview', 'number', ['placeholder' => '暂时不可用']);
+
+		$form->fieldset('标签集 / 演员集');
+		$form->field('tags', 'text', ['placeholder' => '暂时不可用']);
+		$form->field('actors', 'text', ['placeholder' => '暂时不可用']);
+
+		$form->fieldset();
+		$form->button('更新视频', 'submit');
+		return $form;
+	}
+	function post_video(string $hash)
+	{
+		if ($this->form_video()->fetch($data))
+		{
+			$this->webapp->video_update($hash, $data, 'cover');
+		}
+	}
+	function get_video(string $hash)
+	{
+		$form = $this->form_video($this->main);
+		if ($this->webapp->nfs_videos->fetch($hash, $data))
+		{
+			$form->xml->fieldset->figure->img['src'] = $data['poster'];
+			$form->echo($data);
+		}
+	}
+	function get_videos(int $page = 1)
+	{
+		$this->script(['src' => '/webapp/static/js/hls.min.js']);
+		$this->script(['src' => '/webapp/static/js/video.js']);
+
+		$cond = $this->webapp->cond();
+
+		$cond->append('ORDER BY t1 DESC, hash ASC');
+
+
+		$table = $this->main->table($cond($this->webapp->nfs_videos)->paging($page, 10), function($table, $value)
+		{
+			$table->row()['class'] = 'title';
+			$table->cell()->append('a', ['删除这个视频', 'href' => 'javascript:;']);
+			$table->cell([htmlentities($value['name']), 'colspan' => 8]);
+
+			$table->row();
+			$table->cell(['rowspan' => 6, 'class' => 'cover', 'style' => 'min-width:312px'])->figure($value['poster']);
+
+			$table->row();
+			$table->cell('HASH');
+			$table->cell()->append('a', [$value['hash'], 'href' => "?admin/video,hash:{$value['hash']}"]);
+			$table->cell('创建');
+			$table->cell(date('Y-m-d\TH:i:s', $value['t0']));
+			$table->cell('更新');
+			$table->cell(date('Y-m-d\TH:i:s', $value['t1']));
+			$table->cell('时长');
+			$table->cell($this->webapp->format_duration($value['size']));
+
+
+			$table->row();
+			$table->cell('要求');
+			$table->cell(match (intval($value['require']))
+			{
+				-2 => '下架', -1 => '会员', 0 => '免费',
+				default => "{$value['require']} 金币"
+			});
+			$table->cell('观看');
+			$table->cell(number_format($value['views']));
+			$table->cell('喜欢');
+			$table->cell(number_format($value['likes']));
+			$table->cell('分享');
+			$table->cell(number_format($value['shares']));
+
+			$table->row();
+			$table->cell('标签');
+			$table->cell(['colspan' => 7]);
+	
+			$table->row();
+			$table->cell('作者');
+			$table->cell(['colspan' => 7]);
+
+			$table->row();
+			$table->cell('专题');
+			$table->cell(['colspan' => 7]);
+
+		});
+		
+		$table->header('找到 %d 个视频', $table->count());
+		$table->paging($this->webapp->at(['page' => '']));
+
+
+
+	}
 	function get_users()
 	{
 		$this->main->append('h2', 'User system are under development');

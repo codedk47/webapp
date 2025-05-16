@@ -135,12 +135,7 @@ else
 	const cachename = location.search.substring(location.search.indexOf('/')), headers = {}, origin = new Promise(resolve => confirm = resolve);
 	async function request(resource, options)
 	{
-		// if (resource instanceof Request && resource.url.indexOf('#') > 0)
-		// {
-		// 	console.log(resource, resource.url = resource.url.substring(0, resource.url.indexOf('#')))
-		// }
-		
-		const response = await fetch(resource, options instanceof Object ? options : null), key = response.headers.get('masker-key')
+		const response = await fetch(resource, options instanceof Object ? options : {cache: 'no-cache'}), key = response.headers.get('masker-key')
 			? response.headers.get('masker-key').match(/[0-f]{2}/gi).map(value => parseInt(value, 16))
 			: options;
 		if (Array.isArray(key))
@@ -252,7 +247,7 @@ else
 		}
 		event.source.postMessage(event.data);
 	});
-	addEventListener('fetch', async event => event.respondWith(caches.open(cachename).then(cache => caches.match(event.request).then(response =>
+	addEventListener('fetch', event => event.respondWith(caches.open(cachename).then(cache => caches.match(event.request).then(response =>
 	{
 		if (response)
 		{
@@ -268,10 +263,12 @@ else
 					return request(event.request, {priority: 'high', cache: 'no-cache', headers:
 						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)});
 				case /^\/[0-9]{1,3}/.test(url.pathname):
+					console.log(url.pathname, key);
 					return origin.then(origin => origin + url.pathname).then(url => request(url, key).then(response =>
 						response.ok ? cache.put(event.request, response.clone()).then(() => response) : response));
 				default:
-					//do something here
+					// return fetch(event.request).then(response =>
+					// 	response.ok ? cache.put(event.request, response.clone()).then(() => response) : response);
 			}
 		}
 		else

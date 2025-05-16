@@ -66,37 +66,16 @@ class webapp_nfs implements Countable, IteratorAggregate
 	//private ?string $uid = NULL;
 	public array $paging = [];
 	private array $conditions = [];
-	private readonly webapp_mysql_table $table;
+	//private readonly webapp_mysql_table $table;
 	//private readonly webapp_redis_table $cache;
 	private readonly Closure $format;
 	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort, Closure $format = NULL)
 	{
 		$this->format = $format ?? fn($data) => $data;
-		//$this->format = function(){return [];};
 	}
 	function __invoke(...$conditions):static
 	{
 		$this->conditions = $conditions;
-		return $this;
-		// if ($syntax = array_shift($conditions))
-		// {
-		// 	if (preg_match('/^\s*(order|group)\s+by\s+/i', $syntax))
-		// 	{
-		// 		$this->append[] = $syntax;
-		// 	}
-		// 	else
-		// 	{
-		// 		$this->cond[0][] = $syntax;
-		// 	}
-			
-		// 	array_push($this->cond, ...$conditions);
-		// }
-		// print_r($this->cond);
-
-
-		// $this->table ??= $this->webapp->mysql->{$this->webapp::tablename};
-		// ($this->table)('WHERE sort=?i' . ($conditions ? (preg_match('/^\s*(order|group)\s+by\s+/i',
-		// 	$append = array_shift($conditions)) ? " {$append}" : " AND {$append}") : ''), $this->sort, ...$conditions);
 		return $this;
 	}
 	function count(string &$cond = NULL):int
@@ -120,32 +99,15 @@ class webapp_nfs implements Countable, IteratorAggregate
 		}
 		return $this->webapp->mysql->{$this->webapp::tablename}(...$cond);
 	}
+	private function cache():webapp_mysql_table{}
 	private function primary(string $hash):webapp_mysql_table
 	{
 		return $this('`hash`=?s LIMIT 1', $hash)->table();
 	}
-	// function search(string|array $context, ...$conditions)
-	// {
-	// 	if (is_string($context))
-	// 	{
-	// 		return $this($context, ...$conditions);
-	// 	}
-	// 	$cond = [[]];
-	// 	foreach ($context as $key => $value)
-	// 	{
-	// 		$cond[0][] = "extdata->\"$.{$key}\"=?s";
-	// 		$cond[] = $value;
-	// 	}
-	// 	if ($conditions)
-	// 	{
-	// 		$cond[0][] = array_shift($conditions);
-	// 		array_push($cond, $conditions);
-	// 	}
-	// 	$cond[0] = join(' AND ', $cond[0]);
-	// 	return $this(...$cond);
-	// }
-
-
+	function search(string $syntax, ...$values):static
+	{
+		return $this(preg_replace('/\$\.(\w+)/', 'extdata->"$.$1"', $syntax), ...$values);
+	}
 	function paging(int $index, int $rows = 21, bool $overflow = FALSE):static
 	{
 		$conditions = $this->conditions;
@@ -186,20 +148,39 @@ class webapp_nfs implements Countable, IteratorAggregate
 	}
 	function update(string $hash, array $data = []):bool
 	{
-		$file = ['t1' => $this->webapp->time()];
+		$syntax = ['t1' => $this->webapp->time()];
 		foreach (['size', 'views', 'likes', 'shares', 'name', 'node', 'key'] as $field)
 		{
 			if (array_key_exists($field, $data))
 			{
-				$file[$field] = $data[$field];
+				$syntax[$field] = $data[$field];
 			}
 		}
 		if (array_key_exists('extdata', $data))
 		{
-			$file['extdata'] = is_array($data['extdata']) ? json_encode(
-				$data['extdata'], JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE) : $data['extdata'];
+			$syntax = $this->webapp->mysql->format('?v', $syntax);
+			$syntax .= ',`extdata`=';
+			if (is_array($data['extdata']))
+			{
+				$syntax = [$syntax, 'JSON_SET(`extdata`'];
+				$values = [];
+				foreach ($data['extdata'] as $key => $value)
+				{
+					[$type, $values[]]=match (get_debug_type($value))
+					{
+						'null' => ['??', 'NULL'],
+						'bool' => ['??', $value ? 'true' : 'false'],
+						'int', 'float' => ['??', $value],
+						default => ['?s', $value]
+					};
+					$syntax[] = ",'$.{$key}',{$type}";
+				}
+				$syntax[] = ')';
+				return $this->primary($hash)->update(join($syntax), ...$values) === 1;
+			}
+			$syntax .= $data['extdata'];
 		}
-		return $this->primary($hash)->update($file) === 1;
+		return $this->primary($hash)->update($syntax) === 1;
 	}
 	function fetch(string $hash, ?array &$data = NULL):bool
 	{
