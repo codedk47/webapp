@@ -44,15 +44,19 @@ class webapp_nfs_client extends webapp_client_http
 	{
 		return $this->request('DELETE', $filename) && $this->status() === 204;
 	}
-	function upload_directory(string $dir, string $path):bool
+	function upload_directory(string $path, string $from):bool
 	{
-		foreach (scandir($dir) as $file)
+		foreach (scandir($from) as $file)
 		{
-			if (is_file("{$dir}/{$file}"))
+			if (is_file("{$from}/{$file}"))
 			{
-				if (is_resource($stream = fopen("{$dir}/{$file}", 'r'))
+				if (is_resource($stream = fopen("{$from}/{$file}", 'r'))
 					&& $this->put("{$path}/{$file}", $stream)
 					&& fclose($stream)) {
+					// if (PHP_SAPI === 'cli')
+					// {
+					// 	echo "{$path}/{$file}\n";
+					// }
 					continue;
 				}
 				return FALSE;
@@ -108,6 +112,15 @@ class webapp_nfs implements Countable, IteratorAggregate
 	{
 		return $this(preg_replace('/\$\.(\w+)/', 'extdata->"$.$1"', $syntax), ...$values);
 	}
+	function remove(string ...$fields):bool
+	{
+		return $this->table()->update('`extdata`=JSON_REMOVE(`extdata`,??)',
+			join(',', array_map(fn($field) => "'$.{$field}'", $fields))) === $this->count();
+	}
+	function append(string $field, string $value = 'NULL'):bool
+	{
+		return $this->table()->update("`extdata`=JSON_SET(`extdata`, '$.{$field}', {$value})") === $this->count();
+	}
 	function paging(int $index, int $rows = 21, bool $overflow = FALSE):static
 	{
 		$conditions = $this->conditions;
@@ -119,17 +132,18 @@ class webapp_nfs implements Countable, IteratorAggregate
 		$conditions[0] .= " LIMIT {$this->paging['skip']},{$rows}";
 		return $this(...$conditions);
 	}
-	function filename(string $hash):string
+	function filename(string $hash, string $suffix = NULL):string
 	{
-		return "/{$this->sort}/" . substr(chunk_split($hash, 3, '/'), 0, 15);
+		return sprintf('/%d/%04X/%s%s', $this->sort, $this->webapp->hashtime33($hash) % 0xffff, $hash, $suffix);
 	}
 	function create(array $data, int $type = 0):?string
 	{
 		return $this->webapp->mysql->{$this->webapp::tablename}->insert([
-			'hash' => $hash = array_key_exists('hash', $data) && preg_match(
-				'/^[0-9A-V]{12}$/', $data['hash']) ? $data['hash'] : $this->webapp->random_hash(FALSE),
+			'hash' => $hash = array_key_exists('hash', $data)
+				&& $this->webapp->is_long_hash($data['hash'])
+					? $data['hash'] : $this->webapp->random_hash(FALSE),
 			'sort' => $this->sort,
-			'type' => $type,
+			'type' => $type,#Type 0 and 1 is NFS reserved use
 			't0' => $t0 = $this->webapp->time(),
 			't1' => $t0,
 			'size' => $data['size'] ?? 0,
@@ -139,8 +153,8 @@ class webapp_nfs implements Countable, IteratorAggregate
 			'name' => $data['name'] ?? '',
 			'key' => $data['key'] ?? NULL,
 			'node' => $data['node'] ?? NULL,
-			'extdata' => isset($data['extdata']) && is_array($data['extdata']) ? json_encode(
-				$data['extdata'], JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE) : $data['extdata'] ?? NULL]) ? $hash : NULL;
+			'extdata' => isset($data['extdata']) && is_array($data['extdata']) ? json_encode($data['extdata'],
+				JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE) : $data['extdata'] ?? NULL]) ? $hash : NULL;
 	}
 	function delete(string $hash):bool
 	{
@@ -162,11 +176,11 @@ class webapp_nfs implements Countable, IteratorAggregate
 			$syntax .= ',`extdata`=';
 			if (is_array($data['extdata']))
 			{
-				$syntax = [$syntax, 'JSON_SET(`extdata`'];
+				$syntax = [$syntax, 'JSON_REPLACE(`extdata`'];
 				$values = [];
 				foreach ($data['extdata'] as $key => $value)
 				{
-					[$type, $values[]]=match (get_debug_type($value))
+					[$type, $values[]] = match (get_debug_type($value))
 					{
 						'null' => ['??', 'NULL'],
 						'bool' => ['??', $value ? 'true' : 'false'],
@@ -219,9 +233,10 @@ class webapp_nfs implements Countable, IteratorAggregate
 				&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)))
 			: $this->update($hash, $data);
 	}
-	function upload_directory(string $dir, string $hash):bool
+	function upload_directory(string $hash, string $from):bool
 	{
-		return $this->webapp->client->upload_directory($dir, $this->filename($hash));
+		return $this->webapp->client->upload_directory($this->filename($hash), $from);
+		//return $this->fetch($hash) && $this->webapp->client->upload_directory($this->filename($hash), $from);
 	}
 
 	function views(string $hash, int $incr = 1):bool
@@ -279,9 +294,10 @@ class webapp_ext_nfs_base extends webapp
 	}
 	function src(array $file, string $name = NULL):string
 	{
-		$hash = chunk_split($file['hash'], 3, '/');
-		$hash .= $name ?? [$file['t1'], $hash[15] = '?'][0];
-		return "{$this->origin}/{$file['sort']}/{$hash}#{$file['key']}";
+		return sprintf('%s/%d/%04X/%s%s?%X#%s',
+			$this->origin, $file['sort'],
+			$this->hashtime33($file['hash']) % 0xffff,
+			$file['hash'], $name, $file['t1'], $file['key']);
 	}
 
 

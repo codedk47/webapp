@@ -181,6 +181,8 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	}
 	function redirect(string $url):void
 	{
+		//$this->webapp->response_location($url);
+		$this->webapp->response_refresh(0, $url);
 		$this['redirect'] = $url;
 	}
 }

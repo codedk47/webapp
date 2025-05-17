@@ -34,7 +34,7 @@ class webapp_router_admin extends webapp_echo_admin
 		$this->main->append('h2', 'Statistics are under development');
 	}
 
-	const ad_type = [
+	const ad_seat = [
 		0 => '开屏（全屏幕）',
 		1 => '首次弹窗（半屏幕）',
 		2 => '横幅',
@@ -55,7 +55,7 @@ class webapp_router_admin extends webapp_echo_admin
 
 		$form->fieldset('广告图片 / 展示位置');
 		$form->field('ad', 'file', ['accept' => 'image/*', 'onchange' => '$.previewimage(this,document.querySelector("form>fieldset>img"))']);
-		$form->field('type', 'select', ['options' => static::ad_type, 'required' => NULL]);
+		$form->field('seat', 'select', ['options' => static::ad_seat, 'required' => NULL]);
 
 		$form->fieldset('跳转网址');
 		$form->field('jumpurl', 'text', [
@@ -74,6 +74,7 @@ class webapp_router_admin extends webapp_echo_admin
 		$form->fieldset();
 		$form->button('提交', 'submit');
 
+		//$form->xml['onsubmit'] = 'return $(this).action()';
 		return $form;
 	}
 	function post_ad(string $hash = NULL)
@@ -81,13 +82,16 @@ class webapp_router_admin extends webapp_echo_admin
 		$this->json();
 		if ($this->form_ad()->fetch($data))
 		{
-			if ($hash)
-			{
-				$this->webapp->nfs(0)->update_uploadedfile($hash, ['name' => $data['name'], 'extdata' => $data], 'ad', TRUE);
+			$data = ['name' => $data['name'], 'extdata' => $data];
+			unset($data['extdata']['name']);
+			if ($hash
+				? $this->webapp->nfs_ads->update_uploadedfile($hash, $data, 'ad', TRUE)
+				: $this->webapp->nfs_ads->create_uploadedfile('ad', $data, TRUE)) {
+				$this->echo->redirect("?admin/ads,seat:{$data['extdata']['seat']}");
 			}
 			else
 			{
-				$this->webapp->nfs(0)->create_uploadedfile('ad', ['name' => $data['name'], 'extdata' => $data], TRUE);
+				$this->echo->message($hash ? '修改失败！' : '创建失败！');
 			}
 		}
 	}
@@ -103,7 +107,7 @@ class webapp_router_admin extends webapp_echo_admin
 	function get_ads(int $page = 1)
 	{
 		$cond = $this->webapp->cond();
-		$cond_type = $cond->query('type', 'extdata->"$.type"=?s');
+		$cond_seat = $cond->query('seat', 'extdata->"$.seat"=?s');
 		$cond->append('ORDER BY extdata->"$.weight" DESC, hash ASC');
 
 
@@ -126,7 +130,7 @@ class webapp_router_admin extends webapp_echo_admin
 
 			$table->row();
 			$table->cell('位置');
-			$table->cell(static::ad_type[$value['type']] ?? NULL);
+			$table->cell(static::ad_seat[$value['seat']] ?? NULL);
 			$table->cell('权重');
 			$table->cell($value['weight']);
 			$table->cell('到期');
@@ -150,7 +154,7 @@ class webapp_router_admin extends webapp_echo_admin
 
 
 		$table->bar->append('button', ['创建', 'onclick' => 'location.assign("?admin/ad")']);
-		$table->bar->select(['' => '全部类型'] + static::ad_type)->selected($cond_type)['onchange'] = '$.at({type:this.value||null})';
+		$table->bar->select(['' => '全部类型'] + static::ad_seat)->selected($cond_seat)['onchange'] = '$.at({seat:this.value||null})';
 		//$table->bar->select(static::ad_type)->selected(1)['onchange'] = '$.at({type:this.value})';
 
 	}
@@ -170,7 +174,7 @@ class webapp_router_admin extends webapp_echo_admin
 		$form->fieldset('影片名称');
 		$form->field('name', 'textarea', ['style' => 'width:60rem', 'rows' => 3, 'required' => NULL]);
 
-		$form->fieldset('要求：会员:-1、免费:0、金币>0，预览时间段');
+		$form->fieldset('要求：会员:-1、免费:0、金币>0，预览时间段 / 海报封面');
 		$form->field('require', 'number', [
 			'value' => 0,
 			'min' => -1,
@@ -178,11 +182,11 @@ class webapp_router_admin extends webapp_echo_admin
 			'placeholder' => '要求',
 			'required' => NULL
 		]);
-		$form->field('preview', 'number', ['placeholder' => '暂时不可用']);
 
-		$form->fieldset('标签集 / 演员集');
-		$form->field('tags', 'text', ['placeholder' => '暂时不可用']);
-		$form->field('actors', 'text', ['placeholder' => '暂时不可用']);
+		$form->field('poster', 'number', ['placeholder' => '海报封面']);
+		// $form->fieldset('标签集 / 演员集');
+		// $form->field('tags', 'text', ['placeholder' => '暂时不可用']);
+		// $form->field('actors', 'text', ['placeholder' => '暂时不可用']);
 
 		$form->fieldset();
 		$form->button('更新视频', 'submit');
@@ -190,9 +194,17 @@ class webapp_router_admin extends webapp_echo_admin
 	}
 	function post_video(string $hash)
 	{
+		$this->json();
 		if ($this->form_video()->fetch($data))
 		{
-			$this->webapp->video_update($hash, $data, 'cover');
+			if ($this->webapp->video_update($hash, $data, 'cover'))
+			{
+				$this->echo->redirect("?admin/videos");
+			}
+			else
+			{
+				$this->echo->message('更新失败！');
+			}
 		}
 	}
 	function get_video(string $hash)
@@ -201,6 +213,9 @@ class webapp_router_admin extends webapp_echo_admin
 		if ($this->webapp->nfs_videos->fetch($hash, $data))
 		{
 			$form->xml->fieldset->figure->img['src'] = $data['poster'];
+
+			$data['poster'] = preg_match('/(\d+)\.cover$/', $data['poster'], $poster) ? $poster[0] : 0;
+
 			$form->echo($data);
 		}
 	}
@@ -253,7 +268,7 @@ class webapp_router_admin extends webapp_echo_admin
 			$table->cell(['colspan' => 7]);
 	
 			$table->row();
-			$table->cell('作者');
+			$table->cell('演员');
 			$table->cell(['colspan' => 7]);
 
 			$table->row();

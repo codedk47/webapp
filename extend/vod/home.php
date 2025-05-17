@@ -85,9 +85,9 @@ class webapp_router_home extends webapp_echo_masker
 		$this->footer->append('a', ['搜索', 'href' => '?home/search']);
 		
 	}
-	function fetch_ads(int $type = 0):array
+	function fetch_ads(int $seat = 0):array
 	{
-		return iterator_to_array($this->webapp->nfs_ads->search('$.type=?s AND $.expire>?i ORDER BY $.weight DESC', $type, $this->webapp->time));
+		return iterator_to_array($this->webapp->nfs_ads->search('$.seat=?s AND $.expire>?i ORDER BY $.weight DESC', $seat, $this->webapp->time));
 	}
 	function draw_ad_banner(webapp_html $node):?webapp_html
 	{
@@ -159,7 +159,7 @@ class webapp_router_home extends webapp_echo_masker
 		foreach ($videos as $video)
 		{
 			$anchor = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
-			$figure = $anchor->figure($video['poster'], 1);
+			$figure = $anchor->figure($video['poster'], $this->webapp->format_duration($video['size']));
 			$anchor->append('strong', htmlentities($video['name']));
 		}
 		

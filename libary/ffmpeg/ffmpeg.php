@@ -155,6 +155,11 @@ class ffmpeg
 	{
 		return $this(sprintf('-qscale:v %d -frames:v 1 -f image2 "%s"', $quality & 0x1f, $filename)) === 0;
 	}
+	// function preview(string $filename = NULL):bool
+	// {
+	// 	return $this('-vf "select=\'lte(mod(t,%d),1)\',scale=-1:240,setpts=N/FRAME_RATE/TB,fps=fps=15" -b:v 480k -vcodec h264 -an "%s"',
+	// 		$this->duration / 10, $filename ?? "{$this->dirname}/preview.mp4");
+	// }
 	function preview(string $outdir, int $count = 10, int $quality = 2):bool
 	{
 		return ($dirname = $this->mkdir($outdir))
@@ -250,7 +255,7 @@ class ffmpeg
 			&& file_put_contents($keycode = "{$dirname}/keycode", random_bytes(16))
 			&& file_put_contents($keyinfo = "{$dirname}/keyinfo", join("\n", ['keycode', $keycode, bin2hex(random_bytes(16))]))
 			&& is_string($option = $this->v_quality(in_array($quality, $qualityable = $this->v_qualityable(), TRUE) ? $quality : end($qualityable)))
-			&& $this($option, "-hls_key_info_file \"{$keyinfo}\"", "-hls_segment_filename \"{$dirname}/dx%04d\" \"{$dirname}/play.m3u8\"") === 0
+			&& $this($option, "-hls_key_info_file \"{$keyinfo}\"", "-hls_segment_filename \"{$dirname}/ts%d\" \"{$dirname}/ts.m3u8\"") === 0
 			&& unlink($keyinfo);
 	}
 	//m3u8转化mp4

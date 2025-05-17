@@ -120,7 +120,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function hashfile(string $filename, bool $care = FALSE):?string
 	{
-		return is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
+		return is_file($filename) && is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
 	}
 	// static function shuffle()
 	// {
@@ -144,6 +144,14 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	static function serial_hash(bool $care, string $prefix = 'W', int $limit = 12):string
 	{
 		return substr($prefix . static::random_hash($care), 0, $limit);
+	}
+	static function is_short_hash(string $hash):bool
+	{
+		return preg_match('/^[\w\-]{10}$/', $hash) === 1;
+	}
+	static function is_long_hash(string $hash):bool
+	{
+		return preg_match('/^[0-9A-V]{12}$/', $hash) === 1;
 	}
 	static function random_weights(array $items, string $key = 'weight'):array
 	{
@@ -1060,11 +1068,11 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		$this->response_header('Refresh', $url === NULL ? (string)$second : "{$second}; url={$url}");
 	}
-	function response_expires(int $timestamp)
+	function response_expires(int $timestamp):void
 	{
 		$this->response_header('Expires', date(DateTimeInterface::RFC7231, $timestamp));
 	}
-	function response_last_modified(int $timestamp)
+	function response_last_modified(int $timestamp):void
 	{
 		$this->response_header('Last-Modified', date(DateTimeInterface::RFC7231, $timestamp));
 	}
@@ -1089,12 +1097,12 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return $this->io->response_sendfile($filename);
 	}
-	function response_maskdata(string $content):string
-	{
-		$maskdata = $this->maskdata($content);
-		$this->response_header('Mask-Key', bin2hex(substr($maskdata, 0, 8)));
-		return substr($maskdata, 8);
-	}
+	// function response_maskdata(string $content):string
+	// {
+	// 	$maskdata = $this->maskdata($content);
+	// 	$this->response_header('Mask-Key', bin2hex(substr($maskdata, 0, 8)));
+	// 	return substr($maskdata, 8);
+	// }
 	//append function
 	function nonematch(string $etag, bool $needhash = FALSE):bool
 	{
