@@ -3,6 +3,7 @@ class webapp_router_admin extends webapp_echo_admin
 {
 	public array $nav = [
 		['首页', '?admin'],
+		['渠道', '?admin/channels'],
 		['广告', '?admin/ads'],
 		['视频', '?admin/videos'],
 		// ['标签', '?admin/tags'],
@@ -13,7 +14,7 @@ class webapp_router_admin extends webapp_echo_admin
 		// 	['演员', '?admin/actors'],
 		// 	['专题', '?admin/subjects'],
 		// ]],
-		// ['用户', '?admin/users'],
+		// ['用户', '?admin/users']
 	], $submenu = [];
 	function __construct(webapp $webapp)
 	{
@@ -31,17 +32,22 @@ class webapp_router_admin extends webapp_echo_admin
 
 	function get_home()
 	{
-		$this->main->append('h2', 'Statistics are under development');
+		$this->main->append('h2', '正在开发..');
 	}
-
+	#--------------------------------渠道--------------------------------
+	function get_channels()
+	{
+		$this->main->append('h2', '正在开发..');
+	}
+	#--------------------------------广告--------------------------------
 	const ad_seat = [
 		0 => '开屏（全屏幕）',
 		1 => '首次弹窗（半屏幕）',
 		2 => '横幅',
 		3 => '导航图标 1:1',
 		4 => '轮播 21:9',
+		//5 => '播放视频 16:9',
 
-		// 3 => '播放视频 16:9',
 		// 4 => '滑动视频（全屏幕）',
 		// 3 => '游戏轮播',
 		// 4 => '社区轮播',
@@ -159,7 +165,7 @@ class webapp_router_admin extends webapp_echo_admin
 
 	}
 
-
+	#--------------------------------视频--------------------------------
 	function form_video(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
@@ -283,9 +289,16 @@ class webapp_router_admin extends webapp_echo_admin
 
 
 	}
+
+	#--------------------------------用户--------------------------------
 	function get_users()
 	{
-		$this->main->append('h2', 'User system are under development');
-		$this->main->append('img', ['src' => '/0/dwdadawd.jpg']);
+		$this->main->append('h2', '正在开发..');
+	}
+
+
+	function get_a()
+	{
+		echo '1';
 	}
 }

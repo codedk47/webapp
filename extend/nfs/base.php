@@ -98,7 +98,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 		$cond = ['WHERE `sort`=?i', $this->sort];
 		if ($syntax = array_shift($this->conditions))
 		{
-			$cond[0] .= (preg_match('/^\s*(order|group)\s+by\s+/i', $syntax) ? ' ' : ' AND ') . $syntax;
+			$cond[0] .= (preg_match('/^\s*(?:(?:group|order)\s+by|limit)\s+/i', $syntax) ? ' ' : ' AND ') . $syntax;
 			array_push($cond, ...array_splice($this->conditions, 0));
 		}
 		return $this->webapp->mysql->{$this->webapp::tablename}(...$cond);
@@ -129,7 +129,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 		$this->paging['index'] = max(1, $overflow ? $index : min($index, $this->paging['max']));
 		$this->paging['skip'] = ($this->paging['index'] - 1) * $rows;
 		$this->paging['rows'] = $rows;
-		$conditions[0] .= " LIMIT {$this->paging['skip']},{$rows}";
+		$conditions[0] = (isset($conditions[0]) ? "{$conditions[0]} " : '') . "LIMIT {$this->paging['skip']},{$rows}";
 		return $this(...$conditions);
 	}
 	function filename(string $hash, string $suffix = NULL):string
@@ -252,7 +252,6 @@ class webapp_nfs implements Countable, IteratorAggregate
 		return $this->primary($hash)->update('`shares`=`shares`+?i', $incr) === 1;
 	}
 }
-
 class webapp_ext_nfs_base extends webapp
 {
 	const tablename = 'nfs';

@@ -56,18 +56,23 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return parent::get_splashscreen();
 	}
-	function draw_header_index():webapp_html
+	function draw_header_search():webapp_html
 	{
-		$this->header->append('a', ['href' => '?home'])->svg(['width' => 24, 'height' => 24])->logo();
+		$this->header['class'] = 'search';
+		$this->header->append('a', ['href' => '?home', 'style' => 'padding:0 var(--webapp-gapitem)'])->svg(['width' => 32, 'height' => 32, 'fill' => 'white'])->logo();
 
 
-		$this->header->append('input', ['type' => 'search', 'value' => $this->webapp->query['search'] ?? NULL]);
-		$this->header->append('a', ['href' => 'javascript:;'])->svg()->icon('search', 24);
+		$this->header->append('input', ['type' => 'search',
+			'value' => $this->webapp->query['search'] ?? NULL,
+			'placeholder' => '请输入关键词搜索']);
+
+			
+		$this->header->append('a', ['href' => 'javascript:;'])->svg(['fill' => 'white'])->icon('search', 32);
 		return $this->header;
 	}
 	function draw_header_name(string $title, string $goback = 'javascript:history.back();'):webapp_html
 	{
-		$this->header->append('a', ['href' => $goback])->svg()->icon('chevron-left', 24);
+		$this->header->append('a', ['href' => $goback])->svg(['fill' => 'white'])->icon('chevron-left', 32);
 		$this->header->append('strong', $title);
 		
 		return $this->header;
@@ -76,14 +81,14 @@ class webapp_router_home extends webapp_echo_masker
 
 
 
-	function draw_footer()
+	function draw_footer(bool $copyright = TRUE)
 	{
+		$copyright && $this->footer->insert('div', 'before')->setattr([$this->webapp['copy_webapp'], 'class' => 'nav']);
 		$this->footer['class'] = 'nav';
 		$this->footer->append('a', ['导航', 'href' => '?home/home']);
 		$this->footer->append('a', ['视频', 'href' => '?home/video']);
-		$this->footer->append('a', ['抖音', 'href' => '?home/short']);
+		$this->footer->append('a', ['抖音', 'href' => '?home/slide']);
 		$this->footer->append('a', ['搜索', 'href' => '?home/search']);
-		
 	}
 	function fetch_ads(int $seat = 0):array
 	{
@@ -99,7 +104,7 @@ class webapp_router_home extends webapp_echo_masker
 				$element->append('a', [
 					'href' => $ad['jumpurl'],
 					'onclick' => 'return masker.clickad(this)',
-					'data-hash' => $ad['hash']])->figure($ad['src'], '广告');
+					'data-hash' => $ad['hash']])->figure($ad['src']);
 			}
 		}
 		return NULL;
@@ -178,7 +183,7 @@ class webapp_router_home extends webapp_echo_masker
 
 
 		$this->title('导航');
-		$this->draw_header_index('asdasd');
+		$this->draw_header_search('asdasd');
 
 		$this->draw_ad_banner($this->aside);
 
@@ -193,94 +198,36 @@ class webapp_router_home extends webapp_echo_masker
 	function get_video()
 	{
 		$this->title('视频');
+		$this->draw_header_search('asdasd');
 		$this->draw_ad_slideshows($this->main);
 
 
-		$this->webapp->nfs_videos->fetch('6SJCS02B7LJ8', $data);
 
-		$this->draw_videos_lists($this->main, [$data]);
+		$this->draw_videos_lists($this->main, $this->webapp->nfs_videos);
 
-
-
-		$this->draw_footer();
-	}
-	function get_short(int $page = 0)
-	{
-		if ($page)
-		{
-			$videos = [];
-			foreach ($this->webapp->nfs_videos as $video)
-			{
-				$videos[] = $video;
-				// $videos[] = [
-				// 	'hash' => $video['hash'],
-				// 	'name' => $video['name'],
-				// 	'm3u8' => strstr($this->webapp->src($video, 'play.m3u8'), '#', TRUE),
-				// 	'poster' => $this->webapp->src($video, "cover?{$video['t1']}"),
-				// ];
-			}
-
-
-
-			// $tags = $this->webapp->fetch_tags->shortname();
-			// foreach ($this->webapp->fetch_videos->with('type="v"')->random(9) as $video)
-			// //foreach ($this->webapp->fetch_videos->with('type="v"')->paging($page, 6) as $video)
-			// {
-			// 	$tagdata = [];
-			// 	foreach ($video['tags'] ? explode(',', $video['tags']) : [] as $taghash)
-			// 	{
-			// 		if (isset($tags[$taghash]))
-			// 		{
-			// 			$tagdata[$taghash] = $tags[$taghash];
-			// 		}
-			// 	}
-			// 	$videos[] = [
-			// 		'hash' => $video['hash'],
-			// 		'name' => $video['name'],
-			// 		//'m3u8' => $video['m3u8'],
-			// 		//'m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', $video['m3u8']),
-			// 		'm3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', '@' . substr($video['m3u8'], 1)),
-			// 		'poster' => $video['poster'],
-			// 		'watched' => $this->user->watched($video['hash']),
-			// 		'liked' => $this->user->liked($video['hash']),
-			// 		'favorited' => $this->user->favorited($video['hash']),
-			// 		'tags' => $tagdata
-			// 	];
-			// }
-			
-			$this->json($videos);
-			unset($this->echo['errors']);
-			return;
-		}
-		$this->title('抖音');
-		$this->script(['src' => '/webapp/static/js/hls.min.js']);
-		$this->script(['src' => '/webapp/static/js/video.js']);
-		$this->xml->body->div['class'] = 'short';
-		$template = $this->main->append('webapp-videos', [
-			//'onchange' => 'masker.shortchanged(this)',
-			'data-fetch' => '?home/short,page:',
-			'data-page' => 1,
-			//'autoplay' => NULL,
-			'controls' => NULL,
-			//'muted' => NULL
-		])->append('template');
 
 
 		$this->draw_footer();
 	}
 	function get_watch(string $hash)
 	{
-		if ($this->webapp->nfs_videos->fetch($hash, $video) === FALSE)
+		$videos = $this->webapp->nfs_videos;
+		$this->draw_header_search('asdasd');
+		$this->draw_footer();
+		$this->aside['class'] = 'watch';
+		if ($videos->fetch($hash, $video) === FALSE)
 		{
-
+			$this->aside->append('strong', '影片不见了:(');
+			return;
 		}
+		$videos->views($hash);
 		$this->title($video['name']);
-		$this->draw_header_name($video['name']);
+		//$this->draw_header_name($video['name']);
 		$this->script(['src' => '/webapp/static/js/hls.min.js']);
 		$this->script(['src' => '/webapp/static/js/video.js']);
 
 		//print_r($video);
-
+		
 		$element = $this->aside->append('webapp-video', [
 			'data-poster' => $video['poster'],
 			'data-m3u8' => $video['m3u8'],
@@ -295,18 +242,68 @@ class webapp_router_home extends webapp_echo_masker
 		$videoinfo->append('strong', htmlentities($video['name']));
 
 		
-		//$this->aside->append()
+		$this->main['style'] = 'height:1000px';
 
 
 
 
 
 		
-		$this->draw_footer();
+		
 	}
-	function get_search(string $content = NULL)
+	function get_slide(int $page = 0)
 	{
-		$this->title('搜索');
+		if ($page)
+		{
+			$this->json(iterator_to_array($this->webapp->nfs_videos->paging($page, 9, TRUE)));
+			unset($this->echo['errors']);
+			return;
+		}
+		$this->title('抖音');
+		$this->script(['src' => '/webapp/static/js/hls.min.js']);
+		$this->script(['src' => '/webapp/static/js/video.js']);
+
+		$this->header->append('a', ['href' => 'javascript:history.back();'])
+			->svg(['fill' => 'white'])->icon('chevron-left', 32);
+
+
+		$this->xml->body->div['class'] = 'slide';
+		$template = $this->main->append('webapp-videos', [
+			'onchange' => 'console.log(this.current)',
+			'data-fetch' => '?home/slide,page:',
+			'data-page' => 1,
+			//'autoplay' => NULL,
+			'controls' => NULL,
+			//'muted' => NULL
+		])->append('template');
+
+		$this->draw_footer(FALSE);
+	}
+	function get_search(string $keywords = NULL)
+	{
+		$this->draw_header_search();
 		$this->draw_footer();
+		if (is_string($keywords))
+		{
+			$this->title($keywords);
+		}
+		$this->title('搜索');
+
+		$this->script(['src' => '/webapp/static/js/hls.min.js']);
+		$this->script(['src' => '/webapp/static/js/video.js']);
+
+		//print_r($video);
+		
+		$element = $this->aside->append('webapp-video', [
+			//'data-poster' => $video['poster'],
+			'data-m3u8' => '/test.m3u8',
+			//'data-m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', '@' . substr($video['m3u8'], 1)),
+			//'oncanplay' => 'masker.canplay(this)',
+			//'autoheight' => NULL,
+			'autoplay' => NULL,
+			//'muted' => NULL,
+			'controls' => NULL
+		]);
+		
 	}
 }

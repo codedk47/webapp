@@ -1,12 +1,13 @@
 :root {
-	--webapp-hue: 0;
+	/* https://hslpicker.com*/
+	--webapp-hue: 280;
 	--webapp-saturation: 100%;
 	--webapp-color: var(--webapp-hue), var(--webapp-saturation);
-	--webapp-background: hsl(var(--webapp-color), 98%);
-	--webapp-foreground: hsl(var(--webapp-color), 2%);
+	--webapp-background: hsl(var(--webapp-color), 9%);
+	--webapp-foreground: hsl(var(--webapp-color), 100%);
 	/* --webapp-convex: ; */
 
-	--webapp-anchor: hsl(var(--webapp-color), 32%);
+	--webapp-anchor: hsl(var(--webapp-color), 100%);
 	--webapp-button: hsl(var(--webapp-color), 20%);
 	--webapp-hover: hsl(var(--webapp-hue), 0%, 47%);
 	--webapp-hint: hsl(var(--webapp-color), 15%);
@@ -42,7 +43,7 @@ a{
 	text-decoration: none;
 }
 a.logo{
-	width: 4rem;
+	width: 2rem;
 	height: 2rem;
 	background-image: url(/star/logo.png);
 	background-position: center;
@@ -707,18 +708,18 @@ div.videoinfo>div[data-label]>a{
 	white-space: nowrap;
 }
 
-div.short{
+div.slide{
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	background-color: black;
 	color: white;
 }
-div.short>header>a::before{
+div.slide>header>a::before{
 	border-color: white;
 }
-div.short>header,
-div.short>footer{
+div.slide>header,
+div.slide>footer{
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -726,22 +727,22 @@ div.short>footer{
 	z-index: 1;
 	background-color: transparent;
 }
-div.short>main{
+div.slide>main{
 	flex-grow: 1;
 }
-div.short>main>webapp-videos{
+div.slide>main>webapp-videos{
 	height: 100%;
 }
-div.short>main>webapp-videos>div>webapp-video{
+div.slide>main>webapp-videos>div>webapp-video{
 	display: flex;
 	flex-direction: column;
 }
-div.short>main>webapp-videos>div>webapp-video>video{
+div.slide>main>webapp-videos>div>webapp-video>video{
 	height: 0;
 	flex-grow: 1;
 	object-fit: contain;
 }
-div.short>main>webapp-videos>div>webapp-video>div.videoinfo{
+div.slide>main>webapp-videos>div>webapp-video>div.videoinfo{
 	position: absolute;
 	left: 0;
 	right: 6rem;
@@ -749,21 +750,21 @@ div.short>main>webapp-videos>div>webapp-video>div.videoinfo{
 	display: inline-block;
 	text-shadow: 1px 1px 1px var(--webapp-edge);
 }
-div.short>main>webapp-videos>div>webapp-video>div.videoinfo>a{
+div.slide>main>webapp-videos>div>webapp-video>div.videoinfo>a{
 	white-space: nowrap;
 	margin-left: var(--webapp-gapitem);
 }
-div.short>main>webapp-videos>div>webapp-video>div.videoinfo>strong{
+div.slide>main>webapp-videos>div>webapp-video>div.videoinfo>strong{
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
-div.short>main>webapp-videos>div>webapp-video>div.videoinfo>mark{
+div.slide>main>webapp-videos>div>webapp-video>div.videoinfo>mark{
 	width: 100%;
 	overflow: hidden;
 	flex-wrap: nowrap;
 }
-div.short>main>webapp-videos>div>webapp-video>div.videoinfo>mark>a{
+div.slide>main>webapp-videos>div>webapp-video>div.videoinfo>mark>a{
 	white-space: nowrap;
 	background-color: transparent;
 	margin-left: var(--webapp-gap);
@@ -793,30 +794,30 @@ div.videolink>a::after{
 	content: attr(data-label);
 	color: var(--webapp-foreground);
 }
-div.short>footer{
+div.slide>footer{
 	position: relative;
 }
 
 
 
 /* 
-div.short,
-div.short>main>webapp-videos{
+div.slide,
+div.slide>main>webapp-videos{
 	height: 100%;
 }
 
-div.short>main{
+div.slide>main{
 	height: calc(100% - 80px);
 }
 
 
-div.short>header{
+div.slide>header{
 	padding: 0;
 	color: white;
 	height: 40px;
 }
 
-div.short>footer{
+div.slide>footer{
 	position: absolute;
 	height: 40px;
 	bottom: 40px;
