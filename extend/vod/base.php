@@ -22,7 +22,11 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 	}
 	function cid()
 	{
-		var_dump($this->request_header('cid'));
+		var_dump($this->request_header('user-cid'));
+	}
+	function did()
+	{
+		var_dump($this->request_header('user-did'));
 	}
 	function access_log()
 	{

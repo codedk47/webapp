@@ -5,6 +5,7 @@ class webapp_router_home extends webapp_echo_masker
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
+		unset($this->xml->head->link);
 		if ($this->init)
 		{
 			$this->webapp->origin($this);
@@ -12,7 +13,7 @@ class webapp_router_home extends webapp_echo_masker
 		else
 		{
 			$this->footer[0] = '';
-			unset($this->xml->head->link[1]);
+			
 			
 			$this->script(['src' => '/webapp/extend/vod/home.js']);
 			$this->script(['src' => '/webapp/static/js/slideshows.js']);
@@ -299,6 +300,8 @@ class webapp_router_home extends webapp_echo_masker
 
 		$this->script(['src' => '/webapp/static/js/hls.min.js']);
 		$this->script(['src' => '/webapp/static/js/video.js']);
+
+
 
 	}
 }

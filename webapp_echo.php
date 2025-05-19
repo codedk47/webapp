@@ -478,10 +478,19 @@ class webapp_echo_masker extends webapp_echo_html
 			//$this->sw['data-router'] = $webapp->routname;
 			$this->sw['data-init'] = "?{$webapp->routname}/init";
 			$this->sw['data-splashscreen'] = "?{$webapp->routname}/splashscreen";
-
 			$ua = $webapp->request_device();
-			$this->sw['data-cid'] = $this->fetch_cid($ua);
-			$this->sw['data-did'] = $this->fetch_did($ua);
+			is_string(match (TRUE)
+			{
+				preg_match('/cid\/([0-9a-z]{4})/i', $ua, $cid) === 1 => $cid = $cid[1],
+				is_string($cid = $webapp->query['cid'] ?? NULL) && preg_match('/^[0-9a-z]{4}$/i', $cid) => $cid,
+				default => NULL
+			}) && $this->sw['data-cid'] = $cid;
+			is_string(match (TRUE)
+			{
+				preg_match('/cid\/([0-9a-z]{16})/i', $ua, $did) === 1 => $did = $idi[1],
+				is_string($did = $webapp->query['did'] ?? NULL) && preg_match('/^[0-9a-z]{16}$/i', $did) => $did,
+				default => NULL
+			}) && $this->sw['data-did'] = $did;
 			$webapp->break($this->init(...), $ua);
 			unset($this->xml->head->link, $this->xml->head->script[0]);
 		}
@@ -531,16 +540,7 @@ class webapp_echo_masker extends webapp_echo_html
 		$this->script('masker.close()');
 		return 200;
 	}
-	function fetch_cid(string $ua):?string
-	{
-		return preg_match('/cid\/([0-9a-z]{4})/i', $ua, $matches) ? $matches[1]
-			: (($cid = $this->webapp->query['cid'] ?? NULL) && preg_match('/^[0-9a-z]{4}$/i', $cid) ? $cid : NULL);
-	}
-	function fetch_did(string $ua):?string
-	{
-		return preg_match('/cid\/([0-9a-z]{16})/i', $ua, $matches) ? $matches[1]
-			: (($did = $this->webapp->query['did'] ?? NULL) && preg_match('/^[0-9a-z]{16}$/i', $did) ? $did : NULL);
-	}
+
 
 }
 class webapp_echo_admin extends webapp_echo_masker

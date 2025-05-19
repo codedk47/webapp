@@ -29,7 +29,7 @@ if (self.window)
 				sessionStorage.setItem('init', JSON.stringify(data));
 				data.token = localStorage.getItem('token')
 				data.origin = Array.from(document.querySelectorAll('link[rel=preconnect]'))
-					.map(link => `${link.href}/${link.dataset.file || 'robots.txt'}`);
+					.map(link => `${link.href}${link.dataset.file || 'robots.txt'}`);
 				active.postMessage(data);
 			}
 			else
@@ -216,11 +216,11 @@ else
 					{
 						name === 'token'
 							? headers.Authorization = `Bearer ${event.data[name]}`
-							: headers[name] = event.data[name];
+							: headers[`user-${name}`] = event.data[name];
 					}
 					else
 					{
-						delete headers[name === 'token' ? 'Authorization' : name];
+						delete headers[name === 'token' ? 'Authorization' : `user-${name}`];
 					}
 				}
 			});
@@ -271,10 +271,8 @@ else
 	});
 	addEventListener('fetch', event => event.respondWith(caches.open(cachename).then(cache => caches.match(event.request).then(response =>
 	{
-		if (response)
-		{
-			return console.log(`form cache ${event.request.url}`), response;
-		}
+		if (response) return response;
+		// if (response) return console.log(`form cache ${event.request.url}`), response;
 		const url = new URL(event.request.url), key = /^#[0-9a-f]{16}$|^#!$/.test(url.hash)
 			? (url.hash.startsWith('#!') ? [] : url.hash.match(/[0-9a-f]{2}/g).map(key => parseInt(key, 16))) : null;
 		if (url.origin === location.origin)
@@ -289,7 +287,7 @@ else
 						response.ok && key ? cache.put(event.request, response.clone()).then(() => response) : response));
 				default:
 					// return fetch(event.request).then(response =>
-					// 	response.ok ? cache.put(event.request, response.clone()).then(() => response) : response);
+					// response.ok ? cache.put(event.request, response.clone()).then(() => response) : response);
 			}
 		}
 		else
