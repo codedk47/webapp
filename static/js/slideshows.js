@@ -130,7 +130,6 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 		node.style.backgroundImage = `url(${content.picture})`;
 		node.href = 'support' in content ? content.support : 'javascript:;';
 		'hash' in content ? node.dataset.hash = content.hash : delete node.dataset.hash;
-		'target' in this.dataset ? node.setAttribute('target', this.dataset.target) : node.removeAttribute('target');
 	}
 	addition(content)
 	{

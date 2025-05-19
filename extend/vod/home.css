@@ -406,6 +406,7 @@ div[class|=grid]{
 }
 div[class|=grid]>a{
 	display: block;
+	overflow: hidden;
 }
 div[class|=grid]>a>figure{
 	margin: 0;
@@ -482,8 +483,10 @@ div[class|=grid]>a>strong{
 	line-height: calc(var(--webapp-font-normal) * 1.5);
 	max-height: calc(var(--webapp-font-normal) * 3);
 	font-size: var(--webapp-font-small);
-	word-break: break-all;
 	font-weight: lighter;
+	word-break: break-all;
+	/* white-space: nowrap;
+	text-overflow: ellipsis; */
 }
 div[class|=grid]>a>div{
 	position: relative;
@@ -587,7 +590,7 @@ div[class|=grid][class*=-banner]{
 	grid-template-columns: 1fr !important;
 }
 div[class|=grid][class*=-banner]>a>figure{
-	padding-bottom: 10%;
+	padding-bottom: 13%;
 }
 
 

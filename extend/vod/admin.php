@@ -43,7 +43,7 @@ class webapp_router_admin extends webapp_echo_admin
 	const ad_seat = [
 		0 => '开屏（全屏幕）',
 		1 => '首次弹窗（半屏幕）',
-		2 => '横幅',
+		2 => '横幅 7.8:1',
 		3 => '导航图标 1:1',
 		4 => '轮播 21:9',
 		//5 => '播放视频 16:9',

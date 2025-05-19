@@ -44,7 +44,18 @@ if (self.window)
 				active.postMessage(['ping', 4]);
 				callbacks.forEach(callback => callback());
 			}
-		}))), callbacks = [];
+		}))), observes = new Map, viewport = new IntersectionObserver(entries =>
+		{
+			entries.forEach(entry =>
+			{
+				if (entry.isIntersecting && observes.has(entry.target))
+				{
+					viewport.unobserve(entry.target);
+					observes.get(entry.target).resolve(entry.target);
+					observes.delete(entry.target);
+				}
+			});
+		}), callbacks = [];
 	function masker(resource, options = {})
 	{
 		if (options.body)
@@ -127,7 +138,18 @@ if (self.window)
 		}
 		cd(document.body.appendChild(anchor));
 	});
-	masker.clickad = anchor => anchor.dataset.hash ? navigator.sendBeacon('?clickad', anchor.dataset.hash) : true;
+	masker.viewport = async element =>
+	{
+		const pending = observes.get(element) || {};
+		return pending.promise || (observes.promise = new Promise(resolve =>
+		{
+			pending.resolve = resolve;
+			observes.set(element, pending);
+			viewport.observe(element);
+		}));
+	};
+	masker.clickad = anchor => (anchor.dataset.hash ? navigator.sendBeacon('?clickad', anchor.dataset.hash) : true)
+		&& (anchor.href.startsWith(location.origin) || anchor.href.startsWith('javascript:') || !window.open(anchor.href))
 }
 else
 {

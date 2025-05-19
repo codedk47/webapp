@@ -121,7 +121,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 	{
 		return $this->table()->update("`extdata`=JSON_SET(`extdata`, '$.{$field}', {$value})") === $this->count();
 	}
-	function paging(int $index, int $rows = 21, bool $overflow = FALSE):static
+	function paging(int $index, int $rows = 10, bool $overflow = FALSE):static
 	{
 		$conditions = $this->conditions;
 		$this->paging['count'] = $this->count($this->paging['cond']);

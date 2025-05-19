@@ -1,6 +1,7 @@
 <?php
 class webapp_router_home extends webapp_echo_masker
 {
+	public bool $lazyload = TRUE;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -13,6 +14,7 @@ class webapp_router_home extends webapp_echo_masker
 			$this->footer[0] = '';
 			unset($this->xml->head->link[1]);
 			
+			$this->script(['src' => '/webapp/extend/vod/home.js']);
 			$this->script(['src' => '/webapp/static/js/slideshows.js']);
 			$this->stylesheet('/webapp/extend/vod/home.css');
 			
@@ -94,9 +96,9 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		return iterator_to_array($this->webapp->nfs_ads->search('$.seat=?s AND $.expire>?i ORDER BY $.weight DESC', $seat, $this->webapp->time));
 	}
-	function draw_ad_banner(webapp_html $node):?webapp_html
+	function draw_ads_banner(webapp_html $node, int $type = 2):void
 	{
-		if ($ads = $this->fetch_ads(2))
+		if ($ads = $this->fetch_ads($type))
 		{
 			$element = $node->append('div', ['class' => 'grid-banner']);
 			foreach ($ads as $ad)
@@ -104,14 +106,13 @@ class webapp_router_home extends webapp_echo_masker
 				$element->append('a', [
 					'href' => $ad['jumpurl'],
 					'onclick' => 'return masker.clickad(this)',
-					'data-hash' => $ad['hash']])->figure($ad['src']);
+					'data-hash' => $ad['hash']])->figure($ad['src'], $ad['name']);
 			}
 		}
-		return NULL;
 	}
-	function draw_ad_navicon(webapp_html $node, string $name = NULL):void
+	function draw_ads_navicon(webapp_html $node, int $type = 3, string $name = NULL):void
 	{
-		if ($ads = $this->fetch_ads(3))
+		if ($ads = $this->fetch_ads($type))
 		{
 			is_string($name) && $node->append('div', ['class' => 'titles'])->append('strong', $name);
 			
@@ -121,7 +122,6 @@ class webapp_router_home extends webapp_echo_masker
 
 				$anchor = $element->append('a', [
 					'href' => $ad['jumpurl'],
-					'target' => '_blank',
 					'onclick' => 'return masker.clickad(this)',
 					'data-hash' => $ad['hash']]);
 				$anchor->figure($ad['src']);
@@ -129,44 +129,47 @@ class webapp_router_home extends webapp_echo_masker
 			}
 		}
 	}
-	function draw_ad_slideshows(webapp_html $node, int $duration = 5, string $clickad = '')
+	function draw_ads_slideshows(webapp_html $node, int $duration = 5):void
 	{
 		if ($ads = $this->fetch_ads(4))
 		{
-			//masker.lognews(`?home/news,hash:${this.current.hash}`)
-			//$this->webapp->mysql->ads('WHERE hash IN(?S)', array_column($ads, 'hash'))->update('`view`=`view`+1');
-			return $node->append('webapp-slideshows', [
+			$node->append('webapp-slideshows', [
 				'data-contents' => json_encode(array_map(fn($ad) => [
 					'picture' => $ad['src'],
 					'support' => $ad['jumpurl'],
 					'hash' => $ad['hash'],
 				], $ads), JSON_UNESCAPED_UNICODE),
 				'data-duration' => $duration,
-				'data-target' => '_blank',
 				'onchange' => 'this.active.onclick=()=>masker.clickad(this.active)'
 			]);
 		}
-		return NULL;
 	}
-	function draw_videos_lists(webapp_html $node,
-		string|iterable $videos,
-		int $display = 0,
-		string $title = NULL,
-		string $anchor = NULL,
-		string $action = '更多 >>')
+	function draw_videos_lists(webapp_html $node, string|iterable $videos, int $display = 0)
+	{
+		$element = $node->getName() === 'template' ? $node : $node->append('div', ['class' => "grid-t{$display}"]);
+		if (is_string($videos))
 		{
-
-
-
-
-
-		$element = $node->append('div', ['class' => "grid-t{$display}"]);
-		foreach ($videos as $video)
-		{
-			$anchor = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
-			$figure = $anchor->figure($video['poster'], $this->webapp->format_duration($video['size']));
-			$anchor->append('strong', htmlentities($video['name']));
+			$node->append('blockquote', ['内容加载中...', 'data-lazy' => $videos, 'data-page' => 1]);
 		}
+		else
+		{
+			foreach ($videos as $video)
+			{
+				$anchor = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
+				$figure = $anchor->figure($video['poster'], $this->webapp->format_duration($video['size']));
+				$anchor->append('strong', htmlentities($video['name']));
+			}
+		}
+
+
+
+		// $element = $node->append('div', ['class' => "grid-t{$display}"]);
+		// foreach ($videos as $video)
+		// {
+		// 	$anchor = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
+		// 	$figure = $anchor->figure($video['poster'], $this->webapp->format_duration($video['size']));
+		// 	$anchor->append('strong', htmlentities($video['name']));
+		// }
 		
 
 	
@@ -185,25 +188,30 @@ class webapp_router_home extends webapp_echo_masker
 		$this->title('导航');
 		$this->draw_header_search('asdasd');
 
-		$this->draw_ad_banner($this->aside);
+		$this->draw_ads_banner($this->aside);
 
-		$this->draw_ad_slideshows($this->main);
+		$this->draw_ads_slideshows($this->main);
 
 		
-		$this->draw_ad_navicon($this->main);
+		$this->draw_ads_navicon($this->main);
 
 
 		$this->draw_footer();
 	}
-	function get_video()
+	function get_video(int $page = 0)
 	{
+		if ($this->lazyload && $page)
+		{
+			$this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos('ORDER BY t1 DESC, hash ASC')->paging($page));
+			return;
+		}
 		$this->title('视频');
 		$this->draw_header_search('asdasd');
-		$this->draw_ad_slideshows($this->main);
+		$this->draw_ads_slideshows($this->main);
 
 
 
-		$this->draw_videos_lists($this->main, $this->webapp->nfs_videos);
+		$this->draw_videos_lists($this->main, '?home/video,page:');
 
 
 
@@ -292,18 +300,5 @@ class webapp_router_home extends webapp_echo_masker
 		$this->script(['src' => '/webapp/static/js/hls.min.js']);
 		$this->script(['src' => '/webapp/static/js/video.js']);
 
-		//print_r($video);
-		
-		$element = $this->aside->append('webapp-video', [
-			//'data-poster' => $video['poster'],
-			'data-m3u8' => '/test.m3u8',
-			//'data-m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', '@' . substr($video['m3u8'], 1)),
-			//'oncanplay' => 'masker.canplay(this)',
-			//'autoheight' => NULL,
-			'autoplay' => NULL,
-			//'muted' => NULL,
-			'controls' => NULL
-		]);
-		
 	}
 }

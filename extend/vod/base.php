@@ -137,9 +137,10 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 	{
 		static $ffmpeg = static::libary('ffmpeg/interface.php');
 		while (is_dir($outdir)
-			&& is_string($hash = $this->hashfile($filename))
+			&& is_string($hash = is_string($basename = strstr(basename($filename), '.', TRUE))
+				&& $this->is_long_hash($basename) ? $basename : $this->hashfile($filename))
 			&& $this->nfs_videos->fetch($hash) === FALSE
-			&& (is_dir($folder = "{$outdir}/{$hash}") || mkdir($folder))) {
+			&& (is_dir($folder = "{$outdir}/{$hash}") || mkdir($folder, recursive: TRUE))) {
 			$video = $ffmpeg($filename, '-hide_banner -loglevel error -stats -y');
 			$key = $this->random(8);
 			if (($poster
