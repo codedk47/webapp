@@ -20,13 +20,13 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 			$masker->link(['rel' => 'preconnect', 'href' => $origin, 'data-file' => $file, 'crossorigin' => NULL]);
 		}
 	}
-	function cid()
+	function cid(string $default = 'NULL'):string
 	{
-		var_dump($this->request_header('user-cid'));
+		return $this->request_header('user-cid') ?? $default;
 	}
-	function did()
+	function did():?string
 	{
-		var_dump($this->request_header('user-did'));
+		return $this->request_header('user-did') ?? NULL;
 	}
 	function access_log()
 	{

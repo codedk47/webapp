@@ -27,7 +27,9 @@ if (self.window)
 			{
 				const data = Object.fromEntries(Object.entries(script.dataset));
 				sessionStorage.setItem('init', JSON.stringify(data));
-				data.token = localStorage.getItem('token')
+				data.token = localStorage.getItem('token');
+				['cid', 'did'].forEach(key => key in data ? localStorage.setItem(key, data[key])
+					: localStorage.getItem(key) && void(data[key] = localStorage.getItem(key)));
 				data.origin = Array.from(document.querySelectorAll('link[rel=preconnect]'))
 					.map(link => `${link.href}${link.dataset.file || 'robots.txt'}`);
 				active.postMessage(data);
