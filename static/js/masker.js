@@ -285,7 +285,7 @@ else
 					return request(event.request, {priority: 'high', cache: 'no-cache', headers:
 						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)});
 				case /^\/[0-9]{1,3}\//.test(url.pathname):
-					return origin.then(origin => origin + url.pathname).then(url => request(url, key).then(response =>
+					return origin.then(origin => origin + url.pathname + url.search).then(url => request(url, key).then(response =>
 						response.ok && key ? cache.put(event.request, response.clone()).then(() => response) : response));
 				default:
 					// return fetch(event.request).then(response =>

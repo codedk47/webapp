@@ -435,6 +435,7 @@ div[class|=grid]>a>figure{
 	9:16= 177.77%
 	9:21= 233.33%
 	*/
+	/* https://www.fengtupic.com/tools/aspects/ */
 }
 div[class|=grid]>a>figure[data-label]::before{
 	content: attr(data-label);
