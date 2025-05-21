@@ -8,25 +8,20 @@ class webapp_router_home extends webapp_echo_masker
 		unset($this->xml->head->link);
 		if ($this->init)
 		{
+			// if ($webapp->redis->dosevasive(20))
+			// {
+			// 	$this->echo('');
+			// 	return $webapp->response_status(403);
+			// }
 			$this->webapp->origin($this);
 		}
 		else
 		{
 			$this->footer[0] = '';
-			
-			
+			$this->stylesheet('/webapp/extend/vod/home.css');
 			$this->script(['src' => '/webapp/extend/vod/home.js']);
 			$this->script(['src' => '/webapp/static/js/slideshows.js']);
-			$this->stylesheet('/webapp/extend/vod/home.css');
-			
-			
-
 		}
-		// if ($this->webapp->redis->dosevasive(20))
-		// {
-		// 	$this->echo('');
-		// 	return $this->webapp->response_status(403);
-		// }
 	}
 	function init(string $ua):int
 	{
@@ -50,9 +45,9 @@ class webapp_router_home extends webapp_echo_masker
 	function get_splashscreen():int
 	{
 		return parent::get_splashscreen();
-		if (count($ad = $this->webapp->fetch_ad(0)))
+		if (count($ads = $this->fetch_ads()))
 		{
-			$ad = $this->webapp->random_weights($ad);
+			$ad = $this->webapp->random_weights($ads);
 			$this->splashscreen($ad['src'], $ad['jumpurl'], '跳过', 4, TRUE, $ad['hash']);
 			$this->webapp->nfs_ads->views($ad['hash']);
 			return 200;
@@ -62,15 +57,15 @@ class webapp_router_home extends webapp_echo_masker
 	function draw_header_search():webapp_html
 	{
 		$this->header['class'] = 'search';
-		$this->header->append('a', ['href' => '?home', 'style' => 'padding:0 var(--webapp-gapitem)'])->svg(['width' => 32, 'height' => 32, 'fill' => 'white'])->logo();
+		$this->header->append('a', ['href' => '?home', 'style' => 'padding:0 var(--webapp-gapitem)'])->svg(['width' => 32, 'height' => 32])->logo();
 
 
 		$this->header->append('input', ['type' => 'search',
 			'value' => $this->webapp->query['search'] ?? NULL,
 			'placeholder' => '请输入关键词搜索']);
 
-			
-		$this->header->append('a', ['href' => 'javascript:;'])->svg(['fill' => 'white'])->icon('search', 32);
+		$this->header->append('button', ['搜索']);
+		//$this->header->append('a', ['href' => 'javascript:;'])->svg(['fill' => 'white'])->icon('search', 32);
 		return $this->header;
 	}
 	function draw_header_name(string $title, string $goback = 'javascript:history.back();'):webapp_html
@@ -116,11 +111,9 @@ class webapp_router_home extends webapp_echo_masker
 		if ($ads = $this->fetch_ads($type))
 		{
 			is_string($name) && $node->append('div', ['class' => 'titles'])->append('strong', $name);
-			
 			$element = $node->append('div', ['class' => 'grid-icon']);
 			foreach ($ads as $ad)
 			{
-
 				$anchor = $element->append('a', [
 					'href' => $ad['jumpurl'],
 					'onclick' => 'return masker.clickad(this)',
@@ -161,21 +154,6 @@ class webapp_router_home extends webapp_echo_masker
 				$anchor->append('strong', htmlentities($video['name']));
 			}
 		}
-
-
-
-		// $element = $node->append('div', ['class' => "grid-t{$display}"]);
-		// foreach ($videos as $video)
-		// {
-		// 	$anchor = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
-		// 	$figure = $anchor->figure($video['poster'], $this->webapp->format_duration($video['size']));
-		// 	$anchor->append('strong', htmlentities($video['name']));
-		// }
-		
-
-	
-
-
 	}
 
 
@@ -264,7 +242,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($page)
 		{
-			$this->json(iterator_to_array($this->webapp->nfs_videos->paging($page, 9, TRUE)));
+			$this->json(iterator_to_array($this->webapp->nfs_videos->paging($page, 9)));
 			unset($this->echo['errors']);
 			return;
 		}

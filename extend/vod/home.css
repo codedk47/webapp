@@ -3,11 +3,11 @@
 	--webapp-hue: 280;
 	--webapp-saturation: 100%;
 	--webapp-color: var(--webapp-hue), var(--webapp-saturation);
-	--webapp-background: hsl(var(--webapp-color), 9%);
-	--webapp-foreground: hsl(var(--webapp-color), 100%);
+	--webapp-background: hsl(var(--webapp-color), 98%);
+	--webapp-foreground: hsl(var(--webapp-color), 10%);
 	/* --webapp-convex: ; */
 
-	--webapp-anchor: hsl(var(--webapp-color), 100%);
+	--webapp-anchor: hsl(var(--webapp-color), 10%);
 	--webapp-button: hsl(var(--webapp-color), 20%);
 	--webapp-hover: hsl(var(--webapp-hue), 0%, 47%);
 	--webapp-hint: hsl(var(--webapp-color), 15%);
@@ -15,7 +15,7 @@
 	
 	--webapp-primary: hsl(var(--webapp-color), 30%);
 	--webapp-danger: 203, 36, 49;
-	--webapp-concavity: linear-gradient(-180deg, hsl(var(--webapp-color), 30%) 0%, var(--webapp-button) 90%);
+	--webapp-concavity: linear-gradient(-180deg, hsl(var(--webapp-color), 90%) 0%, hsl(var(--webapp-color), 80%) 90%);
 
 	--webapp-gap: 1rem;
 	--webapp-gapitem: .4rem;
@@ -406,7 +406,6 @@ div[class|=grid]{
 }
 div[class|=grid]>a{
 	display: block;
-	overflow: hidden;
 }
 div[class|=grid]>a>figure{
 	margin: 0;
@@ -479,15 +478,17 @@ div[class|=grid]>a>figure>figcaption{
 	border-start-start-radius: var(--webapp-gapradius);
 }
 div[class|=grid]>a>strong{
+
 	display: block;
 	overflow: hidden;
 	line-height: calc(var(--webapp-font-normal) * 1.5);
 	max-height: calc(var(--webapp-font-normal) * 3);
 	font-size: var(--webapp-font-small);
 	font-weight: lighter;
+	
 	word-break: break-all;
-	/* white-space: nowrap;
-	text-overflow: ellipsis; */
+	/* white-space: nowrap; */
+	text-overflow: ellipsis;
 }
 div[class|=grid]>a>div{
 	position: relative;

@@ -121,12 +121,12 @@ class webapp_nfs implements Countable, IteratorAggregate
 	{
 		return $this->table()->update("`extdata`=JSON_SET(`extdata`, '$.{$field}', {$value})") === $this->count();
 	}
-	function paging(int $index, int $rows = 10, bool $overflow = FALSE):static
+	function paging(int $index, int $rows = 10):static
 	{
 		$conditions = $this->conditions;
 		$this->paging['count'] = $this->count($this->paging['cond']);
 		$this->paging['max'] = ceil($this->paging['count'] / $rows = abs($rows));
-		$this->paging['index'] = max(1, $overflow ? $index : min($index, $this->paging['max']));
+		$this->paging['index'] = max(1, $index);
 		$this->paging['skip'] = ($this->paging['index'] - 1) * $rows;
 		$this->paging['rows'] = $rows;
 		$conditions[0] = (isset($conditions[0]) ? "{$conditions[0]} " : '') . "LIMIT {$this->paging['skip']},{$rows}";
