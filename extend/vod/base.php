@@ -50,7 +50,7 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 			$data['poster'] = $this->src($data, "/{$data['poster']}.cover");
 			$data['m3u8'] = $data['proxy']
 				? sprintf("?proxy/%d,m3u8:%s", $data['proxy'][0], $this->url64_encode($data['proxy'][1]))
-				: strstr($this->src($data, '/ts'), '?', TRUE);
+				: $this->src($data, '/ts');
 			//$data['m3u8'] = $this->src($data, '/ts');
 			unset($data['extdata'], $data['cover']);
 			return $data;
