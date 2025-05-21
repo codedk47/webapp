@@ -808,7 +808,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			{
 				if ($conditions)
 				{
-					$cond[] = array_shift($conditions);
+					$this->cond[] = array_shift($conditions);
 					$values = $conditions;
 				}
 			}

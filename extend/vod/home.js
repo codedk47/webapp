@@ -18,3 +18,14 @@ masker.then(() =>
 		});
 	}));
 });
+masker.urlencode = data => encodeURIComponent(data).replace(/%20|[\!'\(\)\*\+\/@~]/g, escape =>
+	({'%20': '+', '!': '%21', "'": '%27', '(': '%28', ')': '%29', '*': '%2A', '+': '%2B', '/': '%2F', '@': '%40', '~': '%7E'}[escape]));
+masker.canplay = video =>
+{
+	console.log(video);
+	if (video.horizontal)
+	{
+		video.parentNode.style.cssText = 'position:sticky;top:0;z-index:9';
+	}
+	
+};

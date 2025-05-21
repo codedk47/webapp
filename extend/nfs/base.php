@@ -1,39 +1,44 @@
 <?php
 class webapp_nfs_client extends webapp_client_http
 {
-	private readonly Closure $auth;
+	private readonly Closure $request;
 	private readonly string $username, $password, $bucket;
 	function __construct(string $api, string ...$options)
 	{
-		parent::__construct(current([$url, $this->auth] = match ($api)
+		parent::__construct(current([$url, $this->request] = match ($api)
 		{
 			#https://developers.cloudflare.com/r2/tutorials/postman/
 			'cloudflare_r2' => [],
 			#https://docs.aws.amazon.com/AmazonS3/latest/API/RESTAuthentication.html
-			'amazon_s3' => ["https://{$options[2]}.s3.{$options[3]}.amazonaws.com", function(string $method, string $path, string $type = NULL)
+			'amazon_s3' => ["https://{$options[2]}.s3.{$options[3]}.amazonaws.com",
+			function(string $method, string $path, $body = NULL, string $type = NULL):bool
 			{
 				$date = date(DATE_RFC2822);
 				$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-amz-acl:public-read\n/{$this->bucket}{$path}", $this->password, TRUE));
-				return ['Authorization' => "AWS {$this->username}:{$signature}", 'Date' => $date, 'x-amz-acl' => 'public-read'];
+				$this->headers(['Authorization' => "AWS {$this->username}:{$signature}", 'Date' => $date, 'x-amz-acl' => 'public-read']);
+				return parent::request($method, $path, $body, $type);
 			}],
 			#https://help.aliyun.com/zh/oss/developer-reference/overview-24
-			'aliyun_oss' => ["https://{$options[2]}.{$options[3]}.aliyuncs.com", function(string $method, string $path, string $type = NULL)
+			'aliyun_oss' => ["https://{$options[2]}.{$options[3]}.aliyuncs.com",
+			function(string $method, string $path, $body = NULL, string $type = NULL):bool
 			{
 				$date = gmdate(DATE_RFC7231);
 				$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-oss-acl:public-read\n/{$this->bucket}{$path}", $this->password, TRUE));
-				return ['Authorization' => "OSS {$this->username}:{$signature}", 'Date' => $date, 'x-oss-acl' => 'public-read'];
+				$this->headers(['Authorization' => "OSS {$this->username}:{$signature}", 'Date' => $date, 'x-oss-acl' => 'public-read']);
+				return parent::request($method, $path, $body, $type);
 			}],
-			default => [$api, function(string $method, string $path)
+			default => [$api, function(string $method, string $path, $body = NULL, string $type = NULL):bool
 			{
-				return ['Authorization' => 'Bearer ' . webapp::signature($this->username, $this->password, webapp::hash($method . $path, TRUE) . $this->bucket)];
+				static $entry = $this->path;
+				$this->headers(['Authorization' => 'Bearer ' . webapp::signature($this->username, $this->password, webapp::hash($method . $path, TRUE) . $this->bucket)]);
+				return parent::request($method, $entry . $path, $body, $type);
 			}]
 		}), ['autoretry' => 2, 'autojump' => 1]);
 		[$this->username, $this->password, $this->bucket] = $options;
 	}
 	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
 	{
-		$this->headers(($this->auth)($method, $path, $type));
-		return parent::request($method, $path, $body, $type);
+		return ($this->request)($method, $path, $body, $type);
 	}
 	function put(string $filename, $stream):bool
 	{
@@ -53,10 +58,6 @@ class webapp_nfs_client extends webapp_client_http
 				if (is_resource($stream = fopen("{$from}/{$file}", 'r'))
 					&& $this->put("{$path}/{$file}", $stream)
 					&& fclose($stream)) {
-					// if (PHP_SAPI === 'cli')
-					// {
-					// 	echo "{$path}/{$file}\n";
-					// }
 					continue;
 				}
 				return FALSE;
@@ -292,7 +293,7 @@ class webapp_ext_nfs_base extends webapp
 	{
 		// return new webapp_nfs_client('amazon_s3', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
 		// return new webapp_nfs_client('aliyun_oss', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
-		return new webapp_nfs_client('http://localhost', [$this['admin_username'], $this['admin_password'], 'D:/']);
+		return new webapp_nfs_client('http://localhost/?', $this['admin_username'], $this['admin_password'], 'D:/');
 	}
 	function nfs(int $sort = 0, Closure $format = NULL):webapp_nfs
 	{
@@ -306,8 +307,14 @@ class webapp_ext_nfs_base extends webapp
 			$file['hash'], $name, $file['t1'], $file['key']);
 	}
 
-
-
+	// function tmpdir():?string
+	// {
+	// 	$tmpdir = sprintf('%s/%s', sys_get_temp_dir(), static::random_hash(FALSE));
+	// 	return 
+	// 	if (mkdir())
+		
+	// 	var_dump( $tmpdir );
+	// }
 	// function put(string $filename, string $source):bool
 	// {
 	// 	return $this->access->put($filename, $source);

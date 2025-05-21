@@ -18,6 +18,7 @@ class webapp_router_home extends webapp_echo_masker
 		else
 		{
 			$this->footer[0] = '';
+			unset($this->xml->head->script[0]);
 			$this->stylesheet('/webapp/extend/vod/home.css');
 			$this->script(['src' => '/webapp/extend/vod/home.js']);
 			$this->script(['src' => '/webapp/static/js/slideshows.js']);
@@ -26,8 +27,8 @@ class webapp_router_home extends webapp_echo_masker
 	function init(string $ua):int
 	{
 		$this->title('初始化..');
-		$this->main['style'] = 'white-space:pre;';
-		$this->main->text('初始化网络服务进程，保护隐私安全，请稍等..');
+		$this->main['style'] = 'white-space:pre';
+		$this->main->text('请确保在浏览器中打开，保护隐私安全');
 		$this->main->text("\n如果长时间没有反应，请更新你的设备\n");
 		$this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'http://chrome.google.com/']);
 		return 200;
@@ -61,10 +62,15 @@ class webapp_router_home extends webapp_echo_masker
 
 
 		$this->header->append('input', ['type' => 'search',
-			'value' => $this->webapp->query['search'] ?? NULL,
-			'placeholder' => '请输入关键词搜索']);
+			'placeholder' => '请输入关键词搜索',
+			'value' => isset($this->webapp->query['keywords']) ? urldecode($this->webapp->query['keywords']) : NULL,
+			'onkeypress' => 'event.keyCode===13&&this.nextElementSibling.onclick()',
+			
+		]);
 
-		$this->header->append('button', ['搜索']);
+		$this->header->append('button', ['搜索',
+			'onclick' => 'location.href=this.dataset.search+this.previousElementSibling.value',
+			'data-search' => '?home/search,keywords:']);
 		//$this->header->append('a', ['href' => 'javascript:;'])->svg(['fill' => 'white'])->icon('search', 32);
 		return $this->header;
 	}
@@ -214,12 +220,14 @@ class webapp_router_home extends webapp_echo_masker
 		$this->script(['src' => '/webapp/static/js/video.js']);
 
 		//print_r($video);
+
+		
 		
 		$element = $this->aside->append('webapp-video', [
 			'data-poster' => $video['poster'],
 			'data-m3u8' => $video['m3u8'],
 			//'data-m3u8' => preg_replace('/\?mask\d{10}/', '.m3u8', '@' . substr($video['m3u8'], 1)),
-			//'oncanplay' => 'masker.canplay(this)',
+			'oncanplay' => 'masker.canplay(this)',
 			//'autoheight' => NULL,
 			'autoplay' => NULL,
 			//'muted' => NULL,
@@ -266,19 +274,36 @@ class webapp_router_home extends webapp_echo_masker
 
 		$this->draw_footer(FALSE);
 	}
-	function get_search(string $keywords = NULL)
+	function get_search(string $keywords = NULL, int $page = 0)
 	{
 		$this->draw_header_search();
 		$this->draw_footer();
-		if (is_string($keywords))
+		if (is_string($keywords) && trim($keywords))
 		{
-			$this->title($keywords);
+			if ($page)
+			{
+				$this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos
+					->search('name LIKE ?s ORDER BY t1 DESC, hash ASC',
+						'%'. urldecode($keywords) . '%')->paging($page));
+			}
+			else
+			{
+				$this->title($keywords);
+				$this->draw_videos_lists($this->main, "?home/search,keywords:{$keywords},page:");
+			}
+			return 200;
 		}
 		$this->title('搜索');
 
-		$this->script(['src' => '/webapp/static/js/hls.min.js']);
-		$this->script(['src' => '/webapp/static/js/video.js']);
+		// $this->script(['src' => '/webapp/static/js/hls.min.js']);
+		// $this->script(['src' => '/webapp/static/js/video.js']);
 
+
+	
+
+
+
+		
 
 
 	}

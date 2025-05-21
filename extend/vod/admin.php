@@ -5,6 +5,7 @@ class webapp_router_admin extends webapp_echo_admin
 		['首页', '?admin'],
 		['渠道', '?admin/channels'],
 		['广告', '?admin/ads'],
+		['分类', '?admin/types'],
 		['视频', '?admin/videos'],
 		// ['标签', '?admin/tags'],
 		// ['演员', '?admin/actors'],
@@ -164,7 +165,58 @@ class webapp_router_admin extends webapp_echo_admin
 		//$table->bar->select(static::ad_type)->selected(1)['onchange'] = '$.at({type:this.value})';
 
 	}
+	#--------------------------------分类--------------------------------
+	function form_type(webapp_html $html = NULL):webapp_form
+	{
+		$form = new webapp_form($html ?? $this->webapp);
+		$form->fieldset->text('注意：该分类是视频的唯一分类，一个视频不能同时属于2个分类。');
+		$form->fieldset();
+		
+		$form->field('name', 'text', ['placeholder' => '名称', 'required' => NULL]);
+		$form->field('level', 'number', ['value' => 0, 'min' => 0, 'max' => 255, 'placeholder' => '等级', 'required' => NULL]);
 
+		$form->fieldset();
+		$form->button('提交', 'submit');
+		return $form;
+	}
+	function post_type(string $hash = NULL)
+	{
+		$this->json();
+		if ($this->form_type()->fetch($data))
+		{
+			print_r($data);
+		}
+	}
+	function get_type(string $hash = NULL)
+	{
+		$form = $this->form_type($this->main);
+		// if ($hash && $this->webapp->nfs_ads->fetch($hash, $data))
+		// {
+		// 	$form->xml->fieldset->img['src'] = $this->webapp->src($data);
+		// 	$form->echo($data);
+		// }
+	}
+	function get_types(int $page = 1)
+	{
+		$cond = $this->webapp->cond('`type`=0');
+
+		//print_r($cond);
+		//$cond->append('ORDER BY t1 DESC, hash ASC');
+
+
+		$table = $this->main->table($cond($this->webapp->nfs_videos)->paging($page, 10), function($table, $value)
+		{
+
+			$table->row();
+			$table->cell('专题');
+			$table->cell(['colspan' => 7]);
+
+		});
+		
+		$table->header('找到 %d 个分类', $table->count());
+		$table->paging($this->webapp->at(['page' => '']));
+		$table->bar->append('button', ['创建', 'onclick' => 'location.assign("?admin/type")']);
+	}
 	#--------------------------------视频--------------------------------
 	function form_video(webapp_html $html = NULL):webapp_form
 	{
