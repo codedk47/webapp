@@ -132,6 +132,13 @@ class webapp_nfs implements Countable, IteratorAggregate
 		$conditions[0] = (isset($conditions[0]) ? "{$conditions[0]} " : '') . "LIMIT {$this->paging['skip']},{$rows}";
 		return $this(...$conditions);
 	}
+	function random(int $rows = 1):iterable
+	{
+		foreach ($this->table()->random($rows) as $file)
+		{
+			yield ($this->format)($file);
+		}
+	}
 	function filename(string $hash, string $suffix = NULL):string
 	{
 		return sprintf('/%d/%04X/%s%s', $this->sort, $this->webapp->hashtime33($hash) % 0xffff, $hash, $suffix);

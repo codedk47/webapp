@@ -519,6 +519,17 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		return $this("{$this->paging['cond']} LIMIT {$this->paging['skip']},{$rows}");
 		//return $this(join(' ', [$this->paging['cond'], 'LIMIT', "{$this->paging['skip']},{$rows}"]));
 	}
+	function random(int $rows = 1):iterable
+	{
+		$count = $this->count($cond);
+		$rows = abs($rows);
+		$random = random_int(0, max(0, $count - $rows));
+		$all = $this("{$cond} LIMIT {$random},{$rows}")->all();
+		while ($all)
+		{
+			yield current(array_splice($all, random_int(0, count($all) - 1), 1));
+		}
+	}
 	// function column(string ...$keys):array
 	// {
 	// 	return array_column($this->select($keys)->all, ...$keys);

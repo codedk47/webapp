@@ -242,7 +242,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($page)
 		{
-			$this->json(iterator_to_array($this->webapp->nfs_videos->paging($page, 9)));
+			$this->json(iterator_to_array($this->webapp->nfs_videos->random(9)));
 			unset($this->echo['errors']);
 			return;
 		}
