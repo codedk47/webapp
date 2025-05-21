@@ -280,15 +280,15 @@ class webapp_router_home extends webapp_echo_masker
 		$this->draw_footer();
 		if (is_string($keywords) && trim($keywords))
 		{
+			$keyword = urldecode($keywords);
 			if ($page)
 			{
 				$this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos
-					->search('name LIKE ?s ORDER BY t1 DESC, hash ASC',
-						'%'. urldecode($keywords) . '%')->paging($page));
+					->search('name LIKE ?s ORDER BY t1 DESC, hash ASC', "%{$keyword}%")->paging($page));
 			}
 			else
 			{
-				$this->title($keywords);
+				$this->title($keyword);
 				$this->draw_videos_lists($this->main, "?home/search,keywords:{$keywords},page:");
 			}
 			return 200;
