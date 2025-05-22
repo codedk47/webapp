@@ -27,5 +27,9 @@ masker.canplay = video =>
 	{
 		video.parentNode.style.cssText = 'position:sticky;top:0;z-index:9';
 	}
+	else
+	{
+		video.firstElementChild.style.objectFit = 'contain';
+	}
 	
 };
