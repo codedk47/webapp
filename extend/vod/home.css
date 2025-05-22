@@ -15,7 +15,7 @@
 	
 	--webapp-primary: hsl(var(--webapp-color), 30%);
 	--webapp-danger: 203, 36, 49;
-	--webapp-concavity: linear-gradient(-180deg, hsl(var(--webapp-color), 90%) 0%, hsl(var(--webapp-color), 80%) 90%);
+	--webapp-concavity: linear-gradient(-180deg, hsl(var(--webapp-color), 30%) 0%, var(--webapp-button) 90%);
 
 	--webapp-gap: 1rem;
 	--webapp-gapitem: .4rem;
@@ -183,6 +183,7 @@ header>input{
 header>button{
 	line-height: 2rem;
 	padding: 0 var(--webapp-gap);
+	color: var(--webapp-background);
 	border-radius: 0 var(--webapp-gapradius) var(--webapp-gapradius) 0;
 }
 header.search>input{
@@ -370,7 +371,7 @@ footer.nav>a{
 	padding: var(--webapp-gap) 0;
 	flex-grow: 1;
 	text-align: center;
-	color: var(--webapp-foreground);
+	color: var(--webapp-background);
 }
 
 
@@ -387,7 +388,7 @@ div.titles>strong{
 }
 div.titles>a{
 	padding: .2rem var(--webapp-gapitem);
-	color: var(--webapp-foreground);
+	color: var(--webapp-background);
 	background-color: var(--webapp-button);
 	border-radius: var(--webapp-gapradius);
 }
@@ -417,7 +418,7 @@ div[class|=grid]>a>figure{
 	padding-bottom: 56.25%;
 	border-radius: var(--webapp-gapradius);
 	box-shadow: 0 0 .2rem var(--webapp-edge);
-	text-shadow: 1px 1px 1px var(--webapp-background);
+	text-shadow: 1px 1px 1px var(--webapp-foreground);
 	/*h
 	4:3	= 75%
 	3:2	= 66.66%
@@ -472,23 +473,22 @@ div[class|=grid]>a>figure>figcaption{
 	right: 0;
 	bottom: 0;
 	padding: 0 var(--webapp-gapitem);
+	color: var(--webapp-background);
 	white-space: nowrap;
 	/* background-color: var(--webapp-button); */
-	background-color: hsl(var(--webapp-color), 7%, .6);
+	background-color: hsl(var(--webapp-color), 18%, .8);
 	border-start-start-radius: var(--webapp-gapradius);
 }
 div[class|=grid]>a>strong{
-
 	display: block;
 	overflow: hidden;
 	line-height: calc(var(--webapp-font-normal) * 1.5);
 	max-height: calc(var(--webapp-font-normal) * 3);
 	font-size: var(--webapp-font-small);
-	font-weight: lighter;
-	
+	font-weight: normal;
 	word-break: break-all;
-	/* white-space: nowrap; */
-	text-overflow: ellipsis;
+	/* white-space: nowrap;
+	text-overflow: ellipsis; */
 }
 div[class|=grid]>a>div{
 	position: relative;

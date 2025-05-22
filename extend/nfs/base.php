@@ -73,9 +73,11 @@ class webapp_nfs implements Countable, IteratorAggregate
 	private array $conditions = [];
 	//private readonly webapp_mysql_table $table;
 	//private readonly webapp_redis_table $cache;
+	private readonly array $where;
 	private readonly Closure $format;
-	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort, Closure $format = NULL)
+	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort, Closure $format = NULL, ...$conditions)
 	{
+		$this->where = ['WHERE `sort`=?i' . ($conditions ? ' AND ' . array_shift($conditions) : ''), $this->sort, ...$conditions];
 		$this->format = $format ?? fn($data) => $data;
 	}
 	function __invoke(...$conditions):static
@@ -96,7 +98,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 	}
 	private function table():webapp_mysql_table
 	{
-		$cond = ['WHERE `sort`=?i', $this->sort];
+		$cond = $this->where;
 		if ($syntax = array_shift($this->conditions))
 		{
 			$cond[0] .= (preg_match('/^\s*(?:(?:group|order)\s+by|limit)\s+/i', $syntax) ? ' ' : ' AND ') . $syntax;
@@ -295,9 +297,9 @@ class webapp_ext_nfs_base extends webapp
 		// return new webapp_nfs_client('aliyun_oss', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
 		return new webapp_nfs_client('http://localhost/?', $this['admin_username'], $this['admin_password'], 'D:/');
 	}
-	function nfs(int $sort = 0, Closure $format = NULL):webapp_nfs
+	function nfs(int $sort = 0, Closure $format = NULL, ...$conditions):webapp_nfs
 	{
-		return $this->nfs[$sort &= 0xff] ??= new webapp_nfs($this, $sort, $format);
+		return new webapp_nfs($this, $sort, $format, ...$conditions);
 	}
 	function src(array $file, string $name = NULL):string
 	{
@@ -327,90 +329,26 @@ class webapp_ext_nfs_base extends webapp
 
 
 
-	/*
-	function get_view(int $sort = 0)
-	{
-		$this->app('webapp_echo_xml');
-
-		foreach ($this->mysql->videos->paging(1, 20) as $file)
-		{
-			$this->app->xml->append('file', [
-				'hash' => $file['hash'],
-				'size' => $file['size'],
-				'name' => $file['name']
-			])->cdata((string)$file['extdata']);
-			
-			
-		}
-	}
-	function host(string $path)
-	{
-		$a = $this->open("http://127.0.0.1/test.php?{$path}", [
-			'headers' => $this->webapp->authorized(0),
-			'method' => match ($path)
-			{
-				'create/file', 'create/folder' => 'POST',
-				'ASD' => 'DELETE',
-				default => 'GET'
-			},
-			'data' => ['name' => 'wwwwwwwwwwwwww']
-		]);
-		//print_r($a);
-
-		var_dump('==',$a->content());
-	}
-
-	function get_create()
-	{
-		$this->app('webapp_echo_json', ['asdasd' => 123]);
-		//$this->echo(123);
-	}
-
-
-	function post_create(string $type)
-	{
-		if ($auth = $this->authorization())
-		{
-			$data = $this->request_content();
-			$data['site'] = $type === 'file' ? $auth[2] : NULL;
-			if (is_string($hash = $this->nfs($auth[2])->create($data)))
-			{
-				$this->echo($hash);
-				return 200;
-			}
-			return 500;
-		}
-		return 401;
-	}
-	function delete_a()
-	{
-
-	}
-	// function path_concat():string
+	
+	// function get_sort(int $sort = 0, int $page = 1, int $rows = 21, int $t = 0)
 	// {
-
+	// 	$this->echo_xml();
+	// 	foreach ($this->mysql->{static::tablename}('WHERE `sort`=?i AND `t1`>?i', $sort, $t)->paging($page, $rows) as $file)
+	// 	{
+	// 		$this->echo->xml->append('file', [
+	// 			'hash' => $file['hash'],
+	// 			'type' => $file['type'],
+	// 			't0' => $file['t0'],
+	// 			't1' => $file['t1'],
+	// 			'size' => $file['size'],
+	// 			'views' => $file['views'],
+	// 			'likes' => $file['likes'],
+	// 			'shares' => $file['shares'],
+	// 			'node' => $file['node'],
+	// 			'key' => $file['key'],
+	// 			'name' => $file['name']
+	// 		])->cdata((string)$file['extdata']);
+	// 	}
+	// 	$this->echo->xml->setattr($this->mysql->{static::tablename}->paging);
 	// }
-	function delete_file(string $hash)
-	{
-		if ($auth = $this->authorization())
-		{
-
-
-
-			print_r($auth);
-			return 200;
-
-
-			// $data = $this->request_content();
-			// $data['site'] = $type === 'file' ? $auth[2] : NULL;
-			// if (is_string($hash = $this->nfs($auth[2])->create($data)))
-			// {
-			// 	$this->echo($hash);
-			// 	return 200;
-			// }
-			// return 500;
-		}
-		return 401;
-	}
-	*/
 }

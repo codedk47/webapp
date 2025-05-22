@@ -42,6 +42,22 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 			return $data;
 		});
 	}
+	function nfs_classify():webapp_nfs
+	{
+		return $this->nfs(1, function($data)
+		{
+			$data += json_decode($data['extdata'], TRUE);
+			unset($data['extdata']);
+			return $data;
+		}, '`type`=0');
+	}
+	function nfs_actors():webapp_nfs
+	{
+		return $this->nfs(1, function($data)
+		{
+			return $data;
+		}, '`type`=1');
+	}
 	function nfs_videos():webapp_nfs
 	{
 		return $this->nfs(1, function($data)
@@ -55,7 +71,7 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 			//$data['m3u8'] = $this->src($data, '/ts');
 			unset($data['extdata'], $data['cover']);
 			return $data;
-		});
+		}, '`type`=2');
 	}
 	function video_create(array $value = [], int $type = 2):?string
 	{
@@ -170,6 +186,7 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 	}
 
 
+	
 	function post_clickad():int
 	{
 		$hash = $this->request_content('text/plain');
@@ -187,6 +204,46 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 			return 200;
 		}
 		return 404;
+	}
+	function cli_classify_videos()
+	{
+		function detect(string $haystack, array $needles, callable $method):bool
+		{
+			foreach ($needles as $needle)
+			{
+				if ($method($haystack, $needle)) return TRUE;
+			}
+			return FALSE;
+		}
+		$classifies = [];
+		foreach ($this->nfs_classify->search('LENGTH($.values)') as $classify)
+		{
+			$classifies[$classify['hash']] = [
+				'name' => $classify['name'],
+				'method' => $classify['method'],
+				'values' => explode(',', $classify['values'])];
+		}
+		foreach ($this->nfs_videos as $video)
+		{
+			foreach ($classifies as $hash => $classify)
+			{
+				if (match ($classify['method'])
+				{
+					// 'intersect' => $video['tags'] && array_intersect(explode(',', $video['tags']), $subject['fetch_values']),
+					// 'union' => count(array_intersect($subject['fetch_values'], explode(',', $video['tags']))) === count($subject['fetch_values']),
+					'starts' => detect($video['name'], $classify['values'], str_starts_with(...)),
+					'ends' => detect($video['name'], $classify['values'], str_ends_with(...)),
+					'contains' => detect($video['name'], $classify['values'], str_contains(...)),
+					// 'uploader' => in_array($video['userid'], $subject['fetch_values'], TRUE),
+					// 'chns' => str_contains(strtolower($video['name']), $subject['fetch_values'][0]),
+					// 'star' => str_contains(strtolower($video['name']), ".{$subject['fetch_values'][0]}."),
+					default => FALSE }) {
+					echo "{$video['hash']} -> {$classify['name']}\n";
+					$this->nfs_videos->update($video['hash'], ['node' => $hash]);
+					break;
+				}
+			}
+		}
 	}
 	function local_video_uploader(string $dir, callable $format = NULL)
 	{

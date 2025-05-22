@@ -82,7 +82,25 @@ class webapp_router_home extends webapp_echo_masker
 		return $this->header;
 	}
 
+	function draw_aside_classify(int $level):void
+	{
+		$this->aside['class'] = 'classify';
+		$selected = $this->webapp->query['classify'] ?? NULL;
 
+		
+		$this->aside->append('a', ['最新', 'href' => "?home/video", 'class' => 'selected']);
+	
+		$url = $this->webapp->at(['classify' => '']);
+		foreach ($this->webapp->nfs_classify->search('$.level=?s ORDER BY $.sorting DESC', $level) as $classify)
+		{
+			$anchor = $this->aside->append('a', [$classify['name'], 'href' => "{$url}{$classify['hash']}"]);
+			if ($classify['hash'] === $selected)
+			{
+				unset($this->aside->a['class']);
+				$anchor['class'] = 'selected';
+			}
+		}
+	}
 
 
 	function draw_footer(bool $copyright = TRUE)
@@ -144,8 +162,25 @@ class webapp_router_home extends webapp_echo_masker
 			]);
 		}
 	}
-	function draw_videos_lists(webapp_html $node, string|iterable $videos, int $display = 0)
-	{
+	function draw_videos_lists(
+		webapp_html $node,
+		string|iterable $videos,
+		int $display = 0,
+		string $title = NULL,
+		string $anchor = NULL,
+		string $action = '更多 >>') {
+		
+		if ($title)
+		{
+			$titles = $this->main->append('div', ['class' => 'titles']);
+			$titles->append('strong', $title);
+			if ($anchor)
+			{
+				$titles->append('a', [$action, 'href' => $anchor]);
+			}
+		}
+
+
 		$element = $node->getName() === 'template' ? $node : $node->append('div', ['class' => "grid-t{$display}"]);
 		if (is_string($videos))
 		{
@@ -153,6 +188,8 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		else
 		{
+
+
 			foreach ($videos as $video)
 			{
 				$anchor = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);
@@ -183,24 +220,41 @@ class webapp_router_home extends webapp_echo_masker
 
 		$this->draw_footer();
 	}
-	function get_video(int $page = 0)
+	function get_video(string $classify = NULL, int $page = 0)
 	{
-		if ($this->lazyload && $page)
+		if ($classify && $page)
 		{
 			$this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos('ORDER BY t1 DESC, hash ASC')->paging($page));
 			return;
 		}
 		$this->title('视频');
 		$this->draw_header_search('asdasd');
+
+		$this->draw_aside_classify(0);
+
 		$this->draw_ads_slideshows($this->main);
-
-
-
-		$this->draw_videos_lists($this->main, '?home/video,page:');
-
-
-
 		$this->draw_footer();
+
+
+		//$this->webapp->nfs_videos('`node`=?s ORDER BY t1 DESC, hash ASC', '');
+	
+		foreach ($this->webapp->nfs_classify->search('$.level="0" ORDER BY $.sorting DESC') as $classify)
+		{
+			$this->draw_videos_lists($this->main,
+				$this->webapp->nfs_videos->random(match ((int)$classify['style'])
+				{
+					1 => 3,
+					2, 3, 7 => 6,
+					5, 6 => 5,
+					4, 8 => 7,
+					9 => 4,
+					default => 2
+				}), $classify['style'] , $classify['name'], "?home/video,classify:{$classify['hash']}");
+		}
+	}
+	function post_watch(string $hash)
+	{
+		
 	}
 	function get_watch(string $hash)
 	{
