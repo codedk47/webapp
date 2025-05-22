@@ -224,7 +224,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($classify && $page)
 		{
-			$this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos('ORDER BY t1 DESC, hash ASC')->paging($page));
+			$this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos('`node`=?s ORDER BY t1 DESC, hash ASC', $classify)->paging($page));
 			return;
 		}
 		$this->title('视频');
@@ -234,6 +234,11 @@ class webapp_router_home extends webapp_echo_masker
 
 		$this->draw_ads_slideshows($this->main);
 		$this->draw_footer();
+		if ($classify && $this->webapp->nfs_classify->fetch($classify, $data))
+		{
+			$this->draw_videos_lists($this->main, "?home/video,classify:{$classify},page:", $data['style']);
+			return;
+		}
 
 
 		//$this->webapp->nfs_videos('`node`=?s ORDER BY t1 DESC, hash ASC', '');
@@ -241,7 +246,7 @@ class webapp_router_home extends webapp_echo_masker
 		foreach ($this->webapp->nfs_classify->search('$.level="0" ORDER BY $.sorting DESC') as $classify)
 		{
 			$this->draw_videos_lists($this->main,
-				$this->webapp->nfs_videos->random(match ((int)$classify['style'])
+				$this->webapp->nfs_videos->search('`node`=?s', $classify['hash'])->random(match ((int)$classify['style'])
 				{
 					1 => 3,
 					2, 3, 7 => 6,
