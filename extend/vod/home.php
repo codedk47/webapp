@@ -224,7 +224,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		if ($classify && $page)
 		{
-			$this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos('`node`=?s ORDER BY t1 DESC, hash ASC', $classify)->paging($page));
+			$this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos->search('`node`=?s ORDER BY t1 DESC, hash ASC', $classify)->paging($page));
 			return;
 		}
 		$this->title('视频');
