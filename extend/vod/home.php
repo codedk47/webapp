@@ -19,7 +19,7 @@ class webapp_router_home extends webapp_echo_masker
 		{
 			$this->footer[0] = '';
 			unset($this->xml->head->script[0]);
-			$this->stylesheet('/webapp/extend/vod/home.css');
+			$this->stylesheet('/webapp/extend/vod/home.css?v1');
 			$this->script(['src' => '/webapp/extend/vod/home.js']);
 			$this->script(['src' => '/webapp/static/js/slideshows.js']);
 		}
