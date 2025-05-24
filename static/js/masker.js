@@ -28,8 +28,6 @@ if (self.window)
 				const data = Object.fromEntries(Object.entries(script.dataset));
 				sessionStorage.setItem('init', JSON.stringify(data));
 				data.token = localStorage.getItem('token');
-				['cid', 'did'].forEach(key => key in data ? localStorage.setItem(key, data[key])
-					: localStorage.getItem(key) && void(data[key] = localStorage.getItem(key)));
 				data.origin = Array.from(document.querySelectorAll('link[rel=preconnect]'))
 					.map(link => `${link.href}${link.dataset.file || 'robots.txt'}`);
 				active.postMessage(data);
@@ -150,8 +148,24 @@ if (self.window)
 			viewport.observe(element);
 		}));
 	};
-	masker.clickad = anchor => (anchor.dataset.hash ? navigator.sendBeacon('?clickad', anchor.dataset.hash) : true)
-		&& (anchor.href.startsWith(location.origin) || anchor.href.startsWith('javascript:') || !window.open(anchor.href))
+	// masker.clickad = anchor => (anchor.dataset.hash ? navigator.sendBeacon('?clickad', anchor.dataset.hash) : true)
+	// 	&& (anchor.href.startsWith(location.origin) || anchor.href.startsWith('javascript:') || !window.open(anchor.href));
+	masker.clickad = (anchor, event) =>
+	{
+		for (let log = anchor.dataset.log, target = event ? event.target : anchor; log && target; target = target.parentNode)
+		{
+			if (target.tagName === 'A')
+			{
+				if (target.dataset.key ? navigator.sendBeacon(log, target.dataset.key) : true)
+				{
+					return target.href.startsWith(location.origin)
+						|| target.href.startsWith('javascript:')
+						|| (window.open(target.href), event && event.preventDefault(), false);
+				}
+				break;
+			}
+		}
+	};
 }
 else
 {
@@ -211,21 +225,17 @@ else
 		//console.log('Service Worker Message', event.data);
 		if (Object.prototype.toString.call(event.data) === '[object Object]')
 		{
-			['token', 'cid', 'did'].forEach(name => {
-				if (name in event.data)
+			if ('token' in event.data)
+			{
+				if (typeof event.data.token === 'string')
 				{
-					if (typeof event.data[name] === 'string')
-					{
-						name === 'token'
-							? headers.Authorization = `Bearer ${event.data[name]}`
-							: headers[`user-${name}`] = event.data[name];
-					}
-					else
-					{
-						delete headers[name === 'token' ? 'Authorization' : `user-${name}`];
-					}
+					headers.Authorization = `Bearer ${event.data.token}`;
 				}
-			});
+				else
+				{
+					delete headers.Authorization;
+				}
+			}
 			if (typeof event.data.reload === 'string')
 			{
 				const controller = new AbortController, speedtest = event.data.origin.length ? Promise.any(event.data.origin.map(url =>

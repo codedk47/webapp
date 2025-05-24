@@ -5,7 +5,7 @@ class webapp_router_admin extends webapp_echo_admin
 		['首页', '?admin'],
 		['渠道', '?admin/channels'],
 		['广告', '?admin/ads'],
-		['分类', '?admin/types'],
+		['分类', '?admin/classifies'],
 		['视频', '?admin/videos'],
 		// ['标签', '?admin/tags'],
 		// ['演员', '?admin/actors'],
@@ -166,7 +166,7 @@ class webapp_router_admin extends webapp_echo_admin
 
 	}
 	#--------------------------------分类--------------------------------
-	const type_display_styles = [
+	const classify_display_styles = [
 		1 => '1 横版（大）',
 		2 => '2 横版（小）',
 		3 => '3 竖版',
@@ -177,14 +177,14 @@ class webapp_router_admin extends webapp_echo_admin
 		8 => '8 横版（右侧封面单排滑动）',
 		9 => '9 横版（右侧封面先大后小）'
 	];
-	const type_fetch_methods = [
+	const classify_fetch_methods = [
 		'intersect' => '标签HASH交集',
 		'union' => '标签HASH并集',
 		'starts' => '标题开始关键词',
 		'ends' => '标题结尾关键词',
 		'contains' => '标题包含关键词'
 	];
-	function form_type(webapp_html $html = NULL):webapp_form
+	function form_classify(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->fieldset->setattr(['注意：该分类是视频的唯一分类，一个视频不能同时属于2个分类！', 'style' => 'color:brown']);
@@ -196,28 +196,28 @@ class webapp_router_admin extends webapp_echo_admin
 
 		$form->field('level', 'number', ['value' => 0, 'min' => 0, 'max' => 255, 'placeholder' => '等级', 'required' => NULL]);
 		$form->field('sorting', 'number', ['value' => 0, 'min' => 0, 'max' => 255, 'placeholder' => '排序', 'required' => NULL]);
-		$form->field('style', 'select', ['options' => static::type_display_styles, 'required' => NULL]);
+		$form->field('style', 'select', ['options' => static::classify_display_styles, 'required' => NULL]);
 
 
 		$form->fieldset('数据来源');
-		$form->field('method', 'select', ['options' => static::type_fetch_methods]);
+		$form->field('method', 'select', ['options' => static::classify_fetch_methods]);
 		$form->field('values', 'text', ['placeholder' => '多个值请用 "," 间隔', 'style' => 'width:21rem']);
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
 		return $form;
 	}
-	function post_type(string $hash = NULL)
+	function post_classify(string $hash = NULL)
 	{
 		$this->json();
-		if ($this->form_type()->fetch($data))
+		if ($this->form_classify()->fetch($data))
 		{
-			$name = $data['name'];
-			unset($data['name']);
+			$data = ['name' => $data['name'], 'extdata' => $data];
+			unset($data['extdata']['name']);
 			if ($hash
-				? $this->webapp->nfs_classify->update($hash, ['name' => $name, 'extdata' => $data])
-				: $this->webapp->nfs_classify->create_tree($name, $data)) {
-				$this->echo->redirect("?admin/types");
+				? $this->webapp->nfs_classifies->update($hash, $data)
+				: $this->webapp->nfs_classifies->create($data)) {
+				$this->echo->redirect("?admin/classifies");
 			}
 			else
 			{
@@ -225,38 +225,38 @@ class webapp_router_admin extends webapp_echo_admin
 			}
 		}
 	}
-	function get_type(string $hash = NULL)
+	function get_classify(string $hash = NULL)
 	{
-		$form = $this->form_type($this->main);
-		if ($hash && $this->webapp->nfs_classify->fetch($hash, $data))
+		$form = $this->form_classify($this->main);
+		if ($hash && $this->webapp->nfs_classifies->fetch($hash, $data))
 		{
 			$form->echo($data);
 		}
 	}
-	function get_types(int $page = 1)
+	function get_classifies(int $page = 1)
 	{
-		$cond = $this->webapp->cond('`type`=0');
+		$cond = $this->webapp->cond();
 
 		//print_r($cond);
 		$cond->append('ORDER BY extdata->"$.sorting" DESC, hash ASC');
-		$table = $this->main->table($cond($this->webapp->nfs_classify)->paging($page), function($table, $value)
+		$table = $this->main->table($cond($this->webapp->nfs_classifies)->paging($page), function($table, $value)
 		{
 			$table->row();
 			$table->cell()->append('a', ['删除', 'href' => '#']);
-			$table->cell()->append('a', [$value['hash'], 'href' => "?admin/type,hash:{$value['hash']}"]);
+			$table->cell()->append('a', [$value['hash'], 'href' => "?admin/classify,hash:{$value['hash']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['t0']));
 			$table->cell(date('Y-m-d\\TH:i:s', $value['t1']));
 			$table->cell($value['name']);
 			$table->cell($value['level']);
 			$table->cell($value['sorting']);
-			$table->cell(static::type_display_styles[$value['style']]);
-			$table->cell(sprintf("%s({$value['values']})", static::type_fetch_methods[$value['method']]));
+			$table->cell(static::classify_display_styles[$value['style']]);
+			$table->cell(sprintf("%s({$value['values']})", static::classify_fetch_methods[$value['method']]));
 		});
 		
 		$table->header('找到 %d 个分类', $table->count());
 		$table->fieldset('删除', 'HASH(编辑)', '创建时间', '修改时间', '名称', '等级', '排序', '样式', '数据来源');
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->bar->append('button', ['创建', 'onclick' => 'location.assign("?admin/type")']);
+		$table->bar->append('button', ['创建', 'onclick' => 'location.assign("?admin/classify")']);
 	}
 	#--------------------------------视频--------------------------------
 	function form_video(webapp_html $html = NULL):webapp_form

@@ -222,7 +222,7 @@ class webapp_echo_html extends webapp_implementation
 	}
 	final function initauth(webapp|string $context, string ...$allow):void
 	{
-		if (in_array(strtolower($this->webapp->method), $allow) === FALSE)
+		if (in_array($this->webapp->method, $allow, TRUE) === FALSE)
 		{
 			[$this->auth, $authenticate, $storage] = is_string($context)
 				? [$this->webapp->auth($this->authenticate(...), $context), $this->authenticate(...), $context]
@@ -288,6 +288,11 @@ class webapp_echo_html extends webapp_implementation
 	function frag():webapp_html
 	{
 		return $this->echo = webapp_html::from($this->document->createElement('template'));
+	}
+	function echo_no_content():int
+	{
+		$this->echo('');
+		return 204;
 	}
 	function meta(array $attributes):webapp_html
 	{
@@ -444,7 +449,7 @@ class webapp_echo_masker extends webapp_echo_html
 	public readonly bool $init;
 	public readonly array $auth;
 	public readonly webapp_html $sw;
-	//public array $initdata = [];
+	public array $initallow = [];
 	function __construct(webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
 		parent::__construct($webapp);
@@ -473,24 +478,25 @@ class webapp_echo_masker extends webapp_echo_html
 		$this->sw = $this->script(['fetchpriority' => 'high', 'src' => "?masker{$webapp->into}"]);
 		if ($this->init = $webapp->request_header('Service-Worker') !== 'masker')
 		{
+			if (in_array($webapp->method, $this->initallow, TRUE)) return;
 			$this->auth = [];
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			//$this->sw['data-router'] = $webapp->routname;
 			$this->sw['data-init'] = "?{$webapp->routname}/init";
 			$this->sw['data-splashscreen'] = "?{$webapp->routname}/splashscreen";
 			$ua = $webapp->request_device();
-			is_string(match (TRUE)
+			match (TRUE)
 			{
 				preg_match('/cid\/([0-9a-z]{4})/i', $ua, $cid) === 1 => $cid = $cid[1],
 				is_string($cid = $webapp->query['cid'] ?? NULL) && preg_match('/^[0-9a-z]{4}$/i', $cid) => $cid,
 				default => NULL
-			}) && $this->sw['data-cid'] = $cid;
-			is_string(match (TRUE)
+			} && $webapp->response_cookie('cid', $cid);
+			match (TRUE)
 			{
-				preg_match('/cid\/([0-9a-z]{16})/i', $ua, $did) === 1 => $did = $idi[1],
+				preg_match('/cid\/([0-9a-z]{16})/i', $ua, $did) === 1 => $did = $did[1],
 				is_string($did = $webapp->query['did'] ?? NULL) && preg_match('/^[0-9a-z]{16}$/i', $did) => $did,
 				default => NULL
-			}) && $this->sw['data-did'] = $did;
+			} && $webapp->response_cookie('did', $did);
 			$webapp->break($this->init(...), $ua);
 			unset($this->xml->head->link, $this->xml->head->script[0]);
 		}

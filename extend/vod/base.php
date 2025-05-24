@@ -34,7 +34,7 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 	}
 	function nfs_ads():webapp_nfs
 	{
-		return $this->nfs(0, function($data)
+		return $this->nfs(0, 1, function($data)
 		{
 			$data += json_decode($data['extdata'], TRUE);
 			$data['src'] = $this->src($data);
@@ -42,25 +42,25 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 			return $data;
 		});
 	}
-	function nfs_classify():webapp_nfs
+	function nfs_classifies():webapp_nfs
 	{
-		return $this->nfs(1, function($data)
+		return $this->nfs(1, 0, function($data)
 		{
 			$data += json_decode($data['extdata'], TRUE);
 			unset($data['extdata']);
 			return $data;
-		}, '`type`=0');
+		});
 	}
 	function nfs_actors():webapp_nfs
 	{
-		return $this->nfs(1, function($data)
+		return $this->nfs(1, 1, function($data)
 		{
 			return $data;
-		}, '`type`=1');
+		});
 	}
 	function nfs_videos():webapp_nfs
 	{
-		return $this->nfs(1, function($data)
+		return $this->nfs(1, 2, function($data)
 		{
 			$data += json_decode($data['extdata'], TRUE);
 			$data['poster'] = $this->src($data, "/{$data['poster']}.cover");
@@ -71,13 +71,12 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 			//$data['m3u8'] = $this->src($data, '/ts');
 			unset($data['extdata'], $data['cover']);
 			return $data;
-		}, '`type`=2');
+		});
 	}
-	function video_create(array $value = [], int $type = 2):?string
+	function video_create(array $value = []):?string
 	{
 		return $this->nfs_videos->create(['name' => $value['name'] ?? '',
 			'hash' => $value['hash'] ?? $this->random_hash(FALSE),
-			'type' => $type,//保留01为NFS使用，可以自定义的NFS扩展类型，比如当前影片状态，该值无法通过NFS方法修改
 			'size' => $value['size'] ?? 0,//时长（秒）
 			'key' => $value['key'] ?? bin2hex($this->random(8)),
 			'extdata' => [
@@ -96,8 +95,8 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 		string $m3u8_path,//M3U8路径
 		int $video_duration,//视频时长（秒）
 		string $video_name,//视频名称
-		string $md5 = NULL,//视频MD5
-		int $type = 2):bool {
+		string $md5 = NULL//视频MD5
+		):bool {
 		static $client = new webapp_client_http($this->proxy_origins[$proxy_origin], ['autoretry' => 2, 'autojump' => 1]);
 		$hash = $this->hash(is_string($md5) ? hex2bin($md5) : join(func_get_args()), FALSE);
 		$key = $this->random(8);
@@ -189,10 +188,14 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 	
 	function post_clickad():int
 	{
-		$hash = $this->request_content('text/plain');
-		if ($this->nfs_ads->likes($hash))
-		{
-		}
+		$this->nfs_ads->likes($hash = $this->request_content('text/plain'));
+		return 200;
+	}
+	function post_video(string $record):int
+	{
+		in_array($record, ['views', 'likes', 'shares'], TRUE)
+			&& $this->nfs_videos->fetch($hash = $this->request_content('text/plain'))
+			&& $this->nfs_videos->{$record}($hash);
 		return 200;
 	}
 	function get_proxy(int $origin, string $m3u8):int
@@ -205,7 +208,7 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 		}
 		return 404;
 	}
-	function cli_classify_videos()
+	function cli_refresh_tasks()
 	{
 		function detect(string $haystack, array $needles, callable $method):bool
 		{
@@ -216,7 +219,7 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 			return FALSE;
 		}
 		$classifies = [];
-		foreach ($this->nfs_classify->search('LENGTH($.values)') as $classify)
+		foreach ($this->nfs_classifies->search('LENGTH($.values)') as $classify)
 		{
 			$classifies[$classify['hash']] = [
 				'name' => $classify['name'],

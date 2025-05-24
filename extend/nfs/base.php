@@ -70,24 +70,38 @@ class webapp_nfs implements Countable, IteratorAggregate
 {
 	//private ?string $uid = NULL;
 	public array $paging = [];
-	private array $conditions = [];
+	private array $cond = [];
 	//private readonly webapp_mysql_table $table;
 	//private readonly webapp_redis_table $cache;
 	private readonly array $where;
 	private readonly Closure $format;
-	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort, Closure $format = NULL, ...$conditions)
+	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort, public readonly int $type, Closure $format = NULL)
 	{
-		$this->where = ['WHERE `sort`=?i' . ($conditions ? ' AND ' . array_shift($conditions) : ''), $this->sort, ...$conditions];
+		$this->where = ['WHERE `sort`=?i AND `type`=?i', $this->sort, $this->type];
 		$this->format = $format ?? fn($data) => $data;
+	}
+	function __debugInfo():array
+	{
+		$cond = $this->where;
+		if ($this->cond && $this->cond[0])
+		{
+			$cond[0] .= (preg_match('/^\s*(?:(?:group|order)\s+by|limit)\s+/i', $this->cond[0]) ? ' ' : ' AND ') . $this->cond[0];
+			array_push($cond, ...array_slice($this->cond, 1));
+		}
+		return $cond;
 	}
 	function __invoke(...$conditions):static
 	{
-		$this->conditions = $conditions;
+		$this->cond = $conditions;
 		return $this;
 	}
-	function count(string &$cond = NULL):int
+	function __toString():string
 	{
-		return $this->table()->count($cond);
+		return $this->webapp->mysql->format(...$this->__debugInfo());
+	}
+	function count(bool $reserve = FALSE):int
+	{
+		return $this->table($reserve)->count();
 	}
 	function getIterator():Traversable
 	{
@@ -96,44 +110,42 @@ class webapp_nfs implements Countable, IteratorAggregate
 			yield ($this->format)($file);
 		}
 	}
-	private function table():webapp_mysql_table
+	private function table(bool $reserve = FALSE):webapp_mysql_table
 	{
-		$cond = $this->where;
-		if ($syntax = array_shift($this->conditions))
+		$cond = $this->__debugInfo();
+		if ($reserve === FALSE)
 		{
-			$cond[0] .= (preg_match('/^\s*(?:(?:group|order)\s+by|limit)\s+/i', $syntax) ? ' ' : ' AND ') . $syntax;
-			array_push($cond, ...array_splice($this->conditions, 0));
+			$this->cond = [];
 		}
 		return $this->webapp->mysql->{$this->webapp::tablename}(...$cond);
 	}
-	private function cache():webapp_mysql_table{}
+	private function cache():webapp_redis_table{}
 	private function primary(string $hash):webapp_mysql_table
 	{
 		return $this('`hash`=?s LIMIT 1', $hash)->table();
+	}
+	function append(string $field, string $value = 'NULL'):bool
+	{
+		return $this->table(TRUE)->update("`extdata`=JSON_SET(`extdata`, '$.{$field}', {$value})") === $this->count();
+	}
+	function remove(string ...$fields):bool
+	{
+		return $this->table(TRUE)->update('`extdata`=JSON_REMOVE(`extdata`,??)',
+			join(',', array_map(fn($field) => "'$.{$field}'", $fields))) === $this->count();
 	}
 	function search(string $syntax, ...$values):static
 	{
 		return $this(preg_replace('/\$\.(\w+)/', 'extdata->"$.$1"', $syntax), ...$values);
 	}
-	function remove(string ...$fields):bool
-	{
-		return $this->table()->update('`extdata`=JSON_REMOVE(`extdata`,??)',
-			join(',', array_map(fn($field) => "'$.{$field}'", $fields))) === $this->count();
-	}
-	function append(string $field, string $value = 'NULL'):bool
-	{
-		return $this->table()->update("`extdata`=JSON_SET(`extdata`, '$.{$field}', {$value})") === $this->count();
-	}
 	function paging(int $index, int $rows = 10):static
 	{
-		$conditions = $this->conditions;
-		$this->paging['count'] = $this->count($this->paging['cond']);
+		$this->paging['count'] = $this->count(TRUE);
 		$this->paging['max'] = ceil($this->paging['count'] / $rows = abs($rows));
 		$this->paging['index'] = max(1, $index);
 		$this->paging['skip'] = ($this->paging['index'] - 1) * $rows;
 		$this->paging['rows'] = $rows;
-		$conditions[0] = (isset($conditions[0]) ? "{$conditions[0]} " : '') . "LIMIT {$this->paging['skip']},{$rows}";
-		return $this(...$conditions);
+		$this->cond[0] = (isset($this->cond[0]) ? "{$this->cond[0]} " : '') . "LIMIT {$this->paging['skip']},{$rows}";
+		return $this;
 	}
 	function random(int $rows = 1):iterable
 	{
@@ -146,14 +158,14 @@ class webapp_nfs implements Countable, IteratorAggregate
 	{
 		return sprintf('/%d/%04X/%s%s', $this->sort, $this->webapp->hashtime33($hash) % 0xffff, $hash, $suffix);
 	}
-	function create(array $data, int $type = 0):?string
+	function create(array $data):?string
 	{
 		return $this->webapp->mysql->{$this->webapp::tablename}->insert([
 			'hash' => $hash = array_key_exists('hash', $data)
 				&& $this->webapp->is_long_hash($data['hash'])
 					? $data['hash'] : $this->webapp->random_hash(FALSE),
 			'sort' => $this->sort,
-			'type' => $type,#Type 0 and 1 is NFS reserved use
+			'type' => $this->type,#Type 0 and 1 is NFS reserved use
 			't0' => $t0 = $this->webapp->time(),
 			't1' => $t0,
 			'size' => $data['size'] ?? 0,
@@ -215,14 +227,23 @@ class webapp_nfs implements Countable, IteratorAggregate
 		}
 		return FALSE;
 	}
+	function node(string $hash):static
+	{
+		return $this('`node`=?s', $hash);
+	}
+	function order(string $command):static
+	{
+		$this->cond[0] = (isset($this->cond[0]) ? "{$this->cond[0]} " : '') . "ORDER BY {$command}";
+		return $this;
+	}
 	function rename(string $hash, string $newname):bool
 	{
 		return $this->primary($hash)->update(['t1' => $this->webapp->time(), 'name' => $newname]) === 1;
 	}
-	function create_tree(string $name, ?array $extdata = NULL):?string
-	{
-		return $this->create(['name' => $name, 'extdata' => $extdata]);
-	}
+	// function create_tree(string $name, ?array $extdata = NULL):?string
+	// {
+	// 	return $this->create(['name' => $name, 'extdata' => $extdata]);
+	// }
 	function delete_file(string $hash):bool
 	{
 		return $this->webapp->mysql->sync(fn() => $this->delete($hash) && $this->webapp->client->delete($this->filename($hash)));
@@ -297,9 +318,9 @@ class webapp_ext_nfs_base extends webapp
 		// return new webapp_nfs_client('aliyun_oss', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
 		return new webapp_nfs_client('http://localhost/?', $this['admin_username'], $this['admin_password'], 'D:/');
 	}
-	function nfs(int $sort = 0, Closure $format = NULL, ...$conditions):webapp_nfs
+	function nfs(int $sort = 0, int $type = 1, Closure $format = NULL):webapp_nfs
 	{
-		return new webapp_nfs($this, $sort, $format, ...$conditions);
+		return $this->nfs[($sort &= 0xff) << 8 | $type &= 0xff] ??= new webapp_nfs($this, $sort, $type, $format);
 	}
 	function src(array $file, string $name = NULL):string
 	{

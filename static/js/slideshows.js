@@ -37,17 +37,18 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 	{
 		super();
 		this.#slide.style.left = '-100%';
-		this.#slide.append(...this.#anchor.map(anchor =>
-		{
-			anchor.onclick = event =>
-			{
-				event.stopPropagation();
-				return this.#index < this.#contents.length && this.onclick
-					? this.onclick.call(this.#contents[this.#index], event)
-					: event.isTrusted;
-			};
-			return anchor;
-		}));
+		this.#slide.append(...this.#anchor);
+		// this.#slide.append(...this.#anchor.map(anchor =>
+		// {
+		// 	anchor.onclick = event =>
+		// 	{
+		// 		event.stopPropagation();
+		// 		return this.#index < this.#contents.length && this.onclick
+		// 			? this.onclick.call(this.#contents[this.#index], event)
+		// 			: event.isTrusted;
+		// 	};
+		// 	return anchor;
+		// }));
 		let transitioning = false;
 		const position = {
 			offset: 0,
@@ -129,7 +130,7 @@ customElements.define('webapp-slideshows', class extends HTMLElement
 	{
 		node.style.backgroundImage = `url(${content.picture})`;
 		node.href = 'support' in content ? content.support : 'javascript:;';
-		'hash' in content ? node.dataset.hash = content.hash : delete node.dataset.hash;
+		'key' in content ? node.dataset.key = content.key : delete node.dataset.key;
 	}
 	addition(content)
 	{

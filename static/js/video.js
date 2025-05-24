@@ -64,8 +64,6 @@ customElements.define('webapp-video', class extends HTMLElement
 	// #controls = document.createElement('div');
 	// #progress = document.createElement('input');
 	// #functions = document.createElement('div');
-
-	
 	#playm3u8;
 	constructor()
 	{
@@ -96,14 +94,17 @@ customElements.define('webapp-video', class extends HTMLElement
 		// });
 
 		// const functions = this.#controls.appendChild(this.#functions);
-		
+		this.#video.addEventListener('loadeddata', event => new Promise(resolve =>
+			this.#video.paused ? this.#video.onplay = resolve : resolve(event)).then(event => this.#watch(event)));
+
+
 
 		this.#video.addEventListener('canplay', event =>
 		{
 			this.oncanplay && this.oncanplay(this.#video);
-			this.#video.setAttribute('height', this.hasAttribute('autoheight')
-				? Math.trunc(event.target.videoHeight * this.scalewidth)
-				: '100%');
+			// this.#video.setAttribute('height', this.hasAttribute('autoheight')
+			// 	? Math.trunc(event.target.videoHeight * this.scalewidth)
+			// 	: '100%');
 		});
 
 		if (globalThis.MediaSource && globalThis.Hls)
@@ -119,6 +120,13 @@ customElements.define('webapp-video', class extends HTMLElement
 				? data => this.#video.src = Array.isArray(data) ? `data:application/vnd.apple.mpegurl;base64,${btoa(data.join('\n'))}` : data
 				: data => console.error(data);
 		}
+	}
+	#watch(event)
+	{
+		this.#video.setAttribute('height', this.hasAttribute('autoheight')
+			? Math.trunc(this.#video.videoHeight * this.scalewidth) : '100%');
+		this.dataset.log && this.dataset.key && navigator.sendBeacon(this.dataset.log, this.dataset.key);
+		this.watch && this.watch(event);
 	}
 	get video()
 	{
@@ -167,60 +175,49 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	m3u8(resource, preview)
 	{
-		return new Promise(async resolve =>
+		if (preview)
 		{
-			this.#video.addEventListener('canplay', () => resolve(this), {once: true});
-			if (resource.startsWith('?/') || preview)
-			{
-				const
-				[previewstart, previewend] = Number.isInteger(preview *= 1)
-					? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
-					: [0, 0xffff],
-				response = await fetch(resource),
-				basepath = response.url.split('/').slice(0, -1).join('/'),
-				rowdata = (await response.text()).match(/#[^#]+/g),
-				buffer = [];
-				for (let duration = 0, i = 0; i < rowdata.length; ++i)
-				{
-					if (rowdata[i].startsWith('#EXTINF'))
-					{
-						if (duration > -1)
-						{
-							const pattern = rowdata[i].match(/#EXTINF:(\d+(?:\.\d+)?)\,\s*([^#]+)/);
-							duration += parseFloat(pattern[1]);
-							if (duration > previewstart)
-							{
-								buffer[buffer.length] = /^(?!https?:\/\/)/i.test(pattern[2])
-									? pattern[0].replace(pattern[2], `${basepath}/${pattern[2]}`) : pattern[0];
-								if (duration > previewend)
-								{
-									duration = -1;
-								}
-							}
-						}
-					}
-					else
-					{
-						buffer[buffer.length] = rowdata[i].startsWith('#EXT-X-KEY')
-							? rowdata[i].replace(/URI="([^"]+)"/, `URI="${basepath}/$1"`)
-							: rowdata[i];
-					}
-				}
-				this.#playm3u8(buffer);
-			}
-			else
-			{
-				this.#playm3u8(resource.startsWith('@/') && sessionStorage.getItem('origin')
-					? `${new URL(sessionStorage.getItem('origin')).origin}${resource.substring(1)}`
-					: resource);
-			}
-		});
+			// const
+			// [previewstart, previewend] = Number.isInteger(preview *= 1)
+			// 	? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
+			// 	: [0, 0xffff],
+			// response = await fetch(resource),
+			// basepath = response.url.split('/').slice(0, -1).join('/'),
+			// rowdata = (await response.text()).match(/#[^#]+/g),
+			// buffer = [];
+			// for (let duration = 0, i = 0; i < rowdata.length; ++i)
+			// {
+			// 	if (rowdata[i].startsWith('#EXTINF'))
+			// 	{
+			// 		if (duration > -1)
+			// 		{
+			// 			const pattern = rowdata[i].match(/#EXTINF:(\d+(?:\.\d+)?)\,\s*([^#]+)/);
+			// 			duration += parseFloat(pattern[1]);
+			// 			if (duration > previewstart)
+			// 			{
+			// 				buffer[buffer.length] = /^(?!https?:\/\/)/i.test(pattern[2])
+			// 					? pattern[0].replace(pattern[2], `${basepath}/${pattern[2]}`) : pattern[0];
+			// 				if (duration > previewend)
+			// 				{
+			// 					duration = -1;
+			// 				}
+			// 			}
+			// 		}
+			// 	}
+			// 	else
+			// 	{
+			// 		buffer[buffer.length] = rowdata[i].startsWith('#EXT-X-KEY')
+			// 			? rowdata[i].replace(/URI="([^"]+)"/, `URI="${basepath}/$1"`)
+			// 			: rowdata[i];
+			// 	}
+			// }
+			// this.#playm3u8(buffer);
+		}
+		else
+		{
+			this.#playm3u8(resource);
+		}
 	}
-	// log(callback)
-	// {
-	// 	//日志触发回调（类型）
-	// 	return typeof callback === 'string' ? navigator.sendBeacon(callback) : callback('watch');
-	// }
 	splashscreen(element)
 	{
 		if (this.querySelector('mark')) return;
@@ -383,7 +380,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 			{
 				this.#passive.pause();
 				this.#active.play();
-				this.onchange && this.onchange();
+				this.#onchange();
 				if (currentindex < beforeindex)
 				{
 					if (currentindex && this.#contents.length - beforeindex > 1)
@@ -411,14 +408,12 @@ customElements.define('webapp-videos', class extends HTMLElement
 	get index(){return this.#index;}
 	#setvideo(video, content)
 	{
-		if ('poster' in video)
-		{
-			video.poster(content.poster);
-		}
-		if ('m3u8' in content)
-		{
-			content.canplay = video.m3u8(content.m3u8, content.preview);
-		}
+		typeof content.poster === 'string' && video.poster(content.poster);
+		typeof content.m3u8 === 'string' && video.m3u8(content.m3u8);
+	}
+	#onchange()
+	{
+		this.onchange && this.onchange();
 	}
 	fetch()
 	{
@@ -441,7 +436,7 @@ customElements.define('webapp-videos', class extends HTMLElement
 								this.#active.play();
 								this.#current = video;
 								this.#index = 0;
-								this.onchange && this.onchange();
+								this.#onchange();
 							}
 						}
 						this.#contents[this.#contents.length] = video;
@@ -470,6 +465,10 @@ customElements.define('webapp-videos', class extends HTMLElement
 			// this.hasAttribute('autoplay') && video.setAttributeNode(document.createAttribute('autoplay'));
 			// this.hasAttribute('controls') && video.setAttributeNode(document.createAttribute('controls'));
 
+			video.watch = () => 'log' in this.dataset
+				&& typeof this.#current.key === 'string'
+				&& navigator.sendBeacon(this.dataset.log, this.#current.key);
+	
 		});
 		this.appendChild(this.#slide);
 		this.fetch();

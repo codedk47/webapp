@@ -1,3 +1,14 @@
+masker.urlencode = data => encodeURIComponent(data).replace(/%20|[\!'\(\)\*\+\/@~]/g, escape =>
+	({'%20': '+', '!': '%21', "'": '%27', '(': '%28', ')': '%29', '*': '%2A', '+': '%2B', '/': '%2F', '@': '%40', '~': '%7E'}[escape]));
+masker.canplay = video =>
+{
+	console.log(video, video.dataset.hash);
+	if (video.horizontal)
+	{
+		video.parentNode.style.cssText = 'position:sticky;top:0;z-index:9';
+	}
+	
+};
 masker.then(() =>
 {
 	document.querySelectorAll('blockquote[data-lazy]').forEach(element => masker.viewport(element).then(function lazy(element)
@@ -17,15 +28,16 @@ masker.then(() =>
 			}
 		});
 	}));
+
+	// document.querySelectorAll('a[href][data-key]').forEach(a => {
+
+	// 	a.onclick = function()
+	// 	{
+	// 		console.log(a);
+	// 		return false;
+	// 	}
+		
+	// })
+
+
 });
-masker.urlencode = data => encodeURIComponent(data).replace(/%20|[\!'\(\)\*\+\/@~]/g, escape =>
-	({'%20': '+', '!': '%21', "'": '%27', '(': '%28', ')': '%29', '*': '%2A', '+': '%2B', '/': '%2F', '@': '%40', '~': '%7E'}[escape]));
-masker.canplay = video =>
-{
-	console.log(video);
-	if (video.horizontal)
-	{
-		video.parentNode.style.cssText = 'position:sticky;top:0;z-index:9';
-	}
-	
-};

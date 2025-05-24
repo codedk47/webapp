@@ -535,6 +535,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			if (property_exists($this, 'buffer'))
 			{
 				if ($this['gzip_level']
+					&& ftell($this->buffer)
 					&& is_string($encoding = $this->request_header('Accept-Encoding'))
 					&& stripos($encoding, 'gzip') !== FALSE
 					&& stream_filter_append($this->buffer, 'zlib.deflate', STREAM_FILTER_READ,

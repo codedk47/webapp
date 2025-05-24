@@ -192,7 +192,7 @@ header.search>input{
 
 
 /* aside */
-aside.classify{
+aside.classifies{
 	position: sticky;
 	top: 0;
 	z-index: 2;
@@ -202,13 +202,13 @@ aside.classify{
 	background-color: var(--webapp-background);
 	/* box-shadow: 0 .2rem .6rem rgb(27, 31, 35); */
 }
-aside.classify>a{
+aside.classifies>a{
 	position: relative;
 	padding: var(--webapp-gapitem) var(--webapp-gap);
 	font-size: var(--webapp-font-medium);
 	white-space: nowrap;
 }
-aside.classify>a.selected::before{
+aside.classifies>a.selected::before{
 	content: '';
 	position: absolute;
 	left: 1rem;
@@ -664,7 +664,7 @@ div.videoinfo>mark{
 }
 div.videoinfo>mark>a{
 	padding: .2rem var(--webapp-gapitem);
-	color: var(--webapp-foreground);
+	color: var(--webapp-background);
 	background-color: var(--webapp-button);
 	border-radius: var(--webapp-gapradius);
 }
