@@ -73,7 +73,7 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		return strlen($keyword) < 9 && is_float($this->webapp->redis->zIncrBy('hotwords', 1, $keyword));
 	}
-	function fetch_hotword(int $limit = 20):array
+	function fetch_hotword(int $limit = 30):array
 	{
 		return $this->webapp->redis->zRevRange('hotwords', 0, $limit);
 	}
