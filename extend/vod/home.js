@@ -3,12 +3,13 @@ masker.urlencode = data => encodeURIComponent(data).replace(/%20|[\!'\(\)\*\+\/@
 masker.canplay = video =>
 {
 	console.log(video);
-	document.querySelector('aside').style.height = `${Math.trunc(this.height * video.scalewidth)}px`;
 	if (video.horizontal)
 	{
 		video.parentNode.style.cssText = 'position:sticky;top:0;z-index:9';
 	}
-	
+	const style = document.querySelector('aside').style;
+	style.paddingBottom = 0;
+	style.height = `${Math.trunc(video.height * video.scalewidth)}px`;
 };
 masker.then(() =>
 {
