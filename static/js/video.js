@@ -124,7 +124,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	#watch(event)
 	{
 		this.#video.setAttribute('height', this.hasAttribute('autoheight')
-			? Math.trunc(this.#video.videoHeight * this.scalewidth) : '100%');
+			? Math.trunc(this.height * this.scalewidth) : '100%');
 		this.dataset.log && this.dataset.key && navigator.sendBeacon(this.dataset.log, this.dataset.key);
 		this.watch && this.watch(event);
 	}
