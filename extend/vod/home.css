@@ -217,11 +217,11 @@ aside.classifies>a.selected::before{
 	border-bottom: .2rem solid var(--webapp-anchor);
 }
 
-aside.watch{
+/* aside.watch{
 	position: relative;
 	padding-bottom: 56.25%;
 	background-color: var(--webapp-edge);
-}
+} */
 /* landscape = viewport 处于横向，即宽度大于高度。 */
 /* portrait = viewport 处于纵向，即高度大于等于宽度。 */
 @media (orientation: portrait) {
@@ -231,7 +231,7 @@ aside.watch{
 		z-index: 9;
 	}
 }
-aside.watch>webapp-video{
+/* aside.watch>webapp-video{
 	position: absolute;
 	inset: 0;
 }
@@ -248,7 +248,7 @@ aside.watch>strong>div{
 	gap: var(--webapp-gapitem);
 	flex-direction: column;
 	text-align: center;
-}
+} */
 
 
 /* main */

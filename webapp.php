@@ -153,7 +153,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return preg_match('/^[0-9A-V]{12}$/', $hash) === 1;
 	}
-	static function random_weights(array $items, string $key = 'weight'):array
+	static function random_weight(array $items, string $key = 'weight'):array
 	{
 		if ($items)
 		{

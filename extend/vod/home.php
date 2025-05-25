@@ -62,7 +62,7 @@ class webapp_router_home extends webapp_echo_masker
 		return parent::get_splashscreen();
 		if (count($ads = $this->fetch_ads()))
 		{
-			$ad = $this->webapp->random_weights($ads);
+			$ad = $this->webapp->random_weight($ads);
 			$this->splashscreen($ad['src'], $ad['jumpurl'], '跳过', 4, FALSE, $ad['hash']);
 			$this->webapp->nfs_ads->views($ad['hash']);
 			return 200;
@@ -280,17 +280,36 @@ class webapp_router_home extends webapp_echo_masker
 
 		//print_r($video);
 
-		$element = $this->aside->append('webapp-video', [
-			'oncanplay' => 'masker.canplay(this)',
+		$player = $this->aside->append('webapp-video', [
+			'onresize' => 'masker.video_resizer(this)',
 			'data-poster' => $video['poster'],
 			'data-m3u8' => $video['m3u8'],
 			'data-log' => '?home/video,record:views',
 			'data-key' => $video['hash'],
 			'autoheight' => NULL,
-			'autoplay' => NULL,
+			//'autoplay' => NULL,
 			'controls' => NULL,
 			//'muted' => NULL
 		]);
+		if ($ad = $this->webapp->random_weight($this->fetch_ads(5)))
+		{
+			$player->append('a', ['href' => $ad['jumpurl'],
+				'onclick' => 'return masker.clickad(this)',
+				'data-log' => '?home/clickad',
+				'data-key' => $ad['hash'],
+				'data-duration' => 5,
+				'data-unit' => '秒',
+				'data-skip' => '跳过',
+			])->append('img', ['src' => $ad['src'],
+				'onload' => 'this.parentNode.parentNode.splashscreen(this.parentNode)',
+				'onerror' => 'this.parentNode.parentNode.removeChild(this.parentNode)'
+			]);
+		}
+		else
+		{
+			$player->setattr('autoplay');
+		}
+
 		$videoinfo = $this->main->append('div', ['class' => 'videoinfo']);
 		$videoinfo->append('strong', htmlentities($video['name']));
 

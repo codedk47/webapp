@@ -94,18 +94,24 @@ customElements.define('webapp-video', class extends HTMLElement
 		// });
 
 		// const functions = this.#controls.appendChild(this.#functions);
-		this.#video.addEventListener('loadeddata', event => new Promise(resolve =>
-			this.#video.paused ? this.#video.onplay = resolve : resolve(event)).then(event => this.#watch(event)));
-
-
-
-		this.#video.addEventListener('canplay', event =>
+		this.#video.addEventListener('loadedmetadata', event =>
 		{
-			this.oncanplay && this.oncanplay(this.#video);
-			// this.#video.setAttribute('height', this.hasAttribute('autoheight')
-			// 	? Math.trunc(event.target.videoHeight * this.scalewidth)
-			// 	: '100%');
+			this.onresize && this.onresize(event);
+			// const autoheight = event =>
+			// {
+			// 	this.#video.setAttribute('height', this.hasAttribute('autoheight') ? Math.trunc(this.height * this.scalewidth) : '100%');
+			// 	this.onresize && this.onresize(event);
+			// }
+			// autoheight(event);
+			// addEventListener('resize', autoheight)
 		});
+		this.#video.addEventListener('loadeddata', event => new Promise(resolve =>
+			this.#video.paused ? this.#video.onplay = resolve : resolve(event)).then(event => {
+			this.dataset.log && this.dataset.key && navigator.sendBeacon(this.dataset.log, this.dataset.key);
+			this.watch && this.watch(event);
+		}));
+
+		this.#video.addEventListener('canplay', event => this.oncanplay && this.oncanplay(event));
 
 		if (globalThis.MediaSource && globalThis.Hls)
 		{
@@ -120,13 +126,6 @@ customElements.define('webapp-video', class extends HTMLElement
 				? data => this.#video.src = Array.isArray(data) ? `data:application/vnd.apple.mpegurl;base64,${btoa(data.join('\n'))}` : data
 				: data => console.error(data);
 		}
-	}
-	#watch(event)
-	{
-		this.#video.setAttribute('height', this.hasAttribute('autoheight')
-			? Math.trunc(this.height * this.scalewidth) : '100%');
-		this.dataset.log && this.dataset.key && navigator.sendBeacon(this.dataset.log, this.dataset.key);
-		this.watch && this.watch(event);
 	}
 	get video()
 	{
@@ -246,16 +245,6 @@ customElements.define('webapp-video', class extends HTMLElement
 	connectedCallback()
 	{
 		if (this.#video.isConnected) return;
-		this.#video.loop = this.hasAttribute('loop');
-		this.#video.muted = this.hasAttribute('muted');
-		this.#video.autoplay = this.hasAttribute('autoplay');
-		this.#video.controls = this.hasAttribute('controls');
-		this.appendChild(this.#video);
-
-		// if ('splashscreen' in this.dataset)
-		// {
-
-		// }
 		if ('poster' in this.dataset)
 		{
 			this.poster(this.dataset.poster);
@@ -266,6 +255,11 @@ customElements.define('webapp-video', class extends HTMLElement
 			this.m3u8(this.dataset.m3u8, this.dataset.preview);
 			delete this.dataset.m3u8;
 		}
+		this.#video.loop = this.hasAttribute('loop');
+		this.#video.muted = this.hasAttribute('muted');
+		this.#video.autoplay = this.hasAttribute('autoplay');
+		this.#video.controls = this.hasAttribute('controls');
+		this.appendChild(this.#video);
 	}
 });
 customElements.define('webapp-videos', class extends HTMLElement
