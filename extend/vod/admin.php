@@ -33,12 +33,118 @@ class webapp_router_admin extends webapp_echo_admin
 
 	function get_home()
 	{
-		$this->main->append('h2', '正在开发..');
+		$cond = $this->webapp->cond();
+		// $cond_search = $cond->query('search', 'name LIKE ?s', fn($v) => "%{$v}%");
+		// var_dump($cond_search);
+		//$cond->append('ORDER BY rate ASC, cid ASC');
+
+
+		$channels = $this->webapp->mysql->channels->column('name', 'cid');
+		$table = $this->main->table($cond($this->webapp->mysql->records), function($table, $value, $channels)
+		{
+			$table->row();
+			$table->cell(substr($value['dcid'], 0, 8));
+			$table->cell($channels[$cid = substr($value['dcid'], -4)] ?? $cid);
+			$table->cell(number_format($value['init']));
+
+			$table->cell(number_format($value['ic']));
+			$table->cell(number_format($value['iu']));
+			$table->cell(number_format($value['pv']));
+			$table->cell(number_format($value['pc']));
+			$table->cell(number_format($value['ac']));
+			$table->cell(number_format($value['vw']));
+			$table->cell(number_format($value['signup']));
+			$table->cell(number_format($value['signin']));
+			$table->cell(number_format($value['oi']));
+			$table->cell(number_format($value['op']));
+		}, $channels);
+		$table->fieldset('日期', '渠道名称', '初始化', '进入统计', '进入唯一', '推广展示', '推广点击', '广告点击', '视频观看', '用户注册', '用户登入', '订单发起', '订单支付');
+		$table->header('数据统计');
+
+
+
 	}
 	#--------------------------------渠道--------------------------------
-	function get_channels()
+	function form_channel(webapp_html $html = NULL):webapp_form
 	{
-		$this->main->append('h2', '正在开发..');
+		$form = new webapp_form($html ?? $this->webapp);
+
+		$form->fieldset('ID / 名称');
+		$form->field('cid', 'text', ['pattern' => '^[0-9A-Za-z]{4}$', 'placeholder' => '唯一ID', 'required' => NULL]);
+		$form->field('name', 'text', ['maxlength' => 16, 'placeholder' => '名称', 'required' => NULL]);
+
+		$form->fieldset('密码 / 比率');
+		$form->field('pwd', 'text', ['maxlength' => 16, 'placeholder' => '密码', 'required' => NULL]);
+		$form->field('rate', 'number', ['min' => 0, 'max' => 99.9999, 'step' => 0.0001, 'placeholder' => '展示比率']);
+
+		$form->fieldset();
+		$form->button('提交', 'submit');
+
+		//$form->xml['onsubmit'] = 'return $(this).action()';
+		return $form;
+	}
+	function post_channel(string $cid = NULL)
+	{
+		$this->json();
+		$form = $this->form_channel();
+		if ($cid)
+		{
+			unset($form['cid']);
+		}
+		if ($form->fetch($data))
+		{
+			if ($cid
+				? $this->webapp->mysql->channels('WHERE cid=?s LIMIT 1', $cid)->update($data)
+				: $this->webapp->mysql->channels->insert(['time' => date('Y-m-d H:i:s')] + $data)) {
+				$this->echo->redirect('?admin/channels');
+			}
+			else
+			{
+				$this->echo->message($cid ? '修改失败！' : '创建失败！');
+			}
+		}
+	}
+	function get_channel(string $cid = NULL)
+	{
+		$form = $this->form_channel($this->main);
+		if ($this->webapp->mysql->channels('WHERE cid=?s LIMIT 1', (string)$cid)->fetch($data))
+		{
+			$form['cid']->setattr('disabled');
+			$form->echo($data);
+		}
+		else
+		{
+			$form->echo([
+				'cid' => bin2hex(random_bytes(2)),
+				'pwd' => bin2hex(random_bytes(8)),
+				'rate' => 1
+			]);
+		}
+	}
+	function get_channels(int $page = 1)
+	{
+		$cond = $this->webapp->cond();
+		// $cond_search = $cond->query('search', 'name LIKE ?s', fn($v) => "%{$v}%");
+		// var_dump($cond_search);
+		$cond->append('ORDER BY rate ASC, cid ASC');
+
+
+		
+
+		$table = $this->main->table($cond($this->webapp->mysql->channels)->paging($page), function($table, $value)
+		{
+			$table->row();
+			$table->cell()->append('a', ['删除', 'href' => '#']);
+			$table->cell()->append('a', [$value['cid'], 'href' => "?admin/channel,cid:{$value['cid']}"]);
+			$table->cell($value['name']);
+			$table->cell($value['rate']);
+			$table->cell($value['time']);
+		});
+		$table->fieldset('删除', 'CID(编辑)', '名称', '比率(ASC)', '创建时间');
+		$table->header('找到 %d 个渠道', $table->count());
+		$table->paging($this->webapp->at(['page' => '']));
+		$table->bar->append('button', ['创建', 'onclick' => 'location.assign("?admin/channel")']);
+		$table->bar->append('span', ['删除 NULL 渠道会导致无法记录丢失渠道ID的数据！', 'style' => 'padding-left:1rem;color:brown']);
 	}
 	#--------------------------------广告--------------------------------
 	const ad_seat = [

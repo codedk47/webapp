@@ -13,6 +13,7 @@ class webapp_router_home extends webapp_echo_masker
 			// 	$this->echo('');
 			// 	return $webapp->response_status(403);
 			// }
+			in_array($webapp->method, $this->initallow, TRUE) || $this->record('init');
 			$this->webapp->origin($this);
 		}
 		else
@@ -22,7 +23,30 @@ class webapp_router_home extends webapp_echo_masker
 			$this->stylesheet('/webapp/extend/vod/home.css');
 			$this->script(['src' => '/webapp/extend/vod/home.js']);
 			$this->script(['src' => '/webapp/static/js/slideshows.js']);
+			
 		}
+	}
+
+	function record(string|array $field, ?string $cid = NULL):bool
+	{
+		if ($this->webapp->mysql->channels->exists('cid', $cid = $cid ?? $this->webapp->request_cookie('cid') ?? 'NULL'))
+		{
+			$fields = ['init', 'ic', 'iu', 'pv', 'pc', 'ac', 'vw', 'signup', 'signin', 'oi', 'op'];
+			$values = array_combine($fields, array_fill(0, count($fields), 0));
+			$values['dcid'] = date('Ymd') . $cid;
+			$update = $fields = [];
+			foreach (is_string($field) ? [$field => 1] : $field as $key => $value)
+			{
+				if (isset($values[$key]))
+				{
+					$values[$key] = $value;
+					$fields[] = '?a=?a+?i';
+					array_push($update, $key, $key, $value);
+				}
+			}
+			return $fields && $this->webapp->mysql->records->insert('?v ON DUPLICATE KEY UPDATE ' .  join(',', $fields), $values, ...$update);
+		}
+		return FALSE;
 	}
 	function init(string $ua):int
 	{
@@ -36,6 +60,8 @@ class webapp_router_home extends webapp_echo_masker
 	function post_init():int
 	{
 		$this->json();
+
+		$this->record(['ic' => 1, 'iu' => intval($this->webapp->redis->uniqueip())]);
 		//print_r($this->webapp->request_content('application/json'));
 		//$data = $this->webapp->request_content('application/json');
 		//$this->echo->error('禁止访问');
@@ -45,16 +71,15 @@ class webapp_router_home extends webapp_echo_masker
 	}
 	function post_clickad():int
 	{
-		if ($this->webapp->nfs_ads->likes($hash = $this->webapp->request_content('text/plain')))
-		{
-			//var_dump($this->fetch_cid());
-		}
+		$this->webapp->nfs_ads->likes($this->webapp->request_content('text/plain'))
+			&& $this->record('ac');
 		return $this->echo_no_content();
 	}
 	function post_video(string $record):int
 	{
 		in_array($record, ['views', 'likes', 'shares'], TRUE)
-			&& $this->webapp->nfs_videos->{$record}($hash = $this->webapp->request_content('text/plain'));
+			&& $this->webapp->nfs_videos->{$record}($this->webapp->request_content('text/plain'))
+			&& $this->record('vw');
 		return $this->echo_no_content();
 	}
 	function get_splashscreen():int
@@ -76,10 +101,6 @@ class webapp_router_home extends webapp_echo_masker
 	function fetch_hotword(int $limit = 30):array
 	{
 		return $this->webapp->redis->zRevRange('hotwords', 0, $limit);
-	}
-	function fetch_cid()
-	{
-		return $this->webapp->request_cookie('cid');
 	}
 	function fetch_ads(int $seat = 0):array
 	{

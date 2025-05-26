@@ -422,6 +422,10 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	// 	// $result->paging = $this->paging;
 	// 	// return $result;
 	// }
+	function exists(string $field, string $value):bool
+	{
+		return boolval($this('WHERE ?a=?s LIMIT 1', $field, $value)->select('COUNT(?a)', $field)->value());
+	}
 	function object(string $class = 'stdClass', array $constructor_args = []):object
 	{
 		return $this->getIterator()->object($class, $constructor_args);
@@ -492,7 +496,7 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	}
 	function insert(iterable|string $data):bool
 	{
-		return ($this->mysql)('INSERT INTO ?a SET ??', $this->tablename, $this->mysql->format(...is_iterable($data) ? ['?v', $data] : func_get_args()))->affected_rows === 1;
+		return ($this->mysql)('INSERT INTO ?a SET ??', $this->tablename, $this->mysql->format(...is_iterable($data) ? ['?v', $data] : func_get_args()))->affected_rows > 0;
 	}
 	function delete(mixed ...$conditionals):int
 	{
@@ -502,9 +506,9 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	{
 		return ($this->mysql)('UPDATE ?a SET ????', $this->tablename, $this->mysql->format(...is_iterable($data) ? ['?v', $data] : func_get_args()), (string)$this)->affected_rows;
 	}
-	function select(array|string $fields):static
+	function select(iterable|string $fields):static
 	{
-		$this->fields = $this->mysql->format('?A', $fields);
+		$this->fields = $this->mysql->format(...is_iterable($fields) ? ['?A', $fields] : func_get_args());
 		return $this;
 	}
 	function paging(int $index, int $rows = 21, bool $overflow = FALSE):static

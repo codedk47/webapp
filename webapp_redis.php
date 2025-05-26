@@ -7,12 +7,21 @@ class webapp_redis extends Redis
 	{
 		$this->pconnect(...$open ? $open : ['127.0.0.1', 6379]);
 	}
-	function dosevasive(int $count):bool
+	function dosevasive(int $count = 10, int $denytime = 600):bool
 	{
-		$deny = $this->incr($key = $this->webapp->request_ip()) > $count;
-		$this->expire($key, $deny ? 10 : 2);
+		$this->expire($key = $this->webapp->iphex($this->webapp->request_ip(TRUE)),
+			($deny = $this->incr($key) > $count) ? $denytime : 2);
 		return $deny;
 	}
+	function uniqueip(int $expire = NULL):bool
+	{
+		return $this->sAdd('uniqueip', $this->webapp->iphex($this->webapp->request_ip(TRUE)))
+			&& ($this->sCard('uniqueip') > 1 || $this->expireAt('uniqueip', $expire ?? mktime(23, 59, 59)));
+	}
+
+
+
+
 	function clear(string|webapp_redis_table $table = NULL):void
 	{
 		if ($table)
