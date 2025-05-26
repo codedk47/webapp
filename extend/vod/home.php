@@ -6,13 +6,13 @@ class webapp_router_home extends webapp_echo_masker
 	{
 		parent::__construct($webapp);
 		unset($this->xml->head->link);
+		if ($webapp->redis->dosevasive())
+		{
+			$this->echo('拒绝服务');
+			return $webapp->response_status(403);
+		}
 		if ($this->init)
 		{
-			// if ($webapp->redis->dosevasive(20))
-			// {
-			// 	$this->echo('');
-			// 	return $webapp->response_status(403);
-			// }
 			in_array($webapp->method, $this->initallow, TRUE) || $this->record('init');
 			$this->webapp->origin($this);
 		}
