@@ -184,20 +184,6 @@ class webapp_ext_vod_base extends webapp_ext_nfs_base
 		return [];
 	}
 
-
-	
-	function post_clickad():int
-	{
-		$this->nfs_ads->likes($hash = $this->request_content('text/plain'));
-		return 200;
-	}
-	function post_video(string $record):int
-	{
-		in_array($record, ['views', 'likes', 'shares'], TRUE)
-			&& $this->nfs_videos->fetch($hash = $this->request_content('text/plain'))
-			&& $this->nfs_videos->{$record}($hash);
-		return 200;
-	}
 	function get_proxy(int $origin, string $m3u8):int
 	{
 		if (isset($this->proxy_origins[$origin]) && is_string($m3u8 = $this->url64_decode($m3u8)))

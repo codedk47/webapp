@@ -19,21 +19,27 @@ masker.then(() =>
 			}
 		});
 	}));
-
-	// document.querySelectorAll('a[href][data-key]').forEach(a => {
-
-	// 	a.onclick = function()
-	// 	{
-	// 		console.log(a);
-	// 		return false;
-	// 	}
-		
-	// })
-
-
 });
+masker.auth = element =>
+{
+	if (element.style.pointerEvents !== 'none')
+	{
+		const account = Object.fromEntries(new FormData(element).entries()), fieldset = element.querySelectorAll('fieldset');
+		element.style.pointerEvents = 'none';
+		fieldset.forEach(field => field.disabled = true);
+		element.oninput = () => Object.keys(account).forEach(field => element[field].setCustomValidity(''));
+		fetch(element.action, {headers: {'Sign-In': encodeURI(JSON.stringify(account))}}).then(response => response.json()).then(authorize =>
+		{
+			typeof authorize[element.dataset.storage] === 'string'
+				? masker.token(authorize[element.dataset.storage]).then(() => location.reload())
+				: (element[authorize.error.field].setCustomValidity(authorize.error.message), requestAnimationFrame(() => element.reportValidity()));
+		}).finally(() => fieldset.forEach(field => field.disabled = false), element.style.pointerEvents = null);
+	}
+	return false;
+};
 masker.video_resizer = video =>
 {
 	//console.log(video);
 	video.parentNode.dataset.type = video.horizontal ? 'h' : 'v';
 };
+

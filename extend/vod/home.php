@@ -4,7 +4,8 @@ class webapp_router_home extends webapp_echo_masker
 	public array $initallow = ['post_clickad', 'post_video'];
 	function __construct(webapp $webapp)
 	{
-		parent::__construct($webapp);
+		//parent::__construct($webapp, 'token');#开启验证登入
+		parent::__construct($webapp);#无验证
 		unset($this->xml->head->link);
 		if ($webapp->redis->dosevasive())
 		{
@@ -23,10 +24,48 @@ class webapp_router_home extends webapp_echo_masker
 			$this->stylesheet('/webapp/extend/vod/home.css');
 			$this->script(['src' => '/webapp/extend/vod/home.js']);
 			$this->script(['src' => '/webapp/static/js/slideshows.js']);
-			
 		}
 	}
-
+	function authenticate(string $username, string $password, int $signtime, string $additional = NULL):array
+	{
+		return $signtime > $this->webapp->time(-86400) && $username === $this->webapp->request_ip(TRUE) ? [0] : [];
+	}
+	function auth(?array $data, callable $authenticate, string $storage):int
+	{
+		if (is_array($data))
+		{
+			$this->json();
+			if (isset($data['captcha_encrypt'], $data['captcha_decrypt']))
+			{
+				if ($this->webapp->captcha_verify($data['captcha_encrypt'], $data['captcha_decrypt']))
+				{
+					$this->echo[$storage] = $this->webapp->signature($this->webapp->request_ip(TRUE), '');
+				}
+				else
+				{
+					$this->echo->error('验证码错误', 'captcha_decrypt');
+				}
+			}
+			return 200;
+		}
+		$this->title('授权');
+		$form = new webapp_form($this->main);
+		$form->fieldset();
+		$form->captcha('验证码', 2)->input[1]['placeholder'] = '输入以下图片展示字母不区分大小写';
+		$form->fieldset();
+		$form->button('我同意以上协议，继续访问', 'submit');
+		// $form->fieldset();
+		// $form->fieldset->append('label', ['使用二维码凭证，继续访问', 'class' => 'button'])->append('input', [
+		// 	'type' => 'file',
+		// 	'accept' => 'image/png',
+		// 	'style' => 'display:none',
+		// 	'onchange' => 'masker.revert_account(this)'
+		// ]);
+		$form->xml['data-storage'] = $storage;
+		$form->xml['onsubmit'] = 'return masker.auth(this)';
+		$form->xml['class'] = 'auth';
+		return 401;
+	}
 	function record(string|array $field, ?string $cid = NULL):bool
 	{
 		if ($this->webapp->mysql->channels->exists('cid', $cid = $cid ?? $this->webapp->request_cookie('cid') ?? 'NULL'))
@@ -44,7 +83,7 @@ class webapp_router_home extends webapp_echo_masker
 					array_push($update, $key, $key, $value);
 				}
 			}
-			return $fields && $this->webapp->mysql->records->insert('?v ON DUPLICATE KEY UPDATE ' .  join(',', $fields), $values, ...$update);
+			return $fields && $this->webapp->mysql->records->insert('?v ON DUPLICATE KEY UPDATE ' . join(',', $fields), $values, ...$update);
 		}
 		return FALSE;
 	}

@@ -103,43 +103,60 @@ form>fieldset>textarea{
 	border-radius: var(--webapp-gapradius);
 }
 
-/* login */
-form.login{
+/* auth */
+form.auth{
 	max-width: 720px;
 	padding: var(--webapp-gap);
 	margin: auto;
 }
+form.auth>fieldset{
+	text-align: center;
+}
+form.auth>fieldset>input{
+	outline: none;
+	border: 1px solid rgba(27, 31, 35, 0.4);
+	padding: var(--webapp-gapitem);
+	font-size: var(--webapp-font-medium);
+	flex-grow: 1;
+	border-radius: var(--webapp-gapradius);
+}
+form.auth>fieldset>img{
+	margin: 0 auto;
+}
 
-form.login>fieldset>button,
-form.login>fieldset>label.button{
 
+
+form.auth>fieldset>button,
+form.auth>fieldset>label.button{
 	display: block;
 	text-align: center;
 }
-form.login>fieldset:first-child{
+
+
+/* form.auth>fieldset:first-child{
 	flex-direction: row;
 	align-items: center;
 }
-form.login>fieldset:first-child>img{
+form.auth>fieldset:first-child>img{
 	width: 5rem;
 	height: 5rem;
 	object-fit: cover;
 }
-form.login>fieldset:first-child>strong{
+form.auth>fieldset:first-child>strong{
 	flex-grow: 1;
 	font-size: 4rem;
 	text-align: center;
 	white-space: nowrap;
 }
-form.login>fieldset.tip{
+form.auth>fieldset.tip{
 	color: var(--webapp-hover);
 	font-size: var(--webapp-font-small);
 	text-align: center;
 }
-form.login>fieldset.tip>ul{
+form.auth>fieldset.tip>ul{
 	margin: 0;
 	line-height: var(--webapp-font-medium);
-}
+} */
 
 /* header */
 header:not(:empty){
@@ -910,7 +927,7 @@ div.listmenu>a:not(:first-child){
 
 button,.button{
 	font: var(--webapp-font-medium) var(--webapp-font-sans-serif);
-	color: var(--webapp-foreground);
+	color: var(--webapp-background);
 	padding: .25rem 1rem;
 	border: 1px solid rgba(27, 31, 35, 0.2);
 	white-space: nowrap;
