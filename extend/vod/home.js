@@ -1,7 +1,5 @@
 masker.urlencode = data => encodeURIComponent(data).replace(/%20|[\!'\(\)\*\+\/@~]/g, escape =>
 	({'%20': '+', '!': '%21', "'": '%27', '(': '%28', ')': '%29', '*': '%2A', '+': '%2B', '/': '%2F', '@': '%40', '~': '%7E'}[escape]));
-
-
 masker.popup = context =>
 {
 	const dialog = document.createElement('dialog'), strong = document.createElement('strong');
@@ -11,7 +9,6 @@ masker.popup = context =>
 	dialog.appendChild(strong).textContent = '关 闭';
 	document.body.appendChild(dialog).showModal();
 }
-
 masker.init(data => typeof data.popup === 'string' && fetch(data.popup).then(response => response.json()).then(data =>
 {
 	data.ads.forEach(ad =>

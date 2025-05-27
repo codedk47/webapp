@@ -7,11 +7,11 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		//parent::__construct($webapp, 'token', 'get_popup');#开启验证登入
 		parent::__construct($webapp, allow: 'get_popup');#无验证
 		unset($this->xml->head->link);
-		// if ($webapp->redis->dosevasive())
-		// {
-		// 	$this->echo('拒绝服务');
-		// 	return $webapp->response_status(403);
-		// }
+		if ($webapp->redis->dosevasive())
+		{
+			$this->echo('拒绝服务');
+			return $webapp->response_status(403);
+		}
 		if ($this->init)
 		{
 			$this->sw['data-popup'] = '?home/popup';
