@@ -804,38 +804,41 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return new class($this->query, $conditions)
 		{
-			private array $cond = [], $values = [], $append = [];
+			private array $syntax = [], $values = [], $merge = [];
 			function __construct(private readonly array $query, $conditions)
 			{
 				if ($conditions)
 				{
-					$this->cond[] = array_shift($conditions);
+					$this->syntax[] = array_shift($conditions);
 					$values = $conditions;
 				}
 			}
 			function __invoke(callable $object):object
 			{
-				$cond = join(' AND ', $this->cond);
-				if ($this->append)
+				if ($object instanceof webapp_mysql_table && $this->syntax)
 				{
-					$cond = trim($cond . ' ' . join(',', $this->append));
+					$this->syntax[0] = "WHERE {$this->syntax[0]}";
 				}
-				return $cond ? $object($cond, ...$this->values) : $object;
-			}
-			function query(string $name, string $cond, callable $format = NULL, &$retval = NULL):?string
-			{
-				if (isset($this->query[$name]))
+				$syntax = join(' AND ', $this->syntax);
+				if ($this->merge)
 				{
-					$this->cond[] = $cond;
-					$value = $this->query[$name];
-					$retval = $this->values[] = is_callable($format) ? $format($value) : $value;
+					$syntax = trim($syntax . ' ' . join(',', $this->merge));
+				}
+				return $syntax ? $object($syntax, ...$this->values) : $object;
+			}
+			function query(string $name, string $syntax, callable $format = NULL, $default = NULL):?string
+			{
+				if ($value = $this->query[$name] ?? $default)
+				{
+					$this->syntax[] = $syntax;
+					$this->values[] = is_callable($format) ? $format($value) : $value;
 					return $value;
 				}
 				return NULL;
 			}
-			function append(string $cond):void
+			function merge(string $conditions):void
 			{
-				$this->append[] = $cond;
+				$this->merge[] = $conditions;
 			}
 		};
 	}

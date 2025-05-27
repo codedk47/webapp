@@ -34,9 +34,11 @@ class webapp_router_admin extends webapp_echo_admin
 	function get_home()
 	{
 		$cond = $this->webapp->cond();
-		// $cond_search = $cond->query('search', 'name LIKE ?s', fn($v) => "%{$v}%");
-		// var_dump($cond_search);
-		//$cond->append('ORDER BY rate ASC, cid ASC');
+		$cond_date = $cond->query('date', 'dcid LIKE ?s', fn($v) => str_replace('-', '', "{$v}%"), date('Y-m-d'));
+		$cond_cid = $cond->query('cid', 'dcid LIKE ?s', fn($v) => "%{$v}");
+
+
+		//$cond->merge('ORDER BY rate ASC, cid ASC');
 
 
 		$channels = $this->webapp->mysql->channels->column('name', 'cid');
@@ -60,9 +62,8 @@ class webapp_router_admin extends webapp_echo_admin
 		}, $channels);
 		$table->fieldset('日期', '渠道名称', '初始化', '进入统计', '进入唯一', '推广展示', '推广点击', '广告点击', '视频观看', '用户注册', '用户登入', '订单发起', '订单支付');
 		$table->header('数据统计');
-
-
-
+		$table->bar->append('input', ['type' => 'date', 'value' => $cond_date, 'onchange' => '$.at({date:this.value||null})']);
+		$table->bar->select(['' => '全部渠道'] + $channels)['onchange'] = '$.at({cid:this.value||null})';
 	}
 	#--------------------------------渠道--------------------------------
 	function form_channel(webapp_html $html = NULL):webapp_form
@@ -124,13 +125,8 @@ class webapp_router_admin extends webapp_echo_admin
 	function get_channels(int $page = 1)
 	{
 		$cond = $this->webapp->cond();
-		// $cond_search = $cond->query('search', 'name LIKE ?s', fn($v) => "%{$v}%");
-		// var_dump($cond_search);
-		$cond->append('ORDER BY rate ASC, cid ASC');
-
-
-		
-
+		$cond_search = urldecode($cond->query('search', 'name LIKE ?s', fn($v) => '%' . urldecode($v) . '%') ?? '');
+		$cond->merge('ORDER BY rate ASC, cid ASC');
 		$table = $this->main->table($cond($this->webapp->mysql->channels)->paging($page), function($table, $value)
 		{
 			$table->row();
@@ -144,6 +140,7 @@ class webapp_router_admin extends webapp_echo_admin
 		$table->header('找到 %d 个渠道', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('button', ['创建', 'onclick' => 'location.assign("?admin/channel")']);
+		$table->bar->append('input', ['type' => 'search', 'value' => $cond_search, 'onkeypress' => 'event.keyCode===13&&$.at({search:this.value||null})']);
 		$table->bar->append('span', ['删除 NULL 渠道会导致无法记录丢失渠道ID的数据！', 'style' => 'padding-left:1rem;color:brown']);
 	}
 	#--------------------------------广告--------------------------------
@@ -221,7 +218,7 @@ class webapp_router_admin extends webapp_echo_admin
 	{
 		$cond = $this->webapp->cond();
 		$cond_seat = $cond->query('seat', 'extdata->"$.seat"=?s');
-		$cond->append('ORDER BY extdata->"$.weight" DESC, hash ASC');
+		$cond->merge('ORDER BY extdata->"$.weight" DESC, hash ASC');
 
 
 		$table = $this->main->table($cond($this->webapp->nfs_ads)->paging($page, 8), function($table, $value)
@@ -344,7 +341,7 @@ class webapp_router_admin extends webapp_echo_admin
 		$cond = $this->webapp->cond();
 
 		//print_r($cond);
-		$cond->append('ORDER BY extdata->"$.sorting" DESC, hash ASC');
+		$cond->merge('ORDER BY extdata->"$.sorting" DESC, hash ASC');
 		$table = $this->main->table($cond($this->webapp->nfs_classifies)->paging($page), function($table, $value)
 		{
 			$table->row();
@@ -430,8 +427,9 @@ class webapp_router_admin extends webapp_echo_admin
 		$this->script(['src' => '/webapp/static/js/video.js']);
 
 		$cond = $this->webapp->cond();
+		$cond_search = urldecode($cond->query('search', 'name LIKE ?s', fn($v) => '%' . urldecode($v) . '%') ?? '');
 
-		$cond->append('ORDER BY t1 DESC, hash ASC');
+		$cond->merge('ORDER BY t1 DESC, hash ASC');
 
 
 		$table = $this->main->table($cond($this->webapp->nfs_videos)->paging($page, 10), function($table, $value)
@@ -484,7 +482,7 @@ class webapp_router_admin extends webapp_echo_admin
 		
 		$table->header('找到 %d 个视频', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
-
+		$table->bar->append('input', ['type' => 'search', 'value' => $cond_search, 'onkeypress' => 'event.keyCode===13&&$.at({search:this.value||null})']);
 
 
 	}
@@ -496,8 +494,4 @@ class webapp_router_admin extends webapp_echo_admin
 	}
 
 
-	function get_a()
-	{
-		echo '1';
-	}
 }
