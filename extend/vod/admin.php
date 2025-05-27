@@ -34,7 +34,8 @@ class webapp_router_admin extends webapp_echo_admin
 	function get_home()
 	{
 		$cond = $this->webapp->cond();
-		$cond_date = $cond->query('date', 'dcid LIKE ?s', fn($v) => str_replace('-', '', "{$v}%"), date('Y-m-d'));
+		$cond_d0 = $cond->query('d0', 'SUBSTR(dcid,1,8)>=?s', fn($v) => str_replace('-', '', $v), date('Y-m-d'));
+		$cond_d1 = $cond->query('d1', 'SUBSTR(dcid,1,8)<=?s', fn($v) => str_replace('-', '', $v), $cond_d0);
 		$cond_cid = $cond->query('cid', 'dcid LIKE ?s', fn($v) => "%{$v}");
 
 
@@ -62,8 +63,11 @@ class webapp_router_admin extends webapp_echo_admin
 		}, $channels);
 		$table->fieldset('日期', '渠道名称', '初始化', '进入统计', '进入唯一', '推广展示', '推广点击', '广告点击', '视频观看', '用户注册', '用户登入', '订单发起', '订单支付');
 		$table->header('数据统计');
-		$table->bar->append('input', ['type' => 'date', 'value' => $cond_date, 'onchange' => '$.at({date:this.value||null})']);
-		$table->bar->select(['' => '全部渠道'] + $channels)['onchange'] = '$.at({cid:this.value||null})';
+		$table->bar->append('input', ['type' => 'date', 'value' => $cond_d0, 'onchange' => '$.at({d0:this.value||null})']);
+		$table->bar->append('span', ' - ');
+		$table->bar->append('input', ['type' => 'date', 'value' => $cond_d1, 'onchange' => '$.at({d1:this.value||null})']);
+		$table->bar->append('span', ' - ');
+		$table->bar->select(['' => '全部渠道'] + $channels)->setattr(['onchange' => '$.at({cid:this.value||null})'])->selected($cond_cid);
 	}
 	#--------------------------------渠道--------------------------------
 	function form_channel(webapp_html $html = NULL):webapp_form
