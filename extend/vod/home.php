@@ -431,14 +431,14 @@ class webapp_extend_vod_home extends webapp_echo_masker
 	}
 	function get_search(string $keywords = NULL, int $page = 0)
 	{
-		if (is_string($keywords) && trim($keyword = urldecode($keywords)) && $page)
+		if (is_string($keywords) && ($keyword = trim(urldecode($keywords))) && $page)
 		{
 			return $this->draw_videos_lists($this->frag(), $this->webapp->nfs_videos
 				->search('name LIKE ?s ORDER BY t1 DESC, hash ASC', "%{$keyword}%")->paging($page));
 		}
 		$this->draw_header_search();
 		$this->draw_footer();
-		if (isset($keyword))
+		if ($keyword ?? FALSE)
 		{
 			$this->title($keyword);
 			$this->cache_hotword($keyword);
