@@ -1,10 +1,31 @@
 masker.urlencode = data => encodeURIComponent(data).replace(/%20|[\!'\(\)\*\+\/@~]/g, escape =>
 	({'%20': '+', '!': '%21', "'": '%27', '(': '%28', ')': '%29', '*': '%2A', '+': '%2B', '/': '%2F', '@': '%40', '~': '%7E'}[escape]));
-masker.init((data) =>
-{
-	console.log(data)
 
-});
+
+masker.popup = context =>
+{
+	const dialog = document.createElement('dialog'), strong = document.createElement('strong');
+	strong.onclick = () => dialog.remove(dialog.close());
+	context instanceof HTMLElement ? dialog.appendChild(context)
+		: dialog.appendChild(document.createElement('pre')).textContent = context;
+	dialog.appendChild(strong).textContent = '关 闭';
+	document.body.appendChild(dialog).showModal();
+}
+
+masker.init(data => typeof data.popup === 'string' && fetch(data.popup).then(response => response.json()).then(data =>
+{
+	data.ads.forEach(ad =>
+	{
+		const anchor = document.createElement('a'), image = new Image;
+		anchor.href = ad.jumpurl;
+		anchor.dataset.log = data.log;
+		anchor.dataset.key = ad.hash;
+		anchor.onclick = () => masker.clickad(anchor);
+		anchor.appendChild(image).src = ad.src;
+		masker.popup(anchor);
+	});
+	typeof data.notice === 'string' && masker.popup(data.notice);
+}));
 masker.then(() =>
 {
 	document.querySelectorAll('blockquote[data-lazy]').forEach(element => masker.viewport(element).then(function lazy(element)

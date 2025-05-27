@@ -950,7 +950,7 @@ dialog::backdrop {
 	backdrop-filter: blur(.4rem);
 }
 dialog>strong{
-	color: var(--webapp-foreground);
+	color: var(--webapp-background);
 	padding: var(--webapp-gapitem) var(--webapp-gap);
 	text-align: center;
 	font-size: var(--webapp-font-medium);

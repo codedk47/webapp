@@ -478,8 +478,8 @@ class webapp_echo_masker extends webapp_echo_html
 		$this->sw = $this->script(['fetchpriority' => 'high', 'src' => "?masker{$webapp->into}"]);
 		if ($this->init = $webapp->request_header('Service-Worker') !== 'masker')
 		{
-			if (in_array($webapp->method, $this->initallow, TRUE)) return;
 			$this->auth = [];
+			if (in_array($webapp->method, $this->initallow, TRUE)) return;
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
 			//$this->sw['data-router'] = $webapp->routname;
 			$this->sw['data-init'] = "?{$webapp->routname}/init";

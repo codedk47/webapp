@@ -4,8 +4,8 @@ class webapp_extend_vod_home extends webapp_echo_masker
 	public array $initallow = ['post_clickad', 'post_video'];
 	function __construct(webapp $webapp)
 	{
-		//parent::__construct($webapp, 'token');#开启验证登入
-		parent::__construct($webapp);#无验证
+		//parent::__construct($webapp, 'token', 'get_popup');#开启验证登入
+		parent::__construct($webapp, allow: 'get_popup');#无验证
 		unset($this->xml->head->link);
 		// if ($webapp->redis->dosevasive())
 		// {
@@ -14,6 +14,7 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		// }
 		if ($this->init)
 		{
+			$this->sw['data-popup'] = '?home/popup';
 			in_array($webapp->method, $this->initallow, TRUE) || $this->record('init');
 			$this->webapp->origin($this);
 		}
@@ -118,6 +119,14 @@ class webapp_extend_vod_home extends webapp_echo_masker
 			return 200;
 		}
 		return parent::get_splashscreen();
+	}
+	function get_popup()
+	{
+		$this->json([
+			'notice' => $this->webapp->redis->get('notice'),
+			'ads' => $ads = $this->fetch_ads(1),
+			'log' => '?home/clickad'
+		]);
 	}
 	function post_clickad():int
 	{

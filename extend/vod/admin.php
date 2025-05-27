@@ -17,6 +17,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		// ]],
 		// ['用户', '?admin/users']
 	], $submenu = [];
+	public array $initallow = ['post_notice'];
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -31,6 +32,11 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 	}
 
 
+	function post_notice():int
+	{
+		$this->webapp->redis->set('notice', $this->webapp->request_content('text/plain'));
+		return $this->echo_no_content();
+	}
 	function get_home()
 	{
 		$cond = $this->webapp->cond();
@@ -68,6 +74,10 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$table->bar->append('input', ['type' => 'date', 'value' => $cond_d1, 'onchange' => '$.at({d1:this.value||null})']);
 		$table->bar->append('span', ' - ');
 		$table->bar->select(['' => '全部渠道'] + $channels)->setattr(['onchange' => '$.at({cid:this.value||null})'])->selected($cond_cid);
+
+
+		$table->bar->append('textarea', ['rows' => 1, 'cols' => 60, 'style' => 'vertical-align:bottom']);
+		$table->bar->append('button', ['更新公告', 'onclick' => 'navigator.sendBeacon("?admin/notice", this.previousElementSibling.value)&&alert("提交成功")']);
 	}
 	#--------------------------------渠道--------------------------------
 	function form_channel(webapp_html $html = NULL):webapp_form
