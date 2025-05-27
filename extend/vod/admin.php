@@ -1,5 +1,5 @@
 <?php
-class webapp_router_admin extends webapp_echo_admin
+class webapp_extend_vod_admin extends webapp_echo_admin
 {
 	public array $nav = [
 		['首页', '?admin'],
@@ -223,8 +223,6 @@ class webapp_router_admin extends webapp_echo_admin
 		$cond = $this->webapp->cond();
 		$cond_seat = $cond->query('seat', 'extdata->"$.seat"=?s');
 		$cond->merge('ORDER BY extdata->"$.weight" DESC, hash ASC');
-
-
 		$table = $this->main->table($cond($this->webapp->nfs_ads)->paging($page, 8), function($table, $value)
 		{
 			$table->row()['class'] = 'title';

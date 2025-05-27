@@ -1,5 +1,5 @@
 <?php
-class webapp_ext_vod_base extends webapp_ext_nfs_base
+class webapp_extend_vod extends webapp_extend_nfs
 {
 	public array $proxy_origins = ['http://localhost'];
 	public array $origins = ['http://localhost'];

@@ -75,7 +75,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 	//private readonly webapp_redis_table $cache;
 	private readonly array $where;
 	private readonly Closure $format;
-	function __construct(public readonly webapp_ext_nfs_base $webapp, public readonly int $sort, public readonly int $type, Closure $format = NULL)
+	function __construct(public readonly webapp_extend_nfs $webapp, public readonly int $sort, public readonly int $type, Closure $format = NULL)
 	{
 		$this->where = ['WHERE `sort`=?i AND `type`=?i', $this->sort, $this->type];
 		$this->format = $format ?? fn($data) => $data;
@@ -283,7 +283,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 		return $this->primary($hash)->update('`shares`=`shares`+?i', $incr) === 1;
 	}
 }
-class webapp_ext_nfs_base extends webapp
+class webapp_extend_nfs extends webapp
 {
 	const tablename = 'nfs';
 	private array $nfs = [];

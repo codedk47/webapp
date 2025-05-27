@@ -1,5 +1,5 @@
 <?php
-class webapp_router_home extends webapp_echo_masker
+class webapp_extend_vod_home extends webapp_echo_masker
 {
 	public array $initallow = ['post_clickad', 'post_video'];
 	function __construct(webapp $webapp)
@@ -7,11 +7,11 @@ class webapp_router_home extends webapp_echo_masker
 		//parent::__construct($webapp, 'token');#开启验证登入
 		parent::__construct($webapp);#无验证
 		unset($this->xml->head->link);
-		if ($webapp->redis->dosevasive())
-		{
-			$this->echo('拒绝服务');
-			return $webapp->response_status(403);
-		}
+		// if ($webapp->redis->dosevasive())
+		// {
+		// 	$this->echo('拒绝服务');
+		// 	return $webapp->response_status(403);
+		// }
 		if ($this->init)
 		{
 			in_array($webapp->method, $this->initallow, TRUE) || $this->record('init');
@@ -66,6 +66,15 @@ class webapp_router_home extends webapp_echo_masker
 		$form->xml['class'] = 'auth';
 		return 401;
 	}
+	function init(string $ua):int
+	{
+		$this->title('初始化..');
+		$this->main['style'] = 'white-space:pre';
+		$this->main->text('请确保在浏览器中打开，保护隐私安全');
+		$this->main->text("\n如果长时间没有反应，请更新你的设备\n");
+		$this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'https://chrome.google.com/']);
+		return 200;
+	}
 	function record(string|array $field, ?string $cid = NULL):bool
 	{
 		if ($this->webapp->mysql->channels->exists('cid', $cid = $cid ?? $this->webapp->request_cookie('cid') ?? 'NULL'))
@@ -87,19 +96,9 @@ class webapp_router_home extends webapp_echo_masker
 		}
 		return FALSE;
 	}
-	function init(string $ua):int
-	{
-		$this->title('初始化..');
-		$this->main['style'] = 'white-space:pre';
-		$this->main->text('请确保在浏览器中打开，保护隐私安全');
-		$this->main->text("\n如果长时间没有反应，请更新你的设备\n");
-		$this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'https://chrome.google.com/']);
-		return 200;
-	}
 	function post_init():int
 	{
 		$this->json();
-
 		$this->record(['ic' => 1, 'iu' => intval($this->webapp->redis->uniqueip())]);
 		//print_r($this->webapp->request_content('application/json'));
 		//$data = $this->webapp->request_content('application/json');
@@ -107,6 +106,18 @@ class webapp_router_home extends webapp_echo_masker
 		//$this->echo->message('提示消息');
 		//$this->echo->redirect('https://volunteer.cdn-go.cn/404/latest/404.html');
 		return 200;
+	}
+	function get_splashscreen():int
+	{
+		unset($this->xml->head->script[1], $this->xml->head->script[2]);
+		if (count($ads = $this->fetch_ads()))
+		{
+			$ad = $this->webapp->random_weight($ads);
+			$this->splashscreen($ad['src'], $ad['jumpurl'], '跳过', 4, FALSE, $ad['hash']);
+			$this->webapp->nfs_ads->views($ad['hash']);
+			return 200;
+		}
+		return parent::get_splashscreen();
 	}
 	function post_clickad():int
 	{
@@ -120,18 +131,6 @@ class webapp_router_home extends webapp_echo_masker
 			&& $this->webapp->nfs_videos->{$record}($this->webapp->request_content('text/plain'))
 			&& $this->record('vw');
 		return $this->echo_no_content();
-	}
-	function get_splashscreen():int
-	{
-		return parent::get_splashscreen();
-		if (count($ads = $this->fetch_ads()))
-		{
-			$ad = $this->webapp->random_weight($ads);
-			$this->splashscreen($ad['src'], $ad['jumpurl'], '跳过', 4, FALSE, $ad['hash']);
-			$this->webapp->nfs_ads->views($ad['hash']);
-			return 200;
-		}
-		return parent::get_splashscreen();
 	}
 	function cache_hotword(string $keyword):bool
 	{

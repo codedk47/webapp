@@ -826,9 +826,9 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				}
 				return $syntax ? $object($syntax, ...$this->values) : $object;
 			}
-			function query(string $name, string $syntax, callable $format = NULL, $default = NULL):?string
+			function query(string $name, string $syntax, callable $format = NULL, string $default = NULL):?string
 			{
-				if ($value = $this->query[$name] ?? $default)
+				if (is_string($value = $this->query[$name] ?? $default))
 				{
 					$this->syntax[] = $syntax;
 					$this->values[] = is_callable($format) ? $format($value) : $value;
