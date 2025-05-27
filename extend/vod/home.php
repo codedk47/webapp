@@ -143,7 +143,7 @@ class webapp_extend_vod_home extends webapp_echo_masker
 	}
 	function cache_hotword(string $keyword):bool
 	{
-		return strlen($keyword) < 9 && is_float($this->webapp->redis->zIncrBy('hotwords', 1, $keyword));
+		return strlen($keyword) < 13 && is_float($this->webapp->redis->zIncrBy('hotwords', 1, $keyword));
 	}
 	function fetch_hotword(int $limit = 30):array
 	{
