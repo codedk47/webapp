@@ -7,7 +7,7 @@ class webapp_redis extends Redis
 	{
 		$this->pconnect(...$open ? $open : ['127.0.0.1', 6379]);
 	}
-	function dosevasive(int $count = 10, int $denytime = 600):bool
+	function dosevasive(int $count = 20, int $denytime = 600):bool
 	{
 		$this->expire($key = $this->webapp->iphex($this->webapp->request_ip(TRUE)),
 			($deny = $this->incr($key) > $count) ? $denytime : 1);
