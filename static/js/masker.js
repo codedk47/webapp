@@ -1,6 +1,7 @@
+'use strict';
 if (self.window)
 {
-	const script = document.currentScript, sw = navigator.serviceWorker.register(script.src,{scope:
+	const script = document.currentScript, sw = navigator.serviceWorker.register(script.src, {scope:
 		location.pathname}).then(() => navigator.serviceWorker.ready.then(registration => registration.active)),
 		init = new Promise(resolve => addEventListener('DOMContentLoaded', () => sw.then(active => {
 			const handle =
@@ -17,6 +18,14 @@ if (self.window)
 				message: content => alert(content),
 				reload: url => location.replace(url)
 			};
+			//notice = Notification.requestPermission(), 
+			// notice.then(permission =>
+			// {
+			// 	navigator.serviceWorker.ready.then(registration =>
+			// 	{
+			// 		registration.showNotification('Title',{icon: '?favicon', body: 'Buzz! Buzz!'});
+			// 	});
+			// });
 			navigator.serviceWorker.addEventListener('message', event =>
 			{
 				//console.log('Global Window Message', event.data);
@@ -166,6 +175,7 @@ if (self.window)
 			}
 		}
 	};
+	self.masker = masker;
 }
 else
 {
@@ -311,5 +321,5 @@ else
 		}
 		return fetch(event.request);
 	}))));
-
+	addEventListener('notificationclick', event => console.log(event));
 }
