@@ -9,7 +9,10 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		unset($this->xml->head->link);
 		if ($webapp->redis->dosevasive())
 		{
-			$this->echo('拒绝服务');
+			unset($this->xml->head->script);
+			$this->title('dosevasive');
+			$this->main->append('h1', '┗|｀O′|┛ 嗷~~');
+			//$webapp->response_location('https://volunteer.cdn-go.cn/404/latest/404.html');
 			return $webapp->response_status(403);
 		}
 		if ($this->init)
