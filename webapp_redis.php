@@ -10,7 +10,7 @@ class webapp_redis extends Redis
 	function dosevasive(int $count = 10, int $denytime = 600):bool
 	{
 		$this->expire($key = $this->webapp->iphex($this->webapp->request_ip(TRUE)),
-			($deny = $this->incr($key) > $count) ? $denytime : 2);
+			($deny = $this->incr($key) > $count) ? $denytime : 1);
 		return $deny;
 	}
 	function uniqueip(int $expire = NULL):bool
