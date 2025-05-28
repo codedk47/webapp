@@ -440,6 +440,10 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		$this->draw_footer();
 		if ($keyword ?? FALSE)
 		{
+			if ($this->webapp->is_long_hash($keyword))
+			{
+				return $this->webapp->response_location("?home/watch,hash:{$keyword}");
+			}
 			$this->title($keyword);
 			$this->cache_hotword($keyword);
 			$this->draw_videos_lists($this->main, "?home/search,keywords:{$keywords},page:");

@@ -20,18 +20,7 @@ class webapp_extend_vod extends webapp_extend_nfs
 			$masker->link(['rel' => 'preconnect', 'href' => $origin, 'data-file' => $file, 'crossorigin' => NULL]);
 		}
 	}
-	function cid(string $default = 'NULL'):string
-	{
-		return $this->request_header('user-cid') ?? $default;
-	}
-	function did():?string
-	{
-		return $this->request_header('user-did') ?? NULL;
-	}
-	function access_log()
-	{
 
-	}
 	function nfs_ads():webapp_nfs
 	{
 		return $this->nfs(0, 1, function($data)

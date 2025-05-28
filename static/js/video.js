@@ -123,7 +123,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		else
 		{
 			this.#playm3u8 = this.#video.canPlayType('application/vnd.apple.mpegurl') || this.#video.canPlayType('application/x-mpegURL')
-				? data => this.#video.src = Array.isArray(data) ? `data:application/vnd.apple.mpegurl;base64,${btoa(data.join('\n'))}` : data
+				? data => this.#video.src = Array.isArray(data) ? `data:application/vnd.apple.mpegurl;base64,${btoa(data.join(''))}` : data
 				: data => console.error(data);
 		}
 	}
@@ -172,45 +172,39 @@ customElements.define('webapp-video', class extends HTMLElement
 	{
 		this.#video[`on${event}`] = callback;
 	}
-	m3u8(resource, preview)
+	m3u8(resource, duration)
 	{
-		if (preview)
+		if (duration)
 		{
-			// const
-			// [previewstart, previewend] = Number.isInteger(preview *= 1)
-			// 	? [preview >> 16 & 0xffff, (preview >> 16 & 0xffff) + (preview & 0xffff)]
-			// 	: [0, 0xffff],
-			// response = await fetch(resource),
-			// basepath = response.url.split('/').slice(0, -1).join('/'),
-			// rowdata = (await response.text()).match(/#[^#]+/g),
-			// buffer = [];
-			// for (let duration = 0, i = 0; i < rowdata.length; ++i)
-			// {
-			// 	if (rowdata[i].startsWith('#EXTINF'))
-			// 	{
-			// 		if (duration > -1)
-			// 		{
-			// 			const pattern = rowdata[i].match(/#EXTINF:(\d+(?:\.\d+)?)\,\s*([^#]+)/);
-			// 			duration += parseFloat(pattern[1]);
-			// 			if (duration > previewstart)
-			// 			{
-			// 				buffer[buffer.length] = /^(?!https?:\/\/)/i.test(pattern[2])
-			// 					? pattern[0].replace(pattern[2], `${basepath}/${pattern[2]}`) : pattern[0];
-			// 				if (duration > previewend)
-			// 				{
-			// 					duration = -1;
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// 	else
-			// 	{
-			// 		buffer[buffer.length] = rowdata[i].startsWith('#EXT-X-KEY')
-			// 			? rowdata[i].replace(/URI="([^"]+)"/, `URI="${basepath}/$1"`)
-			// 			: rowdata[i];
-			// 	}
-			// }
-			// this.#playm3u8(buffer);
+			fetch(resource).then(response => response.text()).then(data =>
+			{
+				const basepath = resource.split('/').slice(0, -1).join('/'), buffer = data.match(/#[^#]+/g);
+				for (let i = 0, t = 0; i < buffer.length; ++i)
+				{
+					switch (true)
+					{
+						case buffer[i].startsWith('#EXT-X-KEY'):
+							buffer[i] = buffer[i].replace(/URI="((?!https?\:)[^"]+)"/i, `URI="${basepath}/$1"`);
+							break;
+						case buffer[i].startsWith('#EXTINF'):
+							let m = buffer[i].match(/(#EXTINF:(\d+(?:\.\d+)?)\,\s*)([^\s]+\s)/);
+							if (m)
+							{
+								t += parseFloat(m[2]);
+								if (/^(?!https?\:)/i.test(m[3]))
+								{
+									buffer[i] = `${m[1]}${basepath}/${m[3]}`;
+								}
+							}
+					}
+					if (t > duration)
+					{
+						buffer.splice(i, buffer.length - i - 1);
+						break;
+					}
+				}
+				this.#playm3u8(buffer);
+			});
 		}
 		else
 		{
@@ -252,7 +246,7 @@ customElements.define('webapp-video', class extends HTMLElement
 		}
 		if ('m3u8' in this.dataset)
 		{
-			this.m3u8(this.dataset.m3u8, this.dataset.preview);
+			this.m3u8(this.dataset.m3u8, this.dataset.duration);
 			delete this.dataset.m3u8;
 		}
 		this.#video.loop = this.hasAttribute('loop');
