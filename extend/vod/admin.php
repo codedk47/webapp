@@ -433,6 +433,18 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 			$form->echo($data);
 		}
 	}
+	function get_delete_video(string $hash)
+	{
+		$this->json();
+		if ($this->webapp->video_delete($hash))
+		{
+			$this->echo->redirect("?admin/videos");
+		}
+		else
+		{
+			$this->echo->message("删除视频 {$hash} 失败！");
+		}
+	}
 	function get_videos(int $page = 1)
 	{
 		$this->script(['src' => '/webapp/static/js/hls.min.js']);
@@ -447,7 +459,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$table = $this->main->table($cond($this->webapp->nfs_videos)->paging($page, 10), function($table, $value)
 		{
 			$table->row()['class'] = 'title';
-			$table->cell()->append('a', ['删除这个视频', 'href' => 'javascript:;']);
+			$table->cell()->append('a', ['删除这个视频', 'href' => "?admin/delete-video,hash:{$value['hash']}"]);
 			$table->cell([htmlentities($value['name']), 'colspan' => 8]);
 
 			$table->row();

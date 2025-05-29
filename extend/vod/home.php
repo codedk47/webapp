@@ -55,7 +55,7 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		$this->title('授权');
 		$form = new webapp_form($this->main);
 		$form->fieldset();
-		$form->captcha('验证码', 2)->input[1]['placeholder'] = '输入以下图片展示字母不区分大小写';
+		$form->captcha('验证码')->input[1]['placeholder'] = '输入以下图片展示字母不区分大小写';
 		$form->fieldset();
 		$form->button('我同意以上协议，继续访问', 'submit');
 		// $form->fieldset();
@@ -74,8 +74,7 @@ class webapp_extend_vod_home extends webapp_echo_masker
 	{
 		$this->title('初始化..');
 		$this->main['style'] = 'white-space:pre';
-		$this->main->text('请确保在浏览器中打开，保护隐私安全');
-		$this->main->text("\n如果长时间没有反应，请更新你的设备\n");
+		$this->main->text("请确保在浏览器中打开，保护隐私安全\n如果长时间没有反应，请更新你的设备\n");
 		$this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'https://chrome.google.com/']);
 		return 200;
 	}
@@ -160,19 +159,14 @@ class webapp_extend_vod_home extends webapp_echo_masker
 	{
 		$this->header['class'] = 'search';
 		$this->header->append('a', ['href' => '?home', 'style' => 'padding:0 var(--webapp-gapitem)'])->svg(['width' => 32, 'height' => 32])->logo();
-
-
 		$this->header->append('input', ['type' => 'search',
 			'placeholder' => '请输入关键词搜索',
 			'value' => isset($this->webapp->query['keywords']) ? urldecode($this->webapp->query['keywords']) : NULL,
-			'onkeypress' => 'event.keyCode===13&&this.nextElementSibling.onclick()',
-			
+			'onkeypress' => 'event.keyCode===13&&this.nextElementSibling.onclick()'
 		]);
-
 		$this->header->append('button', ['搜索',
 			'onclick' => 'location.href=this.dataset.search+this.previousElementSibling.value',
 			'data-search' => '?home/search,keywords:']);
-		//$this->header->append('a', ['href' => 'javascript:;'])->svg(['fill' => 'white'])->icon('search', 32);
 		return $this->header;
 	}
 	function draw_header_name(string $title, string $goback = 'javascript:history.back();'):webapp_html
@@ -260,7 +254,6 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		string $title = NULL,
 		string $anchor = NULL,
 		string $action = '更多 >>'):void {
-		
 		if ($title)
 		{
 			$titles = $this->main->append('div', ['class' => 'titles']);
@@ -270,8 +263,6 @@ class webapp_extend_vod_home extends webapp_echo_masker
 				$titles->append('a', [$action, 'href' => $anchor]);
 			}
 		}
-
-
 		$element = $node->getName() === 'template' ? $node : $node->append('div', ['class' => "grid-t{$display}"]);
 		if (is_string($videos))
 		{
@@ -279,8 +270,6 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		}
 		else
 		{
-
-
 			foreach ($videos as $video)
 			{
 				$anchor = $element->append('a', ['href' => "?home/watch,hash:{$video['hash']}"]);

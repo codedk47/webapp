@@ -111,7 +111,7 @@ class webapp_extend_vod extends webapp_extend_nfs
 	}
 	function video_delete(string $hash):bool
 	{
-		return FALSE;
+		return $this->nfs_videos->delete_data($hash, TRUE);
 	}
 	function video_update(string $hash, array $value, string $cover):bool
 	{

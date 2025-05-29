@@ -14,7 +14,8 @@ class webapp_nfs_client extends webapp_client_http
 			function(string $method, string $path, $body = NULL, string $type = NULL):bool
 			{
 				$date = date(DATE_RFC2822);
-				$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-amz-acl:public-read\n/{$this->bucket}{$path}", $this->password, TRUE));
+				$filename = strpos($path, '?') ? strstr($path, '?', TRUE) : $path;
+				$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-amz-acl:public-read\n/{$this->bucket}{$filename}", $this->password, TRUE));
 				$this->headers(['Authorization' => "AWS {$this->username}:{$signature}", 'Date' => $date, 'x-amz-acl' => 'public-read']);
 				return parent::request($method, $path, $body, $type);
 			}],
@@ -23,7 +24,8 @@ class webapp_nfs_client extends webapp_client_http
 			function(string $method, string $path, $body = NULL, string $type = NULL):bool
 			{
 				$date = gmdate(DATE_RFC7231);
-				$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-oss-acl:public-read\n/{$this->bucket}{$path}", $this->password, TRUE));
+				$filename = strpos($path, '?') ? strstr($path, '?', TRUE) : $path;
+				$signature = base64_encode(hash_hmac('sha1', "{$method}\n\n{$type}\n{$date}\nx-oss-acl:public-read\n/{$this->bucket}{$filename}", $this->password, TRUE));
 				$this->headers(['Authorization' => "OSS {$this->username}:{$signature}", 'Date' => $date, 'x-oss-acl' => 'public-read']);
 				return parent::request($method, $path, $body, $type);
 			}],
@@ -47,7 +49,30 @@ class webapp_nfs_client extends webapp_client_http
 	}
 	function delete(string $filename):bool
 	{
-		return $this->request('DELETE', $filename) && $this->status() === 204;
+		do
+		{
+			if (str_ends_with($filename, '/'))
+			{
+				$prefix = substr($filename, 1);
+				if ($this->request('GET', "/?prefix={$prefix}&max-keys=1000") && $this->status() === 200)
+				{
+					foreach ($this->content()->Contents as $content)
+					{
+						if ($this->request('DELETE', "/{$content->Key}") && $this->status() === 204)
+						{
+							continue;
+						}
+						break 2;
+					}
+				}
+				else
+				{
+					break;
+				}
+			}
+			return $this->request('DELETE', $filename) && $this->status() === 204;
+		} while (0);
+		return FALSE;
 	}
 	function upload_directory(string $path, string $from):bool
 	{
@@ -240,13 +265,10 @@ class webapp_nfs implements Countable, IteratorAggregate
 	{
 		return $this->primary($hash)->update(['t1' => $this->webapp->time(), 'name' => $newname]) === 1;
 	}
-	// function create_tree(string $name, ?array $extdata = NULL):?string
-	// {
-	// 	return $this->create(['name' => $name, 'extdata' => $extdata]);
-	// }
-	function delete_file(string $hash):bool
+	function delete_data(string $hash, bool $folder = FALSE):bool
 	{
-		return $this->webapp->mysql->sync(fn() => $this->delete($hash) && $this->webapp->client->delete($this->filename($hash)));
+		return $this->webapp->mysql->sync(fn() => $this->delete($hash)
+			&& $this->webapp->client->delete($this->filename($hash, $folder ? '/' : '')));
 	}
 	function create_uploadedfile(string $name, array $data = [], bool $mask = FALSE):?string
 	{
