@@ -506,7 +506,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		
 		$table->header('找到 %d 个视频', $table->count());
 		$table->paging($this->webapp->at(['page' => '']));
-		$table->bar->append('input', ['type' => 'search', 'value' => $cond_search, 'onkeypress' => 'event.keyCode===13&&$.at({search:this.value||null})']);
+		$table->bar->append('input', ['type' => 'search', 'value' => $cond_search, 'onkeypress' => 'event.keyCode===13&&$.at({search:this.value||null,page:null})']);
 
 
 	}
