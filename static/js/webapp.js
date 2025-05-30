@@ -14,7 +14,6 @@ const webapp = import('./webkit.js').then(function({default: $})
 			return ('confirm' in dataset ? dialog.confirm(dataset.confirm) : Promise.resolve(true)).then(confirm => confirm
 				? this.fetch().then(response => response.text()).then(async text =>
 				{
-					
 					try
 					{
 						const json = JSON.parse(text);

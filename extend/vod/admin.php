@@ -210,7 +210,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$form->fieldset();
 		$form->button('提交', 'submit');
 
-		$form->xml['onsubmit'] = 'return $(this).action()';
+		$form->xml['onsubmit'] = 'return !$(this).action()';
 		return $form;
 	}
 	function post_ad(string $hash = NULL)
@@ -227,7 +227,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 			}
 			else
 			{
-				$this->echo->message($hash ? '修改失败！' : '创建失败！');
+				$this->echo->message($hash ? '修改失败！' : '创建失败，新广告必须上传图片！');
 			}
 		}
 	}
