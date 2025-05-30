@@ -535,10 +535,9 @@ class webapp_echo_masker extends webapp_echo_html
 		$body = $this->xml->body;
 		$body->append('a', [
 			'href' => $jumpurl,
-			'onclick' => 'return masker.clickad(this), masker.close()',
-			'target' => '_blank',
 			//'style' => "display:block;height:100vh;background:url({$cover})white no-repeat center/100% 100%",
 			'style' => "display:block;height:100vh;background:url({$cover})white no-repeat center/cover",
+			'onclick' => 'return masker.clickad(this), requestAnimationFrame(masker.close)',
 			'data-hash' => $hash]);
 		$auto = $auto ? 'true' : 'false';
 		$this->script("masker.skipsplashscreen('{$skip}',{$cd},{$auto})");
