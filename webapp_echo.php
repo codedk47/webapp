@@ -179,10 +179,14 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	{
 		$this['message'] = $content;
 	}
+	function refresh(string $url = NULL)
+	{
+		//$this->webapp->response_refresh(0, $url);
+		$this['refresh'] = $url;
+	}
 	function redirect(string $url):void
 	{
 		//$this->webapp->response_location($url);
-		$this->webapp->response_refresh(0, $url);
 		$this['redirect'] = $url;
 	}
 }

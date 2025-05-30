@@ -86,11 +86,7 @@ export default new pq((window, undefined)=>
 		}
 		get id()
 		{
-			if (this.target.hasAttribute('id') === false)
-			{
-				this.target.id = `idx${++element.id}`;
-			}
-			return this.target.id;
+			return this.target.hasAttribute('id') ? this.target.id : this.target.id = `wkid${++element.id}`;
 		}
 		get connected()
 		{
@@ -124,21 +120,21 @@ export default new pq((window, undefined)=>
 		{
 			return this.target.dispatchEvent(new Event(type, {bubbles, cancelable, composed}));
 		}
-		fetch(data)
+		fetch(body)
 		{
 			let url;
 			const options = {};
 			if (this.name === 'form')
 			{
 				url = this.target.action;
-				options.method = this.target.method;
-				options.body = new formdata(this.target);
+				options.method = this.target.getAttribute('method');
+				options.body = body || new formdata(this.target);
 			}
 			else
 			{
 				url = this.target.href || this.target.dataset.action;
 				options.method = this.target.dataset.method || 'get';
-				options.body = data;
+				options.body = body;
 			}
 			return fetch(url, options);
 		}
@@ -197,7 +193,7 @@ export default new pq((window, undefined)=>
 			this.#cancel.on('click', () => this.close(false));
 			this.#accept.on('click', () => this.close(true));
 
-
+			this.#section.target.style.whiteSpace = 'pre';
 
 			this.on('close', async event =>
 			{
@@ -267,7 +263,7 @@ export default new pq((window, undefined)=>
 		}
 
 
-		message(content, title = 'Message', button = 'OK')
+		async message(content, title = 'Message', button = 'OK')
 		{
 			return this.open(() => {
 				this.draw(title, button).text(content);

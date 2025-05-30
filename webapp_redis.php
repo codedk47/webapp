@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+#http://doc.redisfans.com/
+#https://github.com/phpredis/phpredis?tab=readme-ov-file
 class webapp_redis extends Redis
 {
 	public array $errors = [];
@@ -18,10 +20,6 @@ class webapp_redis extends Redis
 		return $this->sAdd('uniqueip', $this->webapp->iphex($this->webapp->request_ip(TRUE)))
 			&& ($this->sCard('uniqueip') > 1 || $this->expireAt('uniqueip', $expire ?? mktime(23, 59, 59)));
 	}
-
-
-
-
 	function clear(string|webapp_redis_table $table = NULL):void
 	{
 		if ($table)

@@ -95,7 +95,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$form->fieldset();
 		$form->button('提交', 'submit');
 
-		//$form->xml['onsubmit'] = 'return $(this).action()';
+		$form->xml['onsubmit'] = 'return !$(this).action()';
 		return $form;
 	}
 	function post_channel(string $cid = NULL)
@@ -136,6 +136,13 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 			]);
 		}
 	}
+	function delete_channel(string $cid = NULL)
+	{
+		$this->json();
+		$this->webapp->mysql->channels->delete('WHERE cid=?s LIMIT 1', $cid) === 1
+			? $this->echo->refresh()
+			: $this->echo->message("删除渠道 {$cid} 失败！");
+	}
 	function get_channels(int $page = 1)
 	{
 		$cond = $this->webapp->cond();
@@ -144,7 +151,12 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$table = $this->main->table($cond($this->webapp->mysql->channels)->paging($page), function($table, $value)
 		{
 			$table->row();
-			$table->cell()->append('a', ['删除', 'href' => '#']);
+			$table->cell()->append('a', ['删除',
+				'href' => "?admin/channel,cid:{$value['cid']}",
+				'onclick' => 'return !$(this).action()',
+				'data-method' => 'delete',
+				'data-confirm' => '删除渠道后不可恢复'
+			]);
 			$table->cell()->append('a', [$value['cid'], 'href' => "?admin/channel,cid:{$value['cid']}"]);
 			$table->cell($value['name']);
 			$table->cell($value['rate']);
@@ -198,7 +210,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$form->fieldset();
 		$form->button('提交', 'submit');
 
-		//$form->xml['onsubmit'] = 'return $(this).action()';
+		$form->xml['onsubmit'] = 'return $(this).action()';
 		return $form;
 	}
 	function post_ad(string $hash = NULL)
@@ -228,6 +240,13 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 			$form->echo($data);
 		}
 	}
+	function delete_ad(string $hash)
+	{
+		$this->json();
+		$this->webapp->nfs_ads->delete_data($hash)
+			? $this->echo->refresh()
+			: $this->echo->message("删除广告 {$hash} 失败！");
+	}
 	function get_ads(int $page = 1)
 	{
 		$cond = $this->webapp->cond();
@@ -236,7 +255,11 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$table = $this->main->table($cond($this->webapp->nfs_ads)->paging($page, 8), function($table, $value)
 		{
 			$table->row()['class'] = 'title';
-			$table->cell()->append('a', ['删除这个广告', 'href' => "?admin/ad,hash:{$value['hash']}", 'data-method' => 'delete']);
+			$table->cell()->append('a', ['删除这个广告',
+				'href' => "?admin/ad,hash:{$value['hash']}",
+				'onclick' => 'return !$(this).action()',
+				'data-method' => 'delete'
+			]);
 			$table->cell(['colspan' => 6])->append('a', [$value['jumpurl'], 'href' => $value['jumpurl'], 'target' => '_blank']);
 			
 			$table->row();
@@ -320,6 +343,8 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 
 		$form->fieldset();
 		$form->button('提交', 'submit');
+
+		$form->xml['onsubmit'] = 'return !$(this).action()';
 		return $form;
 	}
 	function post_classify(string $hash = NULL)
@@ -348,6 +373,13 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 			$form->echo($data);
 		}
 	}
+	function delete_classify(string $hash)
+	{
+		$this->json();
+		$this->webapp->nfs_classifies->delete($hash)
+			? $this->echo->refresh()
+			: $this->echo->message("删除分类 {$hash} 失败！");
+	}
 	function get_classifies(int $page = 1)
 	{
 		$cond = $this->webapp->cond();
@@ -357,7 +389,11 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$table = $this->main->table($cond($this->webapp->nfs_classifies)->paging($page), function($table, $value)
 		{
 			$table->row();
-			$table->cell()->append('a', ['删除', 'href' => '#']);
+			$table->cell()->append('a', ['删除',
+				'href' => "?admin/classify,hash:{$value['hash']}",
+				'onclick' => 'return !$(this).action()',
+				'data-method' => 'delete'
+			]);
 			$table->cell()->append('a', [$value['hash'], 'href' => "?admin/classify,hash:{$value['hash']}"]);
 			$table->cell(date('Y-m-d\\TH:i:s', $value['t0']));
 			$table->cell(date('Y-m-d\\TH:i:s', $value['t1']));
@@ -404,6 +440,8 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 
 		$form->fieldset();
 		$form->button('更新视频', 'submit');
+
+		$form->xml['onsubmit'] = 'return !$(this).action()';
 		return $form;
 	}
 	function post_video(string $hash)
@@ -417,7 +455,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 			}
 			else
 			{
-				$this->echo->message('更新失败！');
+				$this->echo->message('更新视频失败！');
 			}
 		}
 	}
@@ -433,17 +471,12 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 			$form->echo($data);
 		}
 	}
-	function get_delete_video(string $hash)
+	function delete_video(string $hash)
 	{
 		$this->json();
-		if ($this->webapp->video_delete($hash))
-		{
-			$this->echo->redirect("?admin/videos");
-		}
-		else
-		{
-			$this->echo->message("删除视频 {$hash} 失败！");
-		}
+		$this->webapp->video_delete($hash)
+			? $this->echo->refresh()
+			: $this->echo->message("删除视频 {$hash} 失败！");
 	}
 	function get_videos(int $page = 1)
 	{
@@ -455,11 +488,16 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 
 		$cond->merge('ORDER BY t1 DESC, hash ASC');
 
-
 		$table = $this->main->table($cond($this->webapp->nfs_videos)->paging($page, 10), function($table, $value)
 		{
 			$table->row()['class'] = 'title';
-			$table->cell()->append('a', ['删除这个视频', 'href' => "?admin/delete-video,hash:{$value['hash']}"]);
+
+
+			$table->cell()->append('a', ['删除这个视频',
+				'href' => "?admin/video,hash:{$value['hash']}",
+				'onclick' => 'return !$(this).action()',
+				'data-method' => 'delete'
+			]);
 			$table->cell([htmlentities($value['name']), 'colspan' => 8]);
 
 			$table->row();
