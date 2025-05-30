@@ -116,7 +116,7 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		if (count($ads = $this->fetch_ads()))
 		{
 			$ad = $this->webapp->random_weight($ads);
-			$this->splashscreen($ad['src'], $ad['jumpurl'], '跳过', 4, TRUE, $ad['hash']);
+			$this->splashscreen($ad['src'], $ad['jumpurl'], '跳过', 4, FALSE, $ad['hash']);
 			$this->webapp->nfs_ads->views($ad['hash']);
 			return 200;
 		}

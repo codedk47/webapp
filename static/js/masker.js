@@ -46,9 +46,8 @@ if (self.window)
 				const init = JSON.parse(sessionStorage.getItem('init'));
 				if (init)
 				{
-					init.splashscreen && masker.open(init.splashscreen);
 					sessionStorage.removeItem('init');
-					resolve(init);
+					init.splashscreen ? masker.open(init.splashscreen).then(() => resolve(init)) : resolve(init);
 				}
 				active.postMessage(['ping', 4]);
 				callbacks.forEach(callback => callback());
@@ -91,7 +90,7 @@ if (self.window)
 	}
 	masker.then = callback => callbacks[callbacks.length] = callback;
 	masker.init = callback => init.then(callback);
-	masker.open = url => init.then(() =>
+	masker.open = url => new Promise(resolve => 
 	{
 		const frame = document.createElement('iframe');
 		frame.src = url;
@@ -106,7 +105,7 @@ if (self.window)
 		{
 			switch (event.data)
 			{
-				case 'close': return document.body.removeChild(frame);
+				case 'close': return document.body.removeChild(frame), resolve(frame);
 			}
 		});
 		frame.focus();
@@ -115,7 +114,6 @@ if (self.window)
 	masker.close = () => postMessage('close');
 	masker.token = token => sw.then(active => (token ? localStorage.setItem('token', token)
 		: localStorage.removeItem('token'), active.postMessage({token})));
-
 	masker.skipsplashscreen = (skip = 'SKIP', second = 4, auto = false) => masker.then(() =>
 	{
 		const anchor = document.createElement('a');
