@@ -270,9 +270,27 @@ aside.watch>strong>div{
 
 /* main */
 main>blockquote{
-	margin: 0;
+	margin: 1rem;
 	padding: var(--webapp-gap);
 	text-align: center;
+
+	border-radius: 8px;
+	color: var(--webapp-background);
+	background-color: var(--webapp-button);
+	background-image: linear-gradient(-45deg,
+	rgba(255, 255, 255, 0.15) 25%,
+	transparent 25%,
+	transparent 50%,
+	rgba(255, 255, 255, 0.15) 50%,
+	rgba(255, 255, 255, 0.15) 75%,
+	transparent 75%,
+	transparent);
+	background-size: 1rem 1rem;
+	animation: 1s linear 0s infinite normal none running vod-loading;
+}
+@keyframes vod-loading {
+	0% {background-position: 1rem 0px;}
+	100% {background-position: 0px 0px;}
 }
 main.myshare{
 	display: flex;

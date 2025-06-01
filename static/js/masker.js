@@ -173,6 +173,7 @@ if (self.window)
 			}
 		}
 	};
+	masker.isStandaloneApp = () => window.matchMedia('(display-mode: standalone)').matches;
 	self.masker = masker;
 }
 else
@@ -227,7 +228,12 @@ else
 		}
 		return response;
 	}
-	//addEventListener('install', event => event.waitUntil(caches.open(cachename)));
+	addEventListener('install', event => {
+
+
+		console.log('asd')
+		//event.waitUntil(caches.open(cachename)).then(cache => cache.addAll([]))
+	});
 	addEventListener('message', event =>
 	{
 		//console.log('Service Worker Message', event.data);

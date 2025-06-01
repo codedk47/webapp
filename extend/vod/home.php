@@ -113,6 +113,21 @@ class webapp_extend_vod_home extends webapp_echo_masker
 	function get_splashscreen():int
 	{
 		unset($this->xml->head->script[1], $this->xml->head->script[2]);
+		// $this->script(['src' => '/webapp/static/js/hls.min.js']);
+		// $this->script(['src' => '/webapp/static/js/video.js']);
+		// $this->script('masker.skipsplashscreen("跳过",5,false)');
+		// $player = $this->main->append('webapp-video', [
+		// 	'style' => 'height:100vh',
+		// 	'data-poster' => '',
+		// 	'data-m3u8' => '',
+		// 	'data-log' => '?home/video,record:views',
+		// 	'data-key' => '',
+		// 	'autoheight' => NULL,
+		// 	'autoplay' => NULL,
+		// 	//'controls' => NULL,
+		// 	'muted' => NULL
+		// ]);
+		// return 200;
 		if (count($ads = $this->fetch_ads()))
 		{
 			$ad = $this->webapp->random_weight($ads);

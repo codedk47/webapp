@@ -43,7 +43,7 @@
 			--expand-button-width: 155px;
 		}
 		.loading {
-			background-image: linear-gradient(45deg,
+			background-image: linear-gradient(-45deg,
 			rgba(255, 255, 255, 0.15) 25%,
 			transparent 25%,
 			transparent 50%,
@@ -58,11 +58,47 @@
 			0% {background-position: 1rem 0px;}
 			100% {background-position: 0px 0px;}
 		}
+
+
+		div.webapp>input[type=range]{
+			appearance: none;
+			outline: none;
+			background-image: linear-gradient(-45deg,
+			rgba(255, 255, 255, 0.15) 25%,
+			transparent 25%,
+			transparent 50%,
+			rgba(255, 255, 255, 0.15) 50%,
+			rgba(255, 255, 255, 0.15) 75%,
+			transparent 75%,
+			transparent);
+			background-size: 1rem 1rem;
+			animation: 1s linear 0s infinite normal none running progress-bar-stripes;
+			background-color: #007bff;
+			overflow: hidden;
+			width: 100%;
+		}
+		div.webapp>input[type=range]::-webkit-slider-thumb{
+			appearance: none;
+			outline: none;
+			width:1rem;
+			
+			background: rgba(0,0,0,.6);
+			box-shadow: 100rem -100rem 0 100rem rgba(0,0,0,.2);
+			height:1rem;
+		}
+
+
+
 	</style>
 </head>
 </html>
 <body>
 <progress max="100" value="70"> 70% </progress>
 
-<span class=" loading " style="width:100%;height:2rem;display: block;flex-grow: 1; background-color: var(--active-color);"></span>
+<div class="webapp">
+<input type="range" max="1" step="0.0001">
+</div>
+
+
+<span class=" loading " style="width:100%;height:8px;display: block;flex-grow: 1; background-color: var(--active-color);"></span>
 </body>
