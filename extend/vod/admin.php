@@ -17,7 +17,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		// ]],
 		// ['用户', '?admin/users']
 	], $submenu = [];
-	public array $initallow = ['post_notice'];
+	public array $initallow = ['post_notice', 'post_video_recommends'];
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -478,6 +478,12 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 			? $this->echo->refresh()
 			: $this->echo->message("删除视频 {$hash} 失败！");
 	}
+
+	function post_video_recommends():int
+	{
+		$this->webapp->redis->set('recommendvideos', $this->webapp->request_content('text/plain'));
+		return $this->echo_no_content();
+	}
 	function get_videos(int $page = 1)
 	{
 		$this->script(['src' => '/webapp/static/js/hls.min.js']);
@@ -546,6 +552,8 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('input', ['type' => 'search', 'value' => $cond_search, 'onkeypress' => 'event.keyCode===13&&$.at({search:this.value||null,page:null})']);
 
+		$table->bar->append('textarea', [is_string($video_recommends = $this->webapp->redis->get('recommendvideos')) ? $video_recommends : NULL, 'rows' => 1, 'cols' => 14, 'style' => 'vertical-align:bottom']);
+		$table->bar->append('button', ['更新推荐', 'onclick' => 'navigator.sendBeacon("?admin/video-recommends", this.previousElementSibling.value)&&alert("提交成功")']);
 
 	}
 

@@ -262,6 +262,22 @@ class webapp_extend_vod_home extends webapp_echo_masker
 			]);
 		}
 	}
+	function draw_video_recommend(webapp_html $node, int $duration = 5):void
+	{
+		if (is_string($video_recommends = $this->webapp->redis->get('recommendvideos'))
+			&& count($video_recommends = iterator_to_array($this->webapp->nfs_videos->search('`hash` IN(?S) ORDER BY FIELD(`hash`,?S)',
+				$video_recommends = str_split(preg_replace('/[^0-9A-Z]+/', '', $video_recommends), 12), $video_recommends)))) {
+			$node->append('div', ['站长推荐', 'class' => 'titles']);
+			$node->append('webapp-slideshows', [
+				'style' => 'padding-bottom:56.25%',
+				'data-contents' => json_encode(array_map(fn($video) => [
+					'picture' => $video['poster'],
+					'support' => "?home/watch,hash:{$video['hash']}"
+				], $video_recommends), JSON_UNESCAPED_UNICODE),
+				'data-duration' => $duration
+			]);
+		}
+	}
 	function draw_videos_lists(
 		webapp_html $node,
 		string|iterable $videos,
@@ -294,14 +310,13 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		}
 	}
 
-
-
 	function get_home()
 	{
 		$this->link(['rel' => 'prefetch', 'href' => '/webapp/static/js/hls.min.js', 'as' => 'script']);
 		$this->link(['rel' => 'prefetch', 'href' => '/webapp/static/js/video.js', 'as' => 'script']);
 		$this->title('导航');
 		$this->draw_header_search();
+		$this->draw_video_recommend($this->main);
 		$this->draw_ads_slideshows($this->aside);
 		$this->draw_ads_banner($this->main);
 		$this->draw_ads_navicon($this->main);
