@@ -267,7 +267,7 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		if (is_string($video_recommends = $this->webapp->redis->get('recommendvideos'))
 			&& count($video_recommends = iterator_to_array($this->webapp->nfs_videos->search('`hash` IN(?S) ORDER BY FIELD(`hash`,?S)',
 				$video_recommends = str_split(preg_replace('/[^0-9A-Z]+/', '', $video_recommends), 12), $video_recommends)))) {
-			$node->append('div', ['站长推荐', 'class' => 'titles']);
+			$node->append('div', ['class' => 'titles'])->append('strong', '站长推荐');
 			$node->append('webapp-slideshows', [
 				'style' => 'padding-bottom:56.25%',
 				'data-contents' => json_encode(array_map(fn($video) => [
@@ -333,7 +333,8 @@ class webapp_extend_vod_home extends webapp_echo_masker
 
 		$this->draw_aside_classifies(0);
 
-		$this->draw_ads_slideshows($this->main);
+		$this->draw_video_recommend($this->main);
+		//$this->draw_ads_slideshows($this->main);
 		$this->draw_footer();
 		if ($classify && $this->webapp->nfs_classifies->fetch($classify, $data))
 		{
