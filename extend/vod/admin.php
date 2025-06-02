@@ -490,7 +490,18 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$this->script(['src' => '/webapp/static/js/video.js']);
 
 		$cond = $this->webapp->cond();
-		$cond_search = urldecode($cond->query('search', 'name LIKE ?s', fn($v) => '%' . urldecode($v) . '%') ?? '');
+
+
+		if (isset($this->webapp->query['search']))
+		{
+			$cond_search = $this->webapp->is_long_hash($hash = $this->webapp->query['search'])
+				? $cond->query('search', 'hash=?s')
+				: urldecode($cond->query('search', 'name LIKE ?s', fn($v) => '%' . urldecode($v) . '%') ?? '');
+		}
+		else
+		{
+			$cond_search = NULL;
+		}
 
 		$cond->merge('ORDER BY t1 DESC, hash ASC');
 
