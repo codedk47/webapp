@@ -48,8 +48,8 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		//$cond->merge('ORDER BY rate ASC, cid ASC');
 
 
-		$channels = $this->webapp->mysql->channels->column('name', 'cid');
-		$table = $this->main->table($cond($this->webapp->mysql->records), function($table, $value, $channels)
+		$channels = $this->webapp->mysql->vod_channels->column('name', 'cid');
+		$table = $this->main->table($cond($this->webapp->mysql->vod_records), function($table, $value, $channels)
 		{
 			$table->row();
 			$table->cell(substr($value['dcid'], 0, 8));
@@ -109,8 +109,8 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		if ($form->fetch($data))
 		{
 			if ($cid
-				? $this->webapp->mysql->channels('WHERE cid=?s LIMIT 1', $cid)->update($data)
-				: $this->webapp->mysql->channels->insert(['time' => date('Y-m-d H:i:s')] + $data)) {
+				? $this->webapp->mysql->vod_channels('WHERE cid=?s LIMIT 1', $cid)->update($data)
+				: $this->webapp->mysql->vod_channels->insert(['time' => date('Y-m-d H:i:s')] + $data)) {
 				$this->echo->redirect('?admin/channels');
 			}
 			else
@@ -122,7 +122,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 	function get_channel(string $cid = NULL)
 	{
 		$form = $this->form_channel($this->main);
-		if ($this->webapp->mysql->channels('WHERE cid=?s LIMIT 1', (string)$cid)->fetch($data))
+		if ($this->webapp->mysql->vod_channels('WHERE cid=?s LIMIT 1', (string)$cid)->fetch($data))
 		{
 			$form['cid']->setattr('disabled');
 			$form->echo($data);
@@ -139,7 +139,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 	function delete_channel(string $cid = NULL)
 	{
 		$this->json();
-		$this->webapp->mysql->channels->delete('WHERE cid=?s LIMIT 1', $cid) === 1
+		$this->webapp->mysql->vod_channels->delete('WHERE cid=?s LIMIT 1', $cid) === 1
 			? $this->echo->refresh()
 			: $this->echo->message("删除渠道 {$cid} 失败！");
 	}
@@ -148,7 +148,7 @@ class webapp_extend_vod_admin extends webapp_echo_admin
 		$cond = $this->webapp->cond();
 		$cond_search = urldecode($cond->query('search', 'name LIKE ?s', fn($v) => '%' . urldecode($v) . '%') ?? '');
 		$cond->merge('ORDER BY rate ASC, cid ASC');
-		$table = $this->main->table($cond($this->webapp->mysql->channels)->paging($page), function($table, $value)
+		$table = $this->main->table($cond($this->webapp->mysql->vod_channels)->paging($page), function($table, $value)
 		{
 			$table->row();
 			$table->cell()->append('a', ['删除',

@@ -80,7 +80,7 @@ class webapp_extend_vod_home extends webapp_echo_masker
 	}
 	function record(string|array $field, ?string $cid = NULL):bool
 	{
-		if ($this->webapp->mysql->channels->exists('cid', $cid = $cid ?? $this->webapp->request_cookie('cid') ?? 'NULL'))
+		if ($this->webapp->mysql->vod_channels->exists('cid', $cid = $cid ?? $this->webapp->request_cookie('cid') ?? 'NULL'))
 		{
 			$fields = ['init', 'ic', 'iu', 'pv', 'pc', 'ac', 'vw', 'signup', 'signin', 'oi', 'op'];
 			$values = array_combine($fields, array_fill(0, count($fields), 0));
@@ -95,7 +95,7 @@ class webapp_extend_vod_home extends webapp_echo_masker
 					array_push($update, $key, $key, $value);
 				}
 			}
-			return $fields && $this->webapp->mysql->records->insert('?v ON DUPLICATE KEY UPDATE ' . join(',', $fields), $values, ...$update);
+			return $fields && $this->webapp->mysql->vod_records->insert('?v ON DUPLICATE KEY UPDATE ' . join(',', $fields), $values, ...$update);
 		}
 		return FALSE;
 	}

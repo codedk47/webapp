@@ -1,6 +1,7 @@
 <?php
 class webapp_extend_vod extends webapp_extend_nfs
 {
+	const tablename = 'vod_nfs';
 	public array $proxy_origins = ['http://localhost'];
 	public array $origins = ['http://localhost'];
 	public string $origin = '';
