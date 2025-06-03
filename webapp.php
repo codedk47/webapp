@@ -1250,6 +1250,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function get_masker()
 	{
+		$this->response_cache_control('no-transform');
 		$this->response_content_type('text/javascript');
 		return $this->response_sendfile(__DIR__ . '/static/js/masker.js');
 		if ($this->nonematch(self::version, TRUE))
