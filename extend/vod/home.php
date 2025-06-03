@@ -75,13 +75,20 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		$this->title('初始化..');
 		$this->main['style'] = 'white-space:pre';
 		$this->main->text("请确保在浏览器中打开，保护隐私安全\n如果长时间没有反应，请更新你的设备\n");
-		$this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'https://chrome.google.com/']);
+		str_contains($ua, 'iPhone') && str_contains($ua, 'Safari') === FALSE
+			? $this->main->append('font', ['苹果用户请使用 Safari 内置浏览器打开', 'color' => 'brown'])
+			: $this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'https://google.cn/chrome/']);
+		match (TRUE)
+		{
+			preg_match('/iphone os (\d+)/i', $ua, $iphone) && $iphone[1] < 15 => TRUE,
+			default => FALSE
+		} && $this->sw['src'] = NULL;
 		return 200;
 	}
 	function record(string|array $field, ?string $cid = NULL):bool
 	{
-		if ($this->webapp->mysql->vod_channels->exists('cid', $cid = $cid ?? $this->webapp->request_cookie('cid') ?? 'NULL'))
-		{
+		if ($cid = $this->webapp->mysql->vod_channels('WHERE `cid` IN(?S) ORDER BY FIELD(`cid`,?S) LIMIT 1',
+			$cids = [$cid ?? $this->webapp->request_cookie('cid') ?? 'NULL', 'NULL'], $cids)->select('cid')->value()) {
 			$fields = ['init', 'ic', 'iu', 'pv', 'pc', 'ac', 'vw', 'signup', 'signin', 'oi', 'op'];
 			$values = array_combine($fields, array_fill(0, count($fields), 0));
 			$values['dcid'] = date('Ymd') . $cid;

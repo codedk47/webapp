@@ -228,12 +228,6 @@ else
 		}
 		return response;
 	}
-	addEventListener('install', event => {
-
-
-		console.log('asd')
-		//event.waitUntil(caches.open(cachename)).then(cache => cache.addAll([]))
-	});
 	addEventListener('message', event =>
 	{
 		//console.log('Service Worker Message', event.data);
@@ -295,6 +289,11 @@ else
 		}
 		event.source.postMessage(event.data);
 	});
+	// Skip the 'waiting' lifecycle phase, to go directly from 'installed' to 'activated',
+	// even if there are still previous incarnations of this service worker registration active.
+	addEventListener('install', event => event.waitUntil(skipWaiting()));
+	// Claim any clients immediately, so that the page will be under SW control without reloading.
+	addEventListener('activate', event => event.waitUntil(clients.claim()));
 	addEventListener('fetch', event => event.respondWith(caches.open(cachename).then(cache => caches.match(event.request).then(response =>
 	{
 		if (response) return response;
@@ -325,5 +324,5 @@ else
 		}
 		return fetch(event.request);
 	}))));
-	addEventListener('notificationclick', event => console.log(event));
+	//addEventListener('notificationclick', event => console.log(event));
 }

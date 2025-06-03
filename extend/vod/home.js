@@ -24,12 +24,10 @@ masker.init(data => typeof data.popup === 'string' && fetch(data.popup).then(res
 	});
 	typeof data.notice === 'string' && masker.popup(data.notice);
 
-
-
 	window.addEventListener("beforeinstallprompt", (event) => {
 		event.preventDefault();
-console.log(event)
-	  });
+		console.log(event)
+	});
 
 }));
 masker.then(() =>
