@@ -305,7 +305,7 @@ else
 		{
 			switch (true)
 			{
-				case url.pathname === location.pathname && url.search !== location.search:
+				case url.pathname === location.pathname:
 					return request(event.request, {priority: 'high', cache: 'no-cache', headers:
 						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)});
 				case /^\/[0-9]{1,3}\//.test(url.pathname):
