@@ -78,9 +78,14 @@ class webapp_extend_vod_home extends webapp_echo_masker
 		$this->title('初始化..');
 		$this->main['style'] = 'white-space:pre';
 		$this->main->text("请确保在浏览器中打开，保护隐私安全\n如果长时间没有反应，请更新你的设备\n");
-		str_contains($ua, 'iPhone') && str_contains($ua, 'Safari') === FALSE
-			? $this->main->append('font', ['苹果用户请使用 Safari 内置浏览器打开', 'color' => 'brown'])
-			: $this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'https://google.cn/chrome/']);
+		if (str_contains($ua, 'iPhone'))
+		{
+			str_contains($ua, 'Safari') || $this->main->append('font', ['苹果用户请使用 Safari 内置浏览器打开', 'color' => 'brown']);
+		}
+		else
+		{
+			$this->main->append('a', ['点击下载最新 Chrome 浏览器', 'href' => 'https://google.cn/chrome/']);
+		}
 		match (TRUE)
 		{
 			preg_match('/iphone os (\d+)/i', $ua, $iphone) && $iphone[1] < 15 => TRUE,
