@@ -527,7 +527,7 @@ class webapp_echo_masker extends webapp_echo_html
 	}
 	function post_init():int
 	{
-		$this->json();
+		$this->json($this->webapp->request_content('application/json'));
 		return 200;
 	}
 	function splashscreen(string $cover, string $jumpurl, string $skip = 'SKIP', int $cd = 4, bool $auto = FALSE, string $hash = NULL):webapp_html

@@ -36,6 +36,7 @@ if (self.window)
 			{
 				const data = Object.fromEntries(Object.entries(script.dataset));
 				sessionStorage.setItem('init', JSON.stringify(data));
+				data.mode = masker.mode;
 				data.token = localStorage.getItem('token');
 				data.origin = Array.from(document.querySelectorAll('link[rel=preconnect]'))
 					.map(link => `${link.href}${link.dataset.file || 'robots.txt'}`);
@@ -88,6 +89,7 @@ if (self.window)
 		}
 		return fetch(resource, options);
 	}
+	masker.mode = ['fullscreen', 'standalone', 'minimal-ui', 'browser', 'picture-in-picture'].filter(mode => matchMedia(`(display-mode: ${mode})`).matches)[0];
 	masker.then = callback => callbacks[callbacks.length] = callback;
 	masker.init = callback => init.then(callback);
 	masker.open = url => new Promise(resolve => 
@@ -173,7 +175,6 @@ if (self.window)
 			}
 		}
 	};
-	masker.isStandaloneApp = () => window.matchMedia('(display-mode: standalone)').matches;
 	self.masker = masker;
 }
 else
@@ -304,7 +305,7 @@ else
 		{
 			switch (true)
 			{
-				case url.pathname === location.pathname:
+				case url.pathname === location.pathname && url.search !== location.search:
 					return request(event.request, {priority: 'high', cache: 'no-cache', headers:
 						Object.assign(Object.fromEntries(event.request.headers.entries()), headers)});
 				case /^\/[0-9]{1,3}\//.test(url.pathname):

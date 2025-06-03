@@ -26,8 +26,11 @@ class webapp_extend_vod_home extends webapp_echo_masker
 			$this->footer[0] = '';
 			unset($this->xml->head->script[0]);
 			$this->stylesheet('/webapp/extend/vod/home.css');
-			$this->script(['src' => '/webapp/extend/vod/home.js']);
-			$this->script(['src' => '/webapp/static/js/slideshows.js']);
+			if ($webapp->method !== 'get_splashscreen')
+			{
+				$this->script(['src' => '/webapp/extend/vod/home.js']);
+				$this->script(['src' => '/webapp/static/js/slideshows.js']);
+			}
 		}
 	}
 	function authenticate(string $username, string $password, int $signtime, string $additional = NULL):array
@@ -108,18 +111,17 @@ class webapp_extend_vod_home extends webapp_echo_masker
 	}
 	function post_init():int
 	{
-		$this->json();
+		$this->json($this->webapp->request_content('application/json'));
 		$this->record(['ic' => 1, 'iu' => intval($this->webapp->redis->uniqueip())]);
 		//print_r($this->webapp->request_content('application/json'));
 		//$data = $this->webapp->request_content('application/json');
-		//$this->echo->error('禁止访问');
+		//$this->echo->error("禁止访问:{$this->echo['mode']}");
 		//$this->echo->message('提示消息');
 		//$this->echo->redirect('https://volunteer.cdn-go.cn/404/latest/404.html');
 		return 200;
 	}
 	function get_splashscreen():int
 	{
-		unset($this->xml->head->script[1], $this->xml->head->script[2]);
 		// $this->script(['src' => '/webapp/static/js/hls.min.js']);
 		// $this->script(['src' => '/webapp/static/js/video.js']);
 		// $this->script('masker.skipsplashscreen("跳过",5,false)');

@@ -11,7 +11,7 @@ masker.popup = context =>
 }
 masker.init(data => typeof data.popup === 'string' && fetch(data.popup).then(response => response.json()).then(data =>
 {
-	console.log('standalone:', masker.isStandaloneApp());
+	console.log(`display: ${masker.mode}`);
 	data.ads.forEach(ad =>
 	{
 		const anchor = document.createElement('a'), image = new Image;
@@ -24,7 +24,7 @@ masker.init(data => typeof data.popup === 'string' && fetch(data.popup).then(res
 	});
 	typeof data.notice === 'string' && masker.popup(data.notice);
 
-	window.addEventListener("beforeinstallprompt", (event) => {
+	addEventListener('beforeinstallprompt', (event) => {
 		event.preventDefault();
 		console.log(event)
 	});
