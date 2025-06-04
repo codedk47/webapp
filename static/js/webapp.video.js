@@ -363,7 +363,14 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	fullscreen()
 	{
-		document.fullscreenElement === this ? document.exitFullscreen() : this.requestFullscreen();
+		if (this.requestFullscreen)
+		{
+			document.fullscreenElement === this ? document.exitFullscreen() : this.requestFullscreen();
+		}
+		else
+		{
+			this.#video.requestFullscreen();
+		}
 	}
 	poster(resource)
 	{
