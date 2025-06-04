@@ -166,6 +166,7 @@ customElements.define('webapp-video', class extends HTMLElement
 
 	//#progress = document.createElement('input');
 	#playm3u8;
+	#fadeout;
 	constructor()
 	{
 		super();
@@ -176,16 +177,25 @@ customElements.define('webapp-video', class extends HTMLElement
 		this.#video.textContent = `Sorry, your browser doesn't support embedded videos.`;
 		this.#video.controlsList = 'nodownload';
 
-		this.#controls.addEventListener('mouseenter', () =>{
-			this.#controls.style.opacity = 1;
+		this.#controls.addEventListener('mousemove', () =>{
+
+			if (this.#video.paused)
+			{
+				console.log('mousemove')
+				this.#controls.style.opacity = 1;
+				clearTimeout(this.#fadeout);
+				this.#fadeout = setTimeout(() => this.#controls.style.opacity = 0, 2000);
+			}
+
 		});
 		this.#controls.addEventListener('mouseleave', () =>{
+			console.log('mouseleave')
 			this.#controls.style.opacity = 0;
 		});
 
 
 		const playpause = this.#controls.appendChild(document.createElement('div'));
-		playpause.addEventListener('dblclick', () => this.#video.requestFullscreen());
+		playpause.addEventListener('dblclick', () => this.fullscreen());
 		playpause.addEventListener('click', () => this.pp());
 		playpause.className = 'playpause';
 
@@ -241,7 +251,7 @@ customElements.define('webapp-video', class extends HTMLElement
 			'm 20,10 0,2 4,0 0,4 2,0 L 26,10 l -6,0 0,0 z',
 			'm 24,24 -4,0 0,2 L 26,26 l 0,-6 -2,0 0,4 0,0 z',
 			'M 12,20 10,20 10,26 l 6,0 0,-2 -4,0 0,-4 0,0 z');
-		fullscreen.addEventListener('click', () => this.#video.requestFullscreen());
+		fullscreen.addEventListener('click', () => this.fullscreen());
 
 		functions.append(playing, speedrate.parentNode, document.createElement('span'), fullscreen);
 		functions.className = 'functions';
@@ -350,6 +360,10 @@ customElements.define('webapp-video', class extends HTMLElement
 	pp()
 	{
 		this.paused ? this.play() : this.pause();
+	}
+	fullscreen()
+	{
+		document.fullscreenElement === this ? document.exitFullscreen() : this.requestFullscreen();
 	}
 	poster(resource)
 	{
