@@ -363,6 +363,7 @@ customElements.define('webapp-video', class extends HTMLElement
 	}
 	fullscreen()
 	{
+		alert(1)
 		if (this.requestFullscreen)
 		{
 			document.fullscreenElement === this ? document.exitFullscreen() : this.requestFullscreen();
