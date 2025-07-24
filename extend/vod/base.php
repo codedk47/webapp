@@ -134,7 +134,15 @@ class webapp_extend_vod extends webapp_extend_nfs
 		}
 		return $videos->update($hash, $data);
 	}
-
+	function video_create_and_upload_directory(array $value, string $directory):bool
+	{
+		if (is_string($hash = $this->video_create($value))
+			&& $this->nfs_videos->upload_directory($hash, $directory)) {
+			return TRUE;
+		}
+		$this->video_delete($hash);
+		return FALSE;
+	}
 
 	
 
