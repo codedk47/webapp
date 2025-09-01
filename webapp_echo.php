@@ -243,7 +243,7 @@ class webapp_echo_html extends webapp_implementation
 		if (is_array($data))
 		{
 			$this->json();
-			if ($this->form_sign_in($this->webapp)->fetch($account, input: $data))
+			if (static::form_sign_in($this->webapp)->fetch($account, input: $data))
 			{
 				if ($auth = $authenticate($account['username'], $account['password'], $this->webapp->time))
 				{
@@ -257,7 +257,7 @@ class webapp_echo_html extends webapp_implementation
 			return 200;
 		}
 		$this->title('Authenticate');
-		$form = $this->form_sign_in($this->main);
+		$form = static::form_sign_in($this->main);
 		$form->xml['onsubmit'] = 'return $.authsignin(this,authorize=>authorize.signature?location.reload(document.cookie=`${this.dataset.storage}=${authorize.signature};path=/`):(this[authorize.error.field].setCustomValidity(authorize.error.message),requestAnimationFrame(()=>this.reportValidity())))';
 		$form->xml['data-storage'] = $storage;
 		// $form->xml['onsubmit'] = <<<'JS'
