@@ -243,7 +243,7 @@ class webapp_echo_html extends webapp_implementation
 		if (is_array($data))
 		{
 			$this->json();
-			if (static::form_sign_in($this->webapp)->fetch($account, input: $data))
+			if ($this->form_sign_in($this->webapp)->fetch($account, input: $data))
 			{
 				if ($auth = $authenticate($account['username'], $account['password'], $this->webapp->time))
 				{
