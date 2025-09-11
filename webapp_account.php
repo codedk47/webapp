@@ -1,11 +1,15 @@
 <?php
 class webapp_account
 {
-	const tablename = 'account';
+	const
+	tablename = 'accounts',
+	records = 'account_records',
+	favorites = 'account_favorites';
+
 	private array $data;
 	function __construct(public readonly webapp $webapp)
 	{
-		
+
 	}
 	function sign_in(string $id, $pwd):bool
 	{
@@ -13,19 +17,30 @@ class webapp_account
 	}
 
 
-	function create():bool
+	function create(array $accountinfo = []):array
 	{
-		$id = $this->webapp->random_hash(TRUE);
-		$time = $this->webapp->time();
+		$accountinfo = [
+			'id' => $this->webapp->random_hash(TRUE),
+			't0' => $this->webapp->time(),
+			't1' => 0,
+			't2' => 0,
+			'ip' => $this->webapp->iphex('0.0.0.0'),
+			'balances' => '{}',
+			'freezes' => '{}'
+		] + $accountinfo;
 
-		var_dump( $this->webapp->mysql->{static::tablename}->insert([
-			'id' => $id,
-			't0' => $time,
-			't1' => $time,
-			'ip' => $this->webapp->iphex('0.0.0.0')
-		]) );
 
-		return false;
+		// $id = $this->webapp->random_hash(TRUE);
+		// $time = $this->webapp->time();
+
+		// var_dump( $this->webapp->mysql->{static::tablename}->insert([
+		// 	'id' => $id,
+		// 	't0' => $time,
+		// 	't1' => $time,
+		// 	'ip' => $this->webapp->iphex('0.0.0.0')
+		// ]) );
+
+		return $accountinfo;
 	}
 
 
