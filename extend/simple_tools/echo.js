@@ -1,9 +1,61 @@
+
 const tools =
 {
 	write_clipboard(content)
 	{
 		navigator.clipboard.writeText(content).then(() => alert('已拷贝！'));
 	},
+	save_content_as(text, name)
+	{
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
+		a.download = name;
+		a.click();
+	},
+	submit(form, calltype, callback)
+	{
+		fetch(form.action, {method: 'POST', body: new FormData(form)}).then(response =>
+		{
+			switch (calltype)
+			{
+				case 'blob': return response.blob();
+				case 'text': return response.text();
+				default: response
+			}
+		}).then(callback);
+		return false;
+	},
+
+
+	openssl_submit(form)
+	{
+		return tools.submit(form, 'text', text => form.querySelector('a[download]').href =
+			URL.createObjectURL(new Blob([form.content.value = text], {type: 'text/plain'})));
+	},
+	openssl_zeroneta(form)
+	{
+		return tools.submit(form, 'text', text =>  {
+			const [key, cer] = text.split('\n\n');
+			form.querySelector('a[download="user.key"]').href = URL.createObjectURL(new Blob([form.key.value = key.trim()], {type: 'text/plain'}));
+			form.querySelector('a[download="user.cer"]').href = URL.createObjectURL(new Blob([form.cer.value = cer.trim()], {type: 'text/plain'}));
+			// [form.key.value, form.cer.value] = text.split('\n\n');
+			// console.log(text)
+
+
+		});
+	},
+
+
+
+	php_hash(form)
+	{
+		return tools.submit(form, 'text', text => form.result.value = text);
+	},
+	php_qrcode_create(form)
+	{
+		return tools.submit(form, 'blob', blob => form.result.src = URL.createObjectURL(blob));
+	},
+
 
 	base64(form)
 	{
@@ -64,7 +116,23 @@ const tools =
 	},
 	generate_password(form)
 	{
-		console.log(form);
+		const charset = form.charset.value.split(''), passwords = [];
+		for (let i = 0; i < form.count.value; ++i)
+		{
+			const password = [];
+			while (password.length < form.length.value)
+			{
+				password[password.length] = charset[$.random_int(0, charset.length)];
+			}
+			passwords[passwords.length] = password.join('');
+		}
+		form.result.value = passwords.join('\n');
+		return false;
+	},
+	generate_uuid(form)
+	{
+		form.result.value = Array.from(Array(parseInt(form.count.value))).map(() =>
+			$.md5($.random_bytes(16)).replace(/^([0-f]{8})([0-f]{4})([0-f]{4})([0-f]{4})([0-f]{12})/i, '$1-$2-$3-$4-$5')).join('\n');
 		return false;
 	},
 	qrcode_reader(form, reader)

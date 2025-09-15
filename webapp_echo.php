@@ -194,7 +194,7 @@ class webapp_echo_html extends webapp_implementation
 {
 	use webapp_echo;
 	public readonly array $auth;
-	protected NULL|string|webapp_html|webapp_echo_json $echo = NULL;
+	protected string|webapp_html|webapp_echo_json $echo;
 	public readonly webapp_html $header, $aside, $main, $footer;
 	function __construct(public readonly webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
@@ -216,13 +216,12 @@ class webapp_echo_html extends webapp_implementation
 	}
 	function __toString():string
 	{
-		return match (get_debug_type($this->echo))
+		return isset($this->echo) ? match (get_debug_type($this->echo))
 		{
-			'string' => $this->echo,
 			'webapp_html' => substr($this->document->saveHTML($this->echo->dom()), 10, -11),
 			'webapp_echo_json' => (string)$this->echo,
-			default => parent::__toString()
-		};
+			default => $this->echo
+		} : parent::__toString();
 	}
 	final function initauth(webapp|string $context, string ...$allow):void
 	{
@@ -280,9 +279,9 @@ class webapp_echo_html extends webapp_implementation
 		// JS;
 		return 401;
 	}
-	function echo(?string $data):void
+	function echo(string $data = ''):void
 	{
-		$this->webapp->response_content_type(sprintf("text/%s; charset={$this->webapp['app_charset']}", $data === NULL ? 'html' : 'plain'));
+		$this->webapp->response_content_type("text/plain; charset={$this->webapp['app_charset']}");
 		$this->echo = $data;
 	}
 	function json(array|object $data = []):webapp_echo_json
@@ -293,11 +292,11 @@ class webapp_echo_html extends webapp_implementation
 	{
 		return $this->echo = webapp_html::from($this->document->createElement('template'));
 	}
-	function echo_no_content():int
-	{
-		$this->echo('');
-		return 204;
-	}
+	// function echo_no_content():int
+	// {
+	// 	$this->echo('');
+	// 	return 204;
+	// }
 	function meta(array $attributes):webapp_html
 	{
 		return $this->xml->head->append('meta', $attributes);

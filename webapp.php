@@ -1336,15 +1336,19 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	// {
 	// 	return array_sum($this->column('size'));
 	// }
+	function file(int $index = 0):string
+	{
+		return $this->uploadedfiles[$index]['file'];
+	}
 	function open(int $index = 0, bool $mask = FALSE, ?string &$key = NULL, bool $merged = FALSE)
 	{
-		$file = fopen($this->uploadedfiles[$index]['file'], 'r');
+		$file = fopen($this->file($index), 'r');
 		return $mask ? $this->webapp->masker($file, $key, $merged) : $file;
 	}
-	// function content(int $index = 0):string
-	// {
-	// 	return file_get_contents($this->uploadedfiles[$index]['file']);
-	// }
+	function content(int $index = 0):string
+	{
+		return file_get_contents($this->file($index));
+	}
 	// function move(string $filename, int $index = 0)
 	// {
 	// 	if ($this->offsetExists($index)
