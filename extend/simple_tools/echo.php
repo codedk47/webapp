@@ -51,7 +51,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_home()
 	{
 		$this->title('WebApp 小工具');
-		$this->meta_pageinfo('WebApp,在线,小工具,简单快速', 'WebApp 小工具、喜欢点个赞');
+		$this->meta_pageinfo('WebApp,在线,小工具,简单快速', '简单的在线小工具、喜欢点个赞');
 		$this->main->append('h4', '欢迎使用基于WebApp框架开发的小工具，喜欢点个赞！');
 		$this->main->append('h4', '⬅从这边选择需要的功能');
 	}
