@@ -13,7 +13,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 			'pkey-new' => '生成新的私钥',
 			'csr-new' => '生成新证书签名请求',
 			'csr-sign-x509' => '签署并且生成x509证书',
-			'zeroneta-user-cert' => '一键生成用户证书和私钥'
+			'zeroneta-user-cert' => '一键生成私钥和用户证书'
 		] as $anchor => $function) {
 			$dl->append('dd')->append('a', [$function, 'href' => "?simple-tools/openssl-{$anchor}"]);
 		}
@@ -51,6 +51,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_home()
 	{
 		$this->title('WebApp 小工具');
+		$this->meta_pageinfo('WebApp,在线,小工具,简单快速', 'WebApp 小工具、喜欢点个赞');
 		$this->main->append('h4', '欢迎使用基于WebApp框架开发的小工具，喜欢点个赞！');
 		$this->main->append('h4', '⬅从这边选择需要的功能');
 	}
@@ -104,6 +105,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_openssl_pkey_new()
 	{
 		$this->title('OpenSSL 生成新的私钥');
+		$this->meta_pageinfo('OpenSSL,生成,创建,私钥,加密', '生成新的私钥');
 		$this->form_openssl_pkey_new($this->main);
 	}
 	function post_openssl_pkey_new()
@@ -131,6 +133,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_openssl_csr_new()
 	{
 		$this->title('OpenSSL 生成新证书签名请求');
+		$this->meta_pageinfo('OpenSSL,生成,创建,签名,请求', '生成新证书签名请求');
 		$this->form_openssl_csr_new($this->main)->echo([
 			'common_name' => $this->webapp->request_host(),
 			'extdata' => <<<extdata
@@ -188,6 +191,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_openssl_csr_sign_x509()
 	{
 		$this->title('OpenSSL 签署并且生成x509证书');
+		$this->meta_pageinfo('OpenSSL,签署,x509,证书', '签署并且生成x509证书');
 		$this->form_openssl_csr_sign_x509($this->main);
 	}
 	function post_openssl_csr_sign_x509()
@@ -228,7 +232,8 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	}
 	function get_openssl_zeroneta_user_cert()
 	{
-		$this->title('OpenSSL 一键生成用户证书和私钥');
+		$this->title('OpenSSL 一键生成私钥和用户证书');
+		$this->meta_pageinfo('OpenSSL,生成,创建,用户,私钥,证书', '简单的一键生成一个私钥和一个用户证书');
 		$this->form_openssl_zeroneta_user_cert($this->main)->echo([
 			'ip' => '127.0.0.1',
 			'dns' => 'localhost',
@@ -290,6 +295,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_qrcode_create()
 	{
 		$this->title('QRCode 二维码创建');
+		$this->meta_pageinfo('QRCode,二维码,创建', 'PHP 二维码创建');
 		$this->form_qrcode_create($this->main);
 	}
 	function post_qrcode_create()
@@ -312,6 +318,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_qrcode_reader()
 	{
 		$this->title('QRCode 二维码读取');
+		$this->meta_pageinfo('QRCode,二维码,读取', 'JavaScript 二维码读取');
 		$this->script(['src' => '/webapp/extend/simple_tools/zxing-browser.min.js']);
 		$form = $this->main->form();
 		$form->field('qrcode', 'file', ['onchange' => 'tools.qrcode_reader(this.form,new ZXingBrowser.BrowserQRCodeReader())']);
@@ -322,6 +329,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_websocket()
 	{
 		$this->title('WebSocket 回显测试');
+		$this->meta_pageinfo('WebSocket,回显,测试,在线', 'JavaScript WebSocket Echo Test');
 		$form = $this->main->form();
 		$form->xml['onsubmit'] = 'return tools.websocket(this)';
 		$form->field('socket', 'text', ['style' => 'width:32rem', 'placeholder' => 'ws://或者wss://协议地址',
@@ -336,6 +344,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_base64()
 	{
 		$this->title('Base64 解码/编码');
+		$this->meta_pageinfo('Base64,解码,编码', 'JavaScript Base64 解码或编码');
 		$form = $this->main->form();
 		$form->xml['onsubmit'] = 'return tools.base64(this)';
 		$form->field('content', 'textarea', ['placeholder' => '需要编码或者解码的原始内容', 'rows' => 8, 'cols' => 64]);
@@ -360,6 +369,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_php_hash()
 	{
 		$this->title('PHP Hash 散列算法');
+		$this->meta_pageinfo('Hash,哈希,散列,算法', 'PHP 散列算法');
 		$form = $this->form_hash(array_combine($algos = hash_algos(), $algos), $this->main);
 		$form->echo(['algos' => 'md5']);
 		$form->xml['onsubmit'] = 'return tools.php_hash(this)';
@@ -373,6 +383,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_js_hash()
 	{
 		$this->title('JS Hash 散列算法');
+		$this->meta_pageinfo('Hash,哈希,散列,算法', 'JavaScript 散列算法');
 		$form = $this->form_hash([
 			'sha3-224' => 'Secure Hash Algorithm 3-224',
 			'sha3-256' => 'Secure Hash Algorithm 3-256',
