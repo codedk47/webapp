@@ -151,9 +151,9 @@ const tools =
 	apple_mobile_webclip(form)
 	{
 	
-		return form.icon.files.length && form.icon.files[0].size < 6144 ? tools.submit(form, 'text', text => {
+		return form.icon.files.length && form.icon.files[0].size < 65535 ? tools.submit(form, 'text', text => {
 
 			console.log(text);
-		}) : !!alert('图标文件必须且小于6K');
+		}) : !!alert('图标文件必须且小于60K');
 	}
 };

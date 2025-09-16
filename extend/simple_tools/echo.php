@@ -460,8 +460,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_apple_mobile_webclip()
 	{
 		$this->title('创建苹果书签');
-		$this->metainfo('苹果,书签', '创建一个苹果书签');
-		$this->meta_open_graph('创建苹果书签', 'image', '/webapp/static/ps/favicon.jpg');
+		$this->meta_pageinfo('苹果,书签', '在线创建一个苹果书签');
 		$this->form_apple_mobile_webclip($this->main)->echo([
 			'Label' => '小工具',
 			'URL' => 'https://wweb.app/?simple-tools',
@@ -480,7 +479,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 		$this->echo();
 		$this->form_apple_mobile_webclip()->fetch($data);
 		count($icon = $this->webapp->request_uploadedfile('icon'));
-		$icon->size() < 6144;
+		$icon->size() < 65535;
 		$data['Icon'] = $icon->file();
 		$payload = [
 			'PayloadContent' => [&$data],
