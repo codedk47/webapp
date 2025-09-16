@@ -890,7 +890,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function request_origin(string $path = NULL):string
 	{
-		return sprintf('%s://%s', $this->request_scheme(), $this->request_host(), $path);
+		return sprintf('%s://%s%s', $this->request_scheme(), $this->request_host(), $path);
 	}
 	// function request_entry(bool $route = FALSE):string
 	// {
@@ -1332,10 +1332,10 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	// {
 	// 	return array_column($key === 'hash' ? $this->__debugInfo() : $this->uploadedfiles, $key);
 	// }
-	// function size():int
-	// {
-	// 	return array_sum($this->column('size'));
-	// }
+	function size(int $index = 0):int
+	{
+		return $index < 0 ? array_sum($this->column('size')) : $this->uploadedfiles[$index]['size'];
+	}
 	function file(int $index = 0):string
 	{
 		return $this->uploadedfiles[$index]['file'];

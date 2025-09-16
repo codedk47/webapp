@@ -1,4 +1,3 @@
-
 const tools =
 {
 	write_clipboard(content)
@@ -25,8 +24,7 @@ const tools =
 		}).then(callback);
 		return false;
 	},
-
-
+	//----------------OpenSSL----------------
 	openssl_submit(form)
 	{
 		return tools.submit(form, 'text', text => form.querySelector('a[download]').href =
@@ -38,35 +36,29 @@ const tools =
 			const [key, cer] = text.split('\n\n');
 			form.querySelector('a[download="user.key"]').href = URL.createObjectURL(new Blob([form.key.value = key.trim()], {type: 'text/plain'}));
 			form.querySelector('a[download="user.cer"]').href = URL.createObjectURL(new Blob([form.cer.value = cer.trim()], {type: 'text/plain'}));
-			// [form.key.value, form.cer.value] = text.split('\n\n');
-			// console.log(text)
-
-
 		});
 	},
-
-
-
-	php_hash(form)
-	{
-		return tools.submit(form, 'text', text => form.result.value = text);
-	},
-	php_qrcode_create(form)
+	//---------------QRCode----------------
+	qrcode_create(form)
 	{
 		return tools.submit(form, 'blob', blob => form.result.src = URL.createObjectURL(blob));
 	},
-
-
-	base64(form)
+	qrcode_reader(form, reader)
 	{
-		form.result.value = $[`base64_${['en', 'de'][form.method.value]}code`](form.content.value);
-		return false;
+		if (form.qrcode.files.length)
+		{
+			form.qrcode.files[0].size < 16777216
+				? reader.decodeFromImageUrl(URL.createObjectURL(form.qrcode.files[0])).then(
+					result => form.result.textContent = result.text,
+					() => alert('读取二维码内容失败，请检文件是图片格式二维码！'))
+				: alert('文件内容过大请输入小于16M图片');
+		}
+		else
+		{
+			form.result.textContent = '';
+		}
 	},
-	hash(form)
-	{
-		form.result.value = $.hash(form.method.value, form.content.value);
-		return false;
-	},
+	//----------------Misc----------------
 	websocket(form)
 	{
 		if (!form.socket.disabled)
@@ -114,6 +106,25 @@ const tools =
 		}
 		return false;
 	},
+	base64(form)
+	{
+		form.result.value = $[`base64_${['en', 'de'][form.method.value]}code`](form.content.value);
+		return false;
+	},
+	php_hash(form)
+	{
+		return tools.submit(form, 'text', text => form.result.value = text);
+	},
+	js_hash(form)
+	{
+		form.result.value = $.hash(form.algos.value, form.content.value);
+		return false;
+	},
+
+
+
+
+
 	generate_password(form)
 	{
 		const charset = form.charset.value.split(''), passwords = [];
@@ -135,19 +146,14 @@ const tools =
 			$.md5($.random_bytes(16)).replace(/^([0-f]{8})([0-f]{4})([0-f]{4})([0-f]{4})([0-f]{12})/i, '$1-$2-$3-$4-$5')).join('\n');
 		return false;
 	},
-	qrcode_reader(form, reader)
+
+
+	apple_mobile_webclip(form)
 	{
-		if (form.qrcode.files.length)
-		{
-			form.qrcode.files[0].size < 16777216
-				? reader.decodeFromImageUrl(URL.createObjectURL(form.qrcode.files[0])).then(
-					result => form.result.textContent = result.text,
-					() => alert('读取二维码内容失败，请检文件是图片格式二维码！'))
-				: alert('文件内容过大请输入小于16M图片');
-		}
-		else
-		{
-			form.result.textContent = '';
-		}
+	
+		return form.icon.files.length && form.icon.files[0].size < 6144 ? tools.submit(form, 'text', text => {
+
+			console.log(text);
+		}) : !!alert('图标文件必须且小于6K');
 	}
 };

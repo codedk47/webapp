@@ -15,7 +15,7 @@ class webapp_echo_xml extends webapp_implementation
 		$webapp->response_content_type('application/xml');
 		parent::__construct($type, ...$params);
 	}
-	static function mobileconfig(array $values, webapp $webapp = NULL, ?string $basename = NULL):webapp_implementation
+	static function apple_mobile_config(array $values, webapp $webapp = NULL, ?string $basename = NULL):webapp_implementation
 	{
 		#https://developer.apple.com/documentation/devicemanagement/webclip?changes=latest_beta&language=objc
 		$mobileconfig = new webapp_implementation('plist', '-//Apple//DTD PLIST 1.0//EN', 'http://www.apple.com/DTDs/PropertyList-1.0.dtd');
