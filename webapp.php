@@ -1001,40 +1001,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 	}
 	// 	return $cond;
 	// }
-	// function request_app_channel():string
-	// {
-	// 	$this->query['wacid'] ?? $this->request_header('webapp-cid')
-	// }
-	// function request_client_info():string
-	// {
-	// 	$this->query['cid'] ?? $this->request_header('webapp-cid')
-	// }
-	function request_apple_mobile_config(array $websockets = [], bool $forcedownload = FALSE):?webapp_implementation
-	{
-		if (webapp_echo_html::form_mobileconfig($this)->fetch($data)
-			&& count($icon = $this->request_uploadedfile('Icon'))) {
-			$data['Icon'] = $icon->filename();
-			if ($websockets && count($action = explode(',', $data['URL'], 2)) === 2)
-			{
-				$urls = [$action[0]];
-				foreach ($websockets as $websocket)
-				{
-					$urls[] = "{$websocket}/{$action[1]}";
-				}
-				$data['URL'] = static::build_test_router(TRUE, ...$urls);
-			}
-			$payload = [
-				'PayloadContent' => [&$data],
-				'PayloadDisplayName' => $data['PayloadDisplayName'],
-				'PayloadDescription' => $data['PayloadDescription'],
-				'PayloadOrganization' => $data['PayloadOrganization'],
-				'PayloadIdentifier' => $data['PayloadIdentifier']
-			];
-			unset($data['PayloadDisplayName'], $data['PayloadDescription'], $data['PayloadOrganization'], $data['PayloadIdentifier']);
-			return webapp_echo_xml::mobileconfig($payload, $this, $forcedownload ? $data['Label'] : NULL);
-		}
-		return NULL;
-	}
+
 	function request_apple_device_enrollment():array
 	{
 		//Apple device enrollment must use HTTPS protocol request method POST and response status 301
@@ -1323,11 +1290,6 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 			yield $this($i);
 		}
 	}
-
-	// function filename(int $index = 0):string
-	// {
-	// 	return $this->uploadedfiles[$index]['file'];
-	// }
 	// function column(string $key):array
 	// {
 	// 	return array_column($key === 'hash' ? $this->__debugInfo() : $this->uploadedfiles, $key);

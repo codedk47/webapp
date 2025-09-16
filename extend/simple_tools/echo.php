@@ -32,13 +32,9 @@ class webapp_echo_simple_tools extends webapp_echo_html
 			'base64' => 'Base64 编码/解码',
 			'php-hash' => 'PHP 散列算法',
 			'js-hash' => 'JS 散列算法',
-
-
 			//'js-timestamp-format' => '时间戳格式化',
 			'generate-password' => '生成随机密码',
 			'generate-uuid' => '生成UUID',
-
-
 			'apple-mobile-webclip' => '创建苹果书签'
 		] as $anchor => $function) {
 			$dl->append('dd')->append('a', [$function, 'href' => "?simple-tools/{$anchor}"]);
@@ -431,10 +427,10 @@ class webapp_echo_simple_tools extends webapp_echo_html
 		$form->field('URL', 'url', ['style' => 'width:24rem', 'placeholder' => 'Startup URL', 'required' => NULL]);
 		$boolean = ['否', '是'];
 		$format = fn($v, $i) => $i ? boolval($v) : intval($v);
-		$form->fieldset('APP全称 / 是否全屏');
+		$form->fieldset('App 全称 / 是否全屏');
 		$form->field('PayloadDisplayName', 'text', ['placeholder' => 'Payload Display Name', 'required' => NULL]);
 		$form->field('FullScreen', 'select', ['options' => $boolean, 'required' => NULL], $format);
-		$form->fieldset('APP描述 / 可被移除');
+		$form->fieldset('App 描述 / 可被移除');
 		$form->field('PayloadDescription', 'text', ['placeholder' => 'Payload Description', 'required' => NULL]);
 		$form->field('IsRemovable', 'select', ['options' => $boolean, 'required' => NULL], $format);
 		$form->fieldset('组织（公司）名称 / 不同源同窗口');
@@ -464,22 +460,20 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function post_apple_mobile_webclip()
 	{
 		$this->echo();
-		$this->form_apple_mobile_webclip()->fetch($data);
-		count($icon = $this->webapp->request_uploadedfile('icon'));
-		$icon->size() < 65535;
-		$data['Icon'] = $icon->file();
-		$payload = [
-			'PayloadContent' => [&$data],
-			'PayloadDisplayName' => $data['PayloadDisplayName'],
-			'PayloadDescription' => $data['PayloadDescription'],
-			'PayloadOrganization' => $data['PayloadOrganization'],
-			'PayloadIdentifier' => $data['PayloadIdentifier']
-		];
-		unset($data['PayloadDisplayName'], $data['PayloadDescription'], $data['PayloadOrganization'], $data['PayloadIdentifier']);
-
-		$this->webapp->echo = webapp_echo_xml::apple_mobile_config($payload, $this->webapp, $data['Label']);
-
-		
+		if ($this->form_apple_mobile_webclip()->fetch($data)
+			&& count($icon = $this->webapp->request_uploadedfile('icon'))
+			&& $icon->size() < 65535) {
+			$data['Icon'] = $icon->file();
+			$payload = [
+				'PayloadContent' => [&$data],
+				'PayloadDisplayName' => $data['PayloadDisplayName'],
+				'PayloadDescription' => $data['PayloadDescription'],
+				'PayloadOrganization' => $data['PayloadOrganization'],
+				'PayloadIdentifier' => $data['PayloadIdentifier']
+			];
+			unset($data['PayloadDisplayName'], $data['PayloadDescription'], $data['PayloadOrganization'], $data['PayloadIdentifier']);
+			$this->webapp->echo = webapp_echo_xml::apple_mobile_config($payload, $this->webapp, $data['Label']);
+		}
 	}
 
 

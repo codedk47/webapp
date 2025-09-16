@@ -407,51 +407,6 @@ class webapp_echo_html extends webapp_implementation
 		$form->xml['spellcheck'] = 'false';
 		return $form;
 	}
-	static function form_mobileconfig(array|webapp|webapp_html $context, ?string $authurl = NULL):webapp_form
-	{
-		$form = new webapp_form($context, $authurl);
-		$form->fieldset('Icon / Label');
-		$form->field('Icon', 'file', ['accept' => 'image/*', 'required' => NULL]);
-		$form->field('Label', 'text', ['placeholder' => 'App Name', 'required' => NULL]);
-		
-		$form->fieldset('URL');
-		$form->field('URL', 'url', ['style' => 'width:24rem', 'placeholder' => 'Startup URL', 'required' => NULL]);
-
-		$boolean = ['No', 'Yes'];
-		$format = fn($v, $i) => $i ? boolval($v) : intval($v);
- 
-		$form->fieldset('Payload Display Name / Full Screen');
-		$form->field('PayloadDisplayName', 'text', ['placeholder' => 'Payload Display Name', 'required' => NULL]);
-		$form->field('FullScreen', 'select', ['options' => $boolean, 'required' => NULL], $format);
-
-		$form->fieldset('Payload Description / Is Removable');
-		$form->field('PayloadDescription', 'text', ['placeholder' => 'Payload Description', 'required' => NULL]);
-		$form->field('IsRemovable', 'select', ['options' => $boolean, 'required' => NULL], $format);
-
-		$form->fieldset('Payload Organization / Ignore ManifestScope');
-		$form->field('PayloadOrganization', 'text', ['placeholder' => 'Payload Organization', 'required' => NULL]);
-		$form->field('IgnoreManifestScope', 'select', ['options' => $boolean, 'required' => NULL], $format);
-
-		$form->fieldset('Payload Identifier');
-		$form->field('PayloadIdentifier', 'text', ['style' => 'width:24rem', 'placeholder' => 'com.webapp.example', 'pattern' => '\w+(.\w+)+', 'required' => NULL]);
-		if ($form->echo && $form->webapp)
-		{
-			$form->echo([
-				'PayloadDisplayName' => $form->webapp::class,
-				'PayloadDescription' => $form->webapp['copy_webapp'],
-				'PayloadOrganization' => $form->webapp['copy_webapp'],
-				'FullScreen' => 1,
-				'IsRemovable' => 1,
-				'IgnoreManifestScope' => 1,
-				'PayloadIdentifier' => sprintf('com.webapp.id%s', bin2hex($form->webapp->random(8)))
-			]);
-		}
-
-		$form->fieldset();
-		$form->button('Build Mobile Config', 'submit');
-
-		return $form;
-	}
 }
 class webapp_echo_masker extends webapp_echo_html
 {
