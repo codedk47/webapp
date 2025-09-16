@@ -385,6 +385,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_generate_password()
 	{
 		$this->title('生成随机密码');
+		$this->meta_pageinfo('随机,密码', '创建生成自定义随机密码');
 		$form = $this->main->form();
 		$form->xml['onsubmit'] = 'return tools.generate_password(this)';
 		$form->fieldset('包含字符 / 长度 / 数量');
@@ -406,22 +407,6 @@ class webapp_echo_simple_tools extends webapp_echo_html
 		$form->fieldset();
 		$form->field('result', 'textarea', ['style' => 'font-family:consolas, monospace', 'placeholder' => '生成结果会显示在这里', 'rows' => 10, 'cols' => 64, 'readonly' => NULL]);
 	}
-
-	// function form_apple_mobile_webclip(webapp_html $html = NULL):webapp_form
-	// {
-	// 	$form = new webapp_form($html ?? $this->webapp);
-	// 	$form->fieldset();
-
-	// 	// $form->field('PayloadDisplayName', 'textarea', ['placeholder' => '需要散列算法的原始内容', 'rows' => 8, 'cols' => 64]);
-	// 	// $form->fieldset();
-	// 	// $form->field('algos', 'select', ['options' => $algos]);
-	// 	// $form->button('开始哈希', 'submit');
-	// 	// $form->fieldset();
-	// 	// $form->field('result', 'text', ['style' => 'width:36rem', 'placeholder' => '哈希结果会显示在这里', 'readonly' => NULL]);
-	// 	// $form->button('')->setattr(['onclick' => 'tools.write_clipboard(this.previousElementSibling.value)'])->svg()->icon('copy');
-	// 	return $form;
-	// }
-
 	function form_apple_mobile_webclip(webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
@@ -430,31 +415,23 @@ class webapp_echo_simple_tools extends webapp_echo_html
 		$form->fieldset('桌面图标 / 桌面名称');
 		$form->field('icon', 'file', ['accept' => 'image/*', 'required' => NULL]);
 		$form->field('Label', 'text', ['placeholder' => 'App Name', 'required' => NULL]);
-		
 		$form->fieldset('启动 URL');
 		$form->field('URL', 'url', ['style' => 'width:24rem', 'placeholder' => 'Startup URL', 'required' => NULL]);
-
 		$boolean = ['否', '是'];
 		$format = fn($v, $i) => $i ? boolval($v) : intval($v);
- 
 		$form->fieldset('APP全称 / 是否全屏');
 		$form->field('PayloadDisplayName', 'text', ['placeholder' => 'Payload Display Name', 'required' => NULL]);
 		$form->field('FullScreen', 'select', ['options' => $boolean, 'required' => NULL], $format);
-
 		$form->fieldset('APP描述 / 可被移除');
 		$form->field('PayloadDescription', 'text', ['placeholder' => 'Payload Description', 'required' => NULL]);
 		$form->field('IsRemovable', 'select', ['options' => $boolean, 'required' => NULL], $format);
-
 		$form->fieldset('组织（公司）名称 / 不同源同窗口');
 		$form->field('PayloadOrganization', 'text', ['placeholder' => 'Payload Organization', 'required' => NULL]);
 		$form->field('IgnoreManifestScope', 'select', ['options' => $boolean, 'required' => NULL], $format);
-
 		$form->fieldset('标识符');
 		$form->field('PayloadIdentifier', 'text', ['style' => 'width:24rem', 'placeholder' => 'com.webapp.example', 'pattern' => '\w+(.\w+)+', 'required' => NULL]);
-
 		$form->fieldset();
 		$form->button('创建并且下载书签', 'submit');
-
 		return $form;
 	}
 	function get_apple_mobile_webclip()
