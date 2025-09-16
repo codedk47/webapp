@@ -319,7 +319,11 @@ class webapp_echo_html extends webapp_implementation
 	{
 		$this->xml->head->title = $title;
 	}
-	function meta_open_graph(string $title, string $type, string $image = NULL):void
+	// function meta_description(string $content):void
+	// {
+	// 	$this->xml->head->title = $title;
+	// }
+	function meta_open_graph(string $title, string $type = 'image', string $image = NULL):void
 	{
 		//https://ogp.me/
 		$this->xml['prefix'] = 'og:https://ogp.me/ns#';
