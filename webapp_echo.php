@@ -319,10 +319,12 @@ class webapp_echo_html extends webapp_implementation
 	{
 		$this->xml->head->title = $title;
 	}
-	// function meta_description(string $content):void
-	// {
-	// 	$this->xml->head->title = $title;
-	// }
+	function metainfo(string $keywords, string $description, string $author = NULL):void
+	{
+		$this->meta(['name' => 'description', 'content' => $description]);
+		$this->meta(['name' => 'keywords', 'content' => $keywords]);
+		$this->meta(['name' => 'author', 'content' => $author ?? 'webapp']);
+	}
 	function meta_open_graph(string $title, string $type = 'image', string $image = NULL):void
 	{
 		//https://ogp.me/
