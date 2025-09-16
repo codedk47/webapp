@@ -369,7 +369,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_php_hash()
 	{
 		$this->title('PHP Hash 散列算法');
-		$this->meta_pageinfo('Hash,哈希,散列,算法', 'PHP 散列算法');
+		$this->meta_pageinfo('Hash,哈希,散列,算法', 'PHP 散列算法，PHP Hash 函数');
 		$form = $this->form_hash(array_combine($algos = hash_algos(), $algos), $this->main);
 		$form->echo(['algos' => 'md5']);
 		$form->xml['onsubmit'] = 'return tools.php_hash(this)';
@@ -383,7 +383,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_js_hash()
 	{
 		$this->title('JS Hash 散列算法');
-		$this->meta_pageinfo('Hash,哈希,散列,算法', 'JavaScript 散列算法');
+		$this->meta_pageinfo('Hash,哈希,散列,算法', 'JavaScript 散列算法，基于 pq.js 库');
 		$form = $this->form_hash([
 			'sha3-224' => 'Secure Hash Algorithm 3-224',
 			'sha3-256' => 'Secure Hash Algorithm 3-256',
@@ -396,7 +396,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_generate_password()
 	{
 		$this->title('生成随机密码');
-		$this->meta_pageinfo('随机,密码', '创建生成自定义随机密码');
+		$this->meta_pageinfo('随机,生成,密码', '创建生成自定义强度和长度的随机密码');
 		$form = $this->main->form();
 		$form->xml['onsubmit'] = 'return tools.generate_password(this)';
 		$form->fieldset('包含字符 / 长度 / 数量');
@@ -410,6 +410,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_generate_uuid()
 	{
 		$this->title('生成UUID');
+		$this->meta_pageinfo('随机,生成,UUID,Universally unique identifier', '创建生成指定数量的通用唯一识别码');
 		$form = $this->main->form();
 		$form->xml['onsubmit'] = 'return tools.generate_uuid(this)';
 		$form->fieldset('数量');
@@ -448,11 +449,9 @@ class webapp_echo_simple_tools extends webapp_echo_html
 	function get_apple_mobile_webclip()
 	{
 		$this->title('创建苹果书签');
-		$this->meta_pageinfo('苹果,书签', '在线创建一个苹果书签');
+		$this->meta_pageinfo('Apple,Mobile,Config,WebClip,苹果,书签', '在线创建一个苹果书签');
 		$this->form_apple_mobile_webclip($this->main)->echo([
-			'Label' => '小工具',
-			'URL' => 'https://wweb.app/?simple-tools',
-			//'URL' => $this->webapp->request_origin('/?simple-tools'),
+			'URL' => $this->webapp->request_origin('/?simple-tools'),
 			'PayloadDisplayName' => 'Web Application',
 			'PayloadDescription' => $this->webapp['copy_webapp'],
 			'PayloadOrganization' => 'WebApp',
