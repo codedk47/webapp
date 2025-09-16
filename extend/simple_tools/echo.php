@@ -1,7 +1,7 @@
 <?php
 class webapp_echo_simple_tools extends webapp_echo_html
 {
-	const passphrase = NULL;
+	const zeroneta = NULL;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
@@ -243,7 +243,7 @@ class webapp_echo_simple_tools extends webapp_echo_html
 				'organizationalUnitName' => 'WebApp', 'commonName' => $data['common_name']], $key, $openssl))
 			&& openssl_x509_export(openssl_csr_sign($csr,
 				sprintf('file://%s/zeroneta.cer', __DIR__),
-				openssl_pkey_get_private(sprintf('file://%s/zeroneta.key', __DIR__), '801462'),
+				openssl_pkey_get_private(sprintf('file://%s/zeroneta.key', __DIR__), static::zeroneta),
 				$data['days'], $openssl, $this->webapp->random_int(0, 0xffffff)), $cerdata)
 				? "{$keydata}\n\n{$cerdata}" : "数据效验失败！\n\n" . openssl_error_string());
 	}
