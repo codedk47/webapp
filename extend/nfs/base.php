@@ -8,7 +8,48 @@ class webapp_nfs_client extends webapp_client_http
 		parent::__construct(current([$url, $this->request] = match ($api)
 		{
 			#https://developers.cloudflare.com/r2/tutorials/postman/
-			'cloudflare_r2' => [],
+			'cloudflare_r2' => ["https://{$options[2]}.{$options[3]}.r2.cloudflarestorage.com",
+			function(string $method, string $path, $body = NULL, string $type = NULL):bool
+			{
+				[$filename, $query] = ($offset = strpos($path, '?')) === FALSE
+					? [$path, '']
+					: [substr($path, 0, $offset), substr($path, $offset)];
+				if (is_resource($body))
+				{
+					//没办法为了配合该死的内容SHA256验证，NFS加密文件流需要暂存后在计算哈希上传
+					[$hash, $body] = is_resource($dump = tmpfile())
+						&& stream_copy_to_stream($body, $dump) !== FALSE
+						&& rewind($dump)
+						&& is_object($hash = hash_init('sha256'))
+						&& is_int(hash_update_stream($hash, $dump))
+						&& rewind($dump) ? [hash_final($hash), $dump] : [NULL, NULL];
+				}
+				else
+				{
+					$hash = is_string($body ??= '') ? hash('sha256', $body) : NULL;
+				}
+				if ($hash === NULL)
+				{
+					//V4签名规定必须要有内容的SHA256，如果没有就别请求了
+					return FALSE;
+				}
+				$date = new DateTime('UTC');
+				$t0 = $date->format('Ymd');
+				$t1 = $date->format('Ymd\THis\Z');
+				$region = 'auto';
+				$service = 's3';
+				$scope = "{$t0}/{$region}/{$service}/aws4_request";
+				$signature = hash_hmac('sha256', join("\n", ['AWS4-HMAC-SHA256', $t1, $scope, hash('sha256',
+					"{$method}\n{$filename}\n{$query}\nhost:{$this->headers['Host']}\nx-amz-date:{$t1}\n\nhost;x-amz-date\n{$hash}")]),
+						hash_hmac('sha256', 'aws4_request',
+							hash_hmac('sha256', $service,
+								hash_hmac('sha256', $region,
+									hash_hmac('sha256', $t0, "AWS4{$this->password}", TRUE), TRUE), TRUE), TRUE));
+				$this->headers([
+					'Authorization' => "AWS4-HMAC-SHA256 Credential={$this->username}/{$scope},SignedHeaders=host;x-amz-date,Signature={$signature}",
+					'x-amz-date' => $t1, 'x-amz-content-sha256' => $hash]);
+				return parent::request($method, $path, $body, $type);
+			}],
 			#https://docs.aws.amazon.com/AmazonS3/latest/API/RESTAuthentication.html
 			'amazon_s3' => ["https://{$options[2]}.s3.{$options[3]}.amazonaws.com",
 			function(string $method, string $path, $body = NULL, string $type = NULL):bool
@@ -37,6 +78,12 @@ class webapp_nfs_client extends webapp_client_http
 			}]
 		}), ['autoretry' => 2, 'autojump' => 1]);
 		[$this->username, $this->password, $this->bucket] = $options;
+	}
+	function signature():string
+	{
+	}
+	function test():void
+	{
 	}
 	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
 	{
@@ -336,6 +383,7 @@ class webapp_extend_nfs extends webapp
 	}
 	function client():webapp_nfs_client
 	{
+		// return new webapp_nfs_client('cloudflare_r2', 'access-key-id', 'secret-access-key', 'bucket-name', 'account-id');
 		// return new webapp_nfs_client('amazon_s3', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
 		// return new webapp_nfs_client('aliyun_oss', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
 		return new webapp_nfs_client('http://localhost/?', $this['admin_username'], $this['admin_password'], 'D:/');
