@@ -691,11 +691,11 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 		&& in_array($this->method, $router === $this ? [
 	// 			'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
 	// }
-	function routname():string
+	function routename():string
 	{
-		return substr(...is_string($this->router)
+		return strtr(substr(...is_string($this->router)
 			? [$this->router, strlen($this['app_router'])]
-			: [$this->method, strlen($this['request_method']) + 1]);
+			: [$this->method, strlen($this['request_method']) + 1]), '_', '-');
 	}
 
 

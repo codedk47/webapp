@@ -15,7 +15,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			'csr-sign-x509' => '签署并且生成x509证书',
 			'zeroneta-user-cert' => '一键生成私钥和用户证书'
 		] as $anchor => $function) {
-			$dl->append('dd')->append('a', [$function, 'href' => "?simple-tools/openssl-{$anchor}"]);
+			$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/openssl-{$anchor}"]);
 		}
 		$dl = $this->aside->append('dl');
 		$dl->append('dt', 'QRCode');
@@ -23,7 +23,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			'create' => '二维码创建',
 			'reader' => '二维码读取'
 		] as $anchor => $function) {
-			$dl->append('dd')->append('a', [$function, 'href' => "?simple-tools/qrcode-{$anchor}"]);
+			$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/qrcode-{$anchor}"]);
 		}
 		$dl = $this->aside->append('dl');
 		$dl->append('dt', '其他杂项');
@@ -37,7 +37,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			'generate-uuid' => '生成UUID',
 			'apple-mobile-webclip' => '创建苹果书签'
 		] as $anchor => $function) {
-			$dl->append('dd')->append('a', [$function, 'href' => "?simple-tools/{$anchor}"]);
+			$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/{$anchor}"]);
 		}
 	}
 	// function message(string $message = NULL)

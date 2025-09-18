@@ -194,6 +194,7 @@ class webapp_echo_html extends webapp_implementation
 {
 	use webapp_echo;
 	public readonly array $auth;
+	public readonly string $routename;
 	protected string|webapp_html|webapp_echo_json $echo;
 	public readonly webapp_html $header, $aside, $main, $footer;
 	function __construct(public readonly webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
@@ -201,6 +202,7 @@ class webapp_echo_html extends webapp_implementation
 		//https://validator.w3.org/nu/#textarea
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
 		parent::__construct();
+		$this->routename = $webapp->routename;
 		$this->xml->setattr(['lang' => 'en'])->append('head');
 		$this->meta(['charset' => $webapp['app_charset']]);
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
@@ -445,9 +447,9 @@ class webapp_echo_masker extends webapp_echo_html
 			$this->auth = [];
 			if (in_array($webapp->method, $this->initallow, TRUE)) return;
 			$this->sw['data-reload'] = "?{$webapp['request_query']}";
-			//$this->sw['data-router'] = $webapp->routname;
-			$this->sw['data-init'] = "?{$webapp->routname}/init";
-			$this->sw['data-splashscreen'] = "?{$webapp->routname}/splashscreen";
+			//$this->sw['data-router'] = $this->routename;
+			$this->sw['data-init'] = "?{$this->routename}/init";
+			$this->sw['data-splashscreen'] = "?{$this->routename}/splashscreen";
 			$ua = $webapp->request_device();
 			match (TRUE)
 			{
