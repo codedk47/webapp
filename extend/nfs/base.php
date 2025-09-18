@@ -90,17 +90,16 @@ class webapp_nfs_client extends webapp_client_http
 	}
 	function test():void
 	{
-		$a = $this->request('GET', '/a1.txt');
-		var_dump($a, $this->status($res), $res, $this->content());
+		// $a = $this->request('GET', '/workers/btc.txt');
+		// var_dump($a, $this->status($res), $res, $this->content());
 	}
 	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
 	{
 		return ($this->request)($method, $path, $body, $type);
 	}
-	function get(string $filename):?string
+	function get(string $filename, string $type = 'application/octet-stream'):?string
 	{
-		return $this->request('GET', $filename)
-			&& $this->status('') === 200 ? $this->content('application/octet-stream') : NULL;
+		return $this->request('GET', $filename) && $this->status() === 200 ? $this->content($type) : NULL;
 	}
 	function put(string $filename, $stream):bool
 	{
@@ -443,19 +442,31 @@ class webapp_extend_nfs extends webapp
 		})) === NULL) return 401;
 		if ($c === 'get')
 		{
-			parse_str(substr($v, 2), $result);
-			$result['prefix'] ??= '';
-			//$result['max-keys'] ??= 1000;
-			$this->echo_xml();
-			if (is_dir($root .= "/{$result['prefix']}") && is_resource($dir = opendir($root)))
+			if (str_starts_with($v, '/?'))
 			{
-				while (is_string($entry = readdir($dir)))
+				parse_str(substr($v, 2), $result);
+				$result['prefix'] ??= '';
+				//$result['max-keys'] ??= 1000;
+				$this->echo_xml();
+				if (is_dir($root .= "/{$result['prefix']}") && is_resource($dir = opendir($root)))
 				{
-					is_file("{$root}/{$entry}") && $this->echo->xml->append('Contents')
-						->append('Key', ltrim("{$result['prefix']}/{$entry}", '/'));
+					while (is_string($entry = readdir($dir)))
+					{
+						is_file("{$root}/{$entry}") && $this->echo->xml->append('Contents')
+							->append('Key', ltrim("{$result['prefix']}/{$entry}", '/'));
+					}
 				}
+				return 200;
 			}
-			return 200;
+			else
+			{
+				if (is_file($filename = "{$root}{$v}"))
+				{
+					$this->echo(file_get_contents($filename));
+					return 200;
+				}
+				return 404;
+			}
 		}
 		else
 		{
