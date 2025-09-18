@@ -1,5 +1,5 @@
 <?php
-class webapp_echo_simple_tools extends webapp_echo_html
+class webapp_extend_simple_tools_echo extends webapp_echo_html
 {
 	const version = '1.0', zeroneta = NULL;
 	function __construct(webapp $webapp)

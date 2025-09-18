@@ -470,12 +470,12 @@ class webapp_extend_nfs extends webapp
 		}
 		else
 		{
-			$filename = "{$root}{$v}";
+			$dirname = dirname($filename = "{$root}{$v}");
 			return match ($c)
 			{
-				'put' => (is_dir($dirname = dirname($filename)) || mkdir($dirname, recursive: TRUE))
+				'put' => (is_dir($dirname) || mkdir($dirname, recursive: TRUE))
 					&& file_put_contents($filename, $this->request_content()) === $this->request_content_length() ? 200 : 500,
-				'delete' => unlink($filename) ? 204 : 404,
+				'delete' => unlink($filename) ? [204, rmdir($dirname)][0] : 404,
 				default => 405
 			};
 		}
