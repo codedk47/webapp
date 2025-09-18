@@ -90,10 +90,17 @@ class webapp_nfs_client extends webapp_client_http
 	}
 	function test():void
 	{
+		$a = $this->request('GET', '/a1.txt');
+		var_dump($a, $this->status($res), $res, $this->content());
 	}
 	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
 	{
 		return ($this->request)($method, $path, $body, $type);
+	}
+	function get(string $filename):?string
+	{
+		return $this->request('GET', $filename)
+			&& $this->status('') === 200 ? $this->content('application/octet-stream') : NULL;
 	}
 	function put(string $filename, $stream):bool
 	{
