@@ -5,15 +5,6 @@ class webapp_extend_vod extends webapp_extend_nfs
 	public array $proxy_origins = ['http://localhost'];
 	public array $origins = ['http://localhost'];
 	public string $origin = '';
-	// function __construct(array $config = [], webapp_io $io = new webapp_stdio)
-	// {
-	// 	parent::__construct($config, $io);
-	// 	if ($this->redis->dosevasive(3))
-	// 	{
-	// 		$this->response_status(500);
-	// 	}
-	// }
-
 	function origin(webapp_echo_masker $masker, string $file = 'robots.txt'):void
 	{
 		foreach ($this->origins as $origin)
@@ -21,7 +12,6 @@ class webapp_extend_vod extends webapp_extend_nfs
 			$masker->link(['rel' => 'preconnect', 'href' => $origin, 'data-file' => $file, 'crossorigin' => NULL]);
 		}
 	}
-
 	function nfs_ads():webapp_nfs
 	{
 		return $this->nfs(0, 1, function($data)

@@ -29,6 +29,10 @@ new class extends webapp_extend_vod
 	function __construct()
 	{
 		parent::__construct(['copy_webapp' => 'vod']);
+		if ($this->redis->dosevasive(3))
+		{
+			$this->response_status(500);
+		}
 	}
 	function client():webapp_nfs_client
 	{
