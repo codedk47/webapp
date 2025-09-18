@@ -73,8 +73,14 @@ class webapp_nfs_client extends webapp_client_http
 			default => [$api, function(string $method, string $path, $body = NULL, string $type = NULL):bool
 			{
 				static $entry = $this->path;
-				$this->headers(['Authorization' => 'Bearer ' . webapp::signature($this->username, $this->password, webapp::hash($method . $path, TRUE) . $this->bucket)]);
-				return parent::request($method, $entry . $path, $body, $type);
+
+				$c = strtolower($method);
+				$v = webapp::url64_encode($path);
+
+				$this->headers(['Authorization' => 'Bearer ' . webapp::signature($this->username, $this->password, webapp::hash($c . $v, TRUE) . $this->bucket)]);
+				
+				
+				return parent::request('POST', "{$entry}/{$c},v:{$v}", $body, $type);
 			}]
 		}), ['autoretry' => 2, 'autojump' => 1]);
 		[$this->username, $this->password, $this->bucket] = $options;
@@ -94,26 +100,33 @@ class webapp_nfs_client extends webapp_client_http
 		return is_resource($stream) && $this->request('PUT', $filename,
 			$stream, 'application/octet-stream') && $this->status() === 200;
 	}
+	function list(string $directory):iterable
+	{
+		$directory = trim($directory, '/');
+		if ($this->request('GET', "/?prefix={$directory}&max-keys=1000") && $this->status() === 200)
+		{
+			foreach ($this->content()->Contents as $content)
+			{
+				yield "/{$content->Key}";
+			}
+		}
+		else
+		{
+			yield NULL;
+		}
+	}
 	function delete(string $filename):bool
 	{
 		do
 		{
 			if (str_ends_with($filename, '/'))
 			{
-				$prefix = substr($filename, 1);
-				if ($this->request('GET', "/?prefix={$prefix}&max-keys=1000") && $this->status() === 200)
+				foreach ($this->list($filename) as $filename)
 				{
-					foreach ($this->content()->Contents as $content)
+					if ($this->request('DELETE', $filename) && $this->status() === 204)
 					{
-						if ($this->request('DELETE', "/{$content->Key}") && $this->status() === 204)
-						{
-							continue;
-						}
-						break 2;
+						continue;
 					}
-				}
-				else
-				{
 					break;
 				}
 			}
@@ -386,7 +399,7 @@ class webapp_extend_nfs extends webapp
 		// return new webapp_nfs_client('cloudflare_r2', 'access-key-id', 'secret-access-key', 'bucket-name', 'account-id');
 		// return new webapp_nfs_client('amazon_s3', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
 		// return new webapp_nfs_client('aliyun_oss', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
-		return new webapp_nfs_client('http://localhost/?', $this['admin_username'], $this['admin_password'], 'D:/');
+		return new webapp_nfs_client('http://localhost/?', $this['admin_username'], $this['admin_password'], 'D:');
 	}
 	function nfs(int $sort = 0, int $type = 1, Closure $format = NULL):webapp_nfs
 	{
@@ -408,38 +421,44 @@ class webapp_extend_nfs extends webapp
 		
 	// 	var_dump( $tmpdir );
 	// }
-	// function put(string $filename, string $source):bool
-	// {
-	// 	return $this->access->put($filename, $source);
-	// }
-	// function delete(string $filename):bool
-	// {
-	// 	return $this->access->delete($filename);
-	// }
 
-
-
-
-	
-	// function get_sort(int $sort = 0, int $page = 1, int $rows = 21, int $t = 0)
-	// {
-	// 	$this->echo_xml();
-	// 	foreach ($this->mysql->{static::tablename}('WHERE `sort`=?i AND `t1`>?i', $sort, $t)->paging($page, $rows) as $file)
-	// 	{
-	// 		$this->echo->xml->append('file', [
-	// 			'hash' => $file['hash'],
-	// 			'type' => $file['type'],
-	// 			't0' => $file['t0'],
-	// 			't1' => $file['t1'],
-	// 			'size' => $file['size'],
-	// 			'views' => $file['views'],
-	// 			'likes' => $file['likes'],
-	// 			'shares' => $file['shares'],
-	// 			'node' => $file['node'],
-	// 			'key' => $file['key'],
-	// 			'name' => $file['name']
-	// 		])->cdata((string)$file['extdata']);
-	// 	}
-	// 	$this->echo->xml->setattr($this->mysql->{static::tablename}->paging);
-	// }
+	//NFS客户端都是通过POST方法请求的，请确保调用该函数的路由是POST方法
+	function server(string $c, string $v, string $open = NULL):int
+	{
+		//[$root, $v] = ['D:', $this->url64_decode($v)];
+		if (current([$root, $v] = $open ? [$open, $this->url64_decode($v)] : $this->authorize($this->request_authorization($type),
+			function(string $username, string $password, int $signtime, string $additional = NULL) use($c, $v) {
+				return str_starts_with($additional, $this->hash($c . $v, TRUE))
+				&& $signtime > $this->time(-$this['admin_expire'])
+				&& $username === $this['admin_username']
+				&& $password === $this['admin_password']
+					? [rtrim(substr($additional, 10), '/'), $this->url64_decode($v)] : [NULL, NULL];
+		})) === NULL) return 401;
+		if ($c === 'get')
+		{
+			parse_str(substr($v, 2), $result);
+			$result['prefix'] ??= '';
+			//$result['max-keys'] ??= 1000;
+			$this->echo_xml();
+			if (is_dir($root .= "/{$result['prefix']}") && is_resource($dir = opendir($root)))
+			{
+				while (is_string($entry = readdir($dir)))
+				{
+					is_file("{$root}/{$entry}") && $this->echo->xml->append('Contents')
+						->append('Key', ltrim("{$result['prefix']}/{$entry}", '/'));
+				}
+			}
+			return 200;
+		}
+		else
+		{
+			$filename = "{$root}{$v}";
+			return match ($c)
+			{
+				'put' => file_put_contents($filename, $this->request_content()) === $this->request_content_length() ? 200 : 500,
+				'delete' => unlink($filename) ? 204 : 404,
+				default => 405
+			};
+		}
+	}
 }
