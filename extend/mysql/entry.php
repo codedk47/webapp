@@ -69,36 +69,7 @@ new class extends webapp
 			['Status', '?status'],
 			['Processlist', '?processlist'],
 		]);
-		$this->echo->xml->head->append('style')->cdata(<<<CSS
-		dialog>footer{
-			margin-top: 1rem;
-		}
-		dialog>form>fieldset{
-			border: none;
-			margin: 0;
-			padding: 0;
-		}
-		table[class*=-multiline] td>a,
-		table[class*=-multiline] td>span{
-			display: block;
-		}
-		table[class*=-multiline] td>span:empty::before{
-			content: 'NULL';
-			color: var(--webapp-hint);
-		}
-		table[class|=webapp]>thead div[class*=-bar]>a{
-			padding: 0 .4rem;
-		}
-		table[class|=webapp]>tbody[class=viewdata]>tr:nth-child(even){
-			background-color: linen;
-		}
-		table[class|=webapp]>tbody[class=viewdata]>tr>td>span{
-			display: inline-block;
-			overflow: hidden;
-			max-width: 10rem;
-			text-overflow: ellipsis;
-		}
-		CSS);
+
 		if ($this->method !== 'get_home')
 		{
 			$this->echo->aside->select(array_combine($this->charsets, $this->charsets))->setattr([
@@ -469,8 +440,8 @@ new class extends webapp
 
 		$table->footer(['style' => 'text-align:left'])->details('Show create table')->append('pre', $create = $this->mysql->show('CREATE TABLE ?a', $tablename)->value(1));
 		$table->header($tablename);
-		$table->bar->append('a', ['View data', 'href' => "?table/{$name},page:1"]);
-		$table->bar->append('a', ['Insert data', 'href' => "?data/{$name}"]);
+		$table->bar->append('a', ['View data', 'href' => "?table/{$name},page:1", 'class' => 'default']);
+		$table->bar->append('a', ['Insert data', 'href' => "?data/{$name}", 'class' => 'primary']);
 		$table->bar->append('a', ['Append field', 'href' => "?field/{$name}"]);
 
 		$table->bar->select($this->mysql->show('ENGINES')->column('Engine', 'Engine'))->setattr([
@@ -506,11 +477,13 @@ new class extends webapp
 		]);
 
 		$table->bar->append('a', ['Truncate table', 'href' => "?truncate/{$name}",
+			'class' => 'danger',
 			'data-bind' => 'click',
 			'data-dialog' => 'Truncate table cannot undo'
 		]);
 
 		$table->bar->append('a', ['Drop table', 'href' => "?table/{$name}",
+			'class' => 'danger',
 			'data-bind' => 'click',
 			'data-method' => 'delete',
 			'data-dialog' => 'Drop table cannot undo'

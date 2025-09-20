@@ -93,8 +93,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->xml['onsubmit'] = 'return tools.openssl_submit(this)';
 		$form->field('passphrase', 'text', ['placeholder' => '可选密码保护']);
 		$form->button('生成 KEY 内容', 'submit');
-		$form->fieldset();
-		$form->field('content', 'textarea', ['style' => 'font-family:consolas,monospace', 'placeholder' => '生成 KEY 内容显示在这里', 'rows' => 32, 'cols' => 64, 'readonly' => NULL]);
+		$form->fieldset()->append('textarea', ['name' => 'content', 'placeholder' => '生成 KEY 内容显示在这里', 'rows' => 32, 'cols' => 64, 'readonly' => NULL]);
 		$form->fieldset()->append('a', ['保存', 'href' => 'javascript:;', 'download' => 'private.key']);
 		return $form;
 	}
@@ -121,8 +120,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->button('生成 CSR 内容', 'submit');
 		$form->fieldset('附加字段（可以自行删除不必要的信息）');
 		$form->field('extdata', 'textarea', ['rows' => 8, 'cols' => 64]);
-		$form->fieldset();
-		$form->field('content', 'textarea', ['style' => 'font-family:consolas,monospace', 'placeholder' => '生成 CSR 内容显示在这里', 'rows' => 8, 'cols' => 64, 'readonly' => NULL]);
+		$form->fieldset()->append('textarea', ['name' => 'content', 'placeholder' => '生成 CSR 内容显示在这里', 'rows' => 8, 'cols' => 64, 'readonly' => NULL]);
 		$form->fieldset()->append('a', ['保存', 'href' => 'javascript:;', 'download' => 'private.csr']);
 		return $form;
 	}
@@ -179,8 +177,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->fieldset('附加备用 IP / DNS');
 		$form->field('ip', 'text', ['placeholder' => '备用IP用"," 分割多个']);
 		$form->field('dns', 'text', ['placeholder' => '备用DNS用"," 分割多个']);
-		$form->fieldset();
-		$form->field('content', 'textarea', ['style' => 'font-family:consolas,monospace', 'placeholder' => '生成 CER 内容显示在这里', 'rows' => 16, 'cols' => 64, 'readonly' => NULL]);
+		$form->fieldset()->append('textarea', ['name' => 'content', 'placeholder' => '生成 CER 内容显示在这里', 'rows' => 16, 'cols' => 64, 'readonly' => NULL]);
 		$form->fieldset()->append('a', ['保存', 'href' => 'javascript:;', 'download' => 'private.cer']);
 		return $form;
 	}
@@ -218,11 +215,9 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->fieldset('附加备用 IP / DNS');
 		$form->field('ip', 'text', ['placeholder' => '备用IP用"," 分割多个']);
 		$form->field('dns', 'text', ['placeholder' => '备用DNS用"," 分割多个']);
-		$form->fieldset();
-		$form->field('key', 'textarea', ['style' => 'font-family:consolas,monospace', 'placeholder' => '生成 KEY 内容显示在这里', 'rows' => 8, 'cols' => 64, 'readonly' => NULL]);
+		$form->fieldset()->append('textarea', ['name' => 'key', 'placeholder' => '生成 KEY 内容显示在这里', 'rows' => 8, 'cols' => 64, 'readonly' => NULL]);
 		$form->fieldset()->append('a', ['保存私钥', 'href' => 'javascript:;', 'download' => 'user.key']);
-		$form->fieldset();
-		$form->field('cer', 'textarea', ['style' => 'font-family:consolas,monospace', 'placeholder' => '生成 CER 内容显示在这里', 'rows' => 8, 'cols' => 64, 'readonly' => NULL]);
+		$form->fieldset()->append('textarea', ['name' => 'cer', 'placeholder' => '生成 CER 内容显示在这里', 'rows' => 8, 'cols' => 64, 'readonly' => NULL]);
 		$form->fieldset()->append('a', ['保存证书', 'href' => 'javascript:;', 'download' => 'user.cer']);
 		return $form;
 	}
@@ -328,7 +323,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$this->meta_pageinfo('WebSocket,回显,测试,在线', 'JavaScript WebSocket Echo Test');
 		$form = $this->main->form();
 		$form->xml['onsubmit'] = 'return tools.websocket(this)';
-		$form->field('socket', 'text', ['style' => 'width:32rem', 'placeholder' => 'ws://或者wss://协议地址',
+		$form->field('socket', 'text', ['placeholder' => 'ws://或者wss://协议地址',
 		'value' => 'wss://echo.websocket.org']);
 		$form->button('开始连接', 'submit');
 		$form->fieldset();
@@ -358,7 +353,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->field('algos', 'select', ['options' => $algos]);
 		$form->button('开始哈希', 'submit');
 		$form->fieldset();
-		$form->field('result', 'text', ['style' => 'width:36rem', 'placeholder' => '哈希结果会显示在这里', 'readonly' => NULL]);
+		$form->field('result', 'text', ['placeholder' => '哈希结果会显示在这里', 'readonly' => NULL]);
 		$form->button('')->setattr(['onclick' => 'tools.write_clipboard(this.previousElementSibling.value)'])->svg()->icon('copy');
 		return $form;
 	}
@@ -400,8 +395,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->field('length', 'number', ['min' => 4, 'max' => 32, 'value' => 16, 'required' => NULL]);
 		$form->field('count', 'number', ['min' => 1, 'max' => 10, 'value' => 4, 'required' => NULL]);
 		$form->button('开始生成', 'submit');
-		$form->fieldset();
-		$form->field('result', 'textarea', ['style' => 'font-family:consolas, monospace', 'placeholder' => '生成结果会显示在这里', 'rows' => 10, 'cols' => 64, 'readonly' => NULL]);
+		$form->fieldset()->append('textarea', ['name' => 'result', 'placeholder' => '生成结果会显示在这里', 'rows' => 10, 'cols' => 64, 'readonly' => NULL]);
 	}
 	function get_generate_uuid()
 	{
@@ -412,8 +406,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->fieldset('数量');
 		$form->field('count', 'number', ['min' => 1, 'max' => 10, 'value' => 4, 'required' => NULL]);
 		$form->button('开始生成', 'submit');
-		$form->fieldset();
-		$form->field('result', 'textarea', ['style' => 'font-family:consolas, monospace', 'placeholder' => '生成结果会显示在这里', 'rows' => 10, 'cols' => 64, 'readonly' => NULL]);
+		$form->fieldset()->append('textarea', ['name' => 'result', 'placeholder' => '生成结果会显示在这里', 'rows' => 10, 'cols' => 64, 'readonly' => NULL]);
 	}
 	function form_apple_mobile_webclip(webapp_html $html = NULL):webapp_form
 	{
@@ -424,7 +417,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->field('icon', 'file', ['accept' => 'image/*', 'required' => NULL]);
 		$form->field('Label', 'text', ['placeholder' => 'App Name', 'required' => NULL]);
 		$form->fieldset('启动 URL');
-		$form->field('URL', 'url', ['style' => 'width:24rem', 'placeholder' => 'Startup URL', 'required' => NULL]);
+		$form->field('URL', 'url', ['placeholder' => 'Startup URL', 'required' => NULL]);
 		$boolean = ['否', '是'];
 		$format = fn($v, $i) => $i ? boolval($v) : intval($v);
 		$form->fieldset('App 全称 / 是否全屏');
@@ -437,7 +430,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->field('PayloadOrganization', 'text', ['placeholder' => 'Payload Organization', 'required' => NULL]);
 		$form->field('IgnoreManifestScope', 'select', ['options' => $boolean, 'required' => NULL], $format);
 		$form->fieldset('标识符');
-		$form->field('PayloadIdentifier', 'text', ['style' => 'width:24rem', 'placeholder' => 'com.webapp.example', 'pattern' => '\w+(.\w+)+', 'required' => NULL]);
+		$form->field('PayloadIdentifier', 'text', ['placeholder' => 'com.webapp.example', 'pattern' => '\w+(.\w+)+', 'required' => NULL]);
 		$form->fieldset();
 		$form->button('创建并且下载书签', 'submit');
 		return $form;

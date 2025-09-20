@@ -1333,7 +1333,7 @@ class webapp_table extends stdClass implements Countable
 			'tfoot'		=> $this->tfoot = $this->xml->tfoot ?? $this->tbody->insert('tfoot', 'after'),
 			'header'	=> $this->header = $this->maxspan($this->thead->insert('tr', 'first')->append('td')),
 			'bar'		=> $this->bar = $this->maxspan($this->thead->append('tr')->append('td'))
-								->append('div')->setattr(['class' => 'webapp-bar merge']),
+								->append('div')->setattr(['class' => 'webapp-bar']),
 			default		=> NULL
 		};
 	}

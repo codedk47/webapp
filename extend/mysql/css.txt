@@ -1,0 +1,30 @@
+		$this->echo->xml->head->append('style')->cdata(<<<CSS
+		dialog>footer{
+			margin-top: 1rem;
+		}
+		dialog>form>fieldset{
+			border: none;
+			margin: 0;
+			padding: 0;
+		}
+		table[class*=-multiline] td>a,
+		table[class*=-multiline] td>span{
+			display: block;
+		}
+		table[class*=-multiline] td>span:empty::before{
+			content: 'NULL';
+			color: var(--webapp-hint);
+		}
+		table[class|=webapp]>thead div[class*=-bar]>a{
+			padding: 0 .4rem;
+		}
+		table[class|=webapp]>tbody[class=viewdata]>tr:nth-child(even){
+			background-color: linen;
+		}
+		table[class|=webapp]>tbody[class=viewdata]>tr>td>span{
+			display: inline-block;
+			overflow: hidden;
+			max-width: 10rem;
+			text-overflow: ellipsis;
+		}
+		CSS);
