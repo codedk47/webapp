@@ -1,331 +1,202 @@
 :root {
-  --webapp-background: white;
-  --webapp-foreground: black;
+  --webapp-hue-default: 210;
+  --webapp-hue-primary: 130;
+  --webapp-hue-danger: 360;
+  --webapp-radius: .2rem;
+  --webapp-default: var(--webapp-hue-default) 0%;
+  --webapp-anchor: var(--webapp-hue-default) 100%;
+  --webapp-primary: var(--webapp-hue-primary) 50%;
+  --webapp-danger: var(--webapp-hue-danger) 70%;
+  --webapp-color-background: var(--webapp-default) 100%;
+  --webapp-color-foreground: var(--webapp-default) 0%;
+  --webapp-color-edge: var(--webapp-default) 60%;
+  --webapp-color-hint: var(--webapp-default) 70%;
+  --webapp-color-anchor: var(--webapp-anchor) 40%;
+  --webapp-color-primary: var(--webapp-primary) 50%;
+  --webapp-color-danger: var(--webapp-danger) 50%;
   --webapp-gap: 1rem;
   --webapp-gapitem: .4rem;
-  --webapp-gapradius: .4rem;
-  --webapp-anchor: #0366d6;
-  --webapp-button: #eff3f6;
-  --webapp-hover: #f3f3f3;
-  --webapp-hint: silver;
-  --webapp-edge: #1b1f23;
-  --webapp-primary: #28a745;
-  --webapp-danger: #cb2431;
+  --webapp-gaplittle: .2rem;
   --webapp-font-monospace: consolas, monospace;
   --webapp-font-sans-serif: verdana, georgia, arial, sans-serif;
-  background: var(--webapp-background);
-  color: var(--webapp-foreground);
-  font: 100% var(--webapp-font-sans-serif);
+  font: normal 16px var(--webapp-font-sans-serif);
+  display: block;
+  height: 100%;
+  background-color: hsl(var(--webapp-color-background));
 }
-
+:root ::selection {
+  background-color: hsl(var(--webapp-color-anchor));
+  color: hsl(var(--webapp-color-background));
+}
 :root > body {
-  font-size: 1rem;
+  margin: 0;
+  padding: 0;
+  height: 100%;
 }
-
-:root > body > div[class*=-grid] {
+:root > body > div:first-of-type {
+  display: grid;
   grid-template-columns: auto 1fr;
 }
-
-:root > body > div[class*=-grid] > header:first-of-type {
-  grid-column: 1 / -1;
+:root > body > div:first-of-type > header:first-of-type {
+  grid-column: 1/-1;
 }
-
-:root > body > div[class*=-grid] > header:first-of-type:empty {
+:root > body > div:first-of-type > header:first-of-type:empty {
   margin-top: var(--webapp-gap);
 }
-
-:root > body > div[class*=-grid] > aside:first-of-type:not(:empty) {
-  display: inline-flex;
-  gap: var(--webapp-gap);
-  flex-direction: column;
-  margin-left: var(--webapp-gap);
+:root > body > div:first-of-type > aside:first-of-type:not(:empty) {
+  white-space: nowrap;
 }
-
-:root > body > div[class*=-grid] > main:first-of-type {
+:root > body > div:first-of-type > main:first-of-type {
   margin: 0 var(--webapp-gap);
 }
-
-:root > body > div[class*=-grid] > footer:first-of-type {
-  grid-column: 1 / -1;
+:root > body > div:first-of-type > footer:first-of-type {
+  grid-column: 1/-1;
   padding: var(--webapp-gap);
 }
 
-:root > body, [class|=webapp], details[class|=webapp][class*=-menu] > ol:first-of-type, ol[class|=webapp][class*=-menu] > li > details > ol:first-of-type,
-ul[class|=webapp][class*=-menu] > li > details > ol:first-of-type, nav[class|=webapp] ul > li > details > ol:first-of-type, details[class|=webapp][class*=-menu] > ul:first-of-type, ol[class|=webapp][class*=-menu] > li > details > ul:first-of-type,
-ul[class|=webapp][class*=-menu] > li > details > ul:first-of-type, nav[class|=webapp] ul > li > details > ul:first-of-type, nav[class|=webapp] ul {
-  margin: 0;
-  padding: 0;
-}
-
-:root > body a, details[class|=webapp][class*=-anchor] > summary:first-child, ol[class|=webapp][class*=-menu] > li > details > summary:first-child,
-ul[class|=webapp][class*=-menu] > li > details > summary:first-child, nav[class|=webapp] ul > li > details > summary:first-child {
-  color: var(--webapp-anchor);
+a {
+  color: hsl(var(--webapp-color-anchor));
+  text-decoration: none;
   cursor: pointer;
   outline: none;
-  text-decoration: none;
 }
-
-:root > body a:hover, details[class|=webapp][class*=-anchor] > summary:hover:first-child, ol[class|=webapp][class*=-menu] > li > details > summary:hover:first-child,
-ul[class|=webapp][class*=-menu] > li > details > summary:hover:first-child, nav[class|=webapp] ul > li > details > summary:hover:first-child {
+a:hover {
   text-decoration: underline;
 }
-
-[class|=webapp][class*=-grid] {
-  display: grid;
+a.primary {
+  color: hsl(var(--webapp-primary));
+}
+a.danger {
+  color: hsl(var(--webapp-danger));
 }
 
-[class|=webapp][class*=-radius] {
-  padding: var(--webapp-gapradius) 0;
-  border-radius: var(--webapp-gapradius);
-}
-
-[class|=webapp-dialog], details[class|=webapp][class*=-menu] > :not(summary):first-of-type, ol[class|=webapp][class*=-menu] > li > details > :not(summary):first-of-type,
-ul[class|=webapp][class*=-menu] > li > details > :not(summary):first-of-type, nav[class|=webapp] ul > li > details > :not(summary):first-of-type {
-  background: var(--webapp-background);
-  border: 1px solid rgba(27, 31, 35, 0.23);
-  box-shadow: 0 0.5rem 2rem rgba(27, 31, 35, 0.175);
-}
-
-[class|=webapp-button], [class|=webapp-input][type=checkbox], [class|=webapp-bar] > input[type=checkbox], form[class|=webapp] > fieldset > input[type=checkbox], [class|=webapp-bar] > textarea[type=checkbox], form[class|=webapp] > fieldset > textarea[type=checkbox], table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox], [class|=webapp-input][type=radio], [class|=webapp-bar] > input[type=radio], form[class|=webapp] > fieldset > input[type=radio], [class|=webapp-bar] > textarea[type=radio], form[class|=webapp] > fieldset > textarea[type=radio], table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio], [class|=webapp-bar] > a, form[class|=webapp] > fieldset > a, [class|=webapp-bar] > button, form[class|=webapp] > fieldset > button, [class|=webapp-bar] > select, form[class|=webapp] > fieldset > select, [class|=webapp-bar] > details, form[class|=webapp] > fieldset > details, table[class|=webapp] > tfoot > tr:first-child > td:first-child > a {
+select, button, textarea, input {
   font: 1rem var(--webapp-font-sans-serif);
-  color: var(--webapp-foreground);
-  padding: .25rem 1rem;
-  border: 1px solid rgba(27, 31, 35, 0.2);
-  white-space: nowrap;
-  background-color: #eff3f6;
-  background-image: linear-gradient(-180deg, #fafbfc 0%, #eff3f6 90%);
-}
-
-[class|=webapp-button]:hover, [class|=webapp-input][type=checkbox]:hover, [class|=webapp-bar] > input[type=checkbox]:hover, form[class|=webapp] > fieldset > input[type=checkbox]:hover, [class|=webapp-bar] > textarea[type=checkbox]:hover, form[class|=webapp] > fieldset > textarea[type=checkbox]:hover, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]:hover, [class|=webapp-input][type=radio]:hover, [class|=webapp-bar] > input[type=radio]:hover, form[class|=webapp] > fieldset > input[type=radio]:hover, [class|=webapp-bar] > textarea[type=radio]:hover, form[class|=webapp] > fieldset > textarea[type=radio]:hover, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]:hover, [class|=webapp-bar] > a:hover, form[class|=webapp] > fieldset > a:hover, [class|=webapp-bar] > button:hover, form[class|=webapp] > fieldset > button:hover, [class|=webapp-bar] > select:hover, form[class|=webapp] > fieldset > select:hover, [class|=webapp-bar] > details:hover, form[class|=webapp] > fieldset > details:hover, table[class|=webapp] > tfoot > tr:first-child > td:first-child > a:hover {
-  background-image: linear-gradient(-180deg, #f0f3f6 0%, #e6ecf1 90%);
-  border-color: rgba(27, 31, 35, 0.35);
-  text-decoration: none;
-}
-
-[class|=webapp-button]:focus, [class|=webapp-input][type=checkbox]:focus, [class|=webapp-bar] > input[type=checkbox]:focus, form[class|=webapp] > fieldset > input[type=checkbox]:focus, [class|=webapp-bar] > textarea[type=checkbox]:focus, form[class|=webapp] > fieldset > textarea[type=checkbox]:focus, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]:focus, [class|=webapp-input][type=radio]:focus, [class|=webapp-bar] > input[type=radio]:focus, form[class|=webapp] > fieldset > input[type=radio]:focus, [class|=webapp-bar] > textarea[type=radio]:focus, form[class|=webapp] > fieldset > textarea[type=radio]:focus, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]:focus, [class|=webapp-bar] > a:focus, form[class|=webapp] > fieldset > a:focus, [class|=webapp-bar] > button:focus, form[class|=webapp] > fieldset > button:focus, [class|=webapp-bar] > select:focus, form[class|=webapp] > fieldset > select:focus, [class|=webapp-bar] > details:focus, form[class|=webapp] > fieldset > details:focus, table[class|=webapp] > tfoot > tr:first-child > td:first-child > a:focus {
-  box-shadow: 0 0 0 0.2rem rgba(3, 102, 214, 0.3);
-  z-index: 1;
-}
-
-[class|=webapp-button]:active, [class|=webapp-input][type=checkbox]:active, [class|=webapp-bar] > input[type=checkbox]:active, form[class|=webapp] > fieldset > input[type=checkbox]:active, [class|=webapp-bar] > textarea[type=checkbox]:active, form[class|=webapp] > fieldset > textarea[type=checkbox]:active, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]:active, [class|=webapp-input][type=radio]:active, [class|=webapp-bar] > input[type=radio]:active, form[class|=webapp] > fieldset > input[type=radio]:active, [class|=webapp-bar] > textarea[type=radio]:active, form[class|=webapp] > fieldset > textarea[type=radio]:active, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]:active, [class|=webapp-bar] > a:active, form[class|=webapp] > fieldset > a:active, [class|=webapp-bar] > button:active, form[class|=webapp] > fieldset > button:active, [class|=webapp-bar] > select:active, form[class|=webapp] > fieldset > select:active, [class|=webapp-bar] > details:active, form[class|=webapp] > fieldset > details:active, table[class|=webapp] > tfoot > tr:first-child > td:first-child > a:active {
-  background-image: none;
-  background-color: #e8eef2;
-  border-color: rgba(27, 31, 35, 0.35);
-  box-shadow: inset 0 0.15rem 0.3rem rgba(27, 31, 35, 0.15);
-}
-
-[class|=webapp-input]:not([type=checkbox]):not([type=radio]), [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]), form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]), [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]), form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]), table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio]) {
-  font: 1rem var(--webapp-font-sans-serif);
-  padding: .32rem .4rem;
-  border: 1px solid #d1d7dc;
-  background-color: rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 1px 2px rgba(27, 31, 35, 0.075);
-  text-overflow: ellipsis;
-}
-
-[class|=webapp-input]:not([type=checkbox]):not([type=radio]):focus, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):focus, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):focus, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):focus, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):focus, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio]):focus {
   outline: none;
-  box-shadow: inset 0 1px 2px rgba(27, 31, 35, 0.075), 0 0 0 0.2rem rgba(3, 102, 214, 0.3);
-  border-color: #2188fc;
+}
+
+select, button, textarea, input:not([type=image i], [type=range i], [type=radio i], [type=checkbox i]) {
+  border: 1px solid hsl(var(--webapp-color-edge));
+  border-radius: var(--webapp-radius);
+}
+select:hover, button:hover, textarea:hover, input:not([type=image i], [type=range i], [type=radio i], [type=checkbox i]):hover {
+  border-color: hsl(var(--webapp-color-hint));
+}
+select:focus, button:focus, textarea:focus, input:not([type=image i], [type=range i], [type=radio i], [type=checkbox i]):focus {
+  border-color: hsl(var(--webapp-color-anchor));
+  box-shadow: 0 0 0 0.2rem hsl(var(--webapp-color-anchor)/0.3);
   z-index: 1;
 }
 
-[class|=webapp-input]:not([type=checkbox]):not([type=radio]):invalid, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):invalid, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):invalid, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):invalid, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):invalid, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio]):invalid {
-  box-shadow: 0 0 0 0.2rem rgba(203, 36, 49, 0.4);
-  border-color: #cb2431;
-}
-
-[class|=webapp-input]:not([type=checkbox]):not([type=radio]):disabled, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio]):disabled, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio]):disabled, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio]):disabled, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio]):disabled, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio]):disabled {
-  pointer-events: none;
-  box-shadow: none;
-  background-color: #f3f3f3;
-}
-
-[class|=webapp-input]:not([type=checkbox]):not([type=radio])::placeholder, [class|=webapp-bar] > input:not([type=checkbox]):not([type=radio])::placeholder, form[class|=webapp] > fieldset > input:not([type=checkbox]):not([type=radio])::placeholder, [class|=webapp-bar] > textarea:not([type=checkbox]):not([type=radio])::placeholder, form[class|=webapp] > fieldset > textarea:not([type=checkbox]):not([type=radio])::placeholder, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input:not([type=checkbox]):not([type=radio])::placeholder {
-  color: silver;
-}
-
-[class|=webapp-input][type=checkbox], [class|=webapp-bar] > input[type=checkbox], form[class|=webapp] > fieldset > input[type=checkbox], [class|=webapp-bar] > textarea[type=checkbox], form[class|=webapp] > fieldset > textarea[type=checkbox], table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox], [class|=webapp-input][type=radio], [class|=webapp-bar] > input[type=radio], form[class|=webapp] > fieldset > input[type=radio], [class|=webapp-bar] > textarea[type=radio], form[class|=webapp] > fieldset > textarea[type=radio], table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio] {
-  appearance: none;
-}
-
-[class|=webapp-input][type=checkbox]::before, [class|=webapp-bar] > input[type=checkbox]::before, form[class|=webapp] > fieldset > input[type=checkbox]::before, [class|=webapp-bar] > textarea[type=checkbox]::before, form[class|=webapp] > fieldset > textarea[type=checkbox]::before, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]::before, [class|=webapp-input][type=radio]::before, [class|=webapp-bar] > input[type=radio]::before, form[class|=webapp] > fieldset > input[type=radio]::before, [class|=webapp-bar] > textarea[type=radio]::before, form[class|=webapp] > fieldset > textarea[type=radio]::before, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]::before {
-  border: 1px solid red;
-}
-
-[class|=webapp-input][type=checkbox]::after, [class|=webapp-bar] > input[type=checkbox]::after, form[class|=webapp] > fieldset > input[type=checkbox]::after, [class|=webapp-bar] > textarea[type=checkbox]::after, form[class|=webapp] > fieldset > textarea[type=checkbox]::after, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=checkbox]::after, [class|=webapp-input][type=radio]::after, [class|=webapp-bar] > input[type=radio]::after, form[class|=webapp] > fieldset > input[type=radio]::after, [class|=webapp-bar] > textarea[type=radio]::after, form[class|=webapp] > fieldset > textarea[type=radio]::after, table[class|=webapp] > tfoot > tr:first-child > td:first-child > input[type=radio]::after {
-  content: attr(value);
-}
-
-[class|=webapp-bar], form[class|=webapp] > fieldset {
-  display: flex;
-}
-
-dl[class|=webapp][class*=-gap] > dd, ol[class|=webapp][class*=-gap] > li,
-ul[class|=webapp][class*=-gap] > li, nav[class|=webapp] ul > li, details[class|=webapp][class*=-menu] > dl:first-of-type > dd, ol[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd,
-ul[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd, nav[class|=webapp] ul > li > details > dl:first-of-type > dd, details[class|=webapp][class*=-menu] > ol:first-of-type > li, ol[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li,
-ul[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li, nav[class|=webapp] ul > li > details > ol:first-of-type > li, details[class|=webapp][class*=-menu] > ul:first-of-type > li, ol[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li,
-ul[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li, nav[class|=webapp] ul > li > details > ul:first-of-type > li {
+select, button, input[type=file i], input[type=submit i] {
+  padding: var(--webapp-gaplittle) var(--webapp-gapitem);
   white-space: nowrap;
+  background-color: hsl(var(--webapp-default) 94%);
+  background-image: linear-gradient(transparent, hsl(var(--webapp-default) 90%) 90%);
+}
+select:hover, button:hover, input[type=file i]:hover, input[type=submit i]:hover {
+  background-image: linear-gradient(hsl(var(--webapp-default) 98%), hsl(var(--webapp-default) 94%) 90%);
+}
+select:active, button:active, input[type=file i]:active, input[type=submit i]:active {
+  background-image: none !important;
+}
+select[type=submit i], select.default, select.primary, select.danger, button[type=submit i], button.default, button.primary, button.danger, input[type=file i][type=submit i], input[type=file i].default, input[type=file i].primary, input[type=file i].danger, input[type=submit i][type=submit i], input[type=submit i].default, input[type=submit i].primary, input[type=submit i].danger {
+  color: hsl(var(--webapp-color-background));
+}
+select[type=submit i], select.default, button[type=submit i], button.default, input[type=file i][type=submit i], input[type=file i].default, input[type=submit i][type=submit i], input[type=submit i].default {
+  border-color: hsl(var(--webapp-anchor) 20%);
+  background-color: hsl(var(--webapp-anchor) 50%);
+  background-image: linear-gradient(transparent, hsl(var(--webapp-anchor) 40%) 90%);
+}
+select[type=submit i]:hover, select.default:hover, button[type=submit i]:hover, button.default:hover, input[type=file i][type=submit i]:hover, input[type=file i].default:hover, input[type=submit i][type=submit i]:hover, input[type=submit i].default:hover {
+  border-color: hsl(var(--webapp-anchor) 40%);
+  background-image: linear-gradient(hsl(var(--webapp-anchor) 60%), hsl(var(--webapp-anchor) 50%) 90%);
+}
+select.primary, button.primary, input[type=file i].primary, input[type=submit i].primary {
+  border-color: hsl(var(--webapp-primary) 20%);
+  background-color: hsl(var(--webapp-primary) 50%);
+  background-image: linear-gradient(transparent, hsl(var(--webapp-primary) 40%) 90%);
+}
+select.primary:hover, button.primary:hover, input[type=file i].primary:hover, input[type=submit i].primary:hover {
+  border-color: hsl(var(--webapp-primary) 40%);
+  background-image: linear-gradient(hsl(var(--webapp-primary) 60%), hsl(var(--webapp-primary) 50%) 90%);
+}
+select.primary:focus, button.primary:focus, input[type=file i].primary:focus, input[type=submit i].primary:focus {
+  box-shadow: 0 0 0 0.2rem hsl(var(--webapp-color-primary)/0.5);
+}
+select.danger, button.danger, input[type=file i].danger, input[type=submit i].danger {
+  border-color: hsl(var(--webapp-danger) 20%);
+  background-color: hsl(var(--webapp-danger) 50%);
+  background-image: linear-gradient(transparent, hsl(var(--webapp-danger) 40%) 90%);
+}
+select.danger:hover, button.danger:hover, input[type=file i].danger:hover, input[type=submit i].danger:hover {
+  border-color: hsl(var(--webapp-danger) 40%);
+  background-image: linear-gradient(hsl(var(--webapp-danger) 60%), hsl(var(--webapp-danger) 50%) 90%);
+}
+select.danger:focus, button.danger:focus, input[type=file i].danger:focus, input[type=submit i].danger:focus {
+  box-shadow: 0 0 0 0.2rem hsl(var(--webapp-color-danger)/0.5);
 }
 
-dl[class|=webapp][class*=-gap] > dd > :not(details), ol[class|=webapp][class*=-gap] > li > :not(details),
-ul[class|=webapp][class*=-gap] > li > :not(details), nav[class|=webapp] ul > li > :not(details), details[class|=webapp][class*=-menu] > dl:first-of-type > dd > :not(details), ol[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd > :not(details),
-ul[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd > :not(details), nav[class|=webapp] ul > li > details > dl:first-of-type > dd > :not(details), details[class|=webapp][class*=-menu] > ol:first-of-type > li > :not(details), ol[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li > :not(details),
-ul[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li > :not(details), nav[class|=webapp] ul > li > details > ol:first-of-type > li > :not(details), details[class|=webapp][class*=-menu] > ul:first-of-type > li > :not(details), ol[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li > :not(details),
-ul[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li > :not(details), nav[class|=webapp] ul > li > details > ul:first-of-type > li > :not(details) {
-  display: block;
+select:invalid, textarea:invalid, input:not([type=image i], [type=range i], [type=radio i], [type=checkbox i]):invalid {
+  border-color: hsl(var(--webapp-color-danger));
+}
+select:invalid:focus, textarea:invalid:focus, input:not([type=image i], [type=range i], [type=radio i], [type=checkbox i]):invalid:focus {
+  box-shadow: 0 0 0 0.2rem hsl(var(--webapp-color-danger)/0.3);
+}
+select:disabled, textarea:disabled, input:not([type=image i], [type=range i], [type=radio i], [type=checkbox i]):disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
-dl[class|=webapp][class*=-gap] > dd > :not(details), ol[class|=webapp][class*=-gap] > li > :not(details),
-ul[class|=webapp][class*=-gap] > li > :not(details), nav[class|=webapp] ul > li > :not(details), details[class|=webapp][class*=-menu] > dl:first-of-type > dd > :not(details), ol[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd > :not(details),
-ul[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd > :not(details), nav[class|=webapp] ul > li > details > dl:first-of-type > dd > :not(details), details[class|=webapp][class*=-menu] > ol:first-of-type > li > :not(details), ol[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li > :not(details),
-ul[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li > :not(details), nav[class|=webapp] ul > li > details > ol:first-of-type > li > :not(details), details[class|=webapp][class*=-menu] > ul:first-of-type > li > :not(details), ol[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li > :not(details),
-ul[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li > :not(details), nav[class|=webapp] ul > li > details > ul:first-of-type > li > :not(details), dl[class|=webapp][class*=-gap] > dd > details > summary, ol[class|=webapp][class*=-gap] > li > details > summary,
-ul[class|=webapp][class*=-gap] > li > details > summary, nav[class|=webapp] ul > li > details > summary, details[class|=webapp][class*=-menu] > dl:first-of-type > dd > details > summary, ol[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd > details > summary,
-ul[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd > details > summary, nav[class|=webapp] ul > li > details > dl:first-of-type > dd > details > summary, details[class|=webapp][class*=-menu] > ol:first-of-type > li > details > summary, ol[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li > details > summary,
-ul[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li > details > summary, nav[class|=webapp] ul > li > details > ol:first-of-type > li > details > summary, details[class|=webapp][class*=-menu] > ul:first-of-type > li > details > summary, ol[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li > details > summary,
-ul[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li > details > summary, nav[class|=webapp] ul > li > details > ul:first-of-type > li > details > summary {
-  padding: var(--webapp-gapitem) var(--webapp-gap);
+textarea, input:not([type=file i], [type=submit i], [type=image i], [type=range i], [type=radio i], [type=checkbox i]) {
+  padding: var(--webapp-gapitem);
+  box-shadow: inset 0 1px 2px hsl(var(--webapp-color-edge)/0.2);
+}
+textarea::placeholder, input:not([type=file i], [type=submit i], [type=image i], [type=range i], [type=radio i], [type=checkbox i])::placeholder {
+  color: hsl(var(--webapp-color-hint));
+}
+textarea:read-only, input:not([type=file i], [type=submit i], [type=image i], [type=range i], [type=radio i], [type=checkbox i]):read-only {
+  background-color: hsl(var(--webapp-color-hint)/0.1);
 }
 
-dl[class|=webapp][class*=-hover] > dd:hover, ol[class|=webapp][class*=-hover] > li:hover,
-ul[class|=webapp][class*=-hover] > li:hover, details[class|=webapp][class*=-menu] > dl:first-of-type > dd:hover, ol[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd:hover,
-ul[class|=webapp][class*=-menu] > li > details > dl:first-of-type > dd:hover, nav[class|=webapp] ul > li > details > dl:first-of-type > dd:hover, details[class|=webapp][class*=-menu] > ol:first-of-type > li:hover, ol[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li:hover,
-ul[class|=webapp][class*=-menu] > li > details > ol:first-of-type > li:hover, nav[class|=webapp] ul > li > details > ol:first-of-type > li:hover, details[class|=webapp][class*=-menu] > ul:first-of-type > li:hover, ol[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li:hover,
-ul[class|=webapp][class*=-menu] > li > details > ul:first-of-type > li:hover, nav[class|=webapp] ul > li > details > ul:first-of-type > li:hover {
-  background: #f3f3f3;
-}
-
-ol[class|=webapp],
-ul[class|=webapp] {
-  list-style-type: none;
-}
-
-details[class|=webapp] {
-  display: inline-block;
-}
-
-details[class|=webapp][class*=-button] {
-  padding: 0;
-}
-
-details[class|=webapp][class*=-button] > summary:first-child {
-  cursor: default;
-  line-height: 1.81rem;
-  padding: 0 1rem;
-}
-
-details[class|=webapp][class*=-menu], ol[class|=webapp][class*=-menu] > li > details,
-ul[class|=webapp][class*=-menu] > li > details, nav[class|=webapp] ul > li > details {
-  position: relative;
-}
-
-details[class|=webapp][class*=-menu] > :not(summary):first-of-type, ol[class|=webapp][class*=-menu] > li > details > :not(summary):first-of-type,
-ul[class|=webapp][class*=-menu] > li > details > :not(summary):first-of-type, nav[class|=webapp] ul > li > details > :not(summary):first-of-type {
-  position: absolute;
-  z-index: 9999;
-}
-
-details[class|=webapp][class*=-menu] > ol:first-of-type, ol[class|=webapp][class*=-menu] > li > details > ol:first-of-type,
-ul[class|=webapp][class*=-menu] > li > details > ol:first-of-type, nav[class|=webapp] ul > li > details > ol:first-of-type, details[class|=webapp][class*=-menu] > ul:first-of-type, ol[class|=webapp][class*=-menu] > li > details > ul:first-of-type,
-ul[class|=webapp][class*=-menu] > li > details > ul:first-of-type, nav[class|=webapp] ul > li > details > ul:first-of-type {
-  list-style-type: none;
+input[type=file i]::file-selector-button {
+  display: none;
 }
 
 form[class|=webapp] {
   display: inline-flex;
-  gap: 1rem;
   flex-direction: column;
-  min-width: 21rem;
+  gap: var(--webapp-gap);
+  border-radius: var(--webapp-gapradius);
 }
-
 form[class|=webapp] > fieldset {
+  display: flex;
   border: none;
-  margin: 0;
-  padding: 0;
+  gap: var(--webapp-gap);
 }
-
-form[class|=webapp] > fieldset:first-child:empty {
-  display: none;
-}
-
-nav[class|=webapp] {
-  padding: var(--webapp-gapitem) 0;
-}
-
-nav[class|=webapp] > ul:first-child > li {
-  display: inline-block;
+form[class|=webapp] > fieldset > * {
+  flex-grow: 1;
 }
 
 table[class|=webapp] {
-  display: inline-table;
-  border: 1px solid var(--webapp-foreground);
-  border-collapse: collapse;
-  empty-cells: show;
+  border: 1px solid hsl(var(--webapp-background));
 }
 
-table[class|=webapp] td {
-  padding: var(--webapp-gapradius);
+[class|=webapp][class*=-bar] {
+  display: flex;
+  gap: 0;
 }
-
-table[class|=webapp] td:empty::before {
-  content: 'NULL';
-  color: var(--webapp-hint);
+[class|=webapp][class*=-bar] > * {
+  border-radius: 0;
 }
-
-table[class|=webapp] > thead > tr:first-child {
-  background-color: var(--webapp-anchor);
-  color: var(--webapp-background);
+[class|=webapp][class*=-bar] > :not(:last-child) {
+  border-right: none;
 }
-
-table[class|=webapp] > tbody > tr > td {
-  border: 1px solid var(--webapp-foreground);
+[class|=webapp][class*=-bar] > :first-child {
+  border-top-left-radius: var(--webapp-radius);
+  border-bottom-left-radius: var(--webapp-radius);
 }
-
-table[class|=webapp] > tbody > tr.fieldset {
-  background-color: var(--webapp-hint);
-}
-
-table[class|=webapp] > tbody > tr.fieldset > td {
-  white-space: nowrap;
-}
-
-table[class|=webapp] > tbody > tr:not(.fieldset) > td {
-  overflow: hidden;
-  white-space: pre;
-  text-overflow: ellipsis;
-}
-
-table[class|=webapp] > tfoot {
-  background-color: var(--webapp-button);
-}
-
-table[class|=webapp] > tfoot > tr:first-child > td:first-child {
-  text-align: right;
-}
-
-table[class|=webapp][class*=-hover] > tbody > tr:not(.fieldset):hover {
-  background-color: var(--webapp-hover);
-}
-
-table[class|=webapp][class*=-even] > tbody > tr:nth-child(even) {
-  background-color: var(--webapp-button);
-}
-
-table[class|=webapp][class*=-top] > tbody > tr > td {
-  vertical-align: top;
-}
-
-select[class|=webapp] {
-  outline: none;
-}
-
-select[class|=webapp] > optgroup, select[class|=webapp] > option {
-  background-color: var(--webapp-background);
-}
-
-code[class|=webapp] {
-  white-space: pre;
-  font-family: var(--webapp-font-monospace);
+[class|=webapp][class*=-bar] > :last-child {
+  border-top-right-radius: var(--webapp-radius);
+  border-bottom-right-radius: var(--webapp-radius);
 }

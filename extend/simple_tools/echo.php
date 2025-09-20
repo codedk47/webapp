@@ -6,7 +6,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 	{
 		parent::__construct($webapp);
 		$this->script(['src' => '/webapp/extend/simple_tools/echo.js?v=' . static::version]);
-	
+
 		$dl = $this->aside->append('dl');
 		$dl->append('dt', 'OpenSSL');
 		foreach ([
