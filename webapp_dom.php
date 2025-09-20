@@ -1434,7 +1434,7 @@ class webapp_table extends stdClass implements Countable
 	{
 		if ($this->paging && $this->paging['max'] > 1)
 		{
-			$node = $this->footer();
+			$node = $this->footer()->append('div', ['class' => 'webapp-bar-merge']);
 			if ($this->paging['max'] > $max)
 			{
 				$halved = intval($max * 0.5);
@@ -1468,7 +1468,7 @@ class webapp_table extends stdClass implements Countable
 			}
 			if (isset($page))
 			{
-				$page->setattr('style', 'background:var(--webapp-anchor);color:white');
+				$page->setattr('class', 'default');
 			}
 		}
 		return $this;

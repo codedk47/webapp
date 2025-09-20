@@ -31,22 +31,6 @@
 	--webapp-color-primary: var(--webapp-primary) 50%;
 	--webapp-color-danger: var(--webapp-danger) 50%;
 
-	// --webapp-primary: var(--webapp-hue-primary) 60% 40%;
-	// --webapp-danger: var(--webapp-hue-danger) 70%;
-
-
-	// --webapp-hue: 186;
-	// --webapp-saturation: 100%;
-	// --webapp-color: var(--webapp-hue), var(--webapp-saturation);
-
-
-	
-	//--webapp-edge-default: var(--webapp-hue-default) 10% 40%;
-	// --webapp-edge-primary: var(--webapp-hue-primary) 10% 20%;
-	//--webapp-edge-danger: var(--webapp-hue-danger) 70% 50%;
-
-	
-
 
 	--webapp-gap: 1rem;
 	--webapp-gapitem: .4rem;
@@ -78,7 +62,12 @@
 				}
 			}
 			>aside:first-of-type:not(:empty){
-				white-space: nowrap;
+				display: flex;
+				flex-direction: column;
+				//white-space: nowrap;
+				padding-left: var(--webapp-gap);
+	
+				//overflow: hidden;
 			}
 			>main:first-of-type{
 				margin: 0 var(--webapp-gap);
@@ -115,6 +104,10 @@ select,button,textarea,input,[class*=webapp-bar]>a{
 	padding: var(--webapp-gaplittle);
 	outline: none;
 }
+select option{
+	background-color: hsl(var(--webapp-color-background));
+	color: hsl(var(--webapp-color-foreground));
+}
 select,button,textarea,input:not([type=image i],[type=range i],[type=radio i],[type=checkbox i]),[class*=webapp-bar]>a{
 	border: 1px solid hsl(var(--webapp-color-edge));
 	border-radius: var(--webapp-radius);
@@ -138,7 +131,8 @@ select,button,input[type=file i],input[type=submit i],[class*=webapp-bar]>a{
 		background-image: none !important;
 	}
 	&[type=submit i],&.default,&.primary,&.danger{
-		color: hsl(var(--webapp-color-background));
+		color: hsl(var(--webapp-default) 100%);
+		text-shadow: 0 0 .1rem hsl(var(--webapp-default) 0%);
 	}
 	&[type=submit i],&.default{
 		border-color: hsl(var(--webapp-anchor) 20%);
@@ -187,7 +181,7 @@ select,textarea,input:not([type=image i],[type=range i],[type=radio i],[type=che
 	}
 }
 textarea,input:not([type=file i],[type=submit i],[type=image i],[type=range i],[type=radio i],[type=checkbox i]){
-	box-shadow: inset 0 1px 2px hsl(var(--webapp-color-edge) / .2);
+	box-shadow: inset 0 .1rem .2rem hsl(var(--webapp-color-edge) / .2);
 	&::placeholder{
 		color: hsl(var(--webapp-color-hint));
 	}
@@ -195,7 +189,7 @@ textarea,input:not([type=file i],[type=submit i],[type=image i],[type=range i],[
 		background-color: hsl(var(--webapp-color-hint) / .1);
 	}
 }
-textarea,code{
+textarea,code,pre{
 	font: 1rem var(--webapp-font-monospace);
 }
 input{
@@ -255,51 +249,30 @@ table[class|=webapp]{
 	}
 	>thead,>tbody,>tfoot{
 		background-color: hsl(var(--webapp-color-background));
-		// >tr>td{
-		// 	padding: var(--webapp-gapitem);
-		// }
+		>tr>td{
+			padding: var(--webapp-gapitem);
+		}
 	}
-
 	>thead{
-		
-		>tr:first-of-type{
-			background-color: hsl(var(--webapp-color-anchor));
-			color: hsl(var(--webapp-color-background));
+		>tr:first-of-type>td:first-of-type{
+			color: hsl(var(--webapp-default) 100%);
+			border: 1px solid hsl(var(--webapp-default) 100%);
+			background-color: hsl(var(--webapp-anchor) 50%);
+			background-image: linear-gradient(transparent, hsl(var(--webapp-anchor) 40%) 90%);
+			text-shadow: 0 0 .1rem hsl(var(--webapp-default) 0%);
 		}
 	}
 	>tbody{
-		background-color: hsl(var(--webapp-color-background));
 		>tr.fieldset:first-of-type{
-			background-color: hsl(var(--webapp-color-hint) / .4);
+			background-color: hsl(var(--webapp-default) 90%);
 		}
-		>tr>td{
-			padding: var(--webapp-gaplittle);
-			
-		}
-		>tr:not(.fieldset)>td{
-			overflow: hidden;
-			text-overflow: ellipsis;
-
-
-		}
-		// >tr.fieldset{
-		// 	background-color: var(--webapp-hint);
-		// 	>td{
-		// 		white-space: nowrap;
-		// 	}
-		// }
-		// >tr:not(.fieldset)>td{
-		// 	overflow: hidden;
-		// 	white-space: pre;
-		// 	text-overflow: ellipsis;
-		// }
 	}
-	// >tfoot{
-	// 	background-color: hsl(var(--webapp-color-background));
-	// }
-}
-pre{
-	font-family: Consolas;
+	>tfoot{
+		background-color: hsl(var(--webapp-anchor) 98%);
+		>tr>td>div.webapp-bar-merge:last-of-type>a{
+			padding: var(--webapp-gaplittle) var(--webapp-gap);
+		}
+	}
 }
 
 [class|=webapp]{

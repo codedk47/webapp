@@ -44,7 +44,9 @@
   margin-top: var(--webapp-gap);
 }
 :root > body > div:first-of-type > aside:first-of-type:not(:empty) {
-  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  padding-left: var(--webapp-gap);
 }
 :root > body > div:first-of-type > main:first-of-type {
   margin: 0 var(--webapp-gap);
@@ -77,6 +79,11 @@ select, button, textarea, input, [class*=webapp-bar] > a {
   outline: none;
 }
 
+select option {
+  background-color: hsl(var(--webapp-color-background));
+  color: hsl(var(--webapp-color-foreground));
+}
+
 select, button, textarea, input:not([type=image i], [type=range i], [type=radio i], [type=checkbox i]), [class*=webapp-bar] > a {
   border: 1px solid hsl(var(--webapp-color-edge));
   border-radius: var(--webapp-radius);
@@ -102,7 +109,8 @@ select:active, button:active, input[type=file i]:active, input[type=submit i]:ac
   background-image: none !important;
 }
 select[type=submit i], select.default, select.primary, select.danger, button[type=submit i], button.default, button.primary, button.danger, input[type=file i][type=submit i], input[type=file i].default, input[type=file i].primary, input[type=file i].danger, input[type=submit i][type=submit i], input[type=submit i].default, input[type=submit i].primary, input[type=submit i].danger, [class*=webapp-bar] > a[type=submit i], [class*=webapp-bar] > a.default, [class*=webapp-bar] > a.primary, [class*=webapp-bar] > a.danger {
-  color: hsl(var(--webapp-color-background));
+  color: hsl(var(--webapp-default) 100%);
+  text-shadow: 0 0 0.1rem hsl(var(--webapp-default) 0%);
 }
 select[type=submit i], select.default, button[type=submit i], button.default, input[type=file i][type=submit i], input[type=file i].default, input[type=submit i][type=submit i], input[type=submit i].default, [class*=webapp-bar] > a[type=submit i], [class*=webapp-bar] > a.default {
   border-color: hsl(var(--webapp-anchor) 20%);
@@ -150,7 +158,7 @@ select:disabled, textarea:disabled, input:not([type=image i], [type=range i], [t
 }
 
 textarea, input:not([type=file i], [type=submit i], [type=image i], [type=range i], [type=radio i], [type=checkbox i]) {
-  box-shadow: inset 0 1px 2px hsl(var(--webapp-color-edge)/0.2);
+  box-shadow: inset 0 0.1rem 0.2rem hsl(var(--webapp-color-edge)/0.2);
 }
 textarea::placeholder, input:not([type=file i], [type=submit i], [type=image i], [type=range i], [type=radio i], [type=checkbox i])::placeholder {
   color: hsl(var(--webapp-color-hint));
@@ -159,7 +167,7 @@ textarea:read-only, input:not([type=file i], [type=submit i], [type=image i], [t
   background-color: hsl(var(--webapp-color-hint)/0.1);
 }
 
-textarea, code {
+textarea, code, pre {
   font: 1rem var(--webapp-font-monospace);
 }
 
@@ -213,26 +221,24 @@ table[class|=webapp] > :last-child > tr:last-of-type > td:last-of-type {
 table[class|=webapp] > thead, table[class|=webapp] > tbody, table[class|=webapp] > tfoot {
   background-color: hsl(var(--webapp-color-background));
 }
-table[class|=webapp] > thead > tr:first-of-type {
-  background-color: hsl(var(--webapp-color-anchor));
-  color: hsl(var(--webapp-color-background));
+table[class|=webapp] > thead > tr > td, table[class|=webapp] > tbody > tr > td, table[class|=webapp] > tfoot > tr > td {
+  padding: var(--webapp-gapitem);
 }
-table[class|=webapp] > tbody {
-  background-color: hsl(var(--webapp-color-background));
+table[class|=webapp] > thead > tr:first-of-type > td:first-of-type {
+  color: hsl(var(--webapp-default) 100%);
+  border: 1px solid hsl(var(--webapp-default) 100%);
+  background-color: hsl(var(--webapp-anchor) 50%);
+  background-image: linear-gradient(transparent, hsl(var(--webapp-anchor) 40%) 90%);
+  text-shadow: 0 0 0.1rem hsl(var(--webapp-default) 0%);
 }
 table[class|=webapp] > tbody > tr.fieldset:first-of-type {
-  background-color: hsl(var(--webapp-color-hint)/0.4);
+  background-color: hsl(var(--webapp-default) 90%);
 }
-table[class|=webapp] > tbody > tr > td {
-  padding: var(--webapp-gaplittle);
+table[class|=webapp] > tfoot {
+  background-color: hsl(var(--webapp-anchor) 98%);
 }
-table[class|=webapp] > tbody > tr:not(.fieldset) > td {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-pre {
-  font-family: Consolas;
+table[class|=webapp] > tfoot > tr > td > div.webapp-bar-merge:last-of-type > a {
+  padding: var(--webapp-gaplittle) var(--webapp-gap);
 }
 
 [class|=webapp][class*=-bar] {
