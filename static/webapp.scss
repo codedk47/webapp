@@ -64,7 +64,7 @@
 			>aside:first-of-type:not(:empty){
 				display: flex;
 				flex-direction: column;
-				//white-space: nowrap;
+				white-space: nowrap;
 				padding-left: var(--webapp-gap);
 	
 				//overflow: hidden;
@@ -98,7 +98,8 @@ a{
 }
 
 
-select,button,textarea,input,[class*=webapp-bar]>a{
+select,button,textarea,input,
+[class*=webapp-button],[class*=webapp-bar]>a{
 	font: 1rem var(--webapp-font-sans-serif);
 	line-height: 1.44rem;
 	padding: var(--webapp-gaplittle);
@@ -108,7 +109,8 @@ select option{
 	background-color: hsl(var(--webapp-color-background));
 	color: hsl(var(--webapp-color-foreground));
 }
-select,button,textarea,input:not([type=image i],[type=range i],[type=radio i],[type=checkbox i]),[class*=webapp-bar]>a{
+select,button,textarea,input:not([type=image i],[type=range i],[type=radio i],[type=checkbox i]),
+[class*=webapp-button],[class*=webapp-bar]>a{
 	border: 1px solid hsl(var(--webapp-color-edge));
 	border-radius: var(--webapp-radius);
 	&:hover{
@@ -120,7 +122,8 @@ select,button,textarea,input:not([type=image i],[type=range i],[type=radio i],[t
 		z-index: 1;
 	}
 }
-select,button,input[type=file i],input[type=submit i],[class*=webapp-bar]>a{
+select,button,input[type=file i],input[type=submit i],
+[class*=webapp-button],[class*=webapp-bar]>a{
 	white-space: nowrap;
 	background-color: hsl(var(--webapp-default) 94%);
 	background-image: linear-gradient(transparent, hsl(var(--webapp-default) 90%) 90%);
@@ -194,7 +197,8 @@ textarea,code,pre{
 }
 input{
 	&[type=file i]{
-
+		width: 100%;
+		min-width: 7rem;
 		&::file-selector-button{
 			display: none;
 		}
@@ -202,6 +206,50 @@ input{
 	&:not([type=file i],[type=submit i],[type=image i],[type=range i],[type=radio i],[type=checkbox i]){
 		text-overflow: ellipsis;
 	}
+
+	&[type=radio i]{
+		appearance: none;
+		background: red;
+		border: 1px solid black;
+		width: 2rem;
+		height: 1rem;
+		border-radius: .5rem;
+		margin: 0;
+		padding: 0;
+		line-height: 1rem;;
+		// box-sizing: border-box;
+		//position: relative;
+		// &::before{
+		// 	position: absolute;
+		// 	content: '';
+		// 	background: red;
+		// 	border: 1px solid black;
+		// 	width: 2rem;
+		// 	height: 1.2rem;
+		// 	border-radius: .6rem;
+		// }
+		&::after{
+			// position: absolute;
+			// top: .1rem;
+			// left: 0;
+
+			content: '';
+			padding: 0;
+			margin: 0;
+			display: inline-block;
+			width: .8rem;
+			height: .8rem;
+			border-radius: 50%;
+			background: green;
+		}
+
+		&:checked{
+			background: blue;
+			text-align: right;
+		}
+	}
+
+	
 }
 
 form[class|=webapp]{
@@ -274,11 +322,69 @@ table[class|=webapp]{
 		}
 	}
 }
+ul[class|=webapp],ul[class|=webapp] ul{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	&[class*=-tree],&[class*=-tree] ul{
+		&[class*=-tree] ul{
+			margin-left: calc(var(--webapp-gapitem) + var(--webapp-gaplittle));
+		}
+		>li{
+			border-left: 1px solid hsl(var(--webapp-color-edge));
+			padding-left: var(--webapp-gaplittle);
+			line-height: 1.4rem;
+			&:before{
+				content: '';
+				position: relative;
+				top: calc(0rem - var(--webapp-gapitem));
+				left: calc(0rem - var(--webapp-gaplittle));
+				width: var(--webapp-gapitem);
+				height: 1rem;
+				display: inline-block;
+				border-bottom: 1px solid hsl(var(--webapp-color-edge));
+			}
+			&:last-of-type{
+				border-left: none;
+				&:before{
+					border-left: 1px solid hsl(var(--webapp-color-edge));
+				}
+			}
+		}
+	}
+}
+details[class|=webapp]{
+	>summary:first-of-type{
+		cursor: pointer;
+	}
+	&[class*=-menu]{
+		position: relative;
+		>:not(summary){
+			position: absolute;
+			border: 1px solid hsl(var(--webapp-color-edge));
+			border-radius: var(--webapp-radius);
+			background-color: hsl(var(--webapp-color-background));
+			box-shadow: 0 0 .2rem hsl(var(--webapp-color-edge));
+			padding: 1rem;
+		}
+	}
+}
+
+
+// dialog[class|=webapp]{
+// 	padding: 0;
+// 	border: 1px solid hsl(var(--webapp-color-edge));
+// 	border-radius: var(--webapp-radius);
+// 	box-shadow: 0 0 .2rem hsl(var(--webapp-color-edge));
+// }
 
 [class|=webapp]{
+	// margin: 0;
+	// padding: 0;
 	// &[class*=-inline]{
 	// 	display: inline-block;
 	// }
+
 	&[class*=-bar]{
 		display: flex;
 		gap: var(--webapp-gapitem);

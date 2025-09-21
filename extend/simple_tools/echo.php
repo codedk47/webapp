@@ -7,38 +7,60 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		parent::__construct($webapp);
 		$this->script(['src' => '/webapp/extend/simple_tools/echo.js?v=' . static::version]);
 
-		$dl = $this->aside->append('dl');
-		$dl->append('dt', 'OpenSSL');
-		foreach ([
-			'pkey-new' => '生成新的私钥',
-			'csr-new' => '生成新证书签名请求',
-			'csr-sign-x509' => '签署并且生成x509证书',
-			'zeroneta-user-cert' => '一键生成私钥和用户证书'
-		] as $anchor => $function) {
-			$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/openssl-{$anchor}"]);
-		}
-		$dl = $this->aside->append('dl');
-		$dl->append('dt', 'QRCode');
-		foreach ([
-			'create' => '二维码创建',
-			'reader' => '二维码读取'
-		] as $anchor => $function) {
-			$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/qrcode-{$anchor}"]);
-		}
-		$dl = $this->aside->append('dl');
-		$dl->append('dt', '其他杂项');
-		foreach ([
-			'websocket' => 'WebSocket 回显测试',
-			'base64' => 'Base64 编码/解码',
-			'php-hash' => 'PHP 散列算法',
-			'js-hash' => 'JS 散列算法',
-			//'js-timestamp-format' => '时间戳格式化',
-			'generate-password' => '生成随机密码',
-			'generate-uuid' => '生成UUID',
-			'apple-mobile-webclip' => '创建苹果书签'
-		] as $anchor => $function) {
-			$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/{$anchor}"]);
-		}
+		$this->aside->atree([
+			
+			['OpenSSL', [
+				['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
+				['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
+				['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
+				['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
+			]],
+			['QRCode', [
+				['二维码创建', "?{$this->routename}/qrcode-create"],
+				['二维码读取', "?{$this->routename}/qrcode-reader"]
+			]],
+			['WebSocket 回显测试', "?{$this->routename}/websocket"],
+			['Base64 编码/解码', "?{$this->routename}/base64"],
+			['PHP 散列算法', "?{$this->routename}/php-hash"],
+			['JS 散列算法', "?{$this->routename}/js-hash"],
+			['生成随机密码', "?{$this->routename}/generate-password"],
+			['生成UUID', "?{$this->routename}/generate-uuid"],
+			['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
+			], TRUE )['class'] = 'webapp';//['class'] = 'webapp-tree';
+
+
+		// $dl = $this->aside->append('dl');
+		// $dl->append('dt', 'OpenSSL');
+		// foreach ([
+		// 	'pkey-new' => '生成新的私钥',
+		// 	'csr-new' => '生成新证书签名请求',
+		// 	'csr-sign-x509' => '签署并且生成x509证书',
+		// 	'zeroneta-user-cert' => '一键生成私钥和用户证书'
+		// ] as $anchor => $function) {
+		// 	$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/openssl-{$anchor}"]);
+		// }
+		// $dl = $this->aside->append('dl');
+		// $dl->append('dt', 'QRCode');
+		// foreach ([
+		// 	'create' => '二维码创建',
+		// 	'reader' => '二维码读取'
+		// ] as $anchor => $function) {
+		// 	$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/qrcode-{$anchor}"]);
+		// }
+		// $dl = $this->aside->append('dl');
+		// $dl->append('dt', '其他杂项');
+		// foreach ([
+		// 	'websocket' => 'WebSocket 回显测试',
+		// 	'base64' => 'Base64 编码/解码',
+		// 	'php-hash' => 'PHP 散列算法',
+		// 	'js-hash' => 'JS 散列算法',
+		// 	//'js-timestamp-format' => '时间戳格式化',
+		// 	'generate-password' => '生成随机密码',
+		// 	'generate-uuid' => '生成UUID',
+		// 	'apple-mobile-webclip' => '创建苹果书签'
+		// ] as $anchor => $function) {
+		// 	$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/{$anchor}"]);
+		// }
 	}
 	// function message(string $message = NULL)
 	// {
@@ -470,7 +492,61 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 	}
 
 
+	function get_test()
+	{
+
+		$this->main->append('div', ['style' => 'padding:2rem'])
+		->append('a', ['asdasd', 'href' => '#', 'class' => 'webapp-button-asd danger']);
+
+
+		$details = $this->main->append('div', ['style' => 'padding:2rem'])
+		->details('详细')->setattr(['class' => 'webapp-button-menu']);
+		$details->atree([
+			
+			['OpenSSL', [
+				['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
+				['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
+				['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
+				['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
+			]],
+			['QRCode', [
+				['二维码创建', "?{$this->routename}/qrcode-create"],
+				['二维码读取', "?{$this->routename}/qrcode-reader"]
+			]],
+			['WebSocket 回显测试', "?{$this->routename}/websocket"],
+			['Base64 编码/解码', "?{$this->routename}/base64"],
+			['PHP 散列算法', "?{$this->routename}/php-hash"],
+			['JS 散列算法', "?{$this->routename}/js-hash"],
+			['生成随机密码', "?{$this->routename}/generate-password"],
+			['生成UUID', "?{$this->routename}/generate-uuid"],
+			['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
+			])['class'] = 'webapp-tree';
+
+		$form = $this->main->form();
+		$form->fieldset();
+		$form->field('aaaa', 'text');
+
+		$form->fieldset();
+		$form->field('asd', 'radio', ['options' => [
+			'asdas' => 'dwdawd',
+			'dwdwd' => 'wwww'
+		]]);
+
+		$form->field('asd', 'checkbox', ['options' => [
+			'asdas' => 'dwdawd',
+			'dwdwd' => 'wwww'
+		]]);
+
+		$form->field('kkk', 'webapp-select', ['options' => [
+			'asdas' => 'dwdawd',
+			'dwdwd' => 'wwww'
+		]]);
+
+		// $dialog = $this->main->append('dialog', ['class' => 'webapp', 'open' => NULL]);
+		// $dialog->append('header', 'dwdawd');
+		// $dialog->append('footer', 'dwdawd');
 	
+	}
 
 
 
