@@ -26,7 +26,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			['生成随机密码', "?{$this->routename}/generate-password"],
 			['生成UUID', "?{$this->routename}/generate-uuid"],
 			['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
-			], TRUE )['class'] = 'webapp';//['class'] = 'webapp-tree';
+			])['class'] = 'webapp-tree';
 
 
 		// $dl = $this->aside->append('dl');
