@@ -14,12 +14,12 @@
   --webapp-color-anchor: var(--webapp-anchor) 40%;
   --webapp-color-primary: var(--webapp-primary) 50%;
   --webapp-color-danger: var(--webapp-danger) 50%;
-  --webapp-gap: 1rem;
-  --webapp-gapitem: .4rem;
-  --webapp-gaplittle: .2rem;
+  --webapp-font-default: opensans, verdana, arial, sans-serif;
   --webapp-font-monospace: consolas, monospace;
-  --webapp-font-sans-serif: verdana, georgia, arial, sans-serif;
-  font: normal 16px var(--webapp-font-sans-serif);
+  --webapp-gaplittle: .2rem;
+  --webapp-gapitem: .4rem;
+  --webapp-gap: 1rem;
+  font: normal 16px var(--webapp-font-default);
   display: block;
   height: 100%;
   background-color: hsl(var(--webapp-color-background));
@@ -75,7 +75,7 @@ a.danger {
 
 select, button, textarea, input,
 [class*=webapp-button], [class*=webapp-bar] > a {
-  font: 1rem var(--webapp-font-sans-serif);
+  font: 1rem var(--webapp-font-default);
   line-height: 1.44rem;
   padding: var(--webapp-gaplittle);
   outline: none;
@@ -232,7 +232,6 @@ input[type=radio i]:checked {
 form[class|=webapp] {
   display: inline-flex;
   flex-direction: column;
-  border-radius: var(--webapp-radius);
 }
 form[class|=webapp] > fieldset {
   display: flex;
@@ -247,7 +246,7 @@ form[class|=webapp] > fieldset:empty {
 form[class|=webapp] > fieldset > legend:first-of-type {
   padding: var(--webapp-gapitem) 0 0 0;
 }
-form[class|=webapp] > fieldset > * {
+form[class|=webapp] > fieldset > :not(legend) {
   flex-grow: 1;
 }
 
@@ -292,9 +291,19 @@ table[class|=webapp] > tfoot > tr > td > div.webapp-bar-merge:last-of-type > a {
   padding: var(--webapp-gaplittle) var(--webapp-gap);
 }
 
-ul[class|=webapp], ul[class|=webapp] ul {
+dl, ul, ol {
   margin: 0;
   padding: 0;
+}
+
+dl[class|=webapp], dl[class|=webapp] dl {
+  padding: 0 !important;
+}
+dl[class|=webapp] > dd, dl[class|=webapp] dl > dd {
+  margin: 0;
+}
+
+ul[class|=webapp], ul[class|=webapp] ul {
   list-style: none;
 }
 ul[class|=webapp][class*=-tree][class*=-tree] ul, ul[class|=webapp][class*=-tree] ul[class*=-tree] ul, ul[class|=webapp] ul[class*=-tree][class*=-tree] ul, ul[class|=webapp] ul[class*=-tree] ul[class*=-tree] ul {
@@ -329,6 +338,7 @@ details[class|=webapp][class*=-menu] {
   position: relative;
 }
 details[class|=webapp][class*=-menu] > :not(summary) {
+  white-space: nowrap;
   position: absolute;
   border: 1px solid hsl(var(--webapp-color-edge));
   border-radius: var(--webapp-radius);
@@ -337,6 +347,24 @@ details[class|=webapp][class*=-menu] > :not(summary) {
   padding: 1rem;
 }
 
+[class|=webapp][class*=-listmenu] {
+  padding: var(--webapp-gaplittle) !important;
+  line-height: 1.6rem;
+}
+[class|=webapp][class*=-listmenu] > * {
+  border-radius: var(--webapp-radius);
+}
+[class|=webapp][class*=-listmenu] a {
+  display: block;
+  padding: var(--webapp-gaplittle) var(--webapp-gapitem);
+}
+[class|=webapp][class*=-listmenu] > :hover {
+  background-color: hsl(var(--webapp-color-hint)/0.2);
+}
+[class|=webapp][class*=-edge] {
+  border: 1px solid hsl(var(--webapp-color-edge));
+  border-radius: var(--webapp-radius);
+}
 [class|=webapp][class*=-bar] {
   display: flex;
   gap: var(--webapp-gapitem);

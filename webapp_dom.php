@@ -64,26 +64,30 @@ class webapp_xml extends SimpleXMLElement
 	}
 	function iter(iterable $contents, Closure $iterator = NULL, ...$params):static
 	{
-		// $doc = $this->dom()->ownerDocument;
-		// $iterator ? $doc->iter = [$iterator, $params] : [$iterator, $params] = $doc->iter;
-		if ($iterator === NULL)
-		{
-			//神奇骚操作，未来某个PHP版本不会改了吧？
-			$backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 3)[2];
-			$backtrace['object'] instanceof Closure
-				? [$iterator, $params] = [$backtrace['object'], array_slice($backtrace['args'], 2)]
-				: $params = [$iterator = function(array $element, Closure $iterator):void
-				{
-					$node = $this->append(array_shift($element), $element);
-					if (isset($element[0]) && is_iterable($element[0]))
-					{
-						$node->iter($element[0], $iterator, $iterator);
-					}
-				}];
-		}
+		$iterator ??= fn(webapp_xml $node, array $element) => $node->append(array_shift($element), $element);
+
+
+
+		// // $doc = $this->dom()->ownerDocument;
+		// // $iterator ? $doc->iter = [$iterator, $params] : [$iterator, $params] = $doc->iter;
+		// if ($iterator === NULL)
+		// {
+		// 	//神奇骚操作，未来某个PHP版本不会改了吧？
+		// 	$backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 3)[2];
+		// 	$backtrace['object'] instanceof Closure
+		// 		? [$iterator, $params] = [$backtrace['object'], array_slice($backtrace['args'], 2)]
+		// 		: $params = [$iterator = function(array $element, Closure $iterator):void
+		// 		{
+		// 			$node = $this->append(array_shift($element), $element);
+		// 			if (isset($element[0]) && is_iterable($element[0]))
+		// 			{
+		// 				$node->iter($element[0], $iterator, $iterator);
+		// 			}
+		// 		}];
+		// }
 		foreach ($contents as $value)
 		{
-			$iterator->call($this, $value, ...$params);
+			$iterator($this, $value, ...$params);
 		}
 		return $this;
 	}
@@ -696,8 +700,8 @@ class webapp_html extends webapp_xml
 	{
 		return $this->append('progress', ['value' => $value, 'max' => $max]);
 	}
-	function anchor(string $href)
-	{}
+	// function anchor(string $href)
+	// {}
 	function fieldset(string $legend = NULL):static
 	{
 		//An optional <legend> element, followed by flow content.
@@ -716,6 +720,25 @@ class webapp_html extends webapp_xml
 		{
 			$node->summary = $summary;
 		}
+		return $node;
+	}
+	function details_listanchor(string $summary = NULL, iterable $anchors):static
+	{
+		$node = $this->details($summary);
+		foreach ($anchors as $anchor)
+		{
+			$anchor['href'] = $anchor[1];
+			unset($anchor[1]);
+			$node->append('a', $anchor);
+		}
+		
+		return $node->setattr(['class' => 'webapp-list', 'open' => NULL]);
+	}
+	function details_menu(string $summary = NULL, bool $open = FALSE):static
+	{
+		$node = $this->details($summary);
+		$node->summary['class'] = 'webapp-button';
+		$node['class'] = 'webapp-menu';
 		return $node;
 	}
 	// function meter(float $value, float $min = 0, float $max = 1, float $low = NULL, float $high = NULL, float $optimum = NULL):static
@@ -876,29 +899,38 @@ class webapp_html extends webapp_xml
 		return $this->append('iframe', $attributes + ['loading' => 'lazy']);
 	}
 
+	
+	// function treelink(iterable $anchors)
+	// {
+
+	// }
+
+
 	function atree(iterable $link, bool $fold = FALSE)
 	{
-		return $this->append('ul')->iter($link, function(array $link, bool $fold):void
-		{
-			$node = $this->append('li');
-			if (is_iterable($link[1]))
-			{
-				if ($fold)
-				{
-					$node = $node->details($link[0]);
-				}
-				else
-				{
-					$node->append('span', $link[0]);
-				}
-				$node->append('ul')->iter($link[1]);
-			}
-			else
-			{
-				$link['href'] ??= $link[1];
-				$node->append('a', $link);
-			}
-		}, $fold);
+		// function(array $link, bool $fold):void
+		// {
+		// 	$node = $this->append('li');
+		// 	if (is_iterable($link[1]))
+		// 	{
+		// 		if ($fold)
+		// 		{
+		// 			$node = $node->details($link[0]);
+		// 		}
+		// 		else
+		// 		{
+		// 			$node->append('span', $link[0]);
+		// 		}
+		// 		$node->append('ul')->iter($link[1]);
+		// 	}
+		// 	else
+		// 	{
+		// 		$link['href'] ??= $link[1];
+		// 		$node->append('a', $link);
+		// 	}
+		// }
+
+		// return $this->append('ul')->iter($link, , $fold);
 	}
 	function cond(array $fields, ?string $action = NULL):static
 	{
@@ -1430,59 +1462,42 @@ class webapp_table extends stdClass implements Countable
 	{
 		return $this->maxspan($this->tfoot->append('tr')->append('td', $context));
 	}
-	function paging(string $url, int $max = 9):static
+	function paging(string $url, int $maxshow = 9):static
 	{
 		if ($this->paging && $this->paging['max'] > 1)
 		{
-			$node = $this->footer()->append('div', ['class' => 'webapp-bar-merge']);
-			if ($this->paging['max'] > $max)
-			{
-				$halved = intval($max * 0.5);
-				$offset = min($this->paging['max'], max($this->paging['index'], $halved + 1) + $halved) - 1;
-				$ranges = range(max(1, $offset - $halved * 2 + 1), $offset);
-				$ranges[0] = 1;
-				$ranges[] = $this->paging['max'];
-				$node->append('a', ['Prev', 'href' => $url . ($this->paging['index'] - 1)]);
-				foreach ($ranges as $index)
-				{
-					$curr = $node->append('a', [$index, 'href' => "{$url}{$index}"]);
-					if ($index == $this->paging['index'])
-					{
-						$page = $curr;
-					}
-				}
-				$node->append('a', ['Next', 'href' => $url . ($this->paging['index'] + 1)]);
-				$node->append('input', ['type' => 'number', 'min' => 1, 'max' => $this->paging['max'], 'value' => $this->paging['index'], 'onkeypress' => 'event.keyCode===13&&location.assign(this.nextElementSibling.href+this.value)']);
-				$node->append('a', ['Goto', 'href' => $url, 'onclick' => 'return !!location.assign(this.href+this.previousElementSibling.value)']);
-			}
-			else
-			{
-				for ($i = 1; $i <= $this->paging['max']; ++$i)
-				{
-					$curr = $node->append('a', [$i, 'href' => "{$url}{$i}"]);
-					if ($i === $this->paging['index'])
-					{
-						$page = $curr;
-					}
-				}
-			}
-			if (isset($page))
-			{
-				$page->setattr('class', 'default');
-			}
+			static::pagination($this->footer(), $url, $this->paging['index'], $this->paging['max'], $maxshow);
 		}
 		return $this;
 	}
-	// function fileds():array
-	// {
-	// 	if ($this->data instanceof mysqli_result)
-	// 	{
-	// 		return array_column($this->data->fetch_fields(), 'name');
-	// 	}
-	// 	return match (TRUE)
-	// 	{
-	// 		$this->data instanceof mysqli_result => array_column($this->data->fetch_fields(), 'name'),
-	// 		default => []
-	// 	};
-	// }
+	static function pagination(webapp_html $node, string $url, int $current, int $maxpage, int $maxshow = 9):webapp_html
+	{
+		$node = $node->append('div', ['class' => 'webapp-bar-merge']);
+		if ($maxpage > $maxshow)
+		{
+			$halved = intval($maxshow * 0.5);
+			$offset = min($maxpage, max($current, $halved + 1) + $halved) - 1;
+			$ranges = range(max(1, $offset - $halved * 2 + 1), $offset);
+			$ranges[0] = 1;
+			$ranges[] = $maxpage;
+			$node->append('a', ['Prev', 'href' => $url . ($current - 1)]);
+			foreach ($ranges as $index)
+			{
+				$node->append('a', [$index, 'href' => "{$url}{$index}",
+					...$index == $current ? ['class' => 'default'] : []]);
+			}
+			$node->append('a', ['Next', 'href' => $url . ($current + 1)]);
+			$node->append('input', ['type' => 'number', 'min' => 1, 'max' => $maxpage, 'value' => $current, 'onkeypress' => 'event.keyCode===13&&location.assign(this.nextElementSibling.href+this.value)']);
+			$node->append('a', ['Goto', 'href' => $url, 'onclick' => 'return !!location.assign(this.href+this.previousElementSibling.value)']);
+		}
+		else
+		{
+			for ($i = 1; $i <= $maxpage; ++$i)
+			{
+				$node->append('a', [$i, 'href' => "{$url}{$i}",
+					...$i == $current ? ['class' => 'default'] : []]);
+			}
+		}
+		return $node;
+	}
 }

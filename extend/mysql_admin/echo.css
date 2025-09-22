@@ -1,0 +1,4 @@
+@import url(/webapp/static/fonts/titilliumweb/import.css);
+:root{
+    --webapp-font-default: titilliumweb;
+}

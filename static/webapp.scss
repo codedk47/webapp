@@ -1,7 +1,6 @@
-@function webapp-anchor($lightness: 50%)
-{
-	@return linear-gradient(-180deg, hsl(var(--webapp-danger) / .7) 0%, hsl(var(--webapp-danger) / .9) 90%)
-}
+@charset "utf-8";
+// @import url(fonts/opensans/import.css);
+// @import url(fonts/titilliumweb/import.css);
 :root{
 	// https://hslpicker.com
 	// hue saturation lightness
@@ -9,19 +8,11 @@
 	--webapp-hue-primary: 130;
 	--webapp-hue-danger: 360;
 	--webapp-radius: .2rem;
-	// --webapp-saturation: 100%;
-
-	// --webapp-background: var(--webapp-hue-default) 0% 100%;
-	// --webapp-foreground: var(--webapp-hue-default) 0% 0%;
-
-
-
-	//HSL Preset Value
+	//HSL Value
 	--webapp-default: var(--webapp-hue-default) 0%;
 	--webapp-anchor: var(--webapp-hue-default) 100%;
 	--webapp-primary: var(--webapp-hue-primary) 50%;
 	--webapp-danger: var(--webapp-hue-danger) 70%;
-
 	//HSL Color
 	--webapp-color-background: var(--webapp-default) 100%;
 	--webapp-color-foreground: var(--webapp-default) 0%;
@@ -30,16 +21,14 @@
 	--webapp-color-anchor: var(--webapp-anchor) 40%;
 	--webapp-color-primary: var(--webapp-primary) 50%;
 	--webapp-color-danger: var(--webapp-danger) 50%;
-
-
-	--webapp-gap: 1rem;
-	--webapp-gapitem: .4rem;
-	--webapp-gaplittle: .2rem;
-	
-
+	//Font
+	--webapp-font-default: opensans, verdana, arial, sans-serif;
 	--webapp-font-monospace: consolas, monospace;
-	--webapp-font-sans-serif: verdana, georgia, arial, sans-serif;
-	font: normal 16px var(--webapp-font-sans-serif);
+	//Misc
+	--webapp-gaplittle: .2rem;
+	--webapp-gapitem: .4rem;
+	--webapp-gap: 1rem;
+	font: normal 16px var(--webapp-font-default);
 	
 	display: block;
 	height: 100%;
@@ -100,7 +89,7 @@ a{
 
 select,button,textarea,input,
 [class*=webapp-button],[class*=webapp-bar]>a{
-	font: 1rem var(--webapp-font-sans-serif);
+	font: 1rem var(--webapp-font-default);
 	line-height: 1.44rem;
 	padding: var(--webapp-gaplittle);
 	outline: none;
@@ -256,7 +245,7 @@ form[class|=webapp]{
 	display: inline-flex;
 	flex-direction: column;
 	//border: 1px solid hsl(var(--webapp-color-edge));
-	border-radius: var(--webapp-radius);
+	//border-radius: var(--webapp-radius);
 	>fieldset{
 		display: flex;
 		border: none;
@@ -269,7 +258,7 @@ form[class|=webapp]{
 		>legend:first-of-type{
 			padding: var(--webapp-gapitem) 0 0 0;
 		}
-		>*{
+		>:not(legend){
 			flex-grow: 1;
 		}
 	}
@@ -322,9 +311,19 @@ table[class|=webapp]{
 		}
 	}
 }
-ul[class|=webapp],ul[class|=webapp] ul{
+dl,ul,ol{
 	margin: 0;
 	padding: 0;
+}
+dl[class|=webapp],dl[class|=webapp] dl{
+	padding: 0 !important;
+	>dd{
+		margin: 0;
+		
+	}
+}
+
+ul[class|=webapp],ul[class|=webapp] ul{
 	list-style: none;
 	&[class*=-tree],&[class*=-tree] ul{
 		&[class*=-tree] ul{
@@ -357,9 +356,24 @@ details[class|=webapp]{
 	>summary:first-of-type{
 		cursor: pointer;
 	}
+	// &[class*=-list]{
+	// 	padding: var(--webapp-gaplittle);
+	// 	line-height: 1.8rem;
+	// 	>:not(summary){
+	// 		display: block;
+	// 		padding: 0 var(--webapp-gapitem);
+	// 		border-radius: var(--webapp-radius);
+	// 		&:hover{
+	// 			background-color: hsl(var(--webapp-color-hint) / .2);
+				
+	// 		}
+	// 	}
+
+	// }
 	&[class*=-menu]{
 		position: relative;
 		>:not(summary){
+			white-space: nowrap;
 			position: absolute;
 			border: 1px solid hsl(var(--webapp-color-edge));
 			border-radius: var(--webapp-radius);
@@ -379,12 +393,39 @@ details[class|=webapp]{
 // }
 
 [class|=webapp]{
+	&[class*=-listmenu]{
+		padding: var(--webapp-gaplittle) !important;
+		>*{
+			border-radius: var(--webapp-radius);
+		}
+		line-height: 1.6rem;
+		a{
+			display: block;
+			padding: var(--webapp-gaplittle) var(--webapp-gapitem);
+		}
+		>:hover{
+			background-color: hsl(var(--webapp-color-hint) / .2);
+			
+		}
+	}
+	// &[class*=plittle]{
+	// 	padding: var(--webapp-gaplittle);
+	// }
+	// &[class*=pmedium]{
+	// 	padding: var(--webapp-gapitem);
+	// }
+	// &[class*=plarge]{
+	// 	padding: var(--webapp-ga);
+	// }
 	// margin: 0;
 	// padding: 0;
 	// &[class*=-inline]{
 	// 	display: inline-block;
 	// }
-
+	&[class*=-edge]{
+		border: 1px solid hsl(var(--webapp-color-edge));
+		border-radius: var(--webapp-radius);
+	}
 	&[class*=-bar]{
 		display: flex;
 		gap: var(--webapp-gapitem);

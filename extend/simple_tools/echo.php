@@ -7,6 +7,14 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		parent::__construct($webapp);
 		$this->script(['src' => '/webapp/extend/simple_tools/echo.js?v=' . static::version]);
 
+
+		$this->aside->details_listanchor('dwdawdawdawd', [
+			['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
+			['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
+			['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
+			['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
+		]);
+
 		$this->aside->atree([
 			
 			['OpenSSL', [
@@ -26,6 +34,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			['生成随机密码', "?{$this->routename}/generate-password"],
 			['生成UUID', "?{$this->routename}/generate-uuid"],
 			['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
+			['WebApp dev UI test', "?{$this->routename}/webapp-dev-ui"]
 			])['class'] = 'webapp-tree';
 
 
@@ -492,16 +501,20 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 	}
 
 
-	function get_test()
+	function get_webapp_dev_ui(int $page = 1)
 	{
-
-		$this->main->append('div', ['style' => 'padding:2rem'])
-		->append('a', ['asdasd', 'href' => '#', 'class' => 'webapp-button-asd danger']);
-
-
-		$details = $this->main->append('div', ['style' => 'padding:2rem'])
-		->details('详细')->setattr(['class' => 'webapp-button-menu']);
-		$details->atree([
+		$this->title('WebApp Development UI Test');
+		$this->meta_pageinfo('WebApp,Formwork,UI,Test', '内部用于测试和展示UI的页面');
+		$fields = ['Field 1', 'Field 2', 'Field 3', 'Field 4'];
+		$table = $this->main->table([$fields, $fields, $fields, $fields]);
+		$table->fieldset(...$fields);
+		$table->header('Table UI Disply');
+		$table->bar->append('input', ['type' => 'search', 'placeholder' => 'Type keywork to search']);
+		$table->bar->append('button', ['Normal']);
+		$table->bar->append('button', ['Default', 'class' => 'default']);
+		$table->bar->append('button', ['Primary', 'class' => 'primary']);
+		$table->bar->append('button', ['Danger', 'class' => 'danger']);
+		$table->bar->details_menu('Details Menu')->atree([
 			
 			['OpenSSL', [
 				['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
@@ -521,8 +534,74 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			['生成UUID', "?{$this->routename}/generate-uuid"],
 			['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
 			])['class'] = 'webapp-tree';
+		webapp_table::pagination($table->footer(), "?{$this->routename}/webapp-dev-ui,page:", $page, 9);
+
+		$this->main->append('hr');
+
+		// foreach( as $a)
+		// {
+		// 	$a['href'] = $a[1];
+		// 	unset($a[1]);
+		// 	$d->append('a', $a);
+		// }
+		// $this->main->iter([
+		// 	['ul', [['li'], ['li']]]
+		// ]);
+
+		$this->main->details_listanchor('dwdawdawdawd', [
+			['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
+			['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
+			['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
+			['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
+		])['class'] = 'webapp-listmenu';
+
+
+		$this->main->append('hr');
+
 
 		$form = $this->main->form();
+		$form->xml['class'] .= '-edge';
+		$form->fieldset->text('Form UI Display');
+
+		$form->fieldset();
+
+		$ds = $form->fieldset->details_menu('Details Menu');
+		$ds['open'] = NULL;
+		$dl = $ds->append('dl');
+		$dl['class'] = 'webapp-listmenu';
+		$dl->append('dd')->append('a', ['Microsoft Windows', 'href' => '#']);
+		$dl->append('dd')->append('a', ['Apple OS', 'href' => '#']);
+		$dl->append('dd')->append('a', ['Linux', 'href' => '#']);
+		$dl->append('dd')->append('a', ['dwd adawdawd', 'href' => '#']);
+		$dl->append('dd')->append('a', ['Windows 2003', 'href' => '#']);
+		$dl->append('dd')->append('a', ['Windows Server', 'href' => '#']);
+
+		$form->fieldset();
+		$form->field('text', 'text', ['placeholder' => 'Text']);
+		$form->field('number', 'number', ['placeholder' => 'Number']);
+		$form->fieldset();
+		$form->field('url', 'url', ['placeholder' => 'URL']);
+		$form->fieldset();
+		$form->field('email', 'email', ['placeholder' => 'E-mail']);
+		$form->field('password', 'password', ['placeholder' => 'Password']);
+
+		$form->fieldset();
+		$form->field('week', 'week');
+		$form->field('time', 'time');
+		$form->fieldset();
+		$form->field('date', 'date');
+		$form->field('datetime-local', 'datetime-local');
+
+		$form->fieldset();
+		$form->field('range', 'range');
+		$form->field('color', 'color');
+		
+		$form->fieldset();
+		$form->field('file', 'file');
+		$form->field('select', 'select', ['options' => $fields]);
+		$form->button('Button', 'button');
+
+
 		$form->fieldset();
 		$form->field('aaaa', 'text');
 
@@ -541,6 +620,14 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			'asdas' => 'dwdawd',
 			'dwdwd' => 'wwww'
 		]]);
+
+		$form->fieldset();
+		$form->button('Submit', 'submit');
+		$form->button('Reset', 'reset')['class'] = 'danger';
+
+
+
+		
 
 		// $dialog = $this->main->append('dialog', ['class' => 'webapp', 'open' => NULL]);
 		// $dialog->append('header', 'dwdawd');

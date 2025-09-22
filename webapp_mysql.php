@@ -515,7 +515,7 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	{
 		$fields = $this->fields;
 		$this->paging['count'] = $this->count($this->paging['cond']);
-		$this->paging['max'] = ceil($this->paging['count'] / $rows = abs($rows));
+		$this->paging['max'] = (int)ceil($this->paging['count'] / $rows = abs($rows));
 		$this->paging['index'] = max(1, $overflow ? $index : min($index, $this->paging['max']));
 		$this->paging['skip'] = ($this->paging['index'] - 1) * $rows;
 		$this->paging['rows'] = $rows;
