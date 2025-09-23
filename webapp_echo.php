@@ -382,9 +382,7 @@ class webapp_echo_html extends webapp_implementation
 
 	function nav(array $link):webapp_html
 	{
-		$node = $this->header->append('nav', ['class' => 'webapp']);
-		$node->atree($link, TRUE);
-		return $node;
+		return $this->header->append('nav')->atree($link, TRUE)->setattr('class', 'webapp-listmenu-inline');
 	}
 	function search(?string $action = NULL):webapp_form
 	{

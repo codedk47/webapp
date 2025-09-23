@@ -69,6 +69,12 @@ new class extends webapp
 			['Status', '?status'],
 			['Processlist', '?processlist'],
 		]);
+		$this->echo->xml->head->append('style', <<<STYLE
+			@import url(/webapp/static/fonts/titilliumweb/import.css);
+			:root{
+				--webapp-font-default: titilliumweb;
+			}
+		STYLE);
 
 		if ($this->method !== 'get_home')
 		{

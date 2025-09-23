@@ -6,17 +6,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 	{
 		parent::__construct($webapp);
 		$this->script(['src' => '/webapp/extend/simple_tools/echo.js?v=' . static::version]);
-
-
-		$this->aside->details_listanchor('dwdawdawdawd', [
-			['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
-			['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
-			['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
-			['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
-		]);
-
-		$this->aside->atree([
-			
+		$this->aside->listmenu([
 			['OpenSSL', [
 				['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
 				['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
@@ -27,49 +17,49 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 				['二维码创建', "?{$this->routename}/qrcode-create"],
 				['二维码读取', "?{$this->routename}/qrcode-reader"]
 			]],
-			['WebSocket 回显测试', "?{$this->routename}/websocket"],
-			['Base64 编码/解码', "?{$this->routename}/base64"],
-			['PHP 散列算法', "?{$this->routename}/php-hash"],
-			['JS 散列算法', "?{$this->routename}/js-hash"],
-			['生成随机密码', "?{$this->routename}/generate-password"],
-			['生成UUID', "?{$this->routename}/generate-uuid"],
-			['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
-			['WebApp dev UI test', "?{$this->routename}/webapp-dev-ui"]
-			])['class'] = 'webapp-tree';
+			//['class' => 'divider'],
+			['其他', [
+				['WebSocket 回显测试', "?{$this->routename}/websocket"],
+				['Base64 编码/解码', "?{$this->routename}/base64"],
+				['PHP 散列算法', "?{$this->routename}/php-hash"],
+				['JS 散列算法', "?{$this->routename}/js-hash"],
+				['生成随机密码', "?{$this->routename}/generate-password"],
+				['生成UUID', "?{$this->routename}/generate-uuid"],
+				['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
+				//['WebApp dev UI test', "?{$this->routename}/webapp-dev-ui"]
+			]]
+		], TRUE);
 
+		// $this->nav([
+			
+		// 	['OpenSSL', [
+		// 		['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
+		// 		['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
+		// 		['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
+		// 		['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
+		// 	]],
+		// 	['QRCode', [
+		// 		['二维码创建', "?{$this->routename}/qrcode-create"],
+		// 		['二维码读取', "?{$this->routename}/qrcode-reader"],
+		// 		['asdasdas', [
+		// 			['二维码创建', "?{$this->routename}/qrcode-create"],
+		// 			['二维码读取', "?{$this->routename}/qrcode-reader"],
+		// 			['asdasdas', [
+		// 				['二维码创建', "?{$this->routename}/qrcode-create"],
+		// 				['二维码读取', "?{$this->routename}/qrcode-reader"],
+		// 			]]
+		// 		]]
+		// 	]],
+		// 	['WebSocket 回显测试', "?{$this->routename}/websocket"],
+		// 	['Base64 编码/解码', "?{$this->routename}/base64"],
+		// 	['PHP 散列算法', "?{$this->routename}/php-hash"],
+		// 	['JS 散列算法', "?{$this->routename}/js-hash"],
+		// 	['生成随机密码', "?{$this->routename}/generate-password"],
+		// 	['生成UUID', "?{$this->routename}/generate-uuid"],
+		// 	['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
+		// 	['WebApp dev UI test', "?{$this->routename}/webapp-dev-ui"]
+		// 	]);
 
-		// $dl = $this->aside->append('dl');
-		// $dl->append('dt', 'OpenSSL');
-		// foreach ([
-		// 	'pkey-new' => '生成新的私钥',
-		// 	'csr-new' => '生成新证书签名请求',
-		// 	'csr-sign-x509' => '签署并且生成x509证书',
-		// 	'zeroneta-user-cert' => '一键生成私钥和用户证书'
-		// ] as $anchor => $function) {
-		// 	$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/openssl-{$anchor}"]);
-		// }
-		// $dl = $this->aside->append('dl');
-		// $dl->append('dt', 'QRCode');
-		// foreach ([
-		// 	'create' => '二维码创建',
-		// 	'reader' => '二维码读取'
-		// ] as $anchor => $function) {
-		// 	$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/qrcode-{$anchor}"]);
-		// }
-		// $dl = $this->aside->append('dl');
-		// $dl->append('dt', '其他杂项');
-		// foreach ([
-		// 	'websocket' => 'WebSocket 回显测试',
-		// 	'base64' => 'Base64 编码/解码',
-		// 	'php-hash' => 'PHP 散列算法',
-		// 	'js-hash' => 'JS 散列算法',
-		// 	//'js-timestamp-format' => '时间戳格式化',
-		// 	'generate-password' => '生成随机密码',
-		// 	'generate-uuid' => '生成UUID',
-		// 	'apple-mobile-webclip' => '创建苹果书签'
-		// ] as $anchor => $function) {
-		// 	$dl->append('dd')->append('a', [$function, 'href' => "?{$this->routename}/{$anchor}"]);
-		// }
 	}
 	// function message(string $message = NULL)
 	// {
@@ -544,9 +534,13 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		// 	unset($a[1]);
 		// 	$d->append('a', $a);
 		// }
-		// $this->main->iter([
-		// 	['ul', [['li'], ['li']]]
-		// ]);
+		$this->main->iter([
+			['ul', [
+				['li', 'dwdwd'],
+				['li', 'wwwwwwwwwwwwww']
+			]]
+		]);
+		
 
 		$this->main->details_listanchor('dwdawdawdawd', [
 			['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
@@ -566,15 +560,21 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->fieldset();
 
 		$ds = $form->fieldset->details_menu('Details Menu');
+		//$ds['class'] = 'webapp-listmenu';
 		$ds['open'] = NULL;
-		$dl = $ds->append('dl');
+		$dl = $ds->append('ul');
 		$dl['class'] = 'webapp-listmenu';
-		$dl->append('dd')->append('a', ['Microsoft Windows', 'href' => '#']);
-		$dl->append('dd')->append('a', ['Apple OS', 'href' => '#']);
-		$dl->append('dd')->append('a', ['Linux', 'href' => '#']);
-		$dl->append('dd')->append('a', ['dwd adawdawd', 'href' => '#']);
-		$dl->append('dd')->append('a', ['Windows 2003', 'href' => '#']);
-		$dl->append('dd')->append('a', ['Windows Server', 'href' => '#']);
+		$dl->append('li')->append('a', ['Microsoft Windows', 'href' => '#']);
+		$dl->append('li')->append('a', ['Apple OS', 'href' => '#']);
+		$dl->append('li')->append('a', ['Linux', 'href' => '#']);
+
+		$aa = $dl->append('li')->details_menu('Submenu');
+		$au = $aa->append('ul');
+		$au->append('li')->append('a', ['Windows 2003', 'href' => '#']);
+		$au->append('li')->append('a', ['Windows Server', 'href' => '#']);
+
+		$dl->append('li')->append('a', ['Windows 2003', 'href' => '#']);
+		$dl->append('li')->append('a', ['Windows Server', 'href' => '#']);
 
 		$form->fieldset();
 		$form->field('text', 'text', ['placeholder' => 'Text']);

@@ -64,30 +64,14 @@ class webapp_xml extends SimpleXMLElement
 	}
 	function iter(iterable $contents, Closure $iterator = NULL, ...$params):static
 	{
-		$iterator ??= fn(webapp_xml $node, array $element) => $node->append(array_shift($element), $element);
-
-
-
-		// // $doc = $this->dom()->ownerDocument;
-		// // $iterator ? $doc->iter = [$iterator, $params] : [$iterator, $params] = $doc->iter;
-		// if ($iterator === NULL)
-		// {
-		// 	//神奇骚操作，未来某个PHP版本不会改了吧？
-		// 	$backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 3)[2];
-		// 	$backtrace['object'] instanceof Closure
-		// 		? [$iterator, $params] = [$backtrace['object'], array_slice($backtrace['args'], 2)]
-		// 		: $params = [$iterator = function(array $element, Closure $iterator):void
-		// 		{
-		// 			$node = $this->append(array_shift($element), $element);
-		// 			if (isset($element[0]) && is_iterable($element[0]))
-		// 			{
-		// 				$node->iter($element[0], $iterator, $iterator);
-		// 			}
-		// 		}];
-		// }
+		$iterator ??= function(Closure $iterator, array $element):void
+		{
+			$node = $this->append(array_shift($element), $element);
+			isset($element[0]) && is_iterable($element[0]) && $node->iter($element[0]);
+		};
 		foreach ($contents as $value)
 		{
-			$iterator($this, $value, ...$params);
+			$iterator->call($this, $iterator, $value, ...$params);
 		}
 		return $this;
 	}
@@ -100,21 +84,20 @@ class webapp_xml extends SimpleXMLElement
 	//设置属性
 	function setattr(string|array $name, $value = NULL):static
 	{
-		$node = $this;
 		foreach (is_string($name) ? [$name => $value] : $name as $name => $value)
 		{
 			if ((is_string($name) || $name === 0) && is_scalar($value))
 			{
-				$node[$name] = $value;
+				$this[$name] = $value;
 				continue;
 			}
 			if (is_string($name) && $value === NULL)
 			{
-				$dom ??= $node->dom();
+				$dom ??= $this->dom();
 				$dom->appendChild($dom->ownerDocument->createAttribute($name));
 			}
 		}
-		return $node;
+		return $this;
 	}
 	function append(string $name, NULL|string|array $contents = NULL):static
 	{
@@ -732,13 +715,13 @@ class webapp_html extends webapp_xml
 			$node->append('a', $anchor);
 		}
 		
-		return $node->setattr(['class' => 'webapp-list', 'open' => NULL]);
+		return $node->setattr(['class' => 'webapp-listmenu', 'open' => NULL]);
 	}
 	function details_menu(string $summary = NULL, bool $open = FALSE):static
 	{
 		$node = $this->details($summary);
 		$node->summary['class'] = 'webapp-button';
-		$node['class'] = 'webapp-menu';
+		$node['class'] = 'menu';
 		return $node;
 	}
 	// function meter(float $value, float $min = 0, float $max = 1, float $low = NULL, float $high = NULL, float $optimum = NULL):static
@@ -894,74 +877,75 @@ class webapp_html extends webapp_xml
 		is_string($caption) && $figure->figcaption = $caption;
 		return $figure;
 	}
-	function iframe(array $attributes):static
-	{
-		return $this->append('iframe', $attributes + ['loading' => 'lazy']);
-	}
-
-	
-	// function treelink(iterable $anchors)
+	// function iframe(array $attributes):static
 	// {
-
+	// 	return $this->append('iframe', $attributes + ['loading' => 'lazy']);
 	// }
-
-
-	function atree(iterable $link, bool $fold = FALSE)
+	function atree(iterable $anchors, bool $fold = FALSE, bool $open = FALSE):static
 	{
-		// function(array $link, bool $fold):void
-		// {
-		// 	$node = $this->append('li');
-		// 	if (is_iterable($link[1]))
-		// 	{
-		// 		if ($fold)
-		// 		{
-		// 			$node = $node->details($link[0]);
-		// 		}
-		// 		else
-		// 		{
-		// 			$node->append('span', $link[0]);
-		// 		}
-		// 		$node->append('ul')->iter($link[1]);
-		// 	}
-		// 	else
-		// 	{
-		// 		$link['href'] ??= $link[1];
-		// 		$node->append('a', $link);
-		// 	}
-		// }
-
-		// return $this->append('ul')->iter($link, , $fold);
+		return $this->append('ul')->iter($anchors, function(Closure $iterator, array $context, bool $fold, bool $open):void
+		{
+			$name = $context[0] ?? NULL;
+			$link = $context[1] ?? $name;
+			unset($context[0], $context[1]);
+			$node = $this->append('li', $context);
+			if (is_iterable($link))
+			{
+				if ($fold)
+				{
+					$node = $node->details($name);
+					$open && $node->setattr('open');
+				}
+				else
+				{
+					is_string($name) && $node->append('span', $name);
+				}
+				$node->append('ul')->iter($link, $iterator, $fold, $open);
+			}
+			else
+			{
+				if (is_string($name))
+				{
+					$name === $link ? $node->text($name) : $node->append('a', [$name, 'href' => $link]);
+				}
+			}
+		}, $fold, $open);
 	}
-	function cond(array $fields, ?string $action = NULL):static
+	function listmenu(iterable $anchors, bool $fold = FALSE):static
 	{
-		$form = $this->form($action);
-
-
-		$form->xml['class'] .= '-cond';
-
-		$form->button('Remove')['onclick'] = 'this.parentElement.remove()';
-		$form->field('F', 'select', ['option' => $fields]);//['onchange'] = 'this.nextElementSibling.nextElementSibling.placeholder=this.options[this.selectedIndex].dataset.comment||""';//this.nextElementSibling.nextElementSibling.placeholder="asd";
-		$form->field('d', 'select', ['option' => [
-			'eq' => '=',
-			'ne' => '!=',
-			'gt' => '>',
-			'ge' => '>=',
-			'lt' => '<',
-			'le' => '<=',
-			'lk' => '%',
-			'nl' => '!%',
-			'in' => '()',
-			'ni' => '!()'
-		]]);
-		$form->field('cond', 'search');
-
-
-		$form->fieldset()['class'] = 'merge';
-		$form->button('Append')['onclick'] = 'this.parentElement.parentElement.appendChild(this.parentElement.previousElementSibling.cloneNode(true))';
-		$form->button('Clear')['class'] = 'danger';
-		$form->button('Submit', 'submit')['class'] = 'primary';
-		return $form->xml;
+		return $this->atree($anchors, $fold, $fold)->setattr(['class' => 'webapp-listmenu']);
 	}
+
+	// function cond(array $fields, ?string $action = NULL):static
+	// {
+	// 	$form = $this->form($action);
+
+
+	// 	$form->xml['class'] .= '-cond';
+
+	// 	$form->button('Remove')['onclick'] = 'this.parentElement.remove()';
+	// 	$form->field('F', 'select', ['option' => $fields]);//['onchange'] = 'this.nextElementSibling.nextElementSibling.placeholder=this.options[this.selectedIndex].dataset.comment||""';//this.nextElementSibling.nextElementSibling.placeholder="asd";
+	// 	$form->field('d', 'select', ['option' => [
+	// 		'eq' => '=',
+	// 		'ne' => '!=',
+	// 		'gt' => '>',
+	// 		'ge' => '>=',
+	// 		'lt' => '<',
+	// 		'le' => '<=',
+	// 		'lk' => '%',
+	// 		'nl' => '!%',
+	// 		'in' => '()',
+	// 		'ni' => '!()'
+	// 	]]);
+	// 	$form->field('cond', 'search');
+
+
+	// 	$form->fieldset()['class'] = 'merge';
+	// 	$form->button('Append')['onclick'] = 'this.parentElement.parentElement.appendChild(this.parentElement.previousElementSibling.cloneNode(true))';
+	// 	$form->button('Clear')['class'] = 'danger';
+	// 	$form->button('Submit', 'submit')['class'] = 'primary';
+	// 	return $form->xml;
+	// }
 	function form(?string $action = NULL):webapp_form
 	{
 		return new webapp_form($this, $action);
