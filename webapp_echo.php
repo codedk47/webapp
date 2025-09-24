@@ -214,7 +214,7 @@ class webapp_echo_html extends webapp_implementation
 		[$this->header, $this->aside, $this->main, $this->footer] = [
 			&$node->header, &$node->aside, &$node->main,
 			$node->append('footer', $webapp['copy_webapp'])];
-		$authenticate && $this->initauth($authenticate);
+		$authenticate && $this->initauth($authenticate, ...$allow);
 	}
 	function __toString():string
 	{
@@ -380,9 +380,13 @@ class webapp_echo_html extends webapp_implementation
 	// 	JS);
 	// }
 
-	function nav(array $link):webapp_html
+	function nav(array $anchors):webapp_html
 	{
-		return $this->header->append('nav')->atree($link, TRUE)->setattr('class', 'webapp-listmenu-inline');
+		return $this->header->append('nav')->listmenu($anchors, TRUE, TRUE, TRUE);
+	}
+	function submenu(array $anchors, bool $fold = FALSE):webapp_html
+	{
+		return $this->aside->listmenu($anchors, $fold);
 	}
 	function search(?string $action = NULL):webapp_form
 	{

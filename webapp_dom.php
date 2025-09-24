@@ -705,23 +705,12 @@ class webapp_html extends webapp_xml
 		}
 		return $node;
 	}
-	function details_listanchor(string $summary = NULL, iterable $anchors):static
-	{
-		$node = $this->details($summary);
-		foreach ($anchors as $anchor)
-		{
-			$anchor['href'] = $anchor[1];
-			unset($anchor[1]);
-			$node->append('a', $anchor);
-		}
-		
-		return $node->setattr(['class' => 'webapp-listmenu', 'open' => NULL]);
-	}
-	function details_menu(string $summary = NULL, bool $open = FALSE):static
+	function details_button_popup(string $summary = NULL, iterable $anchors = NULL):static
 	{
 		$node = $this->details($summary);
 		$node->summary['class'] = 'webapp-button';
-		$node['class'] = 'menu';
+		$node['class'] = 'popup';
+		$anchors && $node->listmenu($anchors, TRUE, TRUE);
 		return $node;
 	}
 	// function meter(float $value, float $min = 0, float $max = 1, float $low = NULL, float $high = NULL, float $optimum = NULL):static
@@ -768,10 +757,11 @@ class webapp_html extends webapp_xml
 	{
 		if ($name)
 		{
-			$node = ($root = $placeholder ? $this->details($placeholder) : $this)->append('ul');
+			$root = $placeholder ? $this->details_button_popup($placeholder) : $this;
+			$node = $root->append('ul', ['class' => 'webapp-option']);
 			if ($multiple)
 			{
-				($placeholder ? $root : $node)->setattr(['data-multiple' => NULL]);
+				//($placeholder ? $root : $node)->setattr(['data-multiple' => NULL]);
 				$name .= '[]';
 				$type = 'checkbox';
 			}
@@ -911,9 +901,12 @@ class webapp_html extends webapp_xml
 			}
 		}, $fold, $open);
 	}
-	function listmenu(iterable $anchors, bool $fold = FALSE):static
+	function listmenu(iterable $anchors, bool $fold = FALSE, bool $popup = FALSE, bool $inline = FALSE):static
 	{
-		return $this->atree($anchors, $fold, $fold)->setattr(['class' => 'webapp-listmenu']);
+		$class = 'webapp-listmenu';
+		$popup && $class .= '-popup';
+		$inline && $class .= '-inline';
+		return $this->atree($anchors, $fold, !$popup)->setattr('class', $class);
 	}
 
 	// function cond(array $fields, ?string $action = NULL):static
@@ -1085,9 +1078,8 @@ class webapp_form implements ArrayAccess
 		return $this->fields[$alias] = match ($type)
 		{
 			'radio',
-			'checkbox' => $this->fieldset->select($attr['options'] ?? [], $type === 'checkbox', $name),
-			'webapp-select' => $this->fieldset->select($attr['options'] ?? [],
-				array_key_exists('data-multiple', $attr), $name, $attr['data-placeholder'] ?? NULL)->setattr($attr),
+			'checkbox' => $this->fieldset->select($attr['options'] ?? [], $type === 'checkbox', $alias,
+				$attr['data-placeholder'] ?? NULL)->setattr($attr),
 			'select' => $this->fieldset->select($attr['options'] ?? [])
 				->setattr(['name' => array_key_exists('multiple', $attr) ? "{$alias}[]" : $alias] + $attr),
 			'textarea' => $this->fieldset->append('textarea', ['name' => $alias] + $attr),

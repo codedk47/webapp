@@ -1,12 +1,12 @@
 <?php
 class webapp_extend_simple_tools_echo extends webapp_echo_html
 {
-	const version = '1.0', zeroneta = NULL;
+	const zeroneta = NULL;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
-		$this->script(['src' => '/webapp/extend/simple_tools/echo.js?v=' . static::version]);
-		$this->aside->listmenu([
+		$this->script(['src' => '/webapp/extend/simple_tools/echo.js']);
+		$this->submenu([
 			['OpenSSL', [
 				['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
 				['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
@@ -26,40 +26,9 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 				['生成随机密码', "?{$this->routename}/generate-password"],
 				['生成UUID', "?{$this->routename}/generate-uuid"],
 				['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
-				//['WebApp dev UI test', "?{$this->routename}/webapp-dev-ui"]
+				['WebApp dev UI test', "?{$this->routename}/webapp-dev-ui"]
 			]]
-		], TRUE);
-
-		// $this->nav([
-			
-		// 	['OpenSSL', [
-		// 		['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
-		// 		['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
-		// 		['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
-		// 		['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
-		// 	]],
-		// 	['QRCode', [
-		// 		['二维码创建', "?{$this->routename}/qrcode-create"],
-		// 		['二维码读取', "?{$this->routename}/qrcode-reader"],
-		// 		['asdasdas', [
-		// 			['二维码创建', "?{$this->routename}/qrcode-create"],
-		// 			['二维码读取', "?{$this->routename}/qrcode-reader"],
-		// 			['asdasdas', [
-		// 				['二维码创建', "?{$this->routename}/qrcode-create"],
-		// 				['二维码读取', "?{$this->routename}/qrcode-reader"],
-		// 			]]
-		// 		]]
-		// 	]],
-		// 	['WebSocket 回显测试', "?{$this->routename}/websocket"],
-		// 	['Base64 编码/解码', "?{$this->routename}/base64"],
-		// 	['PHP 散列算法', "?{$this->routename}/php-hash"],
-		// 	['JS 散列算法', "?{$this->routename}/js-hash"],
-		// 	['生成随机密码', "?{$this->routename}/generate-password"],
-		// 	['生成UUID', "?{$this->routename}/generate-uuid"],
-		// 	['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
-		// 	['WebApp dev UI test', "?{$this->routename}/webapp-dev-ui"]
-		// 	]);
-
+		]);
 	}
 	// function message(string $message = NULL)
 	// {
@@ -504,26 +473,41 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$table->bar->append('button', ['Default', 'class' => 'default']);
 		$table->bar->append('button', ['Primary', 'class' => 'primary']);
 		$table->bar->append('button', ['Danger', 'class' => 'danger']);
-		$table->bar->details_menu('Details Menu')->atree([
+		$table->bar->details_button_popup('Details Button Popup', [
+			['Microsoft', [
+				['Windows Server 2019 Data Center', '#'],
+				['Windows Server 2003', '#'],
+				['Windows 2000', '#'],
+				['Windows 98', '#']
+			]],
+			['Apple macOS', [
+				['Sequoia 15.6.1', '#'],
+				['Sonoma 14.7.8', '#'],
+				['Ventura 13.7.8', '#'],
+				['Monterey 12.7.6', '#']
+			]]
+
+		]);
+			//->atree([
 			
-			['OpenSSL', [
-				['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
-				['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
-				['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
-				['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
-			]],
-			['QRCode', [
-				['二维码创建', "?{$this->routename}/qrcode-create"],
-				['二维码读取', "?{$this->routename}/qrcode-reader"]
-			]],
-			['WebSocket 回显测试', "?{$this->routename}/websocket"],
-			['Base64 编码/解码', "?{$this->routename}/base64"],
-			['PHP 散列算法', "?{$this->routename}/php-hash"],
-			['JS 散列算法', "?{$this->routename}/js-hash"],
-			['生成随机密码', "?{$this->routename}/generate-password"],
-			['生成UUID', "?{$this->routename}/generate-uuid"],
-			['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
-			])['class'] = 'webapp-tree';
+		// 	['OpenSSL', [
+		// 		['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
+		// 		['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
+		// 		['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
+		// 		['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
+		// 	]],
+		// 	['QRCode', [
+		// 		['二维码创建', "?{$this->routename}/qrcode-create"],
+		// 		['二维码读取', "?{$this->routename}/qrcode-reader"]
+		// 	]],
+		// 	['WebSocket 回显测试', "?{$this->routename}/websocket"],
+		// 	['Base64 编码/解码', "?{$this->routename}/base64"],
+		// 	['PHP 散列算法', "?{$this->routename}/php-hash"],
+		// 	['JS 散列算法', "?{$this->routename}/js-hash"],
+		// 	['生成随机密码', "?{$this->routename}/generate-password"],
+		// 	['生成UUID', "?{$this->routename}/generate-uuid"],
+		// 	['创建苹果书签', "?{$this->routename}/apple-mobile-webclip"],
+		// 	])['class'] = 'webapp-tree';
 		webapp_table::pagination($table->footer(), "?{$this->routename}/webapp-dev-ui,page:", $page, 9);
 
 		$this->main->append('hr');
@@ -534,20 +518,24 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		// 	unset($a[1]);
 		// 	$d->append('a', $a);
 		// }
-		$this->main->iter([
-			['ul', [
-				['li', 'dwdwd'],
-				['li', 'wwwwwwwwwwwwww']
-			]]
-		]);
+		$this->main->select([
+			'dwdawd' => '大大大大大1大苏打',
+			'aaaaaa' => '啊圣诞袜伟大伟大',
+			'dwdawd' => 'dasd打到',
+			'awdqdn' => '自行车自行车',
+			'dwdawd' => '大王大大伟大',
+			'asdwee' => '与空调口语课',
+			'dwadaw' => 'iu啊原地复活收到',
+			'asdwwa' => '发咯上的飞机哦i是的发',
+		], true, 'dwdad', 'wwwwwwwwwwwwwww');
 		
 
-		$this->main->details_listanchor('dwdawdawdawd', [
-			['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
-			['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
-			['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
-			['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
-		])['class'] = 'webapp-listmenu';
+		// $this->main->details_listanchor('dwdawdawdawd', [
+		// 	['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
+		// 	['生成新证书签名请求', "?{$this->routename}/openssl-csr-new"],
+		// 	['签署并且生成x509证书', "?{$this->routename}/openssl-csr-sign-x509"],
+		// 	['一键生成私钥和用户证书', "?{$this->routename}/openssl-zeroneta-user-cert"]
+		// ])['class'] = 'webapp-listmenu';
 
 
 		$this->main->append('hr');
@@ -559,22 +547,22 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 
 		$form->fieldset();
 
-		$ds = $form->fieldset->details_menu('Details Menu');
-		//$ds['class'] = 'webapp-listmenu';
-		$ds['open'] = NULL;
-		$dl = $ds->append('ul');
-		$dl['class'] = 'webapp-listmenu';
-		$dl->append('li')->append('a', ['Microsoft Windows', 'href' => '#']);
-		$dl->append('li')->append('a', ['Apple OS', 'href' => '#']);
-		$dl->append('li')->append('a', ['Linux', 'href' => '#']);
+		// $ds = $form->fieldset->details_button_menu('Details Menu');
+		// //$ds['class'] = 'webapp-listmenu';
+		// $ds['open'] = NULL;
+		// $dl = $ds->append('ul');
+		// $dl['class'] = 'webapp-listmenu';
+		// $dl->append('li')->append('a', ['Microsoft Windows', 'href' => '#']);
+		// $dl->append('li')->append('a', ['Apple OS', 'href' => '#']);
+		// $dl->append('li')->append('a', ['Linux', 'href' => '#']);
 
-		$aa = $dl->append('li')->details_menu('Submenu');
-		$au = $aa->append('ul');
-		$au->append('li')->append('a', ['Windows 2003', 'href' => '#']);
-		$au->append('li')->append('a', ['Windows Server', 'href' => '#']);
+		// $aa = $dl->append('li')->details_menu('Submenu');
+		// $au = $aa->append('ul');
+		// $au->append('li')->append('a', ['Windows 2003', 'href' => '#']);
+		// $au->append('li')->append('a', ['Windows Server', 'href' => '#']);
 
-		$dl->append('li')->append('a', ['Windows 2003', 'href' => '#']);
-		$dl->append('li')->append('a', ['Windows Server', 'href' => '#']);
+		// $dl->append('li')->append('a', ['Windows 2003', 'href' => '#']);
+		// $dl->append('li')->append('a', ['Windows Server', 'href' => '#']);
 
 		$form->fieldset();
 		$form->field('text', 'text', ['placeholder' => 'Text']);
@@ -607,19 +595,19 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 
 		$form->fieldset();
 		$form->field('asd', 'radio', ['options' => [
-			'asdas' => 'dwdawd',
-			'dwdwd' => 'wwww'
+			'asdas' => '的的文化带ihd',
+			'dwdwd' => '的的文啊化带ihd'
 		]]);
 
 		$form->field('asd', 'checkbox', ['options' => [
-			'asdas' => 'dwdawd',
-			'dwdwd' => 'wwww'
+			'asdas' => '的伟大伟大为',
+			'dwdwd' => '大卫轻轻的'
 		]]);
 
-		$form->field('kkk', 'webapp-select', ['options' => [
-			'asdas' => 'dwdawd',
-			'dwdwd' => 'wwww'
-		]]);
+		$form->field('kkk', 'radio', ['options' => [
+			'asdas' => '我根本阿达',
+			'dwdwd' => '阿尔法违法'
+		], 'data-placeholder' => 'dawdawdawd']);
 
 		$form->fieldset();
 		$form->button('Submit', 'submit');
