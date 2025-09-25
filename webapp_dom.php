@@ -875,29 +875,39 @@ class webapp_html extends webapp_xml
 	{
 		return $this->append('ul')->iter($anchors, function(Closure $iterator, array $context, bool $fold, bool $open):void
 		{
-			$name = $context[0] ?? NULL;
-			$link = $context[1] ?? $name;
-			unset($context[0], $context[1]);
-			$node = $this->append('li', $context);
-			if (is_iterable($link))
+			$node = $this->append('li');
+			if (isset($context[1]))
 			{
-				if ($fold)
+				if (is_iterable($context[1]))
 				{
-					$node = $node->details($name);
-					$open && $node->setattr('open');
+					if ($fold)
+					{
+						$content = $context[0] ?? '';
+						unset($context[0]);
+						$node->setattr($context);
+						$node = $node->details($content);
+						$open && $node->setattr('open');
+					}
+					else
+					{
+						if (isset($context[0]))
+						{
+							$node->append('span', $context[0]);
+							unset($context[0]);
+							$node->setattr($context);
+						}
+					}
+					$node->append('ul')->iter($context[1], $iterator, $fold, $open);
 				}
 				else
 				{
-					is_string($name) && $node->append('span', $name);
+					$context['href'] = $context[1];
+					$node->append('a', $context);
 				}
-				$node->append('ul')->iter($link, $iterator, $fold, $open);
 			}
 			else
 			{
-				if (is_string($name))
-				{
-					$name === $link ? $node->text($name) : $node->append('a', [$name, 'href' => $link]);
-				}
+				$node->setattr($context);
 			}
 		}, $fold, $open);
 	}

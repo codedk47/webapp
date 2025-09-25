@@ -7,7 +7,6 @@
 	--webapp-hue-default: 210;
 	--webapp-hue-primary: 130;
 	--webapp-hue-danger: 360;
-	--webapp-radius: .2rem;
 	//HSL Value
 	--webapp-default: var(--webapp-hue-default) 0%;
 	--webapp-anchor: var(--webapp-hue-default) 100%;
@@ -25,12 +24,11 @@
 	--webapp-font-default: opensans, verdana, arial, sans-serif;
 	--webapp-font-monospace: consolas, monospace;
 	//Misc
+	--webapp-radius: .2rem;
 	--webapp-gaplittle: .2rem;
 	--webapp-gapitem: .4rem;
 	--webapp-gap: 1rem;
 	font: normal 16px var(--webapp-font-default);
-	
-	display: block;
 	height: 100%;
 	background-color: hsl(var(--webapp-color-background));
 	::selection{
@@ -79,10 +77,10 @@ a{
 		text-decoration: underline;
 	}
 	&.primary{
-		color: hsl(var(--webapp-primary));
+		color: hsl(var(--webapp-color-primary));
 	}
 	&.danger{
-		color: hsl(var(--webapp-danger));
+		color: hsl(var(--webapp-color-danger));
 	}
 }
 option{
@@ -280,6 +278,39 @@ details{
 
 }
 
+
+// @keyframes progress-bar-stripes{
+// 	0% {background-position: 1rem 0px;}
+// 	100% {background-position: 0px 0px;}
+// }
+progress{
+	appearance: none;
+	&::-webkit-progress-inner-element{
+		padding: 1px;
+		border: 1px solid hsl(var(--webapp-color-edge));
+		border-radius: var(--webapp-radius);
+	}
+	&::-webkit-progress-bar{
+		background-color: hsl(var(--webapp-color-hint));
+		border-radius: var(--webapp-radius);
+	}
+	&::-webkit-progress-value{
+		
+		border-radius: var(--webapp-radius);
+		background-image: linear-gradient(-45deg,
+			hsl(var(--webapp-color-background) / .2) 25%,
+			transparent 25%,
+			transparent 50%,
+			hsl(var(--webapp-color-background) / .2) 50%,
+			hsl(var(--webapp-color-background) / .2) 75%,
+			transparent 75%,
+			transparent);
+		background-size: 1rem 1rem;
+		background-color: hsl(var(--webapp-color-anchor));
+		//animation: 1s linear 0s infinite normal none running progress-bar-stripes;
+	}
+
+}
 form[class|=webapp]{
 	display: inline-flex;
 	flex-direction: column;

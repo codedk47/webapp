@@ -2,7 +2,6 @@
   --webapp-hue-default: 210;
   --webapp-hue-primary: 130;
   --webapp-hue-danger: 360;
-  --webapp-radius: .2rem;
   --webapp-default: var(--webapp-hue-default) 0%;
   --webapp-anchor: var(--webapp-hue-default) 100%;
   --webapp-primary: var(--webapp-hue-primary) 50%;
@@ -16,11 +15,11 @@
   --webapp-color-danger: var(--webapp-danger) 50%;
   --webapp-font-default: opensans, verdana, arial, sans-serif;
   --webapp-font-monospace: consolas, monospace;
+  --webapp-radius: .2rem;
   --webapp-gaplittle: .2rem;
   --webapp-gapitem: .4rem;
   --webapp-gap: 1rem;
   font: normal 16px var(--webapp-font-default);
-  display: block;
   height: 100%;
   background-color: hsl(var(--webapp-color-background));
 }
@@ -67,10 +66,10 @@ a:hover {
   text-decoration: underline;
 }
 a.primary {
-  color: hsl(var(--webapp-primary));
+  color: hsl(var(--webapp-color-primary));
 }
 a.danger {
-  color: hsl(var(--webapp-danger));
+  color: hsl(var(--webapp-color-danger));
 }
 
 option {
@@ -288,6 +287,25 @@ details.popup > :not(summary), ul[class|=webapp][class*=-popup] details > :not(s
 details.popup > :not(summary) details > :not(summary), ul[class|=webapp][class*=-popup] details > :not(summary) details > :not(summary), ol[class|=webapp][class*=-popup] details > :not(summary) details > :not(summary), details.popup > :not(summary) ul[class|=webapp][class*=-popup] details > :not(summary), details.popup > :not(summary) ol[class|=webapp][class*=-popup] details > :not(summary) {
   left: 100%;
   top: 0;
+}
+
+progress {
+  appearance: none;
+}
+progress::-webkit-progress-inner-element {
+  padding: 1px;
+  border: 1px solid hsl(var(--webapp-color-edge));
+  border-radius: var(--webapp-radius);
+}
+progress::-webkit-progress-bar {
+  background-color: hsl(var(--webapp-color-hint));
+  border-radius: var(--webapp-radius);
+}
+progress::-webkit-progress-value {
+  border-radius: var(--webapp-radius);
+  background-image: linear-gradient(-45deg, hsl(var(--webapp-color-background)/0.2) 25%, transparent 25%, transparent 50%, hsl(var(--webapp-color-background)/0.2) 50%, hsl(var(--webapp-color-background)/0.2) 75%, transparent 75%, transparent);
+  background-size: 1rem 1rem;
+  background-color: hsl(var(--webapp-color-anchor));
 }
 
 form[class|=webapp] {
