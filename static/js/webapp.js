@@ -54,6 +54,15 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 	$.copytoclipboard = (content, success = 'Copied!') => navigator.clipboard
 		.writeText(content).then($.is_string(success) ? () => $.dialog.hint(success) : success);
 
+	// $.save_content_as = (text, name) =>
+	// {
+	// 	const a = document.createElement('a');
+	// 	a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
+	// 	a.download = name;
+	// 	a.click();
+	// };
+
+
 	async function before(context)
 	{
 		let body;

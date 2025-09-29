@@ -345,7 +345,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->button('开始哈希', 'submit');
 		$form->fieldset();
 		$form->field('result', 'text', ['placeholder' => '哈希结果会显示在这里', 'readonly' => NULL]);
-		$form->button('')->setattr(['onclick' => 'tools.write_clipboard(this.previousElementSibling.value)'])->svg()->icon('copy');
+		$form->button('')->setattr(['onclick' => '$.copytoclipboard(this.previousElementSibling.value)'])->svg()->icon('copy');
 		return $form;
 	}
 	function get_php_hash()

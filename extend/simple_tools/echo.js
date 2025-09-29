@@ -1,9 +1,5 @@
 const tools =
 {
-	write_clipboard(content)
-	{
-		navigator.clipboard.writeText(content).then(() => alert('已拷贝！'));
-	},
 	save_content_as(text, name)
 	{
 		const a = document.createElement('a');
