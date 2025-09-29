@@ -38,11 +38,43 @@ export default new pq((window, undefined)=>
 		WebSocket,
 		XMLHttpRequest
 	} = window,
-	fromCodePoint = String.fromCodePoint,
-	ajax = pq.mapping(()=> pq.http),
-	observers = new Map,
-	listeners = new Map,
-	events = new Map;
+	fromCodePoint = String.fromCodePoint, cookie =
+	{
+		set(name, value = '', expire, path, domain, secure)
+		{
+			document.cookie = [`${pq.urlencode(name)}=${pq.urlencode(value)}`,
+			pq.is_int(expire) ? `;expires=${pq.date_create(expire).toUTCString()}` : '',
+			pq.is_string(path) ? `;path=${path}` : '',
+			pq.is_string(domain) ? `;domain=${domain}` : '',
+			secure ? ';secure' : ''].join('');
+		},
+		delete(name)
+		{
+			document.cookie = `${pq.urlencode(name)}=;expires=0`;
+		},
+		get(name)
+		{
+			const find = ` ${pq.urlencode(name)}=`, cookie = ` ${document.cookie};`, offset = cookie.indexOf(find) + find.length;
+			return offset > find.length ? pq.urldecode(cookie.substring(offset, cookie.indexOf(';', offset))) : '';
+		},
+		all()
+		{
+			return Object.fromEntries(cookie);
+		},
+		*[Symbol.iterator]()
+		{
+			for (let item of document.cookie.split(';'))
+			{
+				const offset = item.indexOf('=');
+				yield [pq.urldecode(item.substring(0, offset).trimLeft()), pq.urldecode(item.substring(offset + 1))];
+			}
+		}
+	};
+	// ,
+	// ajax = pq.mapping(()=> pq.http),
+	// observers = new Map,
+	// listeners = new Map,
+	// events = new Map;
 
 	// new window.MutationObserver((records)=>
 	// {
@@ -59,8 +91,11 @@ export default new pq((window, undefined)=>
 	class element
 	{
 		static id = 0;
-		static get =		(syntax, context = document) => new element(context.querySelector(syntax));
-		static name =		(target)=>
+		static get(selector, context = document)
+		{
+			return new element(context.querySelector(selector));
+		}
+		static name(target)
 		{
 			switch (target.nodeType)
 			{
@@ -70,7 +105,18 @@ export default new pq((window, undefined)=>
 				default:	return target.nodeName;
 			}
 		}
-		static create =	(tagname)=> new element(document.createElement(tagname));
+		static create(tagname, attribute)
+		{
+			const node = new element(document.createElement(tagname));
+			attribute && node.setattr(pq.is_string(attribute) ? {0: attribute} : attribute);
+			return node;
+		}
+		static template(html)
+		{
+			const template = document.createElement('template');
+			template.innerHTML = html;
+			return new element(template.content);
+		}
 		constructor(target = document)
 		{
 			this.#target = target;
@@ -96,6 +142,28 @@ export default new pq((window, undefined)=>
 		{
 			return this.target.textContent;
 		}
+		exists(callback)
+		{
+			this.target && callback(this);
+		}
+		clone()
+		{
+			return new element(this.target.cloneNode(true));
+		}
+		find(selector)
+		{
+			return element.get(selector, this.target);
+		}
+		setattr(name, value)
+		{
+			for (let [k, v] of pq.is_string(name) ? [[name, value]] : Object.entries(name))
+			{
+				k === '0' ? this.text(v) : pq.is_scalar(v)
+					? this.target.setAttribute(k, v) : this.target.setAttributeNode(document.createAttribute(k));
+			}
+			return this;
+		}
+
 		text(content)
 		{
 			this.target.textContent = content;
@@ -128,12 +196,12 @@ export default new pq((window, undefined)=>
 			{
 				url = this.target.action;
 				options.method = this.target.getAttribute('method');
-				options.body = body || new formdata(this.target);
+				options.body = body || pq.is_string(body) ? body : new formdata(this.target);
 			}
 			else
 			{
 				url = this.target.href || this.target.dataset.action;
-				options.method = this.target.dataset.method || 'get';
+				options.method = this.target.dataset.method || (body || pq.is_string(body) ? 'POST' : 'GET');
 				options.body = body;
 			}
 			return fetch(url, options);
@@ -166,14 +234,28 @@ export default new pq((window, undefined)=>
 			}
 			return this;
 		}
-		append(...elements)
+		append(node, attribute)
 		{
-			for (let i in elements)
+			if (pq.is_string(node))
 			{
-				this.target.appendChild(elements[i].target);
+				node = element.create(node, attribute);
 			}
+			else
+			{
+				attribute && node.setattr(attribute);
+			}
+			this.target.appendChild(node.target);
+			return node;
 		}
+
+
+		// disabled(on = true)
+		// {
+
+		// }
 	}
+
+
 	class dialog extends element
 	{
 		#retval;
@@ -189,21 +271,20 @@ export default new pq((window, undefined)=>
 		{
 			let valve = true;
 			super(document.createElement('dialog'));
-			
-			this.#cancel.on('click', () => this.close(false));
-			this.#accept.on('click', () => this.close(true));
-
-			this.#section.target.style.whiteSpace = 'pre';
-
+			this.#accept.on('click', () => this.close(null));
+			this.#cancel.on('click', () => this.close(undefined));
 			this.on('close', async event =>
 			{
+				
 				//this.remove('*');
 				if (valve === false && event.isTrusted)
 				{
+					//console.log(valve, event.isTrusted , '--------------\n')
 					this.remove();
-					await Array.prototype.shift.call(this)(this.#retval);
+					await this.resolve(this.#retval);
 					valve = true;
 				}
+				
 				if (valve && this.target.open === false && this.length)
 				{
 					valve = false;
@@ -211,6 +292,7 @@ export default new pq((window, undefined)=>
 					if (pq.is_function(scheme))
 					{
 						this.remove('*');
+						//console.log('!!--------------\n')
 						await scheme.apply(this, params);
 					}
 					if (document.body)
@@ -225,35 +307,34 @@ export default new pq((window, undefined)=>
 				}
 			});
 		}
-		// clear()
-		// {
-
-		// 	return this.remove('*');
-		// }
-		draw(title, cancel, accept)
+		get retval()
 		{
-			this.append(this.#header.text(title), this.#section);
+			return this.#retval;
+		}
+		draw(context)
+		{
+			pq.is_scalar(context.classname) ? this.target.className = context.classname : this.target.removeAttribute('class');
+			pq.is_scalar(context.title) && this.append(this.#header.text(context.title));
+			this.append(pq.is_scalar(context.content) ? this.#section.text(context.content) : this.#section.remove('*'));
 			this.#footer.remove('*');
-	
-			cancel && this.#footer.append(this.#cancel.text(cancel));
-			accept && this.#footer.append(this.#accept.text(accept));
-
-			if (this.#footer.target.childElementCount)
-			{
-				this.append(this.#footer);
-			}
-
-
+			pq.is_scalar(context.accept) && this.#footer.append(this.#accept.text(context.accept));
+			pq.is_scalar(context.cancel) && this.#footer.append(this.#cancel.text(context.cancel));
+			this.#footer.target.childElementCount && this.append(this.#footer);
 			return this.#section;
 		}
 		open(scheme, ...params)
 		{
-			this.#retval = null;
+			this.#retval = undefined;
 			return pq.promise(resolve =>
 			{
 				Array.prototype.push.call(this, [scheme, params], resolve);
 				this.event('close');
 			});
+		}
+		async resolve(value)
+		{
+			return this.length && this[0].toString().includes('[native code]')
+				? Array.prototype.shift.call(this)(value) : Promise.resolve(value);
 		}
 		close(value)
 		{
@@ -261,60 +342,6 @@ export default new pq((window, undefined)=>
 			this.target.close();
 			return this;
 		}
-
-
-		async message(content, title = 'Message', button = 'OK')
-		{
-			return this.open(() => {
-				this.draw(title, button).text(content);
-
-				
-			})
-		}
-		async confirm(content, title = 'Confirm', cancel = 'Cancel', accept = 'Accept')
-		{
-			return this.open(() => {
-				this.draw(title, cancel, accept).text(content);
-
-				
-			})
-		}
-		async prompt(formdata)
-		{
-			return this.open(() => {
-				let fieldset;
-				const form = element.create('form');
-				
-
-				for (const [name, attributes] of Object.entries(formdata))
-				{
-					const field = element.create('input');
-					fieldset = element.create('fieldset');
-					//field.name = name;
-
-					//field.setattr(attributes);
-
-
-					field.type = attributes.type;
-
-					//console.log(name, attributes);
-
-
-					
-
-					form.append(fieldset.append(field));
-				}
-				fieldset.append
-
-				
-				form.append
-				console.log(this.target);
-
-				this.append(form);
-			})
-
-		}
-
 	};
 	class formdata extends FormData
 	{
@@ -385,16 +412,20 @@ export default new pq((window, undefined)=>
 	{
 	}
 
+
 	return new Proxy(Object.assign(Object.defineProperties(pq,
 	{
 		href: {get() {return location.href;}, set(url) {location.href = url;}},
 		http: {get() {return new http;}}
 	}),
 	{
+		cookie,
+		element,
 		extend: 			(classname, prototype) => Object.assign({element, dialog, formdata, websocket}[classname].prototype, prototype),
-		clipboard:			navigator.clipboard,
-		session:			window.sessionStorage,
-		storage:			window.localStorage,
+		
+		// clipboard:			navigator.clipboard,
+		// session:			window.sessionStorage,
+		// storage:			window.localStorage,
 		// utf8_decode:		(data)=> new TextDecoder('utf-8').decode(Uint8Array.from(data, (byte)=>byte.codePointAt(0))),
 		// utf8_encode:		(data)=> fromCodePoint(...new TextEncoder().encode(data)),
 		// base64_decode:		(data)=> pq.utf8_decode(atob(data)),
@@ -405,33 +436,14 @@ export default new pq((window, undefined)=>
 		is_window:			(object)=> object === window || pq.in_array(object, frames, true),
 		random_bytes:		(length)=> crypto.getRandomValues(new pq.struct(length)).latin1,
 		random_int:			(min, max)=> crypto.getRandomValues(new Uint32Array(1))[0] % (max - min) + min,
-		setcookie:			(name, value = '', expire, path, domain, secure)=>
-		{
-			document.cookie = [`${pq.urlencode(name)}=${pq.urlencode(value)}`,
-				pq.is_int(expire) ? `;expires=${pq.date_create(expire).toUTCString()}` : '',
-				pq.is_string(path) ? `;path=${path}` : '',
-				pq.is_string(domain) ? `;domain=${domain}` : '',
-				secure ? ';secure' : ''].join('');
-			return true;
-		},
-		getcookie:			(name)=>
-		{
-			const find = ` ${pq.urlencode(name)}=`, cookie = ` ${document.cookie};`, offset = cookie.indexOf(find) + find.length;
-			return offset > find.length ? pq.urldecode(cookie.substring(offset, cookie.indexOf(';', offset))) : '';
-		},
-		getcookies:			()=> document.cookie.split(';').reduce((cookies, item)=>
-		{
-			const offset = item.indexOf('=');
-			cookies[pq.urldecode(item.substring(0, offset).trimLeft())] = pq.urldecode(item.substring(offset + 1));
-			return cookies;
-		}, {}),
+		setcookie: 			(...values) => !cookie.set(...values),
 		deferred:			Object.assign((callback, delay = 0, ...params)=> setTimeout(callback, delay, ...params), {cancel(id) {clearTimeout(id);}}),
 		interval:			Object.assign((callback, delay = 0, ...params)=> setInterval(callback, delay, ...params), {cancel(id) {clearInterval(id);}}),
 		reload:				(forced = false)=> location.reload(forced),
 		// pq.assign =				(url)=> location.assign(url);
 		// pq.replace =			(url)=> location.replace(url);
-		openwindow:			(...params)=> window.open(...params),
-		notification:		(title, options)=> new Notification(title, options),
+		// openwindow:			(...params)=> window.open(...params),
+		// notification:		(title, options)=> new Notification(title, options),
 		loadimg:			(url)=> pq.promise((resolve, reject)=>
 		{
 			const image = new Image;
@@ -452,9 +464,6 @@ export default new pq((window, undefined)=>
 	{
 		apply(target, ...[, [any]])
 		{
-
-
-			
 			return target.is_string(any) ? element.get(any) : new element(any);
 		}
 	});

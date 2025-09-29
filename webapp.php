@@ -29,7 +29,7 @@ interface webapp_io
 }
 abstract class webapp extends stdClass implements ArrayAccess, Stringable, Countable
 {
-	const version = '4.7.1a', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
+	const version = '4.7.1b', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
 	public readonly self $webapp;
 	public readonly array $query;
 	public readonly string $into;
@@ -140,18 +140,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	static function random_hash(bool $care):string
 	{
 		return static::hash(static::random(16), $care);
-	}
-	static function serial_hash(bool $care, string $prefix = 'W', int $limit = 12):string
-	{
-		return substr($prefix . static::random_hash($care), 0, $limit);
-	}
-	static function is_short_hash(string $hash):bool
-	{
-		return preg_match('/^[\w\-]{10}$/', $hash) === 1;
-	}
-	static function is_long_hash(string $hash):bool
-	{
-		return preg_match('/^[0-9A-V]{12}$/', $hash) === 1;
 	}
 	static function random_weight(array $items, string $key = 'weight'):array
 	{
@@ -802,16 +790,12 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function cond(...$conditions):object
 	{
-		return new class($this->query, $conditions)
+		return new class($this->query, ...$conditions)
 		{
 			private array $syntax = [], $values = [], $merge = [];
-			function __construct(private readonly array $query, $conditions)
+			function __construct(private readonly array $query, ...$conditions)
 			{
-				if ($conditions)
-				{
-					$this->syntax[] = array_shift($conditions);
-					$values = $conditions;
-				}
+				$this->append(...$conditions);
 			}
 			function __invoke(callable $object):object
 			{
@@ -835,6 +819,14 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 					return $value;
 				}
 				return NULL;
+			}
+			function append(...$conditions):void
+			{
+				if ($conditions)
+				{
+					$this->syntax[] = array_shift($conditions);
+					array_push($this->values, ...$conditions);
+				}
 			}
 			function merge(string $conditions):void
 			{
@@ -1301,6 +1293,10 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	function file(int $index = 0):string
 	{
 		return $this->uploadedfiles[$index]['file'];
+	}
+	function mime(int $index = 0):string
+	{
+		return $this->uploadedfiles[$index]['mime'];
 	}
 	function open(int $index = 0, bool $mask = FALSE, ?string &$key = NULL, bool $merged = FALSE)
 	{

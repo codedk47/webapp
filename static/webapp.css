@@ -19,15 +19,15 @@
   --webapp-gaplittle: .2rem;
   --webapp-gapitem: .4rem;
   --webapp-gap: 1rem;
+  --webapp-blur: blur(.2rem);
   font: normal 16px var(--webapp-font-default);
-  height: 100%;
   background-color: hsl(var(--webapp-color-background));
 }
 :root ::selection {
   background-color: hsl(var(--webapp-color-anchor));
   color: hsl(var(--webapp-color-background));
 }
-:root > body {
+:root, :root > body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -417,19 +417,72 @@ ul[class|=webapp][class*=-listmenu] > li > details > summary:hover, ul[class|=we
 ul[class|=webapp][class*=-inline], ol[class|=webapp][class*=-inline] {
   display: flex;
 }
-ul[class|=webapp][class*=option] > li, ol[class|=webapp][class*=option] > li {
+ul[class|=webapp][class*=-option] > li, ol[class|=webapp][class*=-option] > li {
   border-radius: var(--webapp-radius);
 }
-ul[class|=webapp][class*=option] > li:hover, ol[class|=webapp][class*=option] > li:hover {
+ul[class|=webapp][class*=-option] > li:hover, ol[class|=webapp][class*=-option] > li:hover {
   background-color: hsl(var(--webapp-color-hint)/0.2);
 }
-ul[class|=webapp][class*=option] > li > label, ol[class|=webapp][class*=option] > li > label {
+ul[class|=webapp][class*=-option] > li > label, ol[class|=webapp][class*=-option] > li > label {
   padding: var(--webapp-gaplittle) var(--webapp-gapitem);
 }
 ul[class|=webapp] > li.divider, ol[class|=webapp] > li.divider {
   height: 1px;
   margin: var(--webapp-gapitem);
   background-color: hsl(var(--webapp-color-edge));
+}
+
+dialog[class|=webapp] {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  outline: none;
+  border: 1px solid hsl(var(--webapp-color-foreground));
+  border-radius: var(--webapp-radius);
+  box-shadow: 0 0 0.2rem hsl(var(--webapp-color-foreground));
+  max-height: 80%;
+}
+dialog[class|=webapp]::backdrop {
+  background: hsl(var(--webapp-color-foreground)/0.4);
+  backdrop-filter: var(--webapp-blur);
+}
+dialog[class|=webapp] > header:first-of-type {
+  padding: var(--webapp-gapitem);
+  color: hsl(var(--webapp-color-background));
+  background-color: hsl(var(--webapp-color-anchor));
+  border: 1px solid hsl(var(--webapp-color-background));
+  border-radius: var(--webapp-radius);
+}
+dialog[class|=webapp] > section:first-of-type {
+  padding: var(--webapp-gap);
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow: auto;
+}
+dialog[class|=webapp] > footer:first-of-type {
+  display: flex;
+  gap: var(--webapp-gap);
+  justify-content: center;
+  padding: var(--webapp-gap);
+}
+dialog[class|=webapp] > footer:first-of-type > button {
+  min-width: 6rem;
+}
+dialog[class|=webapp][class*=-warning] {
+  border: 1px solid hsl(var(--webapp-color-danger));
+  box-shadow: 0 0 0 0.2rem hsl(var(--webapp-color-danger)/0.5);
+}
+dialog[class|=webapp][class*=-warning] > header:first-of-type {
+  color: hsl(var(--webapp-color-background));
+  background-color: hsl(var(--webapp-color-danger));
+  border: 1px solid hsl(var(--webapp-color-background));
+}
+dialog[class|=webapp][class*=-hint] {
+  color: hsl(var(--webapp-color-background));
+  border: none;
+  box-shadow: none;
+  background-color: hsl(var(--webapp-color-foreground)/0.7);
+  transition: opacity 0.4s ease-in-out;
 }
 
 :is([class|=webapp])[class*=-edge] {

@@ -663,9 +663,23 @@ class webapp_svg extends webapp_xml
 }
 class webapp_html extends webapp_xml
 {
-	function template(iterable $struct, array|string $attr = []):static
+	function html():string
 	{
-		return $this->append('template')->iter($struct)->setattr(is_array($attr) ? $attr : ['id' => $attr]);
+		$dom = $this->dom();
+		return $dom->ownerDocument->saveHTML($dom);
+	}
+	function id(string $set = NULL):string
+	{
+		static $id = 0;
+		$set ??= 'webapp-idx'. $id++;
+		$this['id'] = $set;
+		return $set;
+	}
+	function template(string $id = NULL):static
+	{
+		$template = $this->append('template');
+		$id && $template->id($id);
+		return $template;
 	}
 	// function img(string $src):webapp_html
 	// {

@@ -101,9 +101,9 @@ class webapp_nfs_client extends webapp_client_http
 	{
 		return $this->request('GET', $filename) && $this->status() === 200 ? $this->content($type) : NULL;
 	}
-	function put(string $filename, $stream):bool
+	function put(string $filename, $stream, string $type = 'application/octet-stream'):bool
 	{
-		return $this->request('PUT', $filename, $stream, 'application/octet-stream') && $this->status() === 200;
+		return $this->request('PUT', $filename, $stream, $type) && $this->status() === 200;
 		// return is_resource($stream) && $this->request('PUT', $filename,
 		// 	$stream, 'application/octet-stream') && $this->status() === 200;
 	}
@@ -246,6 +246,16 @@ class webapp_nfs implements Countable, IteratorAggregate
 			yield ($this->format)($file);
 		}
 	}
+	function node_exist(?string $node):bool
+	{
+		return $node === NULL || $this->webapp->mysql->{$this->webapp::tablename}
+			('WHERE `sort`=?i AND `type`=0 AND `hash`=?s LIMIT 1', $this->sort, $node)->select('hash')->value() === $node;
+	}
+	function node_empty(?string $node):bool
+	{
+		return $node !== NULL && $this->webapp->mysql->{$this->webapp::tablename}
+			('WHERE `sort`=?i AND `node`=?s LIMIT 1', $this->sort, $node)->select('hash')->value() === NULL;
+	}
 	function filename(string $hash, string $suffix = NULL):string
 	{
 		return sprintf('/%d/%04X/%s%s', $this->sort, $this->webapp->hashtime33($hash) % 0xffff, $hash, $suffix);
@@ -272,7 +282,8 @@ class webapp_nfs implements Countable, IteratorAggregate
 	}
 	function delete(string $hash):bool
 	{
-		return $this->primary($hash)->delete() === 1;
+		return $this->type === 0 ? $this->node_empty($hash) && $this->primary($hash)->delete() === 1 : $this->webapp->mysql->sync(fn() =>
+			$this->primary($hash)->delete() === 1 && $this->webapp->client->delete($this->filename($hash, $this->type === 1 ? '' : '/')));
 	}
 	function update(string $hash, array $data = []):bool
 	{
@@ -310,7 +321,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 		}
 		return $this->primary($hash)->update($syntax) === 1;
 	}
-	function fetch(string $hash, ?array &$data = NULL):bool
+	function fetch(string $hash, &$data = NULL):bool
 	{
 		if ($this->primary($hash)->fetch($rawdata))
 		{
@@ -332,27 +343,27 @@ class webapp_nfs implements Countable, IteratorAggregate
 	{
 		return $this->primary($hash)->update(['t1' => $this->webapp->time(), 'name' => $newname]) === 1;
 	}
-	function delete_data(string $hash, bool $folder = FALSE):bool
+	function moveto(string $hash, ?string $node):bool
 	{
-		return $this->webapp->mysql->sync(fn() => $this->delete($hash)
-			&& $this->webapp->client->delete($this->filename($hash, $folder ? '/' : '')));
+		return $this->node_exist($node) && $this->primary($hash)->update(['t1' => $this->webapp->time(), 'node' => $node]) === 1;
 	}
 	function create_uploadedfile(string $name, array $data = [], bool $mask = FALSE):?string
 	{
 		$key = $mask ? $this->webapp->random(8) : NULL;
 		$uploadedfile = $this->webapp->request_uploadedfile($name);
 		return $this->webapp->mysql->sync(fn(&$hash) => $uploadedfile->count()
-			&& is_string($hash = $this->create(['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile(), 1))
-			&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)), $hash) ? $hash : NULL;
+			&& is_string($hash = $this->create(['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile()))
+			&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key), $uploadedfile->mime()), $hash) ? $hash : NULL;
 	}
 	function update_uploadedfile(string $hash, array $data = [], string $name = NULL, bool $mask = FALSE):bool
 	{
 		$key = $mask ? $this->webapp->random(8) : NULL;
 		return $name && count($uploadedfile = $this->webapp->request_uploadedfile($name))
 			? $this->webapp->mysql->sync(fn() => $this->update($hash, ['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile[0])
-				&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key)))
+				&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key), $uploadedfile->mime()))
 			: $this->update($hash, $data);
 	}
+	//upload_localdir
 	function upload_directory(string $hash, string $from):bool
 	{
 		return $this->webapp->client->upload_directory($this->filename($hash), $from);
@@ -377,6 +388,17 @@ class webapp_extend_nfs extends webapp
 	const tablename = 'nfs';
 	private array $nfs = [];
 	public string $origin = 'http://localhost/nfs';
+	static function formatsize(int $size):string
+	{
+		return sprintf('%.2f %s', ...match (TRUE)
+		{
+			$size > 1024 ** 4 => [$size / 1024 ** 4, 'TB'],
+			$size > 1024 ** 3 => [$size / 1024 ** 3, 'GB'],
+			$size > 1024 ** 2 => [$size / 1024 ** 2, 'MB'],
+			$size > 1024 => [$size / 1024, 'KB'],
+			default => [$size, 'B']
+		});
+	}
 	static function createtable(webapp_mysql $mysql):bool
 	{
 		return $mysql->real_query(<<<'SQL'
@@ -401,6 +423,19 @@ class webapp_extend_nfs extends webapp
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 		SQL, static::tablename);
 	}
+	// static function serial_hash(bool $care, string $prefix = 'W', int $limit = 12):string
+	// {
+	// 	return substr($prefix . static::random_hash($care), 0, $limit);
+	// }
+	static function is_short_hash(string $hash):bool
+	{
+		return preg_match('/^[\w\-]{10}$/', $hash) === 1;
+	}
+	static function is_long_hash(string $hash):bool
+	{
+		return preg_match('/^[0-9A-V]{12}$/', $hash) === 1;
+	}
+
 	function client():webapp_nfs_client
 	{
 		// return new webapp_nfs_client('cloudflare_r2', 'access-key-id', 'secret-access-key', 'bucket-name', 'account-id');

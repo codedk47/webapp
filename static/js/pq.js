@@ -334,7 +334,7 @@
 	{
 		struct,
 		datetime,
-		mapping:			(initialize)=> new mapping(initialize),
+		// mapping:			(initialize)=> new mapping(initialize),
 		promise:			(waiting)=> new Promise(waiting),
 		hsl:				(hue, saturation = 1, lightness = 0.5)=>
 		{
@@ -381,6 +381,7 @@
 		floatval:			(number)=> parseFloat(number) || 0,
 		intval:				(number, base = 10)=> parseInt(number, base) || 0,
 		isset:				(...params)=> params.every(pq.is_defined),
+		//strval:				(object)=> object.toString(),
 		method_exists:		(object, method)=> pq.is_defined(object) && pq.is_function(object[method]),
 		property_exists:	(object, property)=> pq.is_defined(object) && Object.prototype.hasOwnProperty.call(object, property),
 		//defval:				(def, val = def)=> val,

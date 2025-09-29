@@ -521,8 +521,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 						$data instanceof DOMDocument => $data->saveXML(),
 						$data instanceof SimpleXMLElement => $data->asXML(),
 						default => (string)$data}),
-				'application/octet-stream' => $this->from($data),
-				default => FALSE})
+				default => is_resource($data) && $this->from($data)})
 			&& is_resource($buffer = fopen('php://memory', 'r+'))
 			&& $this->to($buffer)
 			&& is_int($length = ftell($buffer))

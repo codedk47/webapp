@@ -6,6 +6,15 @@ trait webapp_echo
 	public readonly webapp $webapp;
 	abstract function __construct(webapp $webapp);
 	abstract function __toString():string;
+	function input(string $type = NULL):webapp_xml|array|string
+	{
+		return $this->webapp->request_content(match ($type)
+		{
+			'xml' => 'application/xml',
+			'json' => 'application/json',
+			default => 'text/plain'
+		});
+	}
 }
 class webapp_echo_xml extends webapp_implementation
 {
@@ -129,7 +138,6 @@ class webapp_echo_json extends ArrayObject implements Stringable
 		$webapp->response_content_type("application/json; charset={$webapp['app_charset']}");
 		parent::__construct($data, ArrayObject::STD_PROP_LIST);
 	}
-
 	function __toString():string
 	{
 		return json_encode($this->getArrayCopy(), $this->flags);
@@ -166,28 +174,31 @@ class webapp_echo_json extends ArrayObject implements Stringable
 			default => isset($message['message']) ? ['message' => $this['errors'][] = $message] : $message
 		};
 	}
-	// function dialog(string|array $context, )
-	// {
-	// 	$this['dialog'] = $context;
-	// }
-	// function warning(){}
-	// 
-	// function confirm(){}
-	// function prompt(){}
-	// function form(){}
-	function message(string $content):void
+	function message(string|array $context):void
 	{
-		$this['message'] = $content;
+		$this['message'] = $context;
 	}
-	function refresh(string $url = NULL)
+	function confirm(string|array $context):void
 	{
-		//$this->webapp->response_refresh(0, $url);
-		$this['refresh'] = $url;
+		$this['confirm'] = $context;
+	}
+	function prompt(string|webapp_form $context):void
+	{
+		$this['prompt'] = $context instanceof webapp_form ? $context->xml->html() : $context;
+	}
+	function continue(string $action, string $method = NULL, string|array $body = NULL):void
+	{
+		$this['continue'] = ['action' => $action, 'method' => $method, 'body' => $body];
 	}
 	function redirect(string $url):void
 	{
 		//$this->webapp->response_location($url);
 		$this['redirect'] = $url;
+	}
+	function refresh(string $url = NULL):void
+	{
+		//$this->webapp->response_refresh(0, $url);
+		$this['refresh'] = $url;
 	}
 }
 class webapp_echo_html extends webapp_implementation
@@ -293,6 +304,10 @@ class webapp_echo_html extends webapp_implementation
 	function frag():webapp_html
 	{
 		return $this->echo = webapp_html::from($this->document->createElement('template'));
+	}
+	function template(string $id):webapp_html
+	{
+		return $this->xml->body->template($id);
 	}
 	// function echo_no_content():int
 	// {
