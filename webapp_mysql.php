@@ -329,7 +329,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return $this->show('PROCESSLIST');
 	}
-	function exists_table(string $name):bool
+	function table_exists(string $name):bool
 	{
 		foreach ($this->tablestatus() as $table)
 		{

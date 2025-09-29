@@ -14,6 +14,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 				['Explorer', "?{$this->routename}"],
 				['Administrator', "?{$this->routename}/admin"]
 			]);
+			$webapp->mysql->table_exists($webapp::tablename) || $webapp::createtable($webapp->mysql);
 		}
 		else
 		{
