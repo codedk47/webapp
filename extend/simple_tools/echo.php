@@ -6,6 +6,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 	{
 		parent::__construct($webapp);
 		$this->script(['src' => '/webapp/extend/simple_tools/echo.js']);
+		$this->nav([['Home', '?']]);
 		$this->submenu([
 			['OpenSSL', [
 				['生成新的私钥', "?{$this->routename}/openssl-pkey-new"],
