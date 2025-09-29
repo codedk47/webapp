@@ -10,6 +10,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 		if ($webapp instanceof webapp_extend_nfs)
 		{
 			$this->nav([
+				['Home', '?'],
 				['Explorer', "?{$this->routename}"],
 				['Administrator', "?{$this->routename}/admin"]
 			]);
