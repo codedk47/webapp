@@ -359,64 +359,68 @@ export default new pq((window, undefined)=>
 		// }
 	}
 
-	class http extends XMLHttpRequest
+	class xhr extends XMLHttpRequest
 	{
-		evented(download, upload)
-		{
-			if (pq.is_entries(download))
-			{
-				for (let [type, listener] of Object.entries(download))
-				{
-					switch (type)
-					{
-						case 'onabort':
-						case 'onloadend':
-						case 'onloadstart':
-						case 'onprogress':
-						case 'onreadystatechange':
-						case 'ontimeout':
-							this[type] = listener;
-					}
-				}
-			}
-			if (pq.is_entries(upload))
-			{
-				for (let [type, listener] of Object.entries(upload))
-				{
-					switch (type)
-					{
-						case 'onabort':
-						case 'onerror':
-						case 'onload':
-						case 'onloadend':
-						case 'onloadstart':
-						case 'onprogress':
-						case 'ontimeout':
-							this.upload[type] = listener;
-					}
-				}
-			}
-			return this;
-		}
+		// on(event, listener, upload = false)
+		// {
+
+		// }
+		// evented(download, upload)
+		// {
+		// 	if (pq.is_entries(download))
+		// 	{
+		// 		for (let [type, listener] of Object.entries(download))
+		// 		{
+		// 			switch (type)
+		// 			{
+		// 				case 'onabort':
+		// 				case 'onloadend':
+		// 				case 'onloadstart':
+		// 				case 'onprogress':
+		// 				case 'onreadystatechange':
+		// 				case 'ontimeout':
+		// 					this[type] = listener;
+		// 			}
+		// 		}
+		// 	}
+		// 	if (pq.is_entries(upload))
+		// 	{
+		// 		for (let [type, listener] of Object.entries(upload))
+		// 		{
+		// 			switch (type)
+		// 			{
+		// 				case 'onabort':
+		// 				case 'onerror':
+		// 				case 'onload':
+		// 				case 'onloadend':
+		// 				case 'onloadstart':
+		// 				case 'onprogress':
+		// 				case 'ontimeout':
+		// 					this.upload[type] = listener;
+		// 			}
+		// 		}
+		// 	}
+		// 	return this;
+		// }
 		accept(type)
 		{
 			this.responseType = type;
 			return this;
 		}
-		request(method, url, data = null)
+		request(method, url, body = null, type = null)
 		{
 			this.open(method, url, true);
-			if (pq.is_entries(data) && pq.is_formdata(data) === false)
-			{
-				this.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-				data = pq.http_build_query(data);
-			}
-			return pq.promise((resolve, reject)=>
+			// if (pq.is_entries(body) && pq.is_formdata(body) === false)
+			// {
+			// 	this.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+			// 	body = pq.http_build_query(body);
+			// }
+			return pq.promise((resolve, reject) =>
 			{
 				this.onload = resolve;
 				this.onerror = reject;
-				this.send(data);
-			}).then((event)=> event.target);
+				this.send(body);
+			}).then(event => event.target);
 		}
 	}
 
@@ -427,8 +431,8 @@ export default new pq((window, undefined)=>
 
 	return new Proxy(Object.assign(Object.defineProperties(pq,
 	{
-		href: {get() {return location.href;}, set(url) {location.href = url;}},
-		http: {get() {return new http;}}
+		//href: {get() {return location.href;}, set(url) {location.href = url;}},
+		xhr: {get() {return new xhr;}}
 	}),
 	{
 		cookie,

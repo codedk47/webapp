@@ -1,7 +1,8 @@
 "use strict";
 const webapp = import('./webkit.js').then(function({default: $}, undefined)
 {
-	const dialog = $.dialog(true);
+	const xhr = $.xhr, dialog = $.dialog(true);
+	xhr.upload.onprogress = event => xhr.progress && (xhr.progress.value = event.loaded / event.total);
 	$.dialog.message = (context, classname = 'webapp') => dialog.open(() =>
 		dialog.draw(Object.assign({classname, accept: 'OK'}, $.is_entries(context) ? context : {content: context})));
 	$.dialog.warning = context => $.dialog.message(context, 'webapp-warning');
@@ -66,6 +67,7 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 	// };
 
 
+
 	async function before(context)
 	{
 		let body;
@@ -90,14 +92,19 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 	}
 	async function after(response)
 	{
-		if (!response.ok)
+		if (xhr.status < 200 && xhr.status > 299)
 		{
-			return $.dialog.warning({title: response.status, content: response.statusText});
+			return $.dialog.warning({title: xhr.status, content: xhr.statusText});
 		}
-		const text = await response.text();
+		// if (!response.ok)
+		// {
+		// 	return $.dialog.warning({title: response.status, content: response.statusText});
+		// }
+		// const text = await response.text();
 		try
 		{
-			const context = JSON.parse(text);
+			//const context = JSON.parse(text);
+			const context = JSON.parse(xhr.responseText);
 			await before(context).then(async body => 'continue' in context && await action(context.continue, body), demission => demission);
 			if (typeof context.redirect === 'string')
 			{
@@ -110,7 +117,7 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 		}
 		catch (error)
 		{
-			$.dialog.warning({title: 'Error', content: text.trim()});
+			$.dialog.warning({title: 'Error', content: xhr.responseText.trim()});
 		}
 	}
 	async function action(context, body)
@@ -122,6 +129,7 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 			if ($.is_a(body, HTMLFormElement))
 			{
 				const fieldset = body.querySelectorAll('fieldset');
+				xhr.progress = body.querySelector('progress');
 				body = $.formdata(body);
 				fieldset.forEach(fieldset => fieldset.disabled = true);
 				callback = response =>
@@ -130,6 +138,7 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 					dialog.close();
 					after(response);
 				};
+				
 				break;
 			}
 			if ($.is_object(body))
@@ -159,6 +168,16 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 			options.body = context.body === null ? body : $.is_object(context.body) ? $.json_encode(context.body) : context.body;
 		}
 		options.method ||= options.body === null ? 'GET' : 'POST';
+
+		
+		return xhr.request(options.method, url, body).then(callback);
+		
+		//.then(callback)
+
+		// xhr.request('GET', '/a.html1').then(a =>{
+		// 	console.log(xhr.DONE, a)
+		// }, err => console.warn(err))
+
 		return fetch(url, options).then(callback);
 	}
 	$.action = element => !before(element.dataset).then(body => action(element, body), demission => demission);
