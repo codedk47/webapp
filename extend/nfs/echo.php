@@ -68,6 +68,9 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 			$table->cell($value['likes']);
 			$table->cell($value['shares']);
 
+			
+
+
 
 			$table->cell()->details_button_popup($value['name'], [
 				...match ((int)$value['type'])
@@ -82,26 +85,30 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 							['Image viewer', '#'],
 							['Video playback', '#']
 						]],
-						['Update file', "?{$this->routename}/update,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
-							'data-prompt' => "Select the file to replace:file",
-							'onclick' => 'return $.action(this)'
-						],
-						['Move to', "?{$this->routename}/moveto,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
-							'data-prompt' => "Node hash(empty is root node):text:{$value['node']}",
-							'onclick' => 'return $.action(this)'],
+						...$this->auth ? [
+							['Update file', "?{$this->routename}/update,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
+								'data-prompt' => "Select the file to replace:file",
+								'onclick' => 'return $.action(this)'
+							],
+							['Move to', "?{$this->routename}/moveto,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
+								'data-prompt' => "Node hash(empty is root node):text:{$value['node']}",
+								'onclick' => 'return $.action(this)']
+						] : []
 					],
 					default => [
 						['Copy object URL', '#']
 					]
 				},
-				['Rename', "?{$this->routename}/rename,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
-					'data-prompt' => "New name:text:{$value['name']}",
-					'onclick' => 'return $.action(this)'],
-				['Delete', "?{$this->routename}/delete,sort:{$value['sort']},type:{$value['type']}",
-					'class' => 'danger',
-					'data-confirm' => 'Delete cannot be undo',
-					'data-body' => $value['hash'],
-					'onclick' => 'return $.action(this)']
+				...$this->auth ? [
+					['Rename', "?{$this->routename}/rename,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
+						'data-prompt' => "New name:text:{$value['name']}",
+						'onclick' => 'return $.action(this)'],
+					['Delete', "?{$this->routename}/delete,sort:{$value['sort']},type:{$value['type']}",
+						'class' => 'danger',
+						'data-confirm' => 'Delete cannot be undo',
+						'data-body' => $value['hash'],
+						'onclick' => 'return $.action(this)']
+				] : []
 			]);
 
 		}, ['Node', 'File']);
@@ -111,16 +118,20 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 		$table->bar->append('a', ['Back to top', 'href' => $backtotop, 'class' => 'default']);
 		$table->bar->append('input', ['type' => 'number', 'min' => 0, 'max' => 255, 'value' => $sort, 'placeholder' => 'Sort', 'required' => NULL]);
 		$table->bar->append('input', ['type' => 'search', 'placeholder' => 'Type keyword search', 'value' => $search]);
-		$table->bar->append('a', ['Upload file',
+		if ($this->auth)
+		{
+			$table->bar->append('a', ['Upload file',
 			'href' => "?{$this->routename}/uploadfile,sort:{$sort},node:{$node}",
 			'onclick' => 'return $.action(this)',
 			'data-prompt' => '#form_uploadfile'
-		]);
-		$table->bar->append('a', ['Create folder',
-			'href' => "?{$this->routename}/createnode,sort:{$sort},node:{$node}",
-			'onclick' => 'return $.action(this)',
-			'data-prompt' => '#form_createnode'
-		]);
+			]);
+			$table->bar->append('a', ['Create folder',
+				'href' => "?{$this->routename}/createnode,sort:{$sort},node:{$node}",
+				'onclick' => 'return $.action(this)',
+				'data-prompt' => '#form_createnode'
+			]);
+		}
+
 
 
 		// $table->bar->append('a', ['Dialog test', 'href' => "?{$this->routename}/asd",
