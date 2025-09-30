@@ -39,9 +39,13 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 		$cond = $this->webapp->cond('`sort`=?i', $sort);
 		if ($node = $cond->query('node', '`node`=?s'))
 		{
-			if ($this->webapp->nfs($sort, 0)->fetch($node, $data) && $data['node'])
+			if ($this->webapp->nfs($sort, 0)->fetch($node, $data))
 			{
-				$backtotop .= ",node:{$data['node']}";
+				$this->title($data['name']);
+				if ($data['node'])
+				{
+					$backtotop .= ",node:{$data['node']}";
+				}
 			}
 		}
 		else
