@@ -96,7 +96,8 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 						] : []
 					],
 					default => [
-						['Copy object URL', '#']
+						['Copy object URL', strstr($this->webapp->src($value), '#', TRUE), 
+							'onclick' => 'return !$.copytoclipboard(this.href)']
 					]
 				},
 				...$this->auth ? [
