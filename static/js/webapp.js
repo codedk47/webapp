@@ -26,7 +26,10 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 			}
 			const [name, type, ...value] = context.split(':');
 			context = $.element.create('form', {class: 'webapp', method: 'dialog', autocomplete: 'off'});
-			context.target.onsubmit = event => !dialog.close(event.target.input.value);
+			context.target.onsubmit = event => !dialog.close(event.target.input.type === 'file' ? (event.target.input.files.length
+				? new Blob([event.target.input.files[0]], {type: event.target.input.files[0].type || 'application/octet-stream'})
+				: undefined) : event.target.input.value);
+	
 
 			fieldset = $.element.create('fieldset');
 			fieldset.append('legend', name);

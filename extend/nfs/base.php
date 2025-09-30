@@ -352,16 +352,24 @@ class webapp_nfs implements Countable, IteratorAggregate
 		$key = $mask ? $this->webapp->random(8) : NULL;
 		$uploadedfile = $this->webapp->request_uploadedfile($name);
 		return $this->webapp->mysql->sync(fn(&$hash) => $uploadedfile->count()
-			&& is_string($hash = $this->create(['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile()))
+			&& is_string($hash = $this->create(['key' => $key] + $data + $uploadedfile()))
 			&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key), $uploadedfile->mime()), $hash) ? $hash : NULL;
 	}
 	function update_uploadedfile(string $hash, array $data = [], string $name = NULL, bool $mask = FALSE):bool
 	{
 		$key = $mask ? $this->webapp->random(8) : NULL;
 		return $name && count($uploadedfile = $this->webapp->request_uploadedfile($name))
-			? $this->webapp->mysql->sync(fn() => $this->update($hash, ['key' => $key ? bin2hex($key) : $key] + $data + $uploadedfile[0])
+			? $this->webapp->mysql->sync(fn() => $this->update($hash, ['key' => $key] + $data + $uploadedfile[0])
 				&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key), $uploadedfile->mime()))
 			: $this->update($hash, $data);
+	}
+	function replace_inputedfile(string $hash):bool
+	{
+		return $this->fetch($hash, $data) && $this->webapp->mysql->sync(fn() => $this->update($data['hash'],
+			['size' => $this->webapp->request_content_length()])
+				&& $this->webapp->client->put($this->filename($data['hash']), $data['key']
+					? $this->webapp->maskdata($this->webapp->request_content(), $data['key'])
+					: $this->webapp->request_content(), $this->webapp->request_content_type()));
 	}
 	//upload_localdir
 	function upload_directory(string $hash, string $from):bool
@@ -405,7 +413,7 @@ class webapp_extend_nfs extends webapp
 		CREATE TABLE ?a (
 			`hash` char(12) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
 			`sort` tinyint unsigned NOT NULL,
-			`type` tinyint unsigned NOT NULL COMMENT '0:tree,1:file,2:mixed',
+			`type` tinyint unsigned NOT NULL COMMENT '0:node,1:file,2:mixed',
 			`t0` int unsigned NOT NULL COMMENT 'insert time',
 			`t1` int unsigned NOT NULL COMMENT 'update time',
 			`size` bigint unsigned NOT NULL,
@@ -414,7 +422,7 @@ class webapp_extend_nfs extends webapp
 			`shares` bigint unsigned NOT NULL,
 			`name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
 			`node` char(12) CHARACTER SET ascii COLLATE ascii_general_ci DEFAULT NULL,
-			`key` binary(16) DEFAULT NULL COMMENT 'masker',
+			`key` binary(8) DEFAULT NULL COMMENT 'masker',
 			`extdata` json DEFAULT NULL,
 			PRIMARY KEY (`hash`),
 			KEY `sort` (`sort`),
@@ -452,7 +460,7 @@ class webapp_extend_nfs extends webapp
 		return sprintf('%s/%d/%04X/%s%s?%X#%s',
 			$this->origin, $file['sort'],
 			$this->hashtime33($file['hash']) % 0xffff,
-			$file['hash'], $name, $file['t1'], $file['key']);
+			$file['hash'], $name, $file['t1'], bin2hex((string)$file['key']));
 	}
 
 	// function tmpdir():?string

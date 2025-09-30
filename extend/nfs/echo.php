@@ -78,8 +78,8 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 							['Image viewer', '#'],
 							['Video playback', '#']
 						]],
-						['Update file', "#",
-							'data-prompt' => "Node hash:text:{$value['node']}",
+						['Update file', "?{$this->routename}/update,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
+							'data-prompt' => "Select the file to replace:file",
 							'onclick' => 'return $.action(this)'
 						],
 						['Move to', "?{$this->routename}/moveto,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
@@ -130,9 +130,20 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 	
 		// $table->bar->append('a', ['Copy test', 'href' => "javascript:;", 'onclick' => '$.copytoclipboard(this.href)']);
 	
-
 		$this->form_uploadfile($this->template('form_uploadfile'));
 		$this->form_createnode($this->template('form_createnode'));
+	}
+	function post_update(int $sort, int $type, string $hash)
+	{
+		$this->json();
+		if ($this->webapp->nfs($sort, $type)->replace_inputedfile($hash))
+		{
+			$this->echo->refresh();
+		}
+		else
+		{
+			$this->echo->error('Update file failure');
+		}
 	}
 	function post_moveto(int $sort, int $type, string $hash)
 	{

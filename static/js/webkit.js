@@ -345,6 +345,18 @@ export default new pq((window, undefined)=>
 	};
 	class formdata extends FormData
 	{
+		// constructor(context)
+		// {
+		// 	pq.is_a(context, HTMLFormElement) ? super(context) : super();
+		// 	if (pq.is_object(context))
+		// 	{
+		// 		for (let [name, value] of Object.entries(context))
+		// 		{
+		// 			this.append(name, value);
+		// 			console.log(name, value)
+		// 		}
+		// 	}
+		// }
 	}
 
 	class http extends XMLHttpRequest
