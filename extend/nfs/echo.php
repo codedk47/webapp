@@ -56,7 +56,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 
 	
 		$cond->merge('ORDER BY type ASC,hash ASC');
-		$table = $this->main->table($cond($this->webapp->mysql->{$this->webapp::tablename})->paging($page, 10), function($table, $value, $type)
+		$table = $this->main->table($cond($this->webapp->mysql->{$this->webapp::tablename})->paging($page, 20), function($table, $value, $type)
 		{
 			$table->row();
 			$table->cell($value['hash']);
