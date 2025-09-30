@@ -302,7 +302,7 @@ progress::-webkit-progress-bar {
   border-radius: var(--webapp-radius);
 }
 progress::-webkit-progress-value {
-  transition: width 0.1s ease;
+  transition: width 0.3s ease;
   border-radius: var(--webapp-radius);
   background-image: linear-gradient(-45deg, hsl(var(--webapp-color-background)/0.2) 25%, transparent 25%, transparent 50%, hsl(var(--webapp-color-background)/0.2) 50%, hsl(var(--webapp-color-background)/0.2) 75%, transparent 75%, transparent);
   background-size: 1rem 1rem;
