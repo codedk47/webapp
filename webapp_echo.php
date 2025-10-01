@@ -246,17 +246,6 @@ class webapp_echo_html extends webapp_implementation
 			$this->webapp->response_status($this->auth(json_decode(rawurldecode(
 				$this->webapp->request_header('Sign-In') ?? ''), TRUE), $authenticate, $storage));
 		}
-		// if (in_array($this->webapp->method, $allow, TRUE) === FALSE)
-		// {
-		// 	[$this->auth, $authenticate, $storage] = is_string($context)
-		// 		? [$this->webapp->auth($this->authenticate(...), $context), $this->authenticate(...), $context]
-		// 		: [$this->webapp->auth, $this->webapp->authenticate(...), $this->webapp['admin_cookie']];
-		// 	if (empty($this->auth)) {
-		// 		$this->webapp->response_status($this->auth(json_decode(rawurldecode(
-		// 			$this->webapp->request_header('Sign-In') ?? ''), TRUE), $authenticate, $storage));
-		// 	}
-		// }
-		// $this->auth ??= [];
 	}
 	function auth(?array $data, callable $authenticate, string $storage):int
 	{

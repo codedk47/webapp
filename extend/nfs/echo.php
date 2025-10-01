@@ -35,13 +35,14 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 	}
 	function get_home(int $sort = 0, int $page = 1, string $search = NULL, string $node = NULL)
 	{
+		$title = 'Explorer';
 		$backtotop = "?{$this->routename},sort:{$sort}";
 		$cond = $this->webapp->cond('`sort`=?i', $sort);
 		if ($node = $cond->query('node', '`node`=?s'))
 		{
 			if ($this->webapp->nfs($sort, 0)->fetch($node, $data))
 			{
-				$this->title($data['name']);
+				$this->title($title = $data['name']);
 				if ($data['node'])
 				{
 					$backtotop .= ",node:{$data['node']}";
@@ -114,7 +115,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 
 		}, ['Node', 'File']);
 		$table->fieldset('Hash', 'Type', 'Insert Time', 'Update Time', 'Size', 'Views', 'Likes', 'Shares', 'Name');
-		$table->header('Explorer');
+		$table->header($title);
 		$table->paging($this->webapp->at(['page' => '']));
 		$table->bar->append('a', ['Back to top', 'href' => $backtotop, 'class' => 'default']);
 		$table->bar->append('input', ['type' => 'number', 'min' => 0, 'max' => 255, 'value' => $sort, 'placeholder' => 'Sort', 'required' => NULL]);
