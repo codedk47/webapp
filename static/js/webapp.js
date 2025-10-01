@@ -77,7 +77,7 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 	}
 	async function finish()
 	{
-		if (xhr.status < 200 && xhr.status > 299)
+		if (xhr.status < 200 || xhr.status > 299)
 		{
 			return $.dialog.message({class: 'webapp-warning', title: xhr.status, content: xhr.statusText});
 		}
