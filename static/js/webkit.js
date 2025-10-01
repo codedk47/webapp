@@ -313,7 +313,7 @@ export default new pq((window, undefined)=>
 		}
 		draw(context)
 		{
-			pq.is_scalar(context.classname) ? this.target.className = context.classname : this.target.removeAttribute('class');
+			pq.is_scalar(context.class) ? this.target.className = context.class : this.target.removeAttribute('class');
 			pq.is_scalar(context.title) && this.append(this.#header.text(context.title));
 			this.append(pq.is_scalar(context.content) ? this.#section.text(context.content) : this.#section.remove('*'));
 			this.#footer.remove('*');
@@ -410,6 +410,7 @@ export default new pq((window, undefined)=>
 		request(method, url, body = null, type = null)
 		{
 			this.open(method, url, true);
+			type && this.setRequestHeader('Content-Type', type);
 			// if (pq.is_entries(body) && pq.is_formdata(body) === false)
 			// {
 			// 	this.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');

@@ -3,11 +3,10 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 {
 	const xhr = $.xhr, dialog = $.dialog(true);
 	xhr.upload.onprogress = event => xhr.progress && (xhr.progress.value = event.loaded / event.total);
-	$.dialog.message = (context, classname = 'webapp') => dialog.open(() =>
-		dialog.draw(Object.assign({classname, accept: 'OK'}, $.is_entries(context) ? context : {content: context})));
-	$.dialog.warning = context => $.dialog.message(context, 'webapp-warning');
-	$.dialog.confirm = (context, classname = 'webapp') => dialog.open(() =>
-		dialog.draw(Object.assign({classname, accept: 'Accept', cancel: 'Cancel'}, $.is_entries(context) ? context : {content: context})));
+	$.dialog.message = context => dialog.open(() =>
+		dialog.draw(Object.assign({class: 'webapp', accept: 'OK'}, $.is_entries(context) ? context : {content: context})));
+	$.dialog.confirm = context => dialog.open(() =>
+		dialog.draw(Object.assign({class: 'webapp', accept: 'Accept', cancel: 'Cancel'}, $.is_entries(context) ? context : {content: context})));
 	$.dialog.prompt = context => dialog.open(() =>
 	{
 		while ($.is_string(context))
@@ -30,7 +29,6 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 			context.target.onsubmit = event => !dialog.close(event.target.input.type === 'file' ? (event.target.input.files.length
 				? new Blob([event.target.input.files[0]], {type: event.target.input.files[0].type || 'application/octet-stream'})
 				: undefined) : event.target.input.value);
-	
 
 			fieldset = $.element.create('fieldset');
 			fieldset.append('legend', name);
@@ -43,39 +41,26 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 			context.append(fieldset);
 			break;
 		}
-		dialog.draw({classname: 'webapp'}).append(context);
+		dialog.draw({class: 'webapp'}).append(context);
 	});
 	$.dialog.hint = content =>
 	{
 		const dialog = $.dialog();
 		dialog.open(() =>
 		{
-			dialog.draw({classname: 'webapp-hint', content});
+			dialog.draw({class: 'webapp-hint', content});
 			dialog.once('transitionend', () => dialog.remove());
 			setTimeout(() => dialog.target.style.opacity = 0, 600);
 		});
 	};
-	$.copytoclipboard = (content, success = 'Copied!') => navigator.clipboard
-		.writeText(content).then($.is_string(success) ? () => $.dialog.hint(success) : success);
-
-	// $.save_content_as = (text, name) =>
-	// {
-	// 	const a = document.createElement('a');
-	// 	a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
-	// 	a.download = name;
-	// 	a.click();
-	// };
-
-
-
-	async function before(context)
+	async function pending(context)
 	{
 		let body;
 		if ($.is_object(context) && $.is_array(context.errors) && context.errors.length)
 		{
-			await $.dialog.warning({title: 'Errors', content: context.errors.join('\n')});
+			await $.dialog.message({class: 'webapp-warning', title: 'Errors', content: context.errors.join('\n')});
 		}
-		for (let method of ['message', 'warning', 'confirm', 'prompt'])
+		for (let method of ['message', 'confirm', 'prompt'])
 		{
 			body = method in context ? await $.dialog[method](context[method]) : null;
 			if (body === undefined)
@@ -90,22 +75,16 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 			default: return body;
 		}
 	}
-	async function after(response)
+	async function finish()
 	{
 		if (xhr.status < 200 && xhr.status > 299)
 		{
-			return $.dialog.warning({title: xhr.status, content: xhr.statusText});
+			return $.dialog.message({class: 'webapp-warning', title: xhr.status, content: xhr.statusText});
 		}
-		// if (!response.ok)
-		// {
-		// 	return $.dialog.warning({title: response.status, content: response.statusText});
-		// }
-		// const text = await response.text();
 		try
 		{
-			//const context = JSON.parse(text);
 			const context = JSON.parse(xhr.responseText);
-			await before(context).then(async body => 'continue' in context && await action(context.continue, body), demission => demission);
+			await pending(context).then(async body => 'continue' in context && await action(context.continue, body), demission => demission);
 			if (typeof context.redirect === 'string')
 			{
 				return location.replace(context.redirect);
@@ -117,28 +96,21 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 		}
 		catch (error)
 		{
-			$.dialog.warning({title: 'Error', content: xhr.responseText.trim()});
+			$.dialog.message({class: 'webapp-warning', title: error.message, content: xhr.responseText.trim()});
 		}
 	}
 	async function action(context, body)
 	{
-		const options = {};
-		let callback = after, url;
+		let callback = finish, method, url;
 		do
 		{
 			if ($.is_a(body, HTMLFormElement))
 			{
 				const fieldset = body.querySelectorAll('fieldset');
 				xhr.progress = body.querySelector('progress');
-				body = $.formdata(body);
 				fieldset.forEach(fieldset => fieldset.disabled = true);
-				callback = response =>
-				{
-					fieldset.forEach(fieldset => fieldset.disabled = false);
-					dialog.close();
-					after(response);
-				};
-				
+				callback = () => finish(dialog.close(fieldset.forEach(fieldset => fieldset.disabled = false)));
+				body = $.formdata(body);
 				break;
 			}
 			if ($.is_object(body))
@@ -146,45 +118,61 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 				body = $.json_encode(body);
 			}
 		} while (false);
-		if ($.is_a(context, Element))
+		if ($.is_element(context))
 		{
 			if (context.tagName === 'FORM')
 			{
+				method = context.getAttribute('method');
 				url = context.action;
-				options.method = context.method;
-				options.body = body === null ? $.formdata(context) : body;
+				if (body === null)
+				{
+					body = $.formdata(context);
+					if (callback === finish)
+					{
+						const fieldset = body.querySelectorAll('fieldset');
+						xhr.progress = body.querySelector('progress');
+						fieldset.forEach(fieldset => fieldset.disabled = true);
+						callback = () => finish(dialog.close(fieldset.forEach(fieldset => fieldset.disabled = false)));
+					}
+				}
 			}
 			else
 			{
+				method = context.dataset.method;
 				url = context.href || context.dataset.action;
-				options.method = context.dataset.method;
-				options.body = body === null ? context.dataset.body || null : body;
+				if (body === null && $.is_string(context.dataset.body))
+				{
+					body = context.dataset.body;
+				}
 			}
 		}
 		else
 		{
+			method = context.method;
 			url = context.action;
-			options.method = context.method;
-			options.body = context.body === null ? body : $.is_object(context.body) ? $.json_encode(context.body) : context.body;
+			if (context.body !== null)
+			{
+				body = $.is_object(context.body) ? $.json_encode(context.body) : context.body;
+			}
 		}
-		options.method ||= options.body === null ? 'GET' : 'POST';
-
-		
-		return xhr.request(options.method, url, body).then(callback);
-		
-		//.then(callback)
-
-		// xhr.request('GET', '/a.html1').then(a =>{
-		// 	console.log(xhr.DONE, a)
-		// }, err => console.warn(err))
-
-		return fetch(url, options).then(callback);
+		return xhr.request(method || (body === null ? 'GET' : 'POST'), url, body).then(callback);
 	}
-	$.action = element => !before(element.dataset).then(body => action(element, body), demission => demission);
+	$.action = element => !pending(element.dataset).then(body => action(element, body), demission => demission);
 
+
+	$.copytoclipboard = (content, success = 'Copied!') => navigator.clipboard
+		.writeText(content).then($.is_string(success) ? () => $.dialog.hint(success) : success);
+
+	// $.save_content_as = (text, name) =>
+	// {
+	// 	const a = document.createElement('a');
+	// 	a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
+	// 	a.download = name;
+	// 	a.click();
+	// };
 	$.delete_cookie_reload = name => location.reload($.cookie.delete(name));
 
-	$.previewimage = (input, element) => element.src = URL.createObjectURL(input.files[0]);
+	$.previewimage = (input, element) => element.src = input.files.length ? URL.createObjectURL(input.files[0]) : null;
 
 	$.authsignin = (element, callback) =>
 	{
