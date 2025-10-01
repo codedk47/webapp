@@ -55,24 +55,24 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 	};
 	async function pending(context)
 	{
-		let body;
+		let retval;
 		if ($.is_object(context) && $.is_array(context.errors) && context.errors.length)
 		{
 			await $.dialog.message({class: 'webapp-warning', title: 'Errors', content: context.errors.join('\n')});
 		}
 		for (let method of ['message', 'confirm', 'prompt'])
 		{
-			body = method in context ? await $.dialog[method](context[method]) : null;
-			if (body === undefined)
+			retval = method in context ? await $.dialog[method](context[method]) : null;
+			if (retval === undefined)
 			{
-				return Promise.reject(body);
+				return Promise.reject(retval);
 			}
 		}
 		switch (true)
 		{
-			case $.is_numeric(body): return body.toString(10);
-			case $.is_bool(body): return body.toString();
-			default: return body;
+			case $.is_numeric(retval): return retval.toString(10);
+			case $.is_bool(retval): return retval.toString();
+			default: return retval;
 		}
 	}
 	async function finish()
@@ -84,7 +84,7 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 		try
 		{
 			const context = JSON.parse(xhr.responseText);
-			await pending(context).then(async body => 'continue' in context && await action(context.continue, body), demission => demission);
+			await pending(context).then(async retval => 'continue' in context && await action(context.continue, retval), demission => demission);
 			if (typeof context.redirect === 'string')
 			{
 				return location.replace(context.redirect);
@@ -99,51 +99,32 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 			$.dialog.message({class: 'webapp-warning', title: error.message, content: xhr.responseText.trim()});
 		}
 	}
-	async function action(context, body)
+	async function action(context, retval)
 	{
-		let callback = finish, method, url;
-		do
-		{
-			if ($.is_a(body, HTMLFormElement))
-			{
-				const fieldset = body.querySelectorAll('fieldset');
-				xhr.progress = body.querySelector('progress');
-				fieldset.forEach(fieldset => fieldset.disabled = true);
-				callback = () => finish(dialog.close(fieldset.forEach(fieldset => fieldset.disabled = false)));
-				body = $.formdata(body);
-				break;
-			}
-			if ($.is_object(body))
-			{
-				body = $.json_encode(body);
-			}
-		} while (false);
+		let callback = finish, method, url, body, fieldset;
 		if ($.is_element(context))
 		{
-			if (context.tagName === 'FORM')
+			switch (context.tagName)
 			{
-				method = context.getAttribute('method');
-				url = context.action;
-				if (body === null)
-				{
+				case 'FORM':
+					xhr.progress = context.querySelector('progress');
+					method = context.getAttribute('method');
+					url = context.action;
 					body = $.formdata(context);
-					if (callback === finish)
-					{
-						const fieldset = body.querySelectorAll('fieldset');
-						xhr.progress = body.querySelector('progress');
-						fieldset.forEach(fieldset => fieldset.disabled = true);
-						callback = () => finish(dialog.close(fieldset.forEach(fieldset => fieldset.disabled = false)));
-					}
-				}
-			}
-			else
-			{
-				method = context.dataset.method;
-				url = context.href || context.dataset.action;
-				if (body === null && $.is_string(context.dataset.body))
-				{
-					body = context.dataset.body;
-				}
+					fieldset = context.querySelectorAll('fieldset');
+					fieldset.forEach(fieldset => fieldset.disabled = true);
+					callback = () => finish(dialog.close(fieldset.forEach(fieldset => fieldset.disabled = false)));
+					break;
+				case 'A':
+					url = context.href;
+				case 'INPUT':
+				case 'SELECT':
+				case 'TEXTAREA':
+					body = context.value;
+				default:
+					method = context.dataset.method;
+					url === undefined && (url = context.dataset.action);
+					body === undefined && (body = context.dataset.body);
 			}
 		}
 		else
@@ -155,10 +136,27 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 				body = $.is_object(context.body) ? $.json_encode(context.body) : context.body;
 			}
 		}
+		while (body === undefined)
+		{
+			if ($.is_a(retval, HTMLFormElement))
+			{
+				xhr.progress = retval.querySelector('progress');
+				body = $.formdata(retval);
+				fieldset = retval.querySelectorAll('fieldset');
+				fieldset.forEach(fieldset => fieldset.disabled = true);
+				callback = () => finish(dialog.close(fieldset.forEach(fieldset => fieldset.disabled = false)));
+				break;
+			}
+			if ($.is_object(retval))
+			{
+				body = $.json_encode(retval);
+				break;
+			}
+			body = retval;
+		}
 		return xhr.request(method || (body === null ? 'GET' : 'POST'), url, body).then(callback);
 	}
-	$.action = element => !pending(element.dataset).then(body => action(element, body), demission => demission);
-
+	$.action = element => !pending(element.dataset).then(retval => action(element, retval), demission => demission);
 
 	$.copytoclipboard = (content, success = 'Copied!') => navigator.clipboard
 		.writeText(content).then($.is_string(success) ? () => $.dialog.hint(success) : success);
