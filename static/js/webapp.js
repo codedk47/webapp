@@ -129,8 +129,8 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 		}
 		else
 		{
-			method = context.method;
 			url = context.action;
+			method = context.method;
 			if (context.body !== null)
 			{
 				body = $.is_object(context.body) ? $.json_encode(context.body) : context.body;
