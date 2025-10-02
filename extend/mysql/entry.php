@@ -719,8 +719,8 @@ new class extends webapp
 				'double unsigned' => ['number', ['step' => 0.0001, 'min' => 0]],
 
 				'date' => ['date', []],
-				'set' => ['select', ['options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values), 'multiple' => NULL]],
-				'enum' => ['select', ['options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values)]],
+				'set' => ['checkbox', ['placeholder' => 'asd', 'options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values), 'multiple' => NULL]],
+				'enum' => ['select', ['placeholder' => 'asd', 'options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values)]],
 
 				'text' => ['textarea', ['rows' => 8]],
 				'json' => ['textarea', ['rows' => 21]],
@@ -729,7 +729,7 @@ new class extends webapp
 			};
 			if ($field['Comment'])
 			{
-				$attr[$type === 'select' ? 'title' : 'placeholder'] = $field['Comment'];
+				$attr['placeholder'] = $field['Comment'];
 			}
 			if ($field['Default'])
 			{

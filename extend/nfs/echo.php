@@ -73,7 +73,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 
 
 
-			$table->cell()->details_button_popup($value['name'], [
+			$table->cell()->details_popup($value['name'], [
 				...match ((int)$value['type'])
 				{
 					0 => [
@@ -112,11 +112,10 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 						'onclick' => 'return $.action(this)']
 				] : []
 			]);
-
 		}, ['Node', 'File']);
 		$table->fieldset('Hash', 'Type', 'Insert Time', 'Update Time', 'Size', 'Views', 'Likes', 'Shares', 'Name');
 		$table->header($title);
-		$table->paging($this->webapp->at(['page' => '']));
+		$table->paging(['page' => '']);
 		$table->bar->append('a', ['Back to top', 'href' => $backtotop, 'class' => 'default']);
 		$table->bar->append('input', ['type' => 'number', 'min' => 0, 'max' => 255, 'value' => $sort, 'placeholder' => 'Sort', 'required' => NULL]);
 		$table->bar->append('input', ['type' => 'search', 'placeholder' => 'Type keyword search', 'value' => $search]);

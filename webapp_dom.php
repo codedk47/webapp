@@ -719,12 +719,17 @@ class webapp_html extends webapp_xml
 		}
 		return $node;
 	}
-	function details_button_popup(string $summary = NULL, iterable $anchors = NULL):static
+	function details_popup(string $summary = NULL, ?iterable $anchors = NULL):static
 	{
 		$node = $this->details($summary);
-		$node->summary['class'] = 'webapp-button';
 		$node['class'] = 'popup';
 		$anchors && $node->listmenu($anchors, TRUE, TRUE);
+		return $node;
+	}
+	function details_popup_button(string $summary = NULL, ?iterable $anchors = NULL, string $class = 'webapp-button'):static
+	{
+		$node = $this->details_popup($summary, $anchors);
+		$node->summary['class'] = $class;
 		return $node;
 	}
 	// function meter(float $value, float $min = 0, float $max = 1, float $low = NULL, float $high = NULL, float $optimum = NULL):static
@@ -771,7 +776,7 @@ class webapp_html extends webapp_xml
 	{
 		if ($name)
 		{
-			$root = $placeholder ? $this->details_button_popup($placeholder) : $this;
+			$root = $placeholder ? $this->details_popup_button($placeholder) : $this;
 			$node = $root->append('ul', ['class' => 'webapp-option']);
 			if ($multiple)
 			{
@@ -1462,12 +1467,10 @@ class webapp_table extends stdClass implements Countable
 	{
 		return $this->maxspan($this->tfoot->append('tr')->append('td', $context));
 	}
-	function paging(string $url, int $maxshow = 9):static
+	function paging(string|array $url, int $maxshow = 9):static
 	{
-		if ($this->paging && $this->paging['max'] > 1)
-		{
-			static::pagination($this->footer(), $url, $this->paging['index'], $this->paging['max'], $maxshow);
-		}
+		$this->paging && $this->paging['max'] > 1 && static::pagination($this->footer(), is_array($url)
+				? $this->xml->webapp()->at($url) : $url, $this->paging['index'], $this->paging['max'], $maxshow);
 		return $this;
 	}
 	static function pagination(webapp_html $node, string $url, int $current, int $maxpage, int $maxshow = 9):webapp_html

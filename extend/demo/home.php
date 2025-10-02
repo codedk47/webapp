@@ -24,7 +24,7 @@ class webapp_extend_demo_home extends webapp_echo_html
 		$table->bar->append('button', ['Default', 'class' => 'default']);
 		$table->bar->append('button', ['Primary', 'class' => 'primary']);
 		$table->bar->append('button', ['Danger', 'class' => 'danger']);
-		$table->bar->details_button_popup('Details Button Popup', [
+		$table->bar->details_popup_button('Details Button Popup', [
 			['Microsoft', [
 				['Windows Server 2019 Data Center', '#'],
 				['Windows Server 2003', '#'],

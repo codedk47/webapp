@@ -52,6 +52,7 @@
 		}
 		>aside:first-of-type:not(:empty){
 			display: flex;
+			gap: var(--webapp-gapitem);
 			flex-direction: column;
 			//white-space: nowrap;
 			padding-left: var(--webapp-gap);
