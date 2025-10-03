@@ -526,25 +526,39 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$this->mysql->real_query('SELECT * FROM ?a ??', $this->webapp->url64_decode($name), $input = $this->input())
 			&& $this->echo->redirect("?{$this->routename}/data,name:{$name},cond:" . $this->webapp->encrypt($input));
 	}
+	function delete_data(string $name)
+	{
+		$this->json();
+		$datatable = $this->mysql->table($this->webapp->url64_decode($name));
+		$datatable->delete('WHERE ?a=?s LIMIT 1', $datatable->primary, $this->input()) === 1 && $this->echo->refresh();
+	}
 	function get_data(string $name, string $cond = NULL, int $page = 1)
 	{
 		$datatable = $this->mysql->table($tablename = $this->webapp->url64_decode($name));
 		is_string($cond = $this->webapp->decrypt($cond)) && $datatable($cond);
-		$table = $this->main->table($datatable->paging($page)->result($fields), function($table, $value, $primary)
+		$table = $this->main->table($datatable->paging($page)->result($fields), function($table, $value, $name, $primary)
 		{
 			$table->row();
 			foreach ($value as $k => $v)
 			{
 				$k === $primary ? $table->cell()->details_popup($v, [
 					['Update', '#'],
-					['Delete', '#', 'class' => 'danger'],
+					['Delete', "?{$this->routename}/data,name:{$name}",
+						'class' => 'danger',
+						'onclick' => 'return $.action(this)',
+						'data-body' => $v,
+						'data-method' => 'delete',
+						'data-confirm' => "Delete {$primary}:{$v} data ?"
+					]
 				]) : $table->cell($v);
 			}
 
-		}, $datatable->primary);
+		}, $name, $datatable->primary);
 		$table->fieldset(...$fields);
+		$table->header($tablename);
 		$table->paging(['page' => '']);
-		$table->bar->append('a', ['Insert data', '#', 'class' => 'primary',
+		$table->bar->append('a', ['Back table', 'href' => "?{$this->routename}/table,name:{$name}", 'class' => 'default']);
+		$table->bar->append('a', ['Insert data', 'href' => '#', 'class' => 'primary',
 
 			'onclick' => 'return $.action(this)',
 			'data-prompt' => "#form_data"
@@ -557,7 +571,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-action' => "?{$this->routename}/data,name:{$name}",
 			'data-method' => 'patch'
 		]);
-		$table->header($tablename);
+		
 		
 		
 	}

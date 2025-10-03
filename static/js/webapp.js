@@ -194,4 +194,10 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 
 	return globalThis.$ = $;
 });
-addEventListener('DOMContentLoaded', () => webapp.then(window.webapp));
+addEventListener('DOMContentLoaded', () =>
+{
+	document.addEventListener('mouseup', event =>
+		document.querySelectorAll('details.popup[open]').forEach(details =>
+			details.open = event.target.parentNode === details));
+	webapp.then(window.webapp);
+});
