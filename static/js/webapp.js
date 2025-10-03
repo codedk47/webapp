@@ -196,8 +196,18 @@ const webapp = import('./webkit.js').then(function({default: $}, undefined)
 });
 addEventListener('DOMContentLoaded', () =>
 {
-	document.addEventListener('mouseup', event =>
-		document.querySelectorAll('details.popup[open]').forEach(details =>
-			details.open = event.target.parentNode === details));
+	document.addEventListener('mouseup', event => document.querySelectorAll('details.popup[open]').forEach(details =>
+	{
+		let open = false;
+		for (let element = event.target.parentNode; element; element = element.parentNode)
+		{
+			if (element === details)
+			{
+				open = true;
+				break;
+			}
+		}
+		details.open = open;
+	}));
 	webapp.then(window.webapp);
 });
