@@ -198,16 +198,14 @@ addEventListener('DOMContentLoaded', () =>
 {
 	document.addEventListener('mouseup', event => document.querySelectorAll('details.popup[open]').forEach(details =>
 	{
-		let open = false;
 		for (let element = event.target.parentNode; element; element = element.parentNode)
 		{
 			if (element === details)
 			{
-				open = true;
-				break;
+				return;
 			}
 		}
-		details.open = open;
+		details.open = false;
 	}));
 	webapp.then(window.webapp);
 });
