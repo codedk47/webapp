@@ -141,6 +141,9 @@ class webapp_nfs_client extends webapp_client_http
 		} while (0);
 		return FALSE;
 	}
+
+
+
 	function upload_directory(string $path, string $from):bool
 	{
 		foreach (scandir($from) as $file)
@@ -156,6 +159,18 @@ class webapp_nfs_client extends webapp_client_http
 			}
 		}
 		return TRUE;
+	}
+	function upload_uploadedfile(string $path, webapp_request_uploadedfile $uploadedfile, int $maxpathdeep = 0):int
+	{
+		$count = 0;
+		foreach ($uploadedfile as $index => $item)
+		{
+			if ($uploadedfile->validate($index, $maxpathdeep))
+			{
+				$count += intval($this->put($path . $item['path'], $uploadedfile->open($index), $uploadedfile->mime($index)));
+			}
+		}
+		return $count;
 	}
 }
 class webapp_nfs implements Countable, IteratorAggregate
@@ -372,6 +387,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 					? $this->webapp->maskdata($this->webapp->request_content(), $data['key'])
 					: $this->webapp->request_content(), $this->webapp->request_content_type()));
 	}
+
 	//upload_localdir
 	function upload_directory(string $hash, string $from):bool
 	{

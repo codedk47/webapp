@@ -60,20 +60,35 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return hexdec(substr(hash(static::algo, $data, FALSE), -15));
 	}
-	static function algotohash(int $code, bool $care = FALSE):string
-	{
-		for ($hash = '', [$i, $n, $b] = $care ? [10, 6, 63] : [12, 5, 31]; $i;)
-		{
-			$hash .= self::key[$code >> --$i * $n & $b];
-		}
-		return $hash;
-	}
-	static function hash_test(string $data, bool $care = FALSE):string
-	{
-		return static::algotohash(static::algo($data), $care);
-	}
-
-
+	// static function algoreduce(int $code, bool $care = FALSE):string
+	// {
+	// 	for ($hash = '', [$i, $n, $b] = $care ? [10, 6, 63] : [12, 5, 31]; $i;)
+	// 	{
+	// 		$hash .= self::key[$code >> --$i * $n & $b];
+	// 	}
+	// 	return $hash;
+	// }
+	// static function algorevert(string $hash):int
+	// {
+	// 	for ($code = 0, [$i, $n, $b] = strlen($hash) === 10 ? [10, 6, 54] : [12, 5, 55]; $i;)
+	// 	{
+	// 		$code |= strpos(self::key, $hash[--$i]) << $b - $i * $n;
+	// 	}
+	// 	return $code;
+	// }
+	// static function hash(string $data, bool $care = FALSE):string
+	// {
+	// 	return static::algoreduce(static::algo($data), $care);
+	// }
+	// static function hashfile(string $filename, bool $care = FALSE):?string
+	// {
+	// 	return is_file($filename) && is_string($hex = hash_file(static::algo, $filename, FALSE))
+	// 		? static::algoreduce(hexdec(substr($hex, -15)), $care) : NULL;
+	// }
+	// static function random_hash(bool $care):string
+	// {
+	// 	return static::hash(static::random(8), $care);
+	// }
 
 	static function time33(string $data):int
 	{
@@ -933,32 +948,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			default => $this->io->request_content()
 		};
 	}
-	function request_uploadedfile(string $name, int $maximum = 1):webapp_request_uploadedfile
+	function request_uploadedfile(string $name, ?int $maximum = 1):webapp_request_uploadedfile
 	{
 		static $uploadedfile = $this->io->request_uploadedfile();
 		return $this->uploadedfiles[$name] ??= new webapp_request_uploadedfile($this, $name, $uploadedfile, $maximum);
-	}
-	function request_maskdata():?string
-	{
-		return is_string($key = $this->request_header('Mask-Key'))
-			? $this->unmasker(hex2bin($key), $this->io->request_content()) : NULL;
-	}
-	function request_uploading():array
-	{
-		return json_decode($this->request_maskdata(), TRUE) ?? [];
-	}
-	function request_uploaddata(string $filename):int
-	{
-		return is_string($data = $this->request_maskdata())
-			&& is_resource($stream = fopen($filename, 'a'))
-			&& flock($stream, LOCK_EX)
-			&& fwrite($stream, $data) === strlen($data)
-			// && flock($stream, LOCK_UN)
-			&& fclose($stream) ? strlen($data) : -1;
-	}
-	function response_uploading(string $uploadurl, int $offset = 0):void
-	{
-		$this->echo_json(['uploadurl' => $uploadurl, 'offset' => $offset]);
 	}
 
 	// function request_cond(string $name = 'cond'):array
@@ -972,13 +965,13 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 	return $cond;
 	// }
 
-	function request_apple_device_enrollment():array
-	{
-		//Apple device enrollment must use HTTPS protocol request method POST and response status 301
-		return preg_match_all('/\<(\w+\>)([^\<]+)\<\/\1\s*\<(\w+\>)([^\<]+)\<\/\3/',
-			$this->request_content('application/pkcs7-signature'), $pattern)
-				? array_combine($pattern[2], $pattern[4]) : [];
-	}
+	// function request_apple_device_enrollment():array
+	// {
+	// 	//Apple device enrollment must use HTTPS protocol request method POST and response status 301
+	// 	return preg_match_all('/\<(\w+\>)([^\<]+)\<\/\1\s*\<(\w+\>)([^\<]+)\<\/\3/',
+	// 		$this->request_content('application/pkcs7-signature'), $pattern)
+	// 			? array_combine($pattern[2], $pattern[4]) : [];
+	// }
 	//response
 	function response_status(int $code):void
 	{
@@ -1219,7 +1212,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Stringable, Countable
 {
 	private array $uploadedfiles;
-	function __construct(public readonly webapp $webapp, private readonly string $name, array $uploadedfiles, int $maximum = 1)
+	function __construct(public readonly webapp $webapp, private readonly string $name, array $uploadedfiles, ?int $maximum)
 	{
 		$this->uploadedfiles = array_slice($uploadedfiles[$name] ?? [], 0, $maximum);
 	}
@@ -1258,7 +1251,7 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	{
 		for ($i = 0; $i < count($this); ++$i)
 		{
-			yield $this($i);
+			yield $this->uploadedfiles[$i];
 		}
 	}
 	// function column(string $key):array
@@ -1268,6 +1261,14 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	function path(int $index = 0):string
 	{
 		return $this->uploadedfiles[$index]['path'];
+	}
+	function size(?int $index = 0):int
+	{
+		return $index === NULL ? array_sum($this->column('size')) : $this->uploadedfiles[$index]['size'];
+	}
+	function mime(int $index = 0):string
+	{
+		return $this->uploadedfiles[$index]['mime'];
 	}
 	function file(int $index = 0):string
 	{
@@ -1279,14 +1280,6 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 			? $this->uploadedfiles[$index]['hash'] ??= $this->webapp->hashfile($this->file($index))
 			: hash_file($algo, $this->file($index));
 	}
-	function size(?int $index = 0):int
-	{
-		return $index === NULL ? array_sum($this->column('size')) : $this->uploadedfiles[$index]['size'];
-	}
-	function mime(int $index = 0):string
-	{
-		return $this->uploadedfiles[$index]['mime'];
-	}
 	function open(int $index = 0, bool $mask = FALSE, ?string &$key = NULL, bool $merged = FALSE)
 	{
 		$file = fopen($this->file($index), 'r');
@@ -1296,17 +1289,56 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	{
 		return file_get_contents($this->file($index));
 	}
-	// function move(string $filename, int $index = 0)
-	// {
-	// 	if ($this->offsetExists($index)
-	// 		&& ((is_uploaded_file($this->uploadedfiles[$index]['file'])
-	// 			&& move_uploaded_file($this->uploadedfiles[$index]['file'], $filename))
-	// 			|| rename($this->uploadedfiles[$index]['file'], $filename))) {
-	// 		$this->uploadedfiles[$index]['file'] = $filename;
-	// 		return TRUE;
-	// 	}
-	// 	return FALSE;
-	// }
+	function validate(int $index, int $maxpathdeep)
+	{
+		while (count($layer = preg_split('/[\/\\\]/', substr($this->path($index), 1))) <= $maxpathdeep + 1)
+		{
+			foreach ($layer as $name)
+			{
+				if (preg_match('/^\w+(?:\.\w+)*$/', $name) === 0)
+				{
+					break 2;
+				}
+			}
+			return TRUE;
+		}
+		return FALSE;
+	}
+	function move(int $index, string $destination):bool
+	{
+		if ($this->offsetExists($index)
+			&& is_uploaded_file($this->file($index))
+			&& move_uploaded_file($this->file($index), $destination)) {
+			$this->uploadedfiles[$index]['file'] = $destination;
+			return TRUE;
+		}
+		return FALSE;
+	}
+	function savedir(string $directory, int $maxpathdeep = 0):int
+	{
+		$count = 0;
+		foreach ($this as $index => $item)
+		{
+			$count += intval($this->validate($index, $maxpathdeep)
+				&& (is_dir($dir = $directory . dirname($item['path'])) || mkdir($dir, recursive: TRUE))
+				&& $this->move($index, $directory . $item['path']));
+		}
+		return $count;
+	}
+	function savezip(string $filename):int
+	{
+		$count = 0;
+		if (class_exists('ZipArchive', FALSE)
+			&& is_object($zip = new ZipArchive)
+			&& $zip->open($filename, ZIPARCHIVE::CREATE | ZIPARCHIVE::OVERWRITE)) {
+			foreach ($this as $index => $item)
+			{
+				$count += intval($zip->addFile($this->file($index), substr($item['path'], 1)));
+			}
+		}
+		return $count;
+	}
+
 	
 	// function movefile(int $index, string $filename):bool
 	// {
