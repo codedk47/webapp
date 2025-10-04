@@ -56,10 +56,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return time() + $offset;
 	}
-	static function algo(string $data):int
-	{
-		return hexdec(substr(hash(static::algo, $data, FALSE), -15));
-	}
+	// static function algo(string $data):int
+	// {
+	// 	return hexdec(substr(hash(static::algo, $data, FALSE), -15));
+	// }
 	// static function algoreduce(int $code, bool $care = FALSE):string
 	// {
 	// 	for ($hash = '', [$i, $n, $b] = $care ? [10, 6, 63] : [12, 5, 31]; $i;)
