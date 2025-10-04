@@ -29,7 +29,7 @@ interface webapp_io
 }
 abstract class webapp extends stdClass implements ArrayAccess, Stringable, Countable
 {
-	const version = '4.7.1b', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-';
+	const version = '4.7.1b', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-', algo = 'xxh3';
 	public readonly self $webapp;
 	public readonly array $query;
 	public readonly string $into;
@@ -37,53 +37,44 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	public string $method;
 	private array $errors = [], $cookies = [], $headers = [], $uploadedfiles, $configs, $route, $entry;
 	private static array $libary = [], $remote = [];
-	// static private array $locks = [];
-	// static function lock(string $filename = __FILE__):bool
-	// {
-	// 	fopen('php://memory', 'r+');
-	// 	return is_resource(self::$locks[$filename] = fopen($filename, 'r')) && flock(self::$locks[$filename], LOCK_EX | LOCK_NB);
-	// }
-// 	static function fsync(string $filename, callable $sync = NULL, &$value = NULL):bool
-// 	{
-// 		$status = FALSE;
-// 		if ($resource = fopen($filename, 'r+'))
-// 		{
-// 			if (flock($resource, LOCK_EX | LOCK_NB))
-// 			{
-// 				$value = is_callable($sync) ? $sync($resource) : $sync;
-// 				flock($resource, LOCK_UN);
-// 				$status = TRUE;
-// 			}
-// 			else
-// 			{
-// // 				ob_start();
-// // readfile("text.txt");
-// // $data = ob_get_clean();
-// // 				//fread()
-// // 				flock($resource, LOCK_SH);
-// 				$value = file_get_contents($filename);
-// 				//$value = stream_get_contents($resource);
-// 				//$value = fread($resource, 8014);
-				
-// 			}
-// 			fclose($resource);
-// 		}
-// 		return $status;
-// 	}
-	static function libary(string $filename)
+	static function libary(string $filename, ...$parameters)
 	{
-		return array_key_exists($name = strtolower($filename), static::$libary)
+		$lib = array_key_exists($name = strtolower($filename), static::$libary)
 			? static::$libary[$name]
 			: static::$libary[$name] = require __DIR__ . "/libary/{$name}";
+		return $parameters ? $lib(...$parameters) : $lib;
+	}
+	static function simplified_chinese(string $content):string
+	{
+		return static::libary('utf8_convert/simplified.php', $content);
 	}
 	static function qrcode(string $content, int $level = 0):IteratorAggregate&Countable
 	{
-		return static::libary('qrcode/interface.php')($content, $level);
+		return static::libary('qrcode/interface.php', $content, $level);
 	}
 	static function time(int $offset = 0):int
 	{
 		return time() + $offset;
 	}
+	static function algo(string $data):int
+	{
+		return hexdec(substr(hash(static::algo, $data, FALSE), -15));
+	}
+	static function algotohash(int $code, bool $care = FALSE):string
+	{
+		for ($hash = '', [$i, $n, $b] = $care ? [10, 6, 63] : [12, 5, 31]; $i;)
+		{
+			$hash .= self::key[$code >> --$i * $n & $b];
+		}
+		return $hash;
+	}
+	static function hash_test(string $data, bool $care = FALSE):string
+	{
+		return static::algotohash(static::algo($data), $care);
+	}
+
+
+
 	static function time33(string $data):int
 	{
 		// static $bit = PHP_INT_MAX >> 6, $add = PHP_INT_MAX >> 2;
@@ -120,6 +111,8 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function hashfile(string $filename, bool $care = FALSE):?string
 	{
+		// return is_file($filename) && is_string($hex = hash_file(static::algo, $filename, FALSE))
+		// 	? $this->algotohash(hexdec(substr($hex, -15)), $care) : NULL;
 		return is_file($filename) && is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
 	}
 	// static function shuffle()
@@ -305,16 +298,16 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		libxml_use_internal_errors(FALSE);
 		return $xml;
 	}
-	static function iterator(iterable ...$aggregate):iterable
-	{
-		foreach ($aggregate as $iter)
-		{
-			foreach ($iter as $item)
-			{
-				yield $item;
-			}
-		}
-	}
+	// static function iterator(iterable ...$aggregate):iterable
+	// {
+	// 	foreach ($aggregate as $iter)
+	// 	{
+	// 		foreach ($iter as $item)
+	// 		{
+	// 			yield $item;
+	// 		}
+	// 	}
+	// }
 
 	// static function debugtime(?float &$time = 0):float
 	// {
@@ -324,28 +317,23 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// {
 	// 	return preg_match_all('/[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]|\xe0[\xa0-\xbf][\x80-\xbf]|[\xe1-\xef][\x80-\xbf][\x80-\xbf]|\xf0[\x90-\xbf][\x80-\xbf][\x80-\xbf]|[\xf1-\xf7][\x80-\xbf][\x80-\xbf][\x80-\xbf]/', $content, $pattern) === FALSE ? [] : $pattern[0];
 	// }
-	static function simplified_chinese(string $content):string
-	{
-		//simplified_text
-		//convert_simplified_chinese
-		return webapp::libary('hanzi/interface.php')($content);
-	}
-	static function filenameescape(string $basename):string
-	{
-		return str_replace(['\\', '/', ':', '*', '?', '"', '<', '>'], '_', $basename);
-	}
-	static function build_test_router(bool $dataurl = FALSE, ...$urls):string
-	{
-		$code = stream_get_line(fopen(__DIR__ . '/static/js/test_router.js', 'r'), 0xffff, "\n");
-		$code = str_replace('{ERRORPAGE}', array_shift($urls), $code);
-		$code = str_replace('{BASE64URLS}', base64_encode(join(',', $urls)), $code);
-		return $dataurl
-			? 'data:text/html;base64,' . base64_encode("<script>{$code}</script>")
-			: 'javascript:eval(atob(\''. base64_encode($code) .'\'));';
-			//: 'javascript:'. rawurlencode($code) .';';
-			//: 'javascript:Function(atob(\''. base64_encode($code) .'\'))();';
 
-	}
+	// static function filenameescape(string $basename):string
+	// {
+	// 	return str_replace(['\\', '/', ':', '*', '?', '"', '<', '>'], '_', $basename);
+	// }
+	// static function build_test_router(bool $dataurl = FALSE, ...$urls):string
+	// {
+	// 	$code = stream_get_line(fopen(__DIR__ . '/static/js/test_router.js', 'r'), 0xffff, "\n");
+	// 	$code = str_replace('{ERRORPAGE}', array_shift($urls), $code);
+	// 	$code = str_replace('{BASE64URLS}', base64_encode(join(',', $urls)), $code);
+	// 	return $dataurl
+	// 		? 'data:text/html;base64,' . base64_encode("<script>{$code}</script>")
+	// 		: 'javascript:eval(atob(\''. base64_encode($code) .'\'));';
+	// 		//: 'javascript:'. rawurlencode($code) .';';
+	// 		//: 'javascript:Function(atob(\''. base64_encode($code) .'\'))();';
+
+	// }
 	static function masker($stream, string &$key = NULL, bool $merged = FALSE)
 	{
 		$key ??= static::random(8);
@@ -714,16 +702,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return ['Authorization' => 'Bearer ' . static::signature($this['admin_username'], $this['admin_password'], $additional)];
 	}
-	function generatetext(int $count, int $start = 0x4e00, int $end = 0x9fa5)
-	{
-		$random = unpack('V*', random_bytes($count * 4));
-		$mod = $end - $start;
-		foreach ($random as &$unicode)
-		{
-			$unicode = iconv('UCS-4LE', $this['app_charset'], pack('V', $unicode % $mod + $start));
-		}
-		return join($random);
-	}
 	function strlen($text):int
 	{
 		return iconv_strlen($text, $this['app_charset']);
@@ -1072,78 +1050,78 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		$this->response_header('Etag', $hash = '"' . ($needhash ? static::hash($etag, TRUE) : $etag) . '"');
 		return $this->request_header('If-None-Match') !== $hash;
 	}
-	private function remote_encode_value(NULL|bool|int|float|string|array|webapp_xml $value):array
-	{
-		return match (get_debug_type($value))
-		{
-			'null' => ['null', 'NULL'],
-			'bool' => ['boolean', $value ? 'TRUE' : 'FALSE'],
-			'int' => ['integer', (string)$value],
-			'float' => ['float', (string)$value],
-			'string' => ['string', $value],
-			'array' => ['array', json_encode($value, JSON_UNESCAPED_UNICODE)],
-			default => ['xml' => $value->asXML()]
-		};
-	}
-	private function remote_decode_value(string $type, string $value):NULL|bool|int|float|string|array|webapp_xml
-	{
-		return match ($type)
-		{
-			'null' => NULL,
-			'boolean' => $value === 'TRUE',
-			'integer' => intval($value),
-			'float' => floatval($value),
-			'string' => $value,
-			'array' => json_decode($value, TRUE),
-			default => $this->xml($value)
-		};
-	}
-	function remote(string $url, string $method, array $params):NULL|bool|int|float|string|array|webapp_xml
-	{
-		$host = self::$remote[$url] ??= new webapp_client_http($url, ['autoretry' => 1, 'headers' => $this->authorized()]);
-		$input = $this->webappxml();
-		foreach ($params as $name => $value)
-		{
-			[$type, $data] = $this->remote_encode_value($value);
-			$input->append('entry', ['name' => $name, 'type' => $type])->cdata($data);
-		}
-		$output = $host->goto("{$host->path}?called/{$method}", ['method' => 'POST', 'type' => 'application/xml', 'data' => $input])->content();
-		if (is_object($output) === FALSE || (string)$output['type'] === 'error')
-		{
-			$response = [];
-			$host->status($response, TRUE);
-			$response[] = (string)$output;
-			throw new Error(join(PHP_EOL, $response));
-		}
-		return $this->remote_decode_value((string)$output['type'], (string)$output);
-	}
-	//router extends
-	function post_called(string $method)
-	{
-		//$this['app_called'];
-		if ($this->authorization())
-		{
-			try
-			{
-				$params = [];
-				if (is_object($input = $this->request_content()))
-				{
-					foreach ($input->entry as $entry)
-					{
-						$params[(string)$entry['name']] = $this->remote_decode_value((string)$entry['type'], (string)$entry);
-					}
-				}
-				[$type, $data] = $this->remote_encode_value($this->{$method}(...$params));
-			}
-			catch (Error $error)
-			{
-				[$type, $data] = ['error', (string)$error];
-			}
-			$this->echo_xml()->xml->setattr(['type' => $type])->cdata($data);
-			return 200;
-		}
-		return 401;
-	}
+	// private function remote_encode_value(NULL|bool|int|float|string|array|webapp_xml $value):array
+	// {
+	// 	return match (get_debug_type($value))
+	// 	{
+	// 		'null' => ['null', 'NULL'],
+	// 		'bool' => ['boolean', $value ? 'TRUE' : 'FALSE'],
+	// 		'int' => ['integer', (string)$value],
+	// 		'float' => ['float', (string)$value],
+	// 		'string' => ['string', $value],
+	// 		'array' => ['array', json_encode($value, JSON_UNESCAPED_UNICODE)],
+	// 		default => ['xml' => $value->asXML()]
+	// 	};
+	// }
+	// private function remote_decode_value(string $type, string $value):NULL|bool|int|float|string|array|webapp_xml
+	// {
+	// 	return match ($type)
+	// 	{
+	// 		'null' => NULL,
+	// 		'boolean' => $value === 'TRUE',
+	// 		'integer' => intval($value),
+	// 		'float' => floatval($value),
+	// 		'string' => $value,
+	// 		'array' => json_decode($value, TRUE),
+	// 		default => $this->xml($value)
+	// 	};
+	// }
+	// function remote(string $url, string $method, array $params):NULL|bool|int|float|string|array|webapp_xml
+	// {
+	// 	$host = self::$remote[$url] ??= new webapp_client_http($url, ['autoretry' => 1, 'headers' => $this->authorized()]);
+	// 	$input = $this->webappxml();
+	// 	foreach ($params as $name => $value)
+	// 	{
+	// 		[$type, $data] = $this->remote_encode_value($value);
+	// 		$input->append('entry', ['name' => $name, 'type' => $type])->cdata($data);
+	// 	}
+	// 	$output = $host->goto("{$host->path}?called/{$method}", ['method' => 'POST', 'type' => 'application/xml', 'data' => $input])->content();
+	// 	if (is_object($output) === FALSE || (string)$output['type'] === 'error')
+	// 	{
+	// 		$response = [];
+	// 		$host->status($response, TRUE);
+	// 		$response[] = (string)$output;
+	// 		throw new Error(join(PHP_EOL, $response));
+	// 	}
+	// 	return $this->remote_decode_value((string)$output['type'], (string)$output);
+	// }
+	// //router extends
+	// function post_called(string $method)
+	// {
+	// 	//$this['app_called'];
+	// 	if ($this->authorization())
+	// 	{
+	// 		try
+	// 		{
+	// 			$params = [];
+	// 			if (is_object($input = $this->request_content()))
+	// 			{
+	// 				foreach ($input->entry as $entry)
+	// 				{
+	// 					$params[(string)$entry['name']] = $this->remote_decode_value((string)$entry['type'], (string)$entry);
+	// 				}
+	// 			}
+	// 			[$type, $data] = $this->remote_encode_value($this->{$method}(...$params));
+	// 		}
+	// 		catch (Error $error)
+	// 		{
+	// 			[$type, $data] = ['error', (string)$error];
+	// 		}
+	// 		$this->echo_xml()->xml->setattr(['type' => $type])->cdata($data);
+	// 		return 200;
+	// 	}
+	// 	return 401;
+	// }
 	function get_captcha(string $random = NULL)
 	{
 		if ($this['captcha_length'])
@@ -1295,9 +1273,11 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	{
 		return $this->uploadedfiles[$index]['file'];
 	}
-	function hash(int $index = 0):string
+	function hash(int $index = 0, string $algo = NULL):string
 	{
-		return $this->uploadedfiles[$index]['hash'] ??= $this->webapp->hashfile($this->file($index));
+		return $algo === NULL
+			? $this->uploadedfiles[$index]['hash'] ??= $this->webapp->hashfile($this->file($index))
+			: hash_file($algo, $this->file($index));
 	}
 	function size(?int $index = 0):int
 	{
