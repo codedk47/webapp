@@ -167,6 +167,7 @@ else
 					if ($file['error'] === UPLOAD_ERR_OK)
 					{
 						$uploadedfiles[$name][] = [
+							'path' => strstr($file['full_path'], '/'),
 							'file' => $file['tmp_name'],
 							'size' => $file['size'],
 							'mime' => $file['type'],

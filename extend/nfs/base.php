@@ -345,7 +345,8 @@ class webapp_nfs implements Countable, IteratorAggregate
 	}
 	function moveto(string $hash, ?string $node):bool
 	{
-		return $this->node_exist($node) && $this->primary($hash)->update(['t1' => $this->webapp->time(), 'node' => $node]) === 1;
+		return $this->node_exist($node) && $node !== $hash
+			&& $this->primary($hash)->update(['t1' => $this->webapp->time(), 'node' => $node]) === 1;
 	}
 	function create_uploadedfile(string $name, array $data = [], bool $mask = FALSE):?string
 	{
@@ -414,8 +415,8 @@ class webapp_extend_nfs extends webapp
 			`hash` char(12) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
 			`sort` tinyint unsigned NOT NULL,
 			`type` tinyint unsigned NOT NULL COMMENT '0:node,1:file,2:mixed',
-			`t0` int unsigned NOT NULL COMMENT 'insert time',
-			`t1` int unsigned NOT NULL COMMENT 'update time',
+			`t0` bigint unsigned NOT NULL COMMENT 'insert time',
+			`t1` bigint unsigned NOT NULL COMMENT 'update time',
 			`size` bigint unsigned NOT NULL,
 			`views` bigint unsigned NOT NULL,
 			`likes` bigint unsigned NOT NULL,

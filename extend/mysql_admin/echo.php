@@ -15,6 +15,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		}
 		if ($this->auth)
 		{
+			$this->title('MySQL Admin');
 			$this->connect = is_string($connect = $webapp->request_cookie_decrypt('mysql-connect'))
 				? json_decode($connect, TRUE) : [$webapp['mysql_hostname'], $webapp['mysql_username'], $webapp['mysql_password']];
 			$this->charset = $webapp->request_cookie('mysql-charset') ?? $webapp['mysql_charset'];
@@ -91,7 +92,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			case 'charset':
 			case 'database':
 				$this->webapp->response_cookie("mysql-{$command}", $this->input());
-				$this->echo->refresh($command === 'database' ? "?{$this->routename}/tables" : NULL);
+				$this->echo->refresh($command === 'database' ? "?{$this->routename}/database" : NULL);
 				break;
 			default:
 				if ($this->form_connect()->fetch($input))
@@ -118,20 +119,10 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->xml['onsubmit'] = 'return $.action(this)';
-
 		$form->field('database', 'text', ['placeholder' => 'Create database name']);
 		$form->button('Execute', 'submit');
 		$form->fieldset();
 		$form->field('command', 'textarea', ['rows' => 16, 'cols' => 64, 'placeholder' => 'The command will act on the created database context']);
-
-		// $form->fieldset('Hostname');
-		// $form->field('hostname', 'text', ['required' => NULL]);
-		// $form->fieldset('Username');
-		// $form->field('username', 'text', ['required' => NULL]);
-		// $form->fieldset('Password');
-		// $form->field('password', 'text');
-		// $form->fieldset();
-		// $form->button('Connect to MySQL', 'submit');
 		return $form;
 	}
 	function post_console()
@@ -144,20 +135,36 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 				&& $this->mysql->select_db($input['database'])
 				&& $this->webapp->response_cookie('mysql-database', $input['database']);
 			strlen($input['command']) && $this->mysql->real_query($input['command']);
-			$this->mysql->errno === 0 && $this->echo->refresh();
+			$this->mysql->errno || $this->echo->refresh();
 		}
 	}
 	function get_console()
 	{
 		$this->form_console($this->main);
 	}
-	function post_tables()
+	function delete_database()
 	{
 		$this->json();
-
-		var_dump($this->input());
+		if ($this->mysql->real_query('DROP DATABASE ?a', $this->database))
+		{
+			$this->echo->redirect("?{$this->routename}/console");
+		}
 	}
-	function get_tables()
+	function patch_database()
+	{
+		$this->json();
+		foreach ($this->mysql->show('TABLES')->column("Tables_in_{$this->database}") as $table)
+		{
+			$this->mysql->real_query(match ($this->input())
+			{
+				'truncate' => 'TRUNCATE TABLE ?a',
+				'drop' => 'DROP TABLE ?a',
+				default => '?a'
+			}, $table);
+		}
+		$this->echo->refresh();
+	}
+	function get_database()
 	{
 		//print_r( $this->mysql->show('TABLE STATUS')->all() );
 		$table = $this->main->table($this->mysql->show('TABLE STATUS'), function($table, $value)
@@ -185,16 +192,18 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-prompt' => 'Type table name:text'
 		]);
 		$table->bar->append('a', ['Truncate all table',
-			'href' => "?{$this->routename}/tables",
+			'href' => "?{$this->routename}/database",
 			'class' => 'danger',
 			'onclick' => 'return $.action(this)',
+			'data-method' => 'patch',
 			'data-body' => 'truncate',
 			'data-confirm' => "Truncate all table ?"
 		]);
 		$table->bar->append('a', ['Drop all table',
-			'href' => "?{$this->routename}/tables",
+			'href' => "?{$this->routename}/database",
 			'class' => 'danger',
 			'onclick' => 'return $.action(this)',
+			'data-method' => 'patch',
 			'data-body' => 'drop',
 			'data-confirm' => "Drop all table ?"
 		]);
@@ -206,15 +215,6 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-confirm' => "Delete \"{$this->database}\" database ?"
 		]);
 	}
-	function delete_database()
-	{
-		$this->json();
-		if ($this->mysql->real_query('DROP DATABASE ?a', $this->database))
-		{
-			$this->echo->redirect("?{$this->routename}/console");
-		}
-	}
-
 
 	function form_field(string $tablename, webapp_html $html = NULL):webapp_form
 	{
@@ -296,8 +296,6 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		}
 		return FALSE;
 	}
-
-
 	function post_table(string $name = NULL, string $field = NULL)
 	{
 		$this->json();
@@ -341,7 +339,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 							'comment' => $data['Comment']
 						]);
 					$this->echo->prompt($form);
-					$this->echo->continue("?{$this->routename}/table,name:{$name},field:{$field}", 'post');
+					$this->echo->continue("?{$this->routename}/table,name:{$name},field:{$field}");
 				}
 			}
 		}
@@ -351,33 +349,31 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$this->json();
 		if ($this->mysql->real_query('DROP TABLE ?a', $this->webapp->url64_decode($name)))
 		{
-			$this->echo->redirect("?{$this->routename}/tables");
+			$this->echo->redirect("?{$this->routename}/database");
 		}
 	}
-	function patch_table(string $name, string $command = NULL)
+	function patch_table(string $name, string $command)
 	{
 		$this->json();
-		$sql = [];
+		$tablename = $this->webapp->url64_decode($name);
 		$input = $this->input();
-		$redirect = NULL;
-
-
-		$command = match ($command)
+		[$commands, $redirect] = match ($command)
 		{
-			'engine' => 'ENGINE=?s',
-			'index' => 'ADD INDEX(?a)',
-			'unique' => 'ADD UNIQUE(?a)',
-			'primary' => 'ADD PRIMARY KEY(?a)',
-			'dropfield' => 'DROP ?a',
-			'dropindex' => 'DROP INDEX ?a',
-			default => ['RENAME ?a', "?{$this->routename}/table,name:" . $this->webapp->url64_encode($input)][0]
+			'rename' => [['ALTER TABLE ?a RENAME ?a', $tablename, $input],
+				"?{$this->routename}/table,name:" . $this->webapp->url64_encode($input)],
+			'engine' => [['ALTER TABLE ?a ENGINE=?s', $tablename, $input], NULL],
+			'index' => [['ALTER TABLE ?a ADD INDEX(?a)', $tablename, $input], NULL],
+			'unique' => [['ALTER TABLE ?a ADD UNIQUE(?a)', $tablename, $input], NULL],
+			'primary' => [['ALTER TABLE ?a ADD PRIMARY KEY(?a)', $tablename, $input], NULL],
+			'dropfield' => [['ALTER TABLE ?a DROP ?a', $tablename, $input], NULL],
+			'dropindex' => [['ALTER TABLE ?a DROP INDEX ?a', $tablename, $input], NULL],
+			'truncate' => [['TRUNCATE TABLE ?a', $tablename], NULL],
+			default => [NULL, NULL]
 		};
-		if ($this->mysql->real_query("ALTER TABLE ?a {$command}", $this->webapp->url64_decode($name), $this->input()))
-		{
-			$this->echo->refresh($redirect);
-		}
+		$commands
+			&& $this->mysql->real_query(...$commands)
+			&& $this->echo->refresh($redirect);
 	}
-
 	function get_table(string $name)
 	{
 		$tablename = $this->webapp->url64_decode($name);
@@ -413,7 +409,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$table->header($tablename);
 		$table->footer()->details('Show create table')->append('pre', $create = $this->mysql->show('CREATE TABLE ?a', $tablename)->value(1));
 		$table->bar->append('a', ['View data', 'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'default']);
-		$table->bar->append('a', ['Insert data', '#', 'class' => 'primary',
+		$table->bar->append('a', ['Insert data', 'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'primary',
 
 			'onclick' => 'return $.action(this)',
 			'data-prompt' => "#form_data"
@@ -451,7 +447,6 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-confirm' => "Delete \"{$tablename}\" table ?"
 		]);
 		$table->xml['style'] = 'margin-bottom:var(--webapp-gap)';
-
 		$table = $this->main->table($this->mysql->show('INDEX FROM ?a', $tablename)->result($fields), function($table, $value, $name)
 		{
 			$table->row();
@@ -467,7 +462,6 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		}, $name);
 		$table->fieldset('Delete', ...$fields);
 	}
-
 	function form_data(string $tablename, webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
@@ -476,7 +470,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		{
 			$form->fieldset($data['Field']);
 			preg_match('/(\w+(?:\sunsigned)?)(?:\(([^)]+)\))?/', $data['Type'], $pattern);
-			[$type, $attr] = match ($pattern[1])
+			$params = match ($pattern[1])
 			{
 				'tinyint' => ['number', ['min' => -128, 'max' => 127]],
 				'smallint' => ['number', ['min' => -32768, 'max' => 32767]],
@@ -496,7 +490,8 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 
 				'date' => ['date', []],
 				'datetime' => ['datetime-local', []],
-				'set' => ['checkbox', ['options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values), 'multiple' => NULL]],
+				'set' => ['checkbox', ['options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values)],
+					fn($v, $i) => $i ? join(',', $v) : explode(',', $v)],
 				'enum' => ['radio', ['options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values)]],
 
 				'text' => ['textarea', ['rows' => 8]],
@@ -506,25 +501,42 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			};
 			if ($data['Comment'])
 			{
-				$attr['placeholder'] = $data['Comment'];
+				$params[1]['placeholder'] = $data['Comment'];
 			}
 			if ($data['Default'])
 			{
-				$attr['value'] = $data['Default'];
+				$params[1]['value'] = $data['Default'];
 			}
-			$form->field($data['Field'], $type, $attr);
+			$form->field($data['Field'], ...$params);
 		}
-
 		$form->fieldset();
+		$form->button('Close', 'button', ['value' => 'close']);
 		$form->button('Submit', 'submit');
 		return $form;
 	}
-
-	function patch_data(string $name)
+	function post_data(string $name, string $primary = NULL)
 	{
 		$this->json();
-		$this->mysql->real_query('SELECT * FROM ?a ??', $this->webapp->url64_decode($name), $input = $this->input())
-			&& $this->echo->redirect("?{$this->routename}/data,name:{$name},cond:" . $this->webapp->encrypt($input));
+		$tablename = $this->webapp->url64_decode($name);
+		if ($this->webapp->request_content_length())
+		{
+			if ($this->form_data($tablename)->fetch($data))
+			{
+				$datatable = $this->mysql->table($tablename);
+				if ($primary ? $datatable('WHERE ?a=?s LIMIT 1', $datatable->primary,
+					$primary)->update($data) === 1 : $datatable->insert($data)) {
+					$this->echo->refresh();
+				}
+			}
+		}
+		else
+		{
+			$datatable = $this->mysql->table($tablename);
+			$form = $this->form_data($tablename, $this->main);
+			$form->echo($datatable('WHERE ?a=?s LIMIT 1', $datatable->primary, $primary)->array());
+			$this->echo->prompt($form);
+			$this->echo->continue("?{$this->routename}/data,name:{$name},primary:{$primary}");
+		}
 	}
 	function delete_data(string $name)
 	{
@@ -532,9 +544,16 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$datatable = $this->mysql->table($this->webapp->url64_decode($name));
 		$datatable->delete('WHERE ?a=?s LIMIT 1', $datatable->primary, $this->input()) === 1 && $this->echo->refresh();
 	}
+	function patch_data(string $name)
+	{
+		$this->json();
+		$this->mysql->real_query('SELECT * FROM ?a ??', $this->webapp->url64_decode($name), $input = $this->input())
+			&& $this->echo->redirect("?{$this->routename}/data,name:{$name},cond:" . $this->webapp->encrypt($input));
+	}
 	function get_data(string $name, string $cond = NULL, int $page = 1)
 	{
-		$datatable = $this->mysql->table($tablename = $this->webapp->url64_decode($name));
+		$this->form_data($tablename = $this->webapp->url64_decode($name), $this->template('form_data'));
+		$datatable = $this->mysql->table($tablename);
 		is_string($cond = $this->webapp->decrypt($cond)) && $datatable($cond);
 		$table = $this->main->table($datatable->paging($page)->result($fields), function($table, $value, $name, $primary)
 		{
@@ -542,7 +561,10 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			foreach ($value as $k => $v)
 			{
 				$k === $primary ? $table->cell()->details_popup($v, [
-					['Update', '#'],
+					['Update', "?{$this->routename}/data,name:{$name},primary:{$v}",
+						'onclick' => 'return $.action(this)',
+						'data-method' => 'post'
+					],
 					['Delete', "?{$this->routename}/data,name:{$name}",
 						'class' => 'danger',
 						'onclick' => 'return $.action(this)',
@@ -552,14 +574,13 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 					]
 				]) : $table->cell($v);
 			}
-
 		}, $name, $datatable->primary);
 		$table->fieldset(...$fields);
 		$table->header($tablename);
 		$table->paging(['page' => '']);
 		$table->bar->append('a', ['Back table', 'href' => "?{$this->routename}/table,name:{$name}", 'class' => 'default']);
-		$table->bar->append('a', ['Insert data', 'href' => '#', 'class' => 'primary',
-
+		$table->bar->append('a', ['Insert data',  'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'primary',
+			'href' => "?{$this->routename}/data,name:{$name}",
 			'onclick' => 'return $.action(this)',
 			'data-prompt' => "#form_data"
 		]);
@@ -571,9 +592,6 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-action' => "?{$this->routename}/data,name:{$name}",
 			'data-method' => 'patch'
 		]);
-		
-		
-		
 	}
 
 }

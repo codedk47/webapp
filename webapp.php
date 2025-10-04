@@ -1255,7 +1255,8 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	}
 	function __invoke(int $index = 0):array
 	{
-		return ['hash' => $this->webapp->hashfile($this->uploadedfiles[$index]['file'])] + $this->uploadedfiles[$index];
+		$this->hash($index);
+		return $this->uploadedfiles[$index];
 	}
 	function offsetExists(mixed $key):bool
 	{
@@ -1286,13 +1287,21 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	// {
 	// 	return array_column($key === 'hash' ? $this->__debugInfo() : $this->uploadedfiles, $key);
 	// }
-	function size(int $index = 0):int
+	function path(int $index = 0):string
 	{
-		return $index < 0 ? array_sum($this->column('size')) : $this->uploadedfiles[$index]['size'];
+		return $this->uploadedfiles[$index]['path'];
 	}
 	function file(int $index = 0):string
 	{
 		return $this->uploadedfiles[$index]['file'];
+	}
+	function hash(int $index = 0):string
+	{
+		return $this->uploadedfiles[$index]['hash'] ??= $this->webapp->hashfile($this->file($index));
+	}
+	function size(?int $index = 0):int
+	{
+		return $index === NULL ? array_sum($this->column('size')) : $this->uploadedfiles[$index]['size'];
 	}
 	function mime(int $index = 0):string
 	{

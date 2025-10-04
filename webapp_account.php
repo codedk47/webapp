@@ -48,8 +48,19 @@ class webapp_account
 	static function createtable(webapp_mysql $mysql):bool
 	{
 		return $mysql->real_query(<<<'SQL'
-		CREATE TABLE CREATE TABLE `account` (
+		CREATE TABLE ?a (
 			`id` char(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+			`t0` bigint unsigned NOT NULL COMMENT 'create time',
+			`t1` bigint unsigned NOT NULL COMMENT 'expire time',
+			`t2` bigint unsigned NOT NULL COMMENT 'signin time',
+			`ip` char(32) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL COMMENT 'signin hexip',
+			`balances` json NOT NULL,
+			`freezes` json NOT NULL,
+			`extdata` json NOT NULL,
+			`phone` bigint unsigned DEFAULT NULL,
+			`email` varchar(64) CHARACTER SET ascii COLLATE ascii_general_ci DEFAULT NULL,
+			`uid` varchar(16) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
+			`pwd` varchar(16) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,
 			PRIMARY KEY (`id`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 		SQL, static::tablename);
