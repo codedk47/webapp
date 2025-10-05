@@ -69,39 +69,21 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 			$table->cell($value['likes']);
 			$table->cell($value['shares']);
 
-			
-
-
-
-			$table->cell()->details_popup($value['name'], [
-				...match ((int)$value['type'])
-				{
-					0 => [
-						['Into node', "?{$this->routename},sort:{$value['sort']},node:{$value['hash']}"]
-					],
-					1 => [
-						['Access object URL', strstr($this->webapp->src($value), '#', TRUE), 'target' => '_blank'],
-						['Open with', [
-							['Text reader', '#'],
-							['Image viewer', '#'],
-							['Video playback', '#']
-						]],
-						...$this->auth ? [
-							['Update file', "?{$this->routename}/update,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
-								'data-prompt' => "Select the file to replace:file",
-								'onclick' => 'return $.action(this)'
-							],
-							['Move to', "?{$this->routename}/moveto,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
-								'data-prompt' => "Node hash(empty is root node):text:{$value['node']}",
-								'onclick' => 'return $.action(this)']
-						] : []
-					],
-					default => [
-						['Copy object URL', strstr($this->webapp->src($value), '#', TRUE), 
-							'onclick' => 'return !$.copytoclipboard(this.href)']
-					]
-				},
-				...$this->auth ? [
+			$filemenu = [
+				['Access object URL', strstr($this->webapp->src($value), '#', TRUE), 'target' => '_blank'],
+				['Open with', [
+					['Text reader', '#'],
+					['Image viewer', '#'],
+					['Video playback', '#']
+				]]
+			];
+			$elsemenu = [
+				['Copy object URL', strstr($this->webapp->src($value), '#', TRUE), 
+					'onclick' => 'return !$.copytoclipboard(this.href)']
+			];
+			if ($this->auth)
+			{
+				$moremenu = [
 					['Rename', "?{$this->routename}/rename,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
 						'data-prompt' => "New name:text:{$value['name']}",
 						'onclick' => 'return $.action(this)'],
@@ -110,8 +92,29 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 						'data-confirm' => 'Delete cannot be undo',
 						'data-body' => $value['hash'],
 						'onclick' => 'return $.action(this)']
-				] : []
-			]);
+				];
+				$table->cell()->details_popup($value['name'], [...match ((int)$value['type'])
+				{
+					0 => [['Into node', "?{$this->routename},sort:{$value['sort']},node:{$value['hash']}"], ...$moremenu],
+					1 => [...$filemenu,
+						['Update file', "?{$this->routename}/update,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
+							'data-prompt' => "Select the file to replace:file",
+							'onclick' => 'return $.action(this)'
+						],
+						['Move to', "?{$this->routename}/moveto,sort:{$value['sort']},type:{$value['type']},hash:{$value['hash']}",
+							'data-prompt' => "Node hash(empty is root node):text:{$value['node']}",
+							'onclick' => 'return $.action(this)']
+					, ...$moremenu],
+					default => [...$elsemenu]
+				}]);
+			}
+			else
+			{
+				(int)$value['type'] === 0
+					? $table->cell()->append('a', [$value['name'],
+						'href' => "?{$this->routename},sort:{$value['sort']},node:{$value['hash']}"])
+					: $table->cell()->details_popup($value['name'], (int)$value['type'] === 1 ? $filemenu : $elsemenu);
+			}
 		}, ['Node', 'File']);
 		$table->fieldset('Hash', 'Type', 'Insert Time', 'Update Time', 'Size', 'Views', 'Likes', 'Shares', 'Name');
 		$table->header($title);
