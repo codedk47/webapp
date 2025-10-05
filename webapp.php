@@ -611,10 +611,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			$this->entry = $params;
 		}
 	}
-	final function entry(array $params):void
-	{
-		$this->entry = $params + $this->entry;
-	}
+	// final function entry(array $params):void
+	// {
+	// 	$this->entry = $params + $this->entry;
+	// }
 	final function buffer():mixed
 	{
 		return fopen('php://memory', 'r+');
@@ -664,7 +664,12 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		is_string($title) && $this->echo->title($title);
 		return $this->echo;
 	}
-
+	function routename():string
+	{
+		return strtr(substr(...is_string($this->router)
+			? [$this->router, strlen($this['app_router'])]
+			: [$this->method, strlen($this['request_method']) + 1]), '_', '-');
+	}
 	function admin(string $username, string $password, int $signtime, string $additional = NULL):array
 	{
 		return $signtime > static::time(-$this['admin_expire'])
@@ -684,12 +689,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 		&& in_array($this->method, $router === $this ? [
 	// 			'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
 	// }
-	function routename():string
-	{
-		return strtr(substr(...is_string($this->router)
-			? [$this->router, strlen($this['app_router'])]
-			: [$this->method, strlen($this['request_method']) + 1]), '_', '-');
-	}
+
 
 
 	// function request_authorized(callable $authenticate = NULL, string $storage = NULL)
@@ -950,10 +950,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			default => $this->io->request_content()
 		};
 	}
-	function request_uploadedfile(string $name, ?int $maximum = 1):webapp_request_uploadedfile
+	function request_uploadedfile(string $name, ?int $maximum = 1, int $maxpathdeep = 0):webapp_request_uploadedfile
 	{
 		static $uploadedfile = $this->io->request_uploadedfile();
-		return $this->uploadedfiles[$name] ??= new webapp_request_uploadedfile($this, $name, $uploadedfile, $maximum);
+		return $this->uploadedfiles[$name] ??= new webapp_request_uploadedfile($this, $name, $uploadedfile, $maximum, $maxpathdeep);
 	}
 
 	// function request_cond(string $name = 'cond'):array
@@ -1214,8 +1214,12 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Stringable, Countable
 {
 	private array $uploadedfiles;
-	function __construct(public readonly webapp $webapp, private readonly string $name, array $uploadedfiles, ?int $maximum)
-	{
+	function __construct(
+		public readonly webapp $webapp,
+		private readonly string $name,
+		array $uploadedfiles,
+		?int $maximum,
+		private readonly int $maxpathdeep) {
 		$this->uploadedfiles = array_slice($uploadedfiles[$name] ?? [], 0, $maximum);
 	}
 	function __debugInfo():array
@@ -1291,12 +1295,14 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	{
 		return file_get_contents($this->file($index));
 	}
-	function validate(int $index, int $maxpathdeep)
+	function validate(int $index):bool
 	{
-		while (count($layer = preg_split('/[\/\\\]/', substr($this->path($index), 1))) <= $maxpathdeep + 1)
+		#验证文件路径深度
+		while (count($layer = preg_split('/[\/\\\]/', substr($this->path($index), 1))) <= $this->maxpathdeep + 1)
 		{
 			foreach ($layer as $name)
 			{
+				#验证文件名合法性
 				if (preg_match('/^\w+(?:\.\w+)*$/', $name) === 0)
 				{
 					break 2;
@@ -1316,12 +1322,12 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 		}
 		return FALSE;
 	}
-	function savedir(string $directory, int $maxpathdeep = 0):int
+	function savedir(string $directory):int
 	{
 		$count = 0;
 		foreach ($this as $index => $item)
 		{
-			$count += intval($this->validate($index, $maxpathdeep)
+			$count += intval($this->validate($index)
 				&& (is_dir($dir = $directory . dirname($item['path'])) || mkdir($dir, recursive: TRUE))
 				&& $this->move($index, $directory . $item['path']));
 		}

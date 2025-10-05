@@ -142,9 +142,7 @@ class webapp_nfs_client extends webapp_client_http
 		return FALSE;
 	}
 
-
-
-	function upload_directory(string $path, string $from):bool
+	function upload_localdir(string $path, string $from):bool
 	{
 		foreach (scandir($from) as $file)
 		{
@@ -160,15 +158,13 @@ class webapp_nfs_client extends webapp_client_http
 		}
 		return TRUE;
 	}
-	function upload_uploadedfile(string $path, webapp_request_uploadedfile $uploadedfile, int $maxpathdeep = 0):int
+	function upload_uploadedfile(string $path, webapp_request_uploadedfile $uploadedfile):int
 	{
 		$count = 0;
 		foreach ($uploadedfile as $index => $item)
 		{
-			if ($uploadedfile->validate($index, $maxpathdeep))
-			{
-				$count += intval($this->put($path . $item['path'], $uploadedfile->open($index), $uploadedfile->mime($index)));
-			}
+			$count += intval($uploadedfile->validate($index)
+				&& $this->put($path . $item['path'], $uploadedfile->open($index), $uploadedfile->mime($index)));
 		}
 		return $count;
 	}

@@ -492,7 +492,8 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 		}
 		return TRUE;
 	}
-	function request(string $method, string $path, $data = NULL, string $type = NULL):bool
+
+	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
 	{
 		$this->path = $path;
 		$request = ["{$method} {$path} HTTP/1.1"];
@@ -509,19 +510,20 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 			}
 			$request[] = 'Cookie: ' . join(';', $cookies);
 		}
-		if ($data === NULL || ($this->clear()
-			&& (is_string($data) ? $this->echo($data) : match ($type ??= 'application/x-www-form-urlencoded') {
-				'application/x-www-form-urlencoded' => $this->echo(http_build_query($data)),
-				'multipart/form-data' => $this->form($data,
+		if ($body === NULL || ($this->clear()
+			&& (is_string($body) ? $this->echo($body) : (is_resource($body)
+				? $this->from($body) : match ($type ??= 'application/x-www-form-urlencoded') {
+				'application/x-www-form-urlencoded' => $this->echo(http_build_query($body)),
+				'multipart/form-data' => $this->form($body,
 					$contents = '--' . join("\r\n", [$boundary = static::boundary(),'Content-Disposition: form-data; name="%s"', "\r\n"]),
 					substr($contents, 0, -4) . "; filename=\"%s\"\r\nContent-Type: %s\r\n\r\n")
 						&& $this->echo("--{$boundary}--", $type .= "; boundary={$boundary}"),
-				'application/json' => $this->echo(json_encode($data, JSON_UNESCAPED_UNICODE)),
+				'application/json' => $this->echo(json_encode($body, JSON_UNESCAPED_UNICODE)),
 				'application/xml' => $this->echo(match (TRUE) {
-						$data instanceof DOMDocument => $data->saveXML(),
-						$data instanceof SimpleXMLElement => $data->asXML(),
-						default => (string)$data}),
-				default => is_resource($data) && $this->from($data)})
+						$body instanceof DOMDocument => $body->saveXML(),
+						$body instanceof SimpleXMLElement => $body->asXML(),
+						default => (string)$body}),
+				default => FALSE}))
 			&& is_resource($buffer = fopen('php://memory', 'r+'))
 			&& $this->to($buffer)
 			&& is_int($length = ftell($buffer))
@@ -531,7 +533,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 			do
 			{
 				if ($this->send($request) === FALSE
-					|| ($data === NULL || $length === 0 || (rewind($buffer)
+					|| ($body === NULL || $length === 0 || (rewind($buffer)
 						&& $this->sendfrom($buffer, $length))) === FALSE
 					|| $this->readline($status) === FALSE) {
 					continue;
