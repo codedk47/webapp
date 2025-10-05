@@ -36,21 +36,25 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	public object|string $router;
 	public string $method;
 	private array $errors = [], $cookies = [], $headers = [], $uploadedfiles, $configs, $route, $entry;
-	private static array $libary = [], $remote = [];
-	static function libary(string $filename, ...$parameters)
+	private static array $lib = [], $remote = [];
+	static function lib(string $filename, ...$parameters)
 	{
-		$lib = array_key_exists($name = strtolower($filename), static::$libary)
-			? static::$libary[$name]
-			: static::$libary[$name] = require __DIR__ . "/libary/{$name}";
+		$lib = array_key_exists($name = strtolower($filename), static::$lib)
+			? static::$lib[$name]
+			: static::$lib[$name] = require is_file($name) ? $name : __DIR__ . "/library/{$name}";
 		return $parameters ? $lib(...$parameters) : $lib;
 	}
 	static function simplified_chinese(string $content):string
 	{
-		return static::libary('utf8_convert/simplified.php', $content);
+		return static::lib('utf8_convert/simplified.php', $content);
+	}
+	static function mime(string $filename):string
+	{
+		return static::lib('fileinfo/mime.php', $filename);
 	}
 	static function qrcode(string $content, int $level = 0):IteratorAggregate&Countable
 	{
-		return static::libary('qrcode/interface.php', $content, $level);
+		return static::lib('qrcode/interface.php', $content, $level);
 	}
 	static function time(int $offset = 0):int
 	{
@@ -126,8 +130,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function hashfile(string $filename, bool $care = FALSE):?string
 	{
-		// return is_file($filename) && is_string($hex = hash_file(static::algo, $filename, FALSE))
-		// 	? $this->algotohash(hexdec(substr($hex, -15)), $care) : NULL;
 		return is_file($filename) && is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
 	}
 	// static function shuffle()

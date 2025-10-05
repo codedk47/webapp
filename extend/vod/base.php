@@ -143,7 +143,7 @@ class webapp_extend_vod extends webapp_extend_nfs
 	}
 	function format_video(string $filename, string $outdir, ?string $poster = NULL, int $cover = 9):array
 	{
-		static $ffmpeg = static::libary('ffmpeg/interface.php');
+		static $ffmpeg = static::lib('ffmpeg/interface.php');
 		while (is_dir($outdir)
 			&& is_string($hash = is_string($basename = strstr(basename($filename), '.', TRUE))
 				&& $this->is_long_hash($basename) ? $basename : $this->hashfile($filename))

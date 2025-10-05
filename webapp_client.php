@@ -525,8 +525,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 			&& is_resource($buffer = fopen('php://memory', 'r+'))
 			&& $this->to($buffer)
 			&& is_int($length = ftell($buffer))
-			&& ($request[] = "Content-Type: {$type}")
-			&& ($request[] = "Content-Length: {$length}"))) {
+			&& array_push($request, "Content-Type: {$type}", "Content-Length: {$length}"))) {
 			$request = join($request[] = "\r\n", $request);
 			$autoretry = $this->autoretry;
 			do
