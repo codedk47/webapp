@@ -46,7 +46,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function simplified_chinese(string $content):string
 	{
-		return static::lib('utf8_convert/simplified.php', $content);
+		return static::lib('utf8_charset/simplified_chinese.php', $content);
 	}
 	static function mime(string $filename):string
 	{
@@ -1188,10 +1188,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		$this->response_cache_control('no-transform');
 		$this->response_content_type('text/javascript');
-		return $this->response_sendfile(__DIR__ . '/static/js/masker.js');
+		return $this->response_sendfile(__DIR__ . '/static/scripts/masker.js');
 		if ($this->nonematch(self::version, TRUE))
 		{
-			$this->response_sendfile(__DIR__ . '/static/js/masker.js');
+			$this->response_sendfile(__DIR__ . '/static/scripts/masker.js');
 			return 200;
 		}
 		return 304;
