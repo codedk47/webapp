@@ -548,11 +548,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return stream_get_contents($this->buffer, -rewind($this->buffer));
 	}
-	// function __call(string $tablename, array $conditionals):webapp_mysql_table
-	// {
-	//	//和静态魔术调用方法冲突
-	// 	return $this->mysql->{$tablename}(...$conditionals);
-	// }
 	function __get(string $name):mixed
 	{
 		if (method_exists($this, $name))
@@ -563,11 +558,11 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				return $this->{$name} = $loader->invoke($this);
 			}
 		}
-		return NULL;
+		throw new Error;
 	}
 	final function __invoke(object $object):object
 	{
-		if (property_exists($object, 'webapp') === FALSE)
+		if (property_exists($object, 'webapp') && isset($object->webapp) === FALSE)
 		{
 			$object->webapp = $this;
 		}

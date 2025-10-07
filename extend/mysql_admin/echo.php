@@ -32,12 +32,12 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 					$this->nav([
 						['Home', "?{$this->routename}"],
 						['Console', "?{$this->routename}/console"],
-						// ['Users', "?{$this->routename}/users"],
-						// ['Variables', "?{$this->routename}/variables"],
-						// ['Status', "?{$this->routename}/status"],
-						// ['Processlist', "?{$this->routename}/processlist"],
+						['Users', "?{$this->routename}/users"],
+						['Status', "?{$this->routename}/status"],
+						['Variables', "?{$this->routename}/variables"],
+						['Processlist', "?{$this->routename}/processlist"],
 					]);
-					$charset = $this->mysql->characterset()->column('Charset');
+					$charset = $this->mysql->characterset->column('Charset');
 					$node = $this->aside->select(array_combine($charset, $charset))->setattr([
 						'data-action' => "?{$this->routename},command:charset",
 						'onchange' => '$.action(this)'
@@ -48,7 +48,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 						$node->selected($this->charset);
 					}
 					$node = $this->aside->append('ul', ['class' => 'webapp-listmenu']);
-					foreach ($this->mysql->show('DATABASES')->column('Database') as $database)
+					foreach ($this->mysql->databases->column('Database') as $database)
 					{
 						$dbnode = $node->append('li')->details($database);
 						$dbnode->summary->setattr([
@@ -59,7 +59,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 						{
 							$dbnode->setattr('open');
 							$dbnode = $dbnode->append('ul');
-							foreach ($this->mysql->show('TABLE STATUS') as $table)
+							foreach ($this->mysql->tables as $table)
 							{
 								$dbnode->append('li')->append('a', ["{$table['Name']}:{$table['Rows']}",
 									'href' => "?{$this->routename}/table,name:" . $webapp->url64_encode($table['Name'])]);
@@ -153,7 +153,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	function patch_database()
 	{
 		$this->json();
-		foreach ($this->mysql->show('TABLES')->column("Tables_in_{$this->database}") as $table)
+		foreach ($this->mysql->tables->column('Name') as $table)
 		{
 			$this->mysql->real_query(match ($this->input())
 			{
@@ -166,8 +166,8 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	}
 	function get_database()
 	{
-		//print_r( $this->mysql->show('TABLE STATUS')->all() );
-		$table = $this->main->table($this->mysql->show('TABLE STATUS'), function($table, $value)
+		//print_r( $this->mysql->tablestatus->all() );
+		$table = $this->main->table($this->mysql->tables, function($table, $value)
 		{
 			$table->row();
 			$table->cell([$value['Comment'],
@@ -184,7 +184,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		});
 		$table->fieldset('Comment', 'Name:Rows', 'Engine', 'Collation', 'Row_format', 'Create_time', 'Update_time');
 		$table->header($this->database);
-		$table->footer($this->mysql->show('CREATE DATABASE ?a', $this->database)->value(1));
+		$table->footer($this->mysql->create);
 		$table->bar->append('a', ['Create table',
 			'href' => "?{$this->routename}/table",
 			'onclick' => 'return $.action(this)',
@@ -243,13 +243,10 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$form->field('extra', 'select', ['required' => NULL,
 			'options' => array_combine($extra = ['none', 'auto_increment'], $extra)]);
 		$form->field('collation', 'select', ['placeholder' => 'Type default value',
-			'options' => ['' => 'default'] + $this->mysql->collation()->group('Charset', 'Collation', 'Collation')]);
+			'options' => ['' => 'default'] + $this->mysql->collation->group('Charset', 'Collation', 'Collation')]);
 
 		$form->fieldset();
-		$form->button('Close', 'button', ['value' => 'close']);
-		$form->button('Reset', 'reset');
 		$form->button('Submit', 'submit');
-
 		return $form;
 	}
 	function form_field_query(string $tablename, string $fieldname = NULL):bool
@@ -379,7 +376,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$tablename = $this->webapp->url64_decode($name);
 		$this->form_data($tablename, $this->template('form_data'));
 		$this->form_field($tablename, $this->template('form_field'));
-		$table = $this->main->table($this->mysql->show('FULL FIELDS FROM ?a', $tablename)->result($fields), function($table, $value, $name)
+		$table = $this->main->table($this->mysql->table($tablename)->fields->result($fields), function($table, $value, $name)
 		{
 			$field = $this->webapp->url64_encode($value['Field']);
 			$table->row();
@@ -407,7 +404,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		}, $name);
 		$table->fieldset('Field', 'Comment', ...array_slice($fields, 1, -1));
 		$table->header($tablename);
-		$table->footer()->details('Show create table')->append('pre', $create = $this->mysql->show('CREATE TABLE ?a', $tablename)->value(1));
+		$table->footer()->details('Show create table')->append('pre', $create = $this->mysql->table($tablename)->create);
 		$table->bar->append('a', ['View data', 'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'default']);
 		$table->bar->append('a', ['Insert data', 'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'primary',
 
@@ -426,7 +423,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-method' => 'patch',
 			'data-prompt' => "New table name:text:{$tablename}"
 		]);
-		$table->bar->select($this->mysql->show('ENGINES')->column('Engine', 'Engine'))->setattr([
+		$table->bar->select($this->mysql->engines->column('Engine', 'Engine'))->setattr([
 			'onchange' => '$.action(this)',
 			'data-method' => 'patch',
 			'data-action' => "?{$this->routename}/table,name:{$name},command:engine"
@@ -447,7 +444,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-confirm' => "Delete \"{$tablename}\" table ?"
 		]);
 		$table->xml['style'] = 'margin-bottom:var(--webapp-gap)';
-		$table = $this->main->table($this->mysql->show('INDEX FROM ?a', $tablename)->result($fields), function($table, $value, $name)
+		$table = $this->main->table($this->mysql->table($tablename)->index->result($fields), function($table, $value, $name)
 		{
 			$table->row();
 			$table->cell()->append('a', ['Delete',
@@ -465,8 +462,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	function form_data(string $tablename, webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
-
-		foreach ($this->mysql->show('FULL FIELDS FROM ?a', $tablename) as $data)
+		foreach ($this->mysql->table($tablename)->fields as $data)
 		{
 			$form->fieldset($data['Field']);
 			preg_match('/(\w+(?:\sunsigned)?)(?:\(([^)]+)\))?/', $data['Type'], $pattern);
@@ -510,7 +506,6 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			$form->field($data['Field'], ...$params);
 		}
 		$form->fieldset();
-		$form->button('Close', 'button', ['value' => 'close']);
 		$form->button('Submit', 'submit');
 		return $form;
 	}
@@ -579,7 +574,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$table->header($tablename);
 		$table->paging(['page' => '']);
 		$table->bar->append('a', ['Back table', 'href' => "?{$this->routename}/table,name:{$name}", 'class' => 'default']);
-		$table->bar->append('a', ['Insert data',  'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'primary',
+		$table->bar->append('a', ['Insert data', 'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'primary',
 			'href' => "?{$this->routename}/data,name:{$name}",
 			'onclick' => 'return $.action(this)',
 			'data-prompt' => "#form_data"
@@ -593,5 +588,70 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-method' => 'patch'
 		]);
 	}
-
+	function get_users(string $like = NULL, int $page = 1)
+	{
+		$this->mysql->select_db('mysql');
+		$user = $this->mysql->table('user')->select('user,host,plugin,authentication_string');
+		$like && $user('WHERE user LIKE ?s', sprintf('%%%s%%', $like = urldecode($like)));
+		$table = $this->main->table($user->paging($page)->result($fields));
+		$table->fieldset(...$fields);
+		$table->header('Users');
+		$table->paging(['page' => '']);
+		$table->bar->append('input', ['type' => 'search',
+			'value' => $like,
+			'placeholder' => 'Search user name',
+			'onkeydown' => 'event.keyCode===13&&$.at({like:this.value})'
+		]);
+	}
+	function get_status(string $like = NULL)
+	{
+		$table = $this->main->table($this->mysql->show(...$like
+			? ['STATUS LIKE ?s', sprintf('%%%s%%', $like = urldecode($like))]
+			: ['STATUS'])->result($fields));
+		$table->fieldset(...$fields);
+		$table->header('Status');
+		$table->bar->append('input', ['type' => 'search',
+			'value' => $like,
+			'placeholder' => 'Search status name',
+			'onkeydown' => 'event.keyCode===13&&$.at({like:this.value})'
+		]);
+	}
+	function get_variables(string $like = NULL)
+	{
+		$table = $this->main->table($this->mysql->show(...$like
+			? ['VARIABLES LIKE ?s', sprintf('%%%s%%', $like = urldecode($like))]
+			: ['VARIABLES'])->result($fields));
+		$table->fieldset(...$fields);
+		$table->header('Variables');
+		$table->bar->append('input', ['type' => 'search',
+			'value' => $like,
+			'placeholder' => 'Search variables name',
+			'onkeydown' => 'event.keyCode===13&&$.at({like:this.value})'
+		]);
+	}
+	function delete_processlist()
+	{
+		$this->json();
+		$this->mysql->kill($this->input())
+			? $this->echo->refresh()
+			: $this->echo->error($this->mysql->error);
+	}
+	function get_processlist()
+	{
+		$table = $this->main->table($this->mysql->processlist->result($fields), function($table, $value)
+		{
+			$table->row();
+			$table->cell()->append('a', ['Kill',
+				'href' => "?{$this->routename}/processlist",
+				'class' => 'danger',
+				'onclick' => 'return $.action(this)',
+				'data-method' => 'delete',
+				'data-body' => $value['Id'],
+				'data-confirm' => "Kill process with ID {$value['Id']} ?"
+			]);
+			$table->cells($value);
+		});
+		$table->fieldset('Kill', ...$fields);
+		$table->header('Process List');
+	}
 }

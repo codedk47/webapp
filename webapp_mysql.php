@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
-#[\AllowDynamicProperties]
 class webapp_mysql extends mysqli implements IteratorAggregate
 {
+	public webapp $webapp;
 	public array $errors = [];
+	private array $maptables = [];
 	function __construct(string $hostname = 'p:127.0.0.1:3306', string $username = 'root', string $password = NULL, string $database = NULL, private string $maptable = 'webapp_maptable_')
 	{
 		try
@@ -25,13 +26,20 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		//$this->close();
 	}
-	function __get(string $name):webapp_mysql_table
+	function __get(string $name):NULL|string|static
 	{
-		return $this->{$name} = class_exists($tablename = $this->maptable . $name, FALSE) ? new $tablename($this) : $this->table($name);
-	}
-	function __call(string $tablename, array $conditionals):webapp_mysql_table
-	{
-		return ($this->{$tablename})(...$conditionals);
+		return match ($name)
+		{
+			'database' => $this('SELECT DATABASE()')->value(),
+			'create' => $this->show('CREATE DATABASE ?a', $this->database)->value(1),
+			'processlist' => $this->show('PROCESSLIST'),
+			'characterset' => $this->show('CHARACTER SET'),
+			'databases' => $this->show('DATABASES'),
+			'tables' => $this->show('TABLE STATUS'),
+			'engines' => $this->show('ENGINES'),
+			'collation' => $this->show('COLLATION'),
+			default => NULL
+		};
 	}
 	function __invoke(...$commands):static
 	{
@@ -137,34 +145,6 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 			$buffer[] = substr($command, $offset);
 		}
 		return join($buffer);
-		// if ($values)
-		// {
-		// 	$index = 0;
-		// 	$offset = 0;
-		// 	$buffer = [];
-		// 	$length = strlen($query);
-		// 	while (($pos = strpos($query, '?', $offset)) !== FALSE && $pos < $length && array_key_exists($index, $values))
-		// 	{
-		// 		$buffer[] = substr($query, $offset, $pos - $offset) . match ($query[$pos + 1])
-		// 		{
-		// 			'i' => intval($values[$index++]),
-		// 			'f' => floatval($values[$index++]),
-		// 			'a' => $this->quote($values[$index++]),
-		// 			's' => $this->escape($values[$index++]),
-		// 			'v' => $this->iterator($values[$index++]),
-		// 			'?', 'A', 'S' => is_iterable($values[$index]) ? join(',', array_map([$this, $query[$pos + 1] === 'A' ? 'quote' : 'escape'],
-		// 				is_array($values[$index]) ? $values[$index++] : iterator_to_array($values[$index++]))) : (string)$values[$index++],
-		// 			default => substr($query, $pos, 2)
-		// 		};
-		// 		$offset = $pos + 2;
-		// 	}
-		// 	if ($offset < $length)
-		// 	{
-		// 		$buffer[] = substr($query, $offset);
-		// 	}
-		// 	return join($buffer);
-		// }
-		// return $query;
 	}
 	function real_query(string $command, ...$values):bool
 	{
@@ -175,9 +155,9 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 		$this->errors[] = $this->error;
 		return FALSE;
 	}
-	function kill(int $pid = NULL):bool
+	function datatypes():array
 	{
-		return parent::kill($pid ?? $this->thread_id);
+		return $this('SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS GROUP BY DATA_TYPE ORDER BY DATA_TYPE ASC')->column('DATA_TYPE');
 	}
 	function syncable():bool
 	{
@@ -187,96 +167,108 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return $this->autocommit(FALSE) && [($result = $submit(...$params) && $this->commit())
 			|| $this->rollback(), $this->autocommit(TRUE)] ? $result : FALSE;
-		// if ($this->autocommit(FALSE))
-		// {
-		// 	if ($submit->call($this, ...$params))
-		// 	{
-		// 		$this->commit();
-		// 		$this->autocommit(TRUE);
-		// 		return TRUE;
-		// 	}
-		// 	$this->rollback();
-		// 	$this->autocommit(TRUE);
-		// }
-		// return FALSE;
 	}
-	function cond(array $fieldinfo, array $cond):ArrayObject
+	// function cond(array $fieldinfo, array $cond):ArrayObject
+	// {
+	// 	return new class($this, $fieldinfo, $cond) extends ArrayObject implements Stringable
+	// 	{
+	// 		const query = [
+	// 			'eq' => '?a=?s',
+	// 			'ne' => '?a!=?s',
+	// 			'gt' => '?a>?s',
+	// 			'ge' => '?a>=?s',
+	// 			'lt' => '?a<?s',
+	// 			'le' => '?a<=?s',
+	// 			'lk' => '?a LIKE ?s',
+	// 			'nl' => '?a NOT LIKE ?s',
+	// 			'in' => '?a IN(?S)',
+	// 			'ni' => '?a NOT IN(?S)'
+	// 		];
+	// 		private array $where = [], $merge = [], $append;
+	// 		function __construct(private webapp_mysql $mysql, array $fieldinfo, array $cond)
+	// 		{
+	// 			$this->append = $cond;
+	// 			parent::__construct($fieldinfo);
+	// 		}
+	// 		function __toString():string
+	// 		{
+	// 			$where = $this->where;
+	// 			$allow = (array)$this;
+	// 			foreach ($this->append as $fieldinfo => $value)
+	// 			{
+	// 				preg_match('/(\w+)\.(eq|ne|gt|ge|lt|le|lk|nl|in|ni)/', $fieldinfo, $required);
+	// 				if (array_key_exists($required[1], $allow))
+	// 				{
+	// 					$where[] = $value === NULL
+	// 						? $this->mysql->sprintf('?a ?? NULL', $required[1], $required[2] === 'ne' ? 'IS NOT' : 'IS')
+	// 						: $this->mysql->sprintf(self::query[$required[2]], $required[1], in_array($required[2], ['in', 'ni']) ? explode(',', $value) : $value);
+	// 				}
+	// 			}
+	// 			$cond = [];
+	// 			if ($where)
+	// 			{
+	// 				$cond[] = 'WHERE';
+	// 				$cond[] = join(' AND ', $where);
+	// 			}
+	// 			if ($this->merge)
+	// 			{
+	// 				$cond[] = join(' ', $this->merge);
+	// 			}
+	// 			return join(' ', $cond);
+	// 		}
+	// 		function __invoke(string $tablename):webapp_mysql_table
+	// 		{
+	// 			return $this->mysql->{$tablename}($this);
+	// 		}
+	// 		function __call(string $name, array $params)
+	// 		{
+	// 			if (count($params))
+	// 			{
+	// 				switch ($name)
+	// 				{
+	// 					case 'eq':
+	// 					case 'ne':
+	// 					case 'gt':
+	// 					case 'ge':
+	// 					case 'lt':
+	// 					case 'le':
+	// 					case 'lk':
+	// 					case 'nl':
+	// 					case 'in':
+	// 					case 'ni':
+	// 						return $this->append["{$params[0]}.{$name}"] ?? NULL;
+	// 					case 'where':
+	// 					case 'merge':
+	// 						$this->{$name}[] = $this->mysql->sprintf(...$params);
+	// 						return $this;
+	// 				}
+	// 			}
+	// 		}
+	// 	};
+	// }
+	function kill(int $pid = NULL):bool
 	{
-		return new class($this, $fieldinfo, $cond) extends ArrayObject implements Stringable
+		return $this->real_query('KILL ?i', $pid ?? $this->thread_id);
+	}
+	function show(...$conds):static
+	{
+		$conds[0] = "SHOW {$conds[0]}";
+		return $this(...$conds);
+	}
+	function primary(string $tablename):?string
+	{
+		return $this->show('FIELDS FROM ?a WHERE `Key` IN(?S)', $tablename, ['PRI', 'UNI'])->value();
+	}
+	function exists(string $tablename):bool
+	{
+		foreach ($this->tables as $table)
 		{
-			const query = [
-				'eq' => '?a=?s',
-				'ne' => '?a!=?s',
-				'gt' => '?a>?s',
-				'ge' => '?a>=?s',
-				'lt' => '?a<?s',
-				'le' => '?a<=?s',
-				'lk' => '?a LIKE ?s',
-				'nl' => '?a NOT LIKE ?s',
-				'in' => '?a IN(?S)',
-				'ni' => '?a NOT IN(?S)'
-			];
-			private array $where = [], $merge = [], $append;
-			function __construct(private webapp_mysql $mysql, array $fieldinfo, array $cond)
+			if ($table['Name'] === $tablename)
 			{
-				$this->append = $cond;
-				parent::__construct($fieldinfo);
+				return TRUE;
 			}
-			function __toString():string
-			{
-				$where = $this->where;
-				$allow = (array)$this;
-				foreach ($this->append as $fieldinfo => $value)
-				{
-					preg_match('/(\w+)\.(eq|ne|gt|ge|lt|le|lk|nl|in|ni)/', $fieldinfo, $required);
-					if (array_key_exists($required[1], $allow))
-					{
-						$where[] = $value === NULL
-							? $this->mysql->sprintf('?a ?? NULL', $required[1], $required[2] === 'ne' ? 'IS NOT' : 'IS')
-							: $this->mysql->sprintf(self::query[$required[2]], $required[1], in_array($required[2], ['in', 'ni']) ? explode(',', $value) : $value);
-					}
-				}
-				$cond = [];
-				if ($where)
-				{
-					$cond[] = 'WHERE';
-					$cond[] = join(' AND ', $where);
-				}
-				if ($this->merge)
-				{
-					$cond[] = join(' ', $this->merge);
-				}
-				return join(' ', $cond);
-			}
-			function __invoke(string $tablename):webapp_mysql_table
-			{
-				return $this->mysql->{$tablename}($this);
-			}
-			function __call(string $name, array $params)
-			{
-				if (count($params))
-				{
-					switch ($name)
-					{
-						case 'eq':
-						case 'ne':
-						case 'gt':
-						case 'ge':
-						case 'lt':
-						case 'le':
-						case 'lk':
-						case 'nl':
-						case 'in':
-						case 'ni':
-							return $this->append["{$params[0]}.{$name}"] ?? NULL;
-						case 'where':
-						case 'merge':
-							$this->{$name}[] = $this->mysql->sprintf(...$params);
-							return $this;
-					}
-				}
-			}
-		};
+		}
+		return FALSE;
 	}
 	function result(&$fields = NULL, bool $detailed = FALSE):iterable
 	{
@@ -284,13 +276,10 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 		$fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
 		return $result;
 	}
-
-
-
 	function table(string $name, string $primary = NULL):webapp_mysql_table
 	{
-		return new class($this, $name, $primary) extends webapp_mysql_table
-		{
+		return $this->maptables[$name] ??= class_exists($tablename = $this->maptable . $name, FALSE)
+			? new $tablename($this) : new class($this, $name, $primary) extends webapp_mysql_table {
 			function __construct(webapp_mysql $mysql, protected string $tablename, public ?string $primary)
 			{
 				if ($this->primary === NULL)
@@ -300,45 +289,6 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 				parent::__construct($mysql);
 			}
 		};
-	}
-	function datatypes():array
-	{
-		return $this('SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS GROUP BY DATA_TYPE ORDER BY DATA_TYPE ASC')->column('DATA_TYPE');
-	}
-	function show(mixed ...$commands):static
-	{
-		return $this('SHOW ' . $this->format(...$commands));
-	}
-	function status():array
-	{
-		return $this->show('status')->column('Value', 'Variable_name');
-	}
-	function tablestatus():static
-	{
-		return $this->show('TABLE STATUS');
-	}
-	function characterset():static
-	{
-		return $this->show('CHARACTER SET');
-	}
-	function collation():static
-	{
-		return $this->show('COLLATION');
-	}
-	function processlist():static
-	{
-		return $this->show('PROCESSLIST');
-	}
-	function table_exists(string $name):bool
-	{
-		foreach ($this->tablestatus() as $table)
-		{
-			if ($table['Name'] === $name)
-			{
-				return TRUE;
-			}
-		}
-		return FALSE;
 	}
 }
 abstract class webapp_mysql_table implements IteratorAggregate, Countable, Stringable
@@ -351,15 +301,16 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	function __construct(protected readonly webapp_mysql $mysql)
 	{
 	}
-	function __get(string $name):?string
+	function __get(string $name):NULL|string|webapp_mysql
 	{
 		return match ($name)
 		{
 			'tablename' => $this->tablename,
-			'primary' => $this->primary =
-				($this->mysql)('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'PRI')->array()['Field'] ??
-				($this->mysql)('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'UNI')->value()['Field'] ?? NULL,
-			'create' => $this->mysql->show($this->tablename)->value(1),
+			'primary' => $this->primary = $this->mysql->primary($this->tablename),
+			'create' => $this->mysql->show('CREATE TABLE ?a', $this->tablename)->value(1),
+			'engine' => $this->mysql->show('TABLE STATUS LIKE ?s', $this->tablename)->array()['Engine'],
+			'fields' => $this->mysql->show('FULL FIELDS FROM ?a', $this->tablename),
+			'index' => $this->mysql->show('INDEX FROM ?a', $this->tablename),
 			default => NULL
 		};
 	}
@@ -406,22 +357,6 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		// $result->paging = $this->paging;
 		// return $result;
 	}
-	// function result(array|string $fields = '*'):mysqli_result
-	// {
-
-
-
-	// 	$detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
-
-		
-	// 	$result = $this->select($fields)->getIterator()->getIterator();
-	// 	$result->paging = $this->paging;
-	// 	return $result;
-	// 	// $result = $this->getIterator()->getIterator();
-	// 	// $fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
-	// 	// $result->paging = $this->paging;
-	// 	// return $result;
-	// }
 	function exists(string $field, string $value):bool
 	{
 		return boolval($this('WHERE ?a=?s LIMIT 1', $field, $value)->select('COUNT(?a)', $field)->value());
@@ -470,24 +405,6 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		}
 		return $values;
 	}
-
-
-
-	// function &tablename():string
-	// {
-	// 	return $this->tablename;
-	// }
-	// function &primary():string
-	// {
-	// 	if (property_exists($this, 'primary') === FALSE)
-	// 	{
-	// 		$this->primary =
-	// 			$this->mysql->row('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'PRI')['Field'] ??
-	// 			$this->mysql->row('SHOW FIELDS FROM ?a WHERE ?a=?s', $this->tablename, 'Key', 'UNI')['Field'] ?? NULL;
-	// 	}
-	// 	return $this->primary;
-	// }
-
 
 	function append():int
 	{
@@ -543,81 +460,70 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	// {
 	// 	return new $this->targetname($this, $mixed);
 	// }
-	function dataincr(array $data, array $incr)
-	{
-		
-	}
-	function statmonth(string $y_m, string $group, string $day, array $fields, ...$extra)
-	{
-		$days = range(0, date('t', strtotime($y_m)));
 
-		// $stat = [];
-		// foreach ($days as $i)
-		// {
-		// 	$stat[] = "day{$i}";
-		// 	foreach ([$fields] as $field)
-		// 	{
-		// 		$stat[] = "{$field}{$i}";
-		// 	}
-		// }
-		// print_r($stat);
-		// return;
+	// function statmonth(string $y_m, string $group, string $day, array $fields, ...$extra)
+	// {
+	// 	$days = range(0, date('t', strtotime($y_m)));
+
+	// 	// $stat = [];
+	// 	// foreach ($days as $i)
+	// 	// {
+	// 	// 	$stat[] = "day{$i}";
+	// 	// 	foreach ([$fields] as $field)
+	// 	// 	{
+	// 	// 		$stat[] = "{$field}{$i}";
+	// 	// 	}
+	// 	// }
+	// 	// print_r($stat);
+	// 	// return;
 
 
 
-		$data = [];
-		$calc = [];
-		$more = [];
+	// 	$data = [];
+	// 	$calc = [];
+	// 	$more = [];
 
-		foreach ($days as $i)
-		{
-			$daydata = [$i
-				? $this->mysql->format('COUNT(IF(??=?i,1,NULL))AS?a', $day, $i, "\${$i}")
-				: $this->mysql->format('COUNT(1)AS?a', "\${$i}")];
-			$daycalc = [$this->mysql->format('IFNULL(SUM(?a),0)AS?a', "\${$i}", "\${$i}")];
-			$daymore = [$this->mysql->format('SUM(?a)AS?a', "\${$i}", "\${$i}")];
+	// 	foreach ($days as $i)
+	// 	{
+	// 		$daydata = [$i
+	// 			? $this->mysql->format('COUNT(IF(??=?i,1,NULL))AS?a', $day, $i, "\${$i}")
+	// 			: $this->mysql->format('COUNT(1)AS?a', "\${$i}")];
+	// 		$daycalc = [$this->mysql->format('IFNULL(SUM(?a),0)AS?a', "\${$i}", "\${$i}")];
+	// 		$daymore = [$this->mysql->format('SUM(?a)AS?a', "\${$i}", "\${$i}")];
 
 			
-			foreach ($fields as $index => $field)
-			{
+	// 		foreach ($fields as $index => $field)
+	// 		{
 				
-				$daydata[] = $this->mysql->format('??AS?a', str_replace(['{day}'], [$i], $field), "\${$index}\${$i}");
-				$daycalc[] = $this->mysql->format('IFNULL(SUM(?a),0)AS?a', "\${$index}\${$i}", "\${$index}\${$i}");
-				$daymore[] = $this->mysql->format('SUM(?a)AS?a', "\${$index}\${$i}", "\${$index}\${$i}");
-			}
+	// 			$daydata[] = $this->mysql->format('??AS?a', str_replace(['{day}'], [$i], $field), "\${$index}\${$i}");
+	// 			$daycalc[] = $this->mysql->format('IFNULL(SUM(?a),0)AS?a', "\${$index}\${$i}", "\${$index}\${$i}");
+	// 			$daymore[] = $this->mysql->format('SUM(?a)AS?a', "\${$index}\${$i}", "\${$index}\${$i}");
+	// 		}
 			
-			$data[] = join(',', $daydata);
-			$calc[] = join(',', $daycalc);
-			$more[] = join(',', $daymore);
-		}
+	// 		$data[] = join(',', $daydata);
+	// 		$calc[] = join(',', $daycalc);
+	// 		$more[] = join(',', $daymore);
+	// 	}
 
-		$s = $this->mysql->format(join(' ', ['WITH t AS (SELECT ?a,?? FROM ?a?? GROUP BY ?a)',
-				'SELECT NULL as ?a,?? FROM t',
-				'UNION ALL',
-				'SELECT ?a,?? FROM t GROUP BY ?a??'
-			]),
-			$group, join(",\n", $data), $this->tablename, (string)$this, $group,
-			$group, join(",\n", $calc),
-			$group, join(",\n", $more), $group,
-			$extra ? ' '. $this->mysql->format(...$extra) : '');
-		//var_dump($s);
-		return ($this->mysql)($s);
+	// 	$s = $this->mysql->format(join(' ', ['WITH t AS (SELECT ?a,?? FROM ?a?? GROUP BY ?a)',
+	// 			'SELECT NULL as ?a,?? FROM t',
+	// 			'UNION ALL',
+	// 			'SELECT ?a,?? FROM t GROUP BY ?a??'
+	// 		]),
+	// 		$group, join(",\n", $data), $this->tablename, (string)$this, $group,
+	// 		$group, join(",\n", $calc),
+	// 		$group, join(",\n", $more), $group,
+	// 		$extra ? ' '. $this->mysql->format(...$extra) : '');
+	// 	//var_dump($s);
+	// 	return ($this->mysql)($s);
 		
 
 		
-		// PRINT_R(($this->mysql)($s)->all() );
+	// 	// PRINT_R(($this->mysql)($s)->all() );
 		
 	
-		// print_r($s);
-	}
-	function engine(string $name):bool
-	{
-		return $this->mysql->real_query('ALTER TABLE ?a ENGINE=?s', $this->tablename, $name);
-	}
-	function fieldinfo()
-	{
-		return ($this->mysql)('SHOW FULL COLUMNS FROM ?a', $this->tablename);
-	}
+	// 	// print_r($s);
+	// }
 	function rename(string $name):bool
 	{
 		if ($this->mysql->real_query('ALTER TABLE ?a RENAME TO ?a', $this->tablename, $name))
@@ -627,29 +533,20 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 		}
 		return FALSE;
 	}
-	function truncate():bool
+	function engine(string $name):bool
 	{
-		return $this->mysql->real_query('TRUNCATE TABLE ?a', $this->tablename);
+		return $this->mysql->real_query('ALTER TABLE ?a ENGINE=?s', $this->tablename, $name);
 	}
-	function drop():bool
-	{
-		return $this->mysql->real_query('DROP TABLE ?a', $this->tablename);
-	}
-	//field
-	// function fieldformat(string $fieldname, string $type, ):string
+	// function fields(string $name):array
 	// {
-
+	// 	return $this->mysql->show('FULL FIELDS FROM ?a WHERE `Field`=?s', $this->tablename, $name)->array();
 	// }
-	// function fieldappend(string $fieldname):bool
+	// function truncate():bool
+	// {
+	// 	return $this->mysql->real_query('TRUNCATE TABLE ?a', $this->tablename);
+	// }
+	// function drop():bool
 	// {
 	// 	return $this->mysql->real_query('DROP TABLE ?a', $this->tablename);
-	// }
-	// function fieldchange(string $fieldname)
-	// {
-	// 	return $this->mysql->real_query('ALTER TABLE ?a CHANGE COLUMN ?a old json NULL', $this->tablename, $fieldname);
-	// }
-	// function fieldremove(string $fieldname):bool
-	// {
-	// 	return $this->mysql->real_query('ALTER TABLE ?a DROP COLUMN ?a', $this->tablename, $fieldname);	
 	// }
 }

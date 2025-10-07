@@ -9,6 +9,7 @@ const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
 		dialog.draw(Object.assign({class: 'webapp', accept: 'Accept', cancel: 'Cancel'}, $.is_entries(context) ? context : {content: context})));
 	$.dialog.prompt = context => dialog.open(() =>
 	{
+		const draw = {class: 'webapp'};
 		while ($.is_string(context))
 		{
 			let fieldset;
@@ -17,11 +18,8 @@ const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
 				context = context.startsWith('<')
 					? $.element.template(context)
 					: $(document.querySelector(`template${context}`).content.cloneNode(true));
-				context.find('form').exists(node =>
-				{
-					node.target.onsubmit = event => !dialog.resolve(event.target);
-					node.find('button:is([value=close],[type=reset])').exists(node => node.on('click', () => dialog.close()));
-				});
+				context.find('form').exists(node => node.target.onsubmit = event => !dialog.resolve(event.target));
+				draw.cancel = 'Close';
 				break;
 			}
 			const [name, type, ...value] = context.split(':');
@@ -41,7 +39,7 @@ const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
 			context.append(fieldset);
 			break;
 		}
-		dialog.draw({class: 'webapp'}).append(context);
+		dialog.draw(draw).append(context);
 	});
 	$.dialog.hint = content =>
 	{

@@ -220,7 +220,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 		{
 			$this->cond = [];
 		}
-		return $this->webapp->mysql->{$this->webapp::tablename}(...$cond);
+		return $this->webapp->table(...$cond);
 	}
 	private function cache():webapp_redis_table{}
 	private function primary(string $hash):webapp_mysql_table
@@ -259,12 +259,12 @@ class webapp_nfs implements Countable, IteratorAggregate
 	}
 	function node_exist(?string $node):bool
 	{
-		return $node === NULL || $this->webapp->mysql->{$this->webapp::tablename}
+		return $node === NULL || $this->webapp->table
 			('WHERE `sort`=?i AND `type`=0 AND `hash`=?s LIMIT 1', $this->sort, $node)->select('hash')->value() === $node;
 	}
 	function node_empty(?string $node):bool
 	{
-		return $node !== NULL && $this->webapp->mysql->{$this->webapp::tablename}
+		return $node !== NULL && $this->webapp->table
 			('WHERE `sort`=?i AND `node`=?s LIMIT 1', $this->sort, $node)->select('hash')->value() === NULL;
 	}
 	function filename(string $hash, string $suffix = NULL):string
@@ -273,7 +273,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 	}
 	function create(array $data):?string
 	{
-		return $this->webapp->mysql->{$this->webapp::tablename}->insert([
+		return $this->webapp->table->insert([
 			'hash' => $hash = array_key_exists('hash', $data)
 				&& $this->webapp->is_long_hash($data['hash'])
 					? $data['hash'] : $this->webapp->random_hash(FALSE),
@@ -456,7 +456,11 @@ class webapp_extend_nfs extends webapp
 	{
 		return preg_match('/^[0-9A-V]{12}$/', $hash) === 1;
 	}
-
+	function table(...$conds):webapp_mysql_table
+	{
+		static $table = $this->mysql->table(static::tablename, 'hash');
+		return $conds ? $table(...$conds) : $table;
+	}
 	function client():webapp_nfs_client
 	{
 		// return new webapp_nfs_client('cloudflare_r2', 'access-key-id', 'secret-access-key', 'bucket-name', 'account-id');

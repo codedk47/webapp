@@ -18,13 +18,80 @@ class ffmpeg implements Stringable, Countable
 	{
 		return static::exec('-h') ? join("\n", static::$output) : NULL;
 	}
+	/*
+	-formats			show available formats
+	-muxers				show available muxers
+	-demuxers			show available demuxers
+	-devices			show available devices
+	-codecs				show available codecs
+	-decoders			show available decoders
+	-encoders			show available encoders
+	-bsfs				show available bit stream filters
+	-protocols			show available protocols
+	-filters			show available filters
+	-pix_fmts			show available pixel formats
+	-layouts			show standard channel layouts
+	-sample_fmts		show available audio sample formats
+	-dispositions		show available stream dispositions
+	-colors				show available color names
+	-sources device		list sources of the input device
+	-sinks device		list sinks of the output device
+	-hwaccels			show available HW acceleration methods
+	*/
+	static function available(string $command = 'formats'):array
+	{
+		$result = [];
+		if (static::exec("-{$command}"))
+		{
+			//var_dump(static::$output);
+			$offset = match ($command)
+			{
+				'formats', 'muxers', 'demuxers', 'devices' => ' --',
+				'codecs' => ' -------',
+				'decoders', 'encoders' => ' ------',
+				'bsfs', 'sample_fmts', 'colors', 'hwaccels' => 1,
+				'pix_fmts' => '-----',
+				'filters' => '  | = Source or sink filter',
+				'dispositions' => 0,
+				default => NULL
+			};
+			is_string($offset)
+				&& is_int($offset = array_search($offset, static::$output, TRUE))
+				&& ++$offset;
+			if (is_int($offset))
+			{
+				foreach (array_slice(static::$output, $offset) as $value)
+				{
+					$values = preg_split('/\s+/', trim($value), 3);
+					switch (count($values))
+					{
+						case 3:
+							foreach(explode(',', $values[1]) as $type)
+							{
+								$result[$type] ??= $values[2];
+							}
+							continue 2;
+						case 2:
+							$result[$values[0]] = $values[1];
+							continue 2;
+						default:
+							if (strlen($values[0]))
+							{
+								$result[] = $values[0];
+							}
+					}
+				}
+			}
+		}
+		return $result;
+	}
 	static function probe(string $filename):array
 	{
 		return json_decode(shell_exec(static::ffprobe . " -v quiet -print_format json -show_format -show_streams -allowed_extensions ALL \"{$filename}\""), TRUE);
 	}
 	static function from_m3u8(string $filename):bool
 	{
-		$ffmpeg = new static($filename, FALSE);
+		$ffmpeg = new static($filename);
 		array_push($ffmpeg->options,
 			'-user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"',
 			'-allowed_extensions ALL');
@@ -187,9 +254,9 @@ class ffmpeg implements Stringable, Countable
 			"-an {$outdir}/%%d.webp"
 		], $count, 1 / floor(count($this) / $count));
 	}
-	function preview_video(string $filename)
+	function preview_video(string $filename):bool
 	{
-		$this([
+		return $this([
 			'-c:v webp',
 			'-b:v 480k',
 			'-vf "select=\'lte(mod(t,%d),1)\',scale=-1:240,setpts=N/FRAME_RATE/TB,fps=fps=15"',

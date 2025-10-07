@@ -14,7 +14,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 				['Explorer', "?{$this->routename}"],
 				//['Administrator', "?{$this->routename}/admin"]
 			]);
-			$webapp->mysql->table_exists($webapp::tablename) || $webapp::createtable($webapp->mysql);
+			$webapp->mysql->exists($webapp::tablename) || $webapp::createtable($webapp->mysql);
 		}
 		else
 		{
@@ -57,7 +57,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 
 	
 		$cond->merge('ORDER BY type ASC,t1 DESC,hash ASC');
-		$table = $this->main->table($cond($this->webapp->mysql->{$this->webapp::tablename})->paging($page, 20), function($table, $value, $type)
+		$table = $this->main->table($cond($this->webapp->table)->paging($page, 20), function($table, $value, $type)
 		{
 			$table->row();
 			$table->cell($value['hash']);
