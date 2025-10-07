@@ -211,8 +211,6 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 		$form->field('name', 'text', ['placeholder' => 'File name', 'required' => NULL]);
 		$form->fieldset('Extdata');
 		$form->field('extdata', 'textarea', ['placeholder' => 'JSON String', 'rows' => 8]);
-		$form->fieldset();
-		$form->button('Close', 'button', ['value' => 'close']);
 		return $form;
 	}
 	function post_uploadfile(int $sort, string $node)
@@ -246,8 +244,6 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 		$form->button('Create Folder', 'submit');
 		$form->fieldset('Extdata');
 		$form->field('extdata', 'textarea', ['placeholder' => 'JSON String', 'rows' => 8]);
-		$form->fieldset();
-		$form->button('Close', 'button', ['value' => 'close']);
 		return $form;
 	}
 	function post_createnode(int $sort, string $node)
