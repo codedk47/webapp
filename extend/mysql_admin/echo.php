@@ -459,7 +459,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		}, $name);
 		$table->fieldset('Delete', ...$fields);
 	}
-	function form_data(string $tablename, webapp_html $html = NULL):webapp_form
+	function form_data(string $tablename, webapp_html $html = NULL, &$allownull = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		foreach ($this->mysql->table($tablename)->fields as $data)
@@ -468,33 +468,32 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			preg_match('/(\w+(?:\sunsigned)?)(?:\(([^)]+)\))?/', $data['Type'], $pattern);
 			$params = match ($pattern[1])
 			{
-				'tinyint' => ['number', ['min' => -128, 'max' => 127]],
-				'smallint' => ['number', ['min' => -32768, 'max' => 32767]],
-				'mediumint' => ['number', ['min' => -8388608, 'max' => 8388607]],
-				'int' => ['number', ['min' => -2147483648, 'max' => 2147483647]],
-				'bigint' => ['number', ['min' => PHP_INT_MIN, 'max' => PHP_INT_MAX]],
-				'float',
-				'double' => ['number', ['step' => 0.0001, 'min' => PHP_INT_MIN, 'max' => PHP_INT_MAX]],
-
-				'tinyint unsigned' => ['number', ['min' => 0, 'max' => 255]],
-				'smallint unsigned' => ['number', ['min' => 0, 'max' => 65535]],
-				'mediumint unsigned' => ['number', ['min' => 0, 'max' => 16777215]],
-				'int unsigned' => ['number', ['min' => 0, 'max' => 4294967295]],
-				'bigint unsigned' => ['number', ['min' => 0]],
+				'tinyint'				=> ['number', ['min' => ~0x7f, 'max' => 0x7f]],
+				'smallint'				=> ['number', ['min' => ~0x7fff, 'max' => 0x7fff]],
+				'mediumint'				=> ['number', ['min' => ~0x7fffff, 'max' => 0x7fffff]],
+				'int'					=> ['number', ['min' => ~0x7fffffff, 'max' => 0x7fffffff]],
+				'bigint'				=> ['number', ['min' => ~0x7fffffffffffffff, 'max' => 0x7fffffffffffffff]],
+				'float', 'double'		=> ['number', ['min' => ~0x7fffffffffffffff, 'max' => 0x7fffffffffffffff, 'step' => 0.0001]],
+				'tinyint unsigned'		=> ['number', ['min' => 0, 'max' => 0xff]],
+				'smallint unsigned'		=> ['number', ['min' => 0, 'max' => 0xffff]],
+				'mediumint unsigned'	=> ['number', ['min' => 0, 'max' => 0xffffff]],
+				'int unsigned'			=> ['number', ['min' => 0, 'max' => 0xffffffff]],
+				'bigint unsigned'		=> ['number', ['min' => 0]],
 				'float unsigned',
-				'double unsigned' => ['number', ['step' => 0.0001, 'min' => 0]],
-
+				'double unsigned'		=> ['number', ['min' => 0, 'step' => 0.0001]],
 				'date' => ['date', []],
 				'datetime' => ['datetime-local', []],
 				'set' => ['checkbox', ['options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values)],
 					fn($v, $i) => $i ? join(',', $v) : explode(',', $v)],
 				'enum' => ['radio', ['options' => array_combine($values = explode("','", substr($pattern[2], 1, -1)), $values)]],
-
 				'text' => ['textarea', ['rows' => 8]],
 				'json' => ['textarea', ['rows' => 21]],
-
 				default => ['textarea', isset($pattern[2]) ? ['maxlength' => $pattern[2]] : []]
 			};
+			if ($form->echo === FALSE && $data['Null'] === 'YES')
+			{
+				$allownull[] = $data['Field'];
+			}
 			if ($data['Comment'])
 			{
 				$params[1]['placeholder'] = $data['Comment'];
@@ -502,6 +501,10 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			if ($data['Default'])
 			{
 				$params[1]['value'] = $data['Default'];
+			}
+			if ($data['Null'] === 'NO' && in_array($data['Key'], ['PRI', 'UNI'], TRUE))
+			{
+				$params[1]['required'] = NULL;
 			}
 			$form->field($data['Field'], ...$params);
 		}
@@ -515,8 +518,15 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$tablename = $this->webapp->url64_decode($name);
 		if ($this->webapp->request_content_length())
 		{
-			if ($this->form_data($tablename)->fetch($data))
+			if ($this->form_data($tablename, allownull:$allownull)->fetch($data))
 			{
+				foreach ($allownull as $field)
+				{
+					if (empty($data[$field]))
+					{
+						$data[$field] = NULL;
+					}
+				}
 				$datatable = $this->mysql->table($tablename);
 				if ($primary ? $datatable('WHERE ?a=?s LIMIT 1', $datatable->primary,
 					$primary)->update($data) === 1 : $datatable->insert($data)) {
@@ -567,7 +577,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 						'data-method' => 'delete',
 						'data-confirm' => "Delete {$primary}:{$v} data ?"
 					]
-				]) : $table->cell($v);
+				]) : $table->cell($v === NULL ? ['data-null' => NULL] : $v);
 			}
 		}, $name, $datatable->primary);
 		$table->fieldset(...$fields);

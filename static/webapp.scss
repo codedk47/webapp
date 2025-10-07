@@ -380,6 +380,10 @@ table[class|=webapp]{
 		>tr.fieldset:first-of-type{
 			background-color: hsl(var(--webapp-default) 90%);
 		}
+		>tr>td[data-null]::before{
+			content: 'NULL';
+			color: hsl(var(--webapp-color-hint));
+		}
 	}
 	>tfoot{
 		background-color: hsl(var(--webapp-anchor) 98%);
