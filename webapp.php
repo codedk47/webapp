@@ -46,7 +46,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function simplified_chinese(string $content):string
 	{
-		return static::lib('utf8_charset/simplified_chinese.php', $content);
+		return static::lib('utf8_chinese/simplified.php', $content);
 	}
 	static function mime(string $filename):string
 	{
@@ -59,6 +59,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	static function qrcode(string $content, int $level = 0):IteratorAggregate&Countable
 	{
 		return static::lib('qrcode/interface.php', $content, $level);
+	}
+	static function debugtimer(?float &$time = 0):float
+	{
+		return $time = microtime(TRUE) - $time;
 	}
 	static function time(int $offset = 0):int
 	{
@@ -330,14 +334,8 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 	}
 	// }
 
-	// static function debugtime(?float &$time = 0):float
-	// {
-	// 	return $time = microtime(TRUE) - $time;
-	// }
-	// static function splitchar(string $content):array
-	// {
-	// 	return preg_match_all('/[\x01-\x7f]|[\xc2-\xdf][\x80-\xbf]|\xe0[\xa0-\xbf][\x80-\xbf]|[\xe1-\xef][\x80-\xbf][\x80-\xbf]|\xf0[\x90-\xbf][\x80-\xbf][\x80-\xbf]|[\xf1-\xf7][\x80-\xbf][\x80-\xbf][\x80-\xbf]/', $content, $pattern) === FALSE ? [] : $pattern[0];
-	// }
+
+
 
 	// static function filenameescape(string $basename):string
 	// {
@@ -615,10 +613,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			$this->entry = $params;
 		}
 	}
-	// final function entry(array $params):void
-	// {
-	// 	$this->entry = $params + $this->entry;
-	// }
+	final function entry(array $params):void
+	{
+		$this->entry = $params + $this->entry;
+	}
 	final function buffer():mixed
 	{
 		return fopen('php://memory', 'r+');
