@@ -90,7 +90,7 @@ class webapp_nfs_client extends webapp_client_http
 	}
 	function test():void
 	{
-		// $a = $this->request('GET', '/workers/btc.txt');
+		// $a = $this->request('GET', '/');
 		// var_dump($a, $this->status($res), $res, $this->content());
 	}
 	function request(string $method, string $path, $body = NULL, string $type = NULL):bool

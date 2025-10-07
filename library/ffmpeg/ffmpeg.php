@@ -211,7 +211,7 @@ class ffmpeg
 				return array_slice([240, 360, 480, 720, 1080, 1440, 2160], 0, $i + 1);
 			}
 		}
-		return [360];
+		return [144];
 	}
 	//m3u8
 	function m3u8_play(string $dirname, array $quality):bool

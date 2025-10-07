@@ -2,7 +2,7 @@
 该库为PQ分离浏览器库，为了PQ核心函库数可以独立运行在其他JS平台上
 请与PQ核心库一起使用，由ZERONETA编写PQ库的扩展在WebApp骨架上使用
 */
-import pq from './pq.min.js';
+import pq from './pq.min.mjs';
 export default new pq((window, undefined)=>
 {
 	const//Web APIs

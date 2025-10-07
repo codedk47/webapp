@@ -219,7 +219,7 @@ class webapp_echo_html extends webapp_implementation
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
 		$this->stylesheet('/webapp/static/webapp.css');
-		$this->script(['type' => 'module', 'src' => '/webapp/static/js/webapp.js']);
+		$this->script(['type' => 'module', 'src' => '/webapp/static/modules/webapp.mjs']);
 		$webapp['manifests'] && $this->link(['rel' => 'manifest', 'href' => '?manifests']);
 		$node = $this->xml->append('body')->append('div', ['class' => 'webapp-grid']);
 		[$this->header, $this->aside, $this->main, $this->footer] = [

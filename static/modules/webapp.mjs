@@ -1,5 +1,5 @@
 "use strict";
-const webapp = import('./webkit.js').then(function({default: $}, undefined)
+const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
 {
 	const xhr = $.xhr, dialog = $.dialog(true);
 	xhr.upload.onprogress = event => xhr.progress && (xhr.progress.value = event.loaded / event.total);

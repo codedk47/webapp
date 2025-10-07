@@ -52,6 +52,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return static::lib('fileinfo/mime.php', $filename);
 	}
+	static function ffmpeg(string ...$filename):Closure|ffmpeg
+	{
+		return static::lib('ffmpeg/interface.php', ...$filename);
+	}
 	static function qrcode(string $content, int $level = 0):IteratorAggregate&Countable
 	{
 		return static::lib('qrcode/interface.php', $content, $level);
@@ -1346,6 +1350,7 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 		}
 		return $count;
 	}
+
 
 	
 	// function movefile(int $index, string $filename):bool
