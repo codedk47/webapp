@@ -1,18 +1,13 @@
 <?php
 class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 {
-	private readonly array $connect;
+	private readonly array $connect, $charsets;
 	private readonly string $charset, $database;
 	private readonly webapp_mysql $mysql;
 	function __construct(webapp $webapp)
 	{
 		parent::__construct($webapp);
-		$this->stylesheet('/webapp/extend/mysql_admin/echo.css');
-		
-		if ($this->init === FALSE)
-		{
-			$this->script(['src' => '/webapp/extend/mysql_admin/echo.js']);
-		}
+		$this->style('@import url(/webapp/static/fonts/titilliumweb/import.css);:root{--webapp-font-default:titilliumweb}');
 		if ($this->auth)
 		{
 			$this->title('MySQL Admin');
@@ -37,8 +32,8 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 						['Variables', "?{$this->routename}/variables"],
 						['Processlist', "?{$this->routename}/processlist"],
 					]);
-					$charset = $this->mysql->characterset->column('Charset');
-					$node = $this->aside->select(array_combine($charset, $charset))->setattr([
+					$charset = $this->mysql->charsets->column('Charset');
+					$node = $this->aside->select($this->charsets = array_combine($charset, $charset))->setattr([
 						'data-action' => "?{$this->routename},command:charset",
 						'onchange' => '$.action(this)'
 					]);
@@ -150,6 +145,12 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			$this->echo->redirect("?{$this->routename}/console");
 		}
 	}
+	function post_database()
+	{
+		$this->json();
+		$this->mysql->real_query('ALTER DATABASE ?a CHARACTER SET ?s', $this->database, $this->input())
+			&& $this->echo->refresh();
+	}
 	function patch_database()
 	{
 		$this->json();
@@ -166,7 +167,6 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	}
 	function get_database()
 	{
-		//print_r( $this->mysql->tablestatus->all() );
 		$table = $this->main->table($this->mysql->tables, function($table, $value)
 		{
 			$table->row();
@@ -184,13 +184,18 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		});
 		$table->fieldset('Comment', 'Name:Rows', 'Engine', 'Collation', 'Row_format', 'Create_time', 'Update_time');
 		$table->header($this->database);
-		$table->footer($this->mysql->create);
+		$table->footer($create = $this->mysql->create);
 		$table->bar->append('a', ['Create table',
 			'href' => "?{$this->routename}/table",
 			'onclick' => 'return $.action(this)',
 			'class' => 'primary',
 			'data-prompt' => 'Type table name:text'
 		]);
+		$table->bar->select($this->charsets)->setattr([
+			'onchange' => '$.action(this)',
+			'data-method' => 'post',
+			'data-action' => "?{$this->routename}/database",
+		])->selected(preg_match('/CHARACTER SET\s+(\w+)/', $create, $pattern) ? $pattern[1] :NULL);
 		$table->bar->append('a', ['Truncate all table',
 			'href' => "?{$this->routename}/database",
 			'class' => 'danger',
@@ -243,7 +248,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$form->field('extra', 'select', ['required' => NULL,
 			'options' => array_combine($extra = ['none', 'auto_increment'], $extra)]);
 		$form->field('collation', 'select', ['placeholder' => 'Type default value',
-			'options' => ['' => 'default'] + $this->mysql->collation->group('Charset', 'Collation', 'Collation')]);
+			'options' => ['' => 'default'] + $this->mysql->show('COLLATION')->group('Charset', 'Collation', 'Collation')]);
 
 		$form->fieldset();
 		$form->button('Submit', 'submit');
@@ -352,13 +357,14 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	function patch_table(string $name, string $command)
 	{
 		$this->json();
-		$tablename = $this->webapp->url64_decode($name);
 		$input = $this->input();
+		$tablename = $this->webapp->url64_decode($name);
 		[$commands, $redirect] = match ($command)
 		{
 			'rename' => [['ALTER TABLE ?a RENAME ?a', $tablename, $input],
 				"?{$this->routename}/table,name:" . $this->webapp->url64_encode($input)],
 			'engine' => [['ALTER TABLE ?a ENGINE=?s', $tablename, $input], NULL],
+			'charset' => [['ALTER TABLE ?a CONVERT TO CHARACTER SET ?s', $tablename, $input], NULL],
 			'index' => [['ALTER TABLE ?a ADD INDEX(?a)', $tablename, $input], NULL],
 			'unique' => [['ALTER TABLE ?a ADD UNIQUE(?a)', $tablename, $input], NULL],
 			'primary' => [['ALTER TABLE ?a ADD PRIMARY KEY(?a)', $tablename, $input], NULL],
@@ -373,10 +379,8 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	}
 	function get_table(string $name)
 	{
-		$tablename = $this->webapp->url64_decode($name);
-		$this->form_data($tablename, $this->template('form_data'));
-		$this->form_field($tablename, $this->template('form_field'));
-		$table = $this->main->table($this->mysql->table($tablename)->fields->result($fields), function($table, $value, $name)
+		$datatable = $this->mysql->table($this->webapp->url64_decode($name));
+		$table = $this->main->table($datatable->fields->result($fields), function($table, $value, $name)
 		{
 			$field = $this->webapp->url64_encode($value['Field']);
 			$table->row();
@@ -403,15 +407,15 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			$table->cell($value['Privileges']);
 		}, $name);
 		$table->fieldset('Field', 'Comment', ...array_slice($fields, 1, -1));
-		$table->header($tablename);
-		$table->footer()->details('Show create table')->append('pre', $create = $this->mysql->table($tablename)->create);
+		$table->header($datatable->tablename);
+		$table->footer()->details('Show create table')->append('pre', $datatable->create);
 		$table->bar->append('a', ['View data', 'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'default']);
+		$this->form_data($datatable->tablename, $this->template('form_data'));
 		$table->bar->append('a', ['Insert data', 'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'primary',
-
 			'onclick' => 'return $.action(this)',
 			'data-prompt' => "#form_data"
 		]);
-
+		$this->form_field($datatable->tablename, $this->template('form_field'));
 		$table->bar->append('a', ['Append field',
 			'href' => "?{$this->routename}/table,name:{$name}",
 			'onclick' => 'return $.action(this)',
@@ -421,30 +425,40 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'href' => "?{$this->routename}/table,name:{$name},command:rename",
 			'onclick' => 'return $.action(this)',
 			'data-method' => 'patch',
-			'data-prompt' => "New table name:text:{$tablename}"
+			'data-prompt' => "New table name:text:{$datatable->tablename}"
 		]);
 		$table->bar->select($this->mysql->engines->column('Engine', 'Engine'))->setattr([
 			'onchange' => '$.action(this)',
 			'data-method' => 'patch',
 			'data-action' => "?{$this->routename}/table,name:{$name},command:engine"
-		])->selected(preg_match('/ENGINE\=(\w+)/', $create, $engines) ? $engines[1] : '');
-
+		])->selected($datatable->engine);
+		$table->bar->select($this->charsets)->setattr([
+			'onchange' => '$.action(this)',
+			'data-method' => 'patch',
+			'data-action' => "?{$this->routename}/table,name:{$name},command:charset",
+			'data-confirm' => <<<'TEXT'
+			Caution: Converting a table's character set and collation can lead to
+			data loss or corruption if the data is not compatible with the new settings.
+			It is recommended to back up your data before performing this operation.
+			Continue convert ?
+			TEXT,
+		])->selected($datatable->charset);
 		$table->bar->append('a', ['Truncate table',
 			'href' => "?{$this->routename}/table,name:{$name},command:truncate",
 			'class' => 'danger',
 			'onclick' => 'return $.action(this)',
 			'data-method' => 'patch',
-			'data-confirm' => "Clean \"{$tablename}\" table ?"
+			'data-confirm' => "Clean \"{$datatable->tablename}\" table ?"
 		]);
 		$table->bar->append('a', ['Drop table',
 			'href' => "?{$this->routename}/table,name:{$name}",
 			'class' => 'danger',
 			'onclick' => 'return $.action(this)',
 			'data-method' => 'delete',
-			'data-confirm' => "Delete \"{$tablename}\" table ?"
+			'data-confirm' => "Delete \"{$datatable->tablename}\" table ?"
 		]);
 		$table->xml['style'] = 'margin-bottom:var(--webapp-gap)';
-		$table = $this->main->table($this->mysql->table($tablename)->index->result($fields), function($table, $value, $name)
+		$table = $this->main->table($datatable->index->result($fields), function($table, $value, $name)
 		{
 			$table->row();
 			$table->cell()->append('a', ['Delete',
@@ -515,10 +529,10 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	function post_data(string $name, string $primary = NULL)
 	{
 		$this->json();
-		$tablename = $this->webapp->url64_decode($name);
+		$datatable = $this->mysql->table($this->webapp->url64_decode($name));
 		if ($this->webapp->request_content_length())
 		{
-			if ($this->form_data($tablename, allownull:$allownull)->fetch($data))
+			if ($this->form_data($datatable->tablename, allownull:$allownull)->fetch($data))
 			{
 				foreach ($allownull as $field)
 				{
@@ -527,7 +541,6 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 						$data[$field] = NULL;
 					}
 				}
-				$datatable = $this->mysql->table($tablename);
 				if ($primary ? $datatable('WHERE ?a=?s LIMIT 1', $datatable->primary,
 					$primary)->update($data) === 1 : $datatable->insert($data)) {
 					$this->echo->refresh();
@@ -536,8 +549,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		}
 		else
 		{
-			$datatable = $this->mysql->table($tablename);
-			$form = $this->form_data($tablename, $this->main);
+			$form = $this->form_data($datatable->tablename, $this->main);
 			$form->echo($datatable('WHERE ?a=?s LIMIT 1', $datatable->primary, $primary)->array());
 			$this->echo->prompt($form);
 			$this->echo->continue("?{$this->routename}/data,name:{$name},primary:{$primary}");
@@ -557,8 +569,8 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	}
 	function get_data(string $name, string $cond = NULL, int $page = 1)
 	{
-		$this->form_data($tablename = $this->webapp->url64_decode($name), $this->template('form_data'));
-		$datatable = $this->mysql->table($tablename);
+		$datatable = $this->mysql->table($this->webapp->url64_decode($name));
+		$this->form_data($datatable->tablename, $this->template('form_data'));
 		is_string($cond = $this->webapp->decrypt($cond)) && $datatable($cond);
 		$table = $this->main->table($datatable->paging($page)->result($fields), function($table, $value, $name, $primary)
 		{
@@ -581,7 +593,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			}
 		}, $name, $datatable->primary);
 		$table->fieldset(...$fields);
-		$table->header($tablename);
+		$table->header($datatable->tablename);
 		$table->paging(['page' => '']);
 		$table->bar->append('a', ['Back table', 'href' => "?{$this->routename}/table,name:{$name}", 'class' => 'default']);
 		$table->bar->append('a', ['Insert data', 'href' => "?{$this->routename}/data,name:{$name}", 'class' => 'primary',

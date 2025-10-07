@@ -323,6 +323,12 @@ class webapp_echo_html extends webapp_implementation
 	{
 		return $this->link(['rel' => 'stylesheet', 'type' => 'text/css', 'href' => $filename, 'media' => $media]);
 	}
+	function style(string $stylesheet, string $media = 'all'):webapp_html
+	{
+		$style = $this->xml->head->append('style', ['media' => $media]);
+		$style->text($stylesheet);
+		return $style;
+	}
 	function script(array|string $context):webapp_html
 	{
 		$script = $this->xml->head->append('script');
@@ -358,15 +364,12 @@ class webapp_echo_html extends webapp_implementation
 				: ['rel' => $rel, 'href' => $href]);
 		}
 	}
-	function script_variables(array $variables, string $name = 'WEBAPP'):void
-	{
-		$this->script("const {$name}=" . json_encode($variables, JSON_UNESCAPED_UNICODE));
-	}
-
-	// function addstyle(string $rule):DOMText
+	// function script_variables(array $variables, string $name = 'WEBAPP'):void
 	// {
-	// 	return ($this->style ??= $this->xml->head->append('style', ['media' => 'all']))->text($rule);
+	// 	$this->script("const {$name}=" . json_encode($variables, JSON_UNESCAPED_UNICODE));
 	// }
+
+
 	// function wallpaper()
 	// {
 	// 	$this->script(['src' => '/webapp/static/js/tgwallpaper.min.js']);
@@ -408,7 +411,6 @@ class webapp_echo_html extends webapp_implementation
 		$form->button('Search', 'submit');
 		return $form;
 	}
-
 
 	static function form_sign_in(array|webapp|webapp_html $context, ?string $authurl = NULL):webapp_form
 	{

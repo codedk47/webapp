@@ -817,10 +817,10 @@ class webapp_html extends webapp_xml
 			default => '//option/@value'
 		}));
 	}
-	function multiple_selectable()
-	{
+	// function multiple_selectable()
+	// {
 
-	}
+	// }
 	function details_popup(string $summary = NULL, ?iterable $anchors = NULL):static
 	{
 		$node = $this->details($summary);
@@ -828,7 +828,7 @@ class webapp_html extends webapp_xml
 		$anchors && $node->listmenu($anchors, TRUE, TRUE);
 		return $node;
 	}
-	function details_popup_button(string $summary = NULL, ?iterable $anchors = NULL, string $class = 'webapp-button'):static
+	function details_popup_button(string $summary = NULL, ?iterable $anchors = NULL, ?string $class = 'webapp-button'):static
 	{
 		$node = $this->details_popup($summary, $anchors);
 		$node->summary['class'] = $class;

@@ -30,14 +30,15 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return match ($name)
 		{
+			'charset' => $this->character_set_name(),
+			'collation' => $this->get_charset()->collation,
 			'database' => $this('SELECT DATABASE()')->value(),
 			'create' => $this->show('CREATE DATABASE ?a', $this->database)->value(1),
-			'processlist' => $this->show('PROCESSLIST'),
-			'characterset' => $this->show('CHARACTER SET'),
+			'charsets' => $this->show('CHARACTER SET'),
 			'databases' => $this->show('DATABASES'),
 			'tables' => $this->show('TABLE STATUS'),
 			'engines' => $this->show('ENGINES'),
-			'collation' => $this->show('COLLATION'),
+			'processlist' => $this->show('PROCESSLIST'),
 			default => NULL
 		};
 	}
@@ -309,6 +310,8 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 			'primary' => $this->primary = $this->mysql->primary($this->tablename),
 			'create' => $this->mysql->show('CREATE TABLE ?a', $this->tablename)->value(1),
 			'engine' => $this->mysql->show('TABLE STATUS LIKE ?s', $this->tablename)->array()['Engine'],
+			'collation' => $this->mysql->show('TABLE STATUS LIKE ?s', $this->tablename)->array()['Collation'],
+			'charset' => strstr($this->collation, '_', TRUE),
 			'fields' => $this->mysql->show('FULL FIELDS FROM ?a', $this->tablename),
 			'index' => $this->mysql->show('INDEX FROM ?a', $this->tablename),
 			default => NULL
