@@ -23,11 +23,11 @@ return new class extends webapp
 
 ```
 
-在浏览器上访问你刚刚编写的 php 来看看效果
+*在浏览器上访问你刚刚编写的 php 来看看效果*
 ---
 ### 大概功能介绍
 - Streams 的 TCP Client，包括 HTTP、SMTP、WebSocket
-- SimpleXMLElement 的 DOM 操作，XML、SVG、HTML、等……
+- SimpleXMLElement 的 DOM 操作，XML、SVG、HTML
 - GdImage 扩展简单的图像处理，生成验证码、二维码
 - HTML5 原生表单生成和验证输入
 - MySQL 扩展和单表操作以及一些功能
