@@ -50,4 +50,4 @@ class webapp_router_mysql_admin extends webapp_extend_mysql_admin_echo{
 return new class extends webapp;
 ```
 
-*在浏览器上访问刚刚编写的 php 文件进行测试*
+*开始测试*
