@@ -58,7 +58,8 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function qrcode(string $content, int $level = 0):IteratorAggregate&Countable
 	{
-		return static::lib('qrcode/interface.php', $content, $level);
+		return static::lib('misc/qrcode_encode.php', $content, $level);
+		//return static::lib('qrcode/interface.php', $content, $level);
 	}
 	static function debugtimer(?float &$time = 0):float
 	{
@@ -431,7 +432,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			'qrcode_echo'		=> TRUE,
 			'qrcode_ecc'		=> 0,
 			'qrcode_size'		=> 4,
-			'qrcode_maxdata'	=> 256,
+			'qrcode_maxdata'	=> 1024,
 			//Misc
 			'copy_webapp'		=> 'Web Application v' . self::version,
 			'smtp_url'			=> 'ssl://user:pass@smtp.gmail.com:465',
@@ -1138,13 +1139,13 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		}
 		return 404;
 	}
-	function get_qrcode(string $encode, string $type = NULL, string $filename = NULL)
+	function get_qrcode(string $encrypt, string $type = NULL, string $filename = NULL)
 	{
-		if ($this['qrcode_echo'] && is_string($decode = $this->decrypt($encode)) && strlen($decode) < $this['qrcode_maxdata'])
+		if ($this['qrcode_echo'] && is_string($decrypt = $this->decrypt($encrypt)) && strlen($decrypt) < $this['qrcode_maxdata'])
 		{
-			if ($this->nonematch($decode . $type, TRUE))
+			if ($this->nonematch($decrypt . $type, TRUE))
 			{
-				$draw = static::qrcode($decode, $this['qrcode_ecc']);
+				$draw = static::qrcode($decrypt, $this['qrcode_ecc']);
 				in_array($type, ['png', 'jpeg'], TRUE)
 					? $this->response_content_type("image/{$type}")
 						|| webapp_image::qrcode($draw, $this['qrcode_size'])->{$type}($this->buffer)
