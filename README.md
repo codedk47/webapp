@@ -1,10 +1,10 @@
 # *webapp*
 ---
 *`v4.7.1b (PHP >= 8.3)`*
-- 它是一个全局配置的I/O路由对象
-- 它可以嵌入在常驻内存型PHP逻辑服务端运行
+- 它是一个全局配置的 I/O 路由对象
+- 它可以嵌入在常驻内存型 PHP 逻辑服务端运行
 - 它可以嵌入在其他框架内运行并不影响其他框架行为
-- 它可以当作框架来运行构建简单WEB项目并没有太多的约束
+- 它可以当作框架来运行构建简单 Web 项目并没有太多的约束
 - **建议有一定经验的程序员使用!**
 
 ### 让我们看一个简单的列子
@@ -14,7 +14,7 @@
 require 'webapp/webapp_stdio.php';
 return new class extends webapp
 {
-	#默认的路由请求是 GET home,当然你也可以修改 webapp 默认的路由地址
+	#默认的路由请求是 GET home 当然你也可以修改 webapp 默认的路由地址
 	function get_home()
 	{
 		$this->echo('Hi Web!');
@@ -22,13 +22,13 @@ return new class extends webapp
 };
 ```
 
-*在浏览器上访问刚刚编写的 php 进行测试*
+*在浏览器上访问刚刚编写的 php 文件进行测试*
 
 ---
 
 ### 大概功能介绍
-- Streams 的 TCP Client，包括 HTTP、SMTP、WebSocket
-- SimpleXMLElement 的 DOM 操作，XML、SVG、HTML
+- Streams 的 TCP Client 包括 HTTP、SMTP、WebSocket 协议
+- SimpleXMLElement 的 DOM 操作，比如 XML、SVG、HTML
 - GdImage 扩展简单的图像处理，生成验证码、二维码
 - HTML5 原生表单生成和验证输入
 - MySQL 扩展和单表操作以及一些功能
