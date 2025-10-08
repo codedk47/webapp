@@ -7,7 +7,7 @@
 - 它可以当作框架来运行构建简单WEB项目并没有太多的约束
 - **建议有一定经验的程序员使用!**
 
-### 让我们看一个简单的列子吧
+### 让我们看一个简单的列子
 
 ```PHP
 <?php
@@ -22,9 +22,10 @@ return new class extends webapp
 };
 ```
 
-*^^在浏览器上访问你刚刚编写的 php 来看看效果^^*
+*在浏览器上访问刚刚编写的 php 进行测试*
 
 ---
+
 ### 大概功能介绍
 - Streams 的 TCP Client，包括 HTTP、SMTP、WebSocket
 - SimpleXMLElement 的 DOM 操作，XML、SVG、HTML
