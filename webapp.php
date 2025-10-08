@@ -56,10 +56,9 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return static::lib('ffmpeg/interface.php', ...$filename);
 	}
-	static function qrcode(string $content, int $level = 0):IteratorAggregate&Countable
+	static function qrcode(string $data, int $ecc = 0):IteratorAggregate&Countable
 	{
-		return static::lib('misc/qrcode_encode.php', $content, $level);
-		//return static::lib('qrcode/interface.php', $content, $level);
+		return static::lib('misc/qrcode_encode.php', $data, $ecc);
 	}
 	static function debugtimer(?float &$time = 0):float
 	{
