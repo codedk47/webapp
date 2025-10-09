@@ -402,15 +402,23 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			'request_query'		=> $io->request_query(),
 			//Application
 			'app_charset'		=> 'utf-8',
-			'app_called'		=> FALSE,
+			'app_locale'		=> 'zh-CN',
 			'app_router'		=> 'webapp_router_',
 			'app_index'			=> 'home',
-			'app_help'			=> TRUE,
 			//Admin
 			'admin_username'	=> 'admin',
 			'admin_password'	=> 'nimda',
 			'admin_cookie'		=> 'webapp',
 			'admin_expire'		=> 604800,
+			//Captcha
+			'captcha_length'	=> 4,
+			'captcha_expire'	=> 99,
+			'captcha_params'	=> [210, 86, __DIR__ . '/static/fonts/ArchitectsDaughter_R.ttf', 28],
+			//QRCode
+			'qrcode_echo'		=> TRUE,
+			'qrcode_ecc'		=> 0,
+			'qrcode_maxdata'	=> 1024,
+			'qrcode_pixel'		=> 4,
 			//MySQL
 			'mysql_hostname'	=> 'p:127.0.0.1:3306',
 			'mysql_username'	=> 'root',
@@ -421,15 +429,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			//Redis
 			'redis_open'		=> ['127.0.0.1', 6379],
 			'redis_auth'		=> [],
-			//Captcha
-			'captcha_length'	=> 4,
-			'captcha_expire'	=> 99,
-			'captcha_params'	=> [210, 86, __DIR__ . '/static/fonts/ArchitectsDaughter_R.ttf', 28],
-			//QRCode
-			'qrcode_echo'		=> TRUE,
-			'qrcode_ecc'		=> 0,
-			'qrcode_size'		=> 4,
-			'qrcode_maxdata'	=> 1024,
 			//Misc
 			'copy_webapp'		=> 'Web Application v' . self::version,
 			'smtp_url'			=> 'ssl://user:pass@smtp.gmail.com:465',
@@ -614,6 +613,53 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return fopen('php://memory', 'r+');
 	}
+	function locale(&$set, string $prefix, string ...$locales):string
+	{
+		static $local = (fn($locale, $language) => [...$locale ? [$locale] : [], ...$language
+			? array_map(fn($v) => strstr("{$v};", ';', TRUE), explode(',', $language)) : []])
+			($this->io->request_cookie('locale'), $this->io->request_header('Accept-Language'));
+		$localed = $this['app_locale'];
+		foreach ($local as $locale)
+		{
+			if (in_array($locale, $locales, TRUE))
+			{
+				$localed = $locale;
+				break;
+			}
+		}
+		$set = require "{$prefix}{$localed}.php";
+		return $localed;
+	}
+	function nonematch(string $etag):bool
+	{
+		$this->io->response_header('Etag', sprintf('"%s"', $hash = static::hash($etag, TRUE)));
+		return $this->io->request_header('If-None-Match') !== $hash;
+	}
+	function webappxml():webapp_xml
+	{
+		return static::xml(sprintf('<?xml version="1.0" encoding="%s"?><webapp version="%s"/>', $this['app_charset'], self::version));
+	}
+	function at(array $params, string $router = NULL):string
+	{
+		return array_reduce(array_keys($replace = array_reverse($params + $this->query, TRUE)),
+			fn($carry, $key) => is_scalar($replace[$key])
+				? (is_bool($replace[$key]) ? $carry : "{$carry},{$key}:{$replace[$key]}")
+				: "{$carry},{$key}", $router ?? strstr("?{$this['request_query']},", ',', TRUE));
+	}
+	#iconv
+	function iconv(string $encoding, string $text):?string
+	{
+		return is_string($data = @iconv($encoding, $this['app_charset'], $text)) ? $data : NULL;
+	}
+	function strlen(string $text):int
+	{
+		return iconv_strlen($text, $this['app_charset']);
+	}
+	function substr(string $text, int $offset, ?int $length = NULL):string
+	{
+		return iconv_substr($text, $offset, $length, $this['app_charset']);
+	}
+	#echo
 	function echo(string $data):bool
 	{
 		return fwrite($this->buffer, $data) === strlen($data);
@@ -629,13 +675,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	function putcsv(array $values, string $delimiter = ',', string $enclosure = '"'):int
 	{
 		return fputcsv($this->buffer, $values, $delimiter, $enclosure);
-	}
-	function at(array $params, string $router = NULL):string
-	{
-		return array_reduce(array_keys($replace = array_reverse($params + $this->query, TRUE)),
-			fn($carry, $key) => is_scalar($replace[$key])
-				? (is_bool($replace[$key]) ? $carry : "{$carry},{$key}:{$replace[$key]}")
-				: "{$carry},{$key}", $router ?? strstr("?{$this['request_query']},", ',', TRUE));
 	}
 	// function echo_object(string|object $instance, mixed ...$params):object
 	// {
@@ -704,22 +743,19 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 		? static::authorize($this->request_authorization(), $authenticate)
 	// 		: $this->admin($this->request_authorization());
 	// }
-	function authorized(string $additional = NULL):array
-	{
-		return ['Authorization' => 'Bearer ' . static::signature($this['admin_username'], $this['admin_password'], $additional)];
-	}
-	function strlen($text):int
-	{
-		return iconv_strlen($text, $this['app_charset']);
-	}
-	function webappxml():webapp_xml
-	{
-		return static::xml(sprintf('<?xml version="1.0" encoding="%s"?><webapp version="%s"/>', $this['app_charset'], self::version));
-	}
+	// function authorized(string $additional = NULL):array
+	// {
+	// 	return ['Authorization' => 'Bearer ' . static::signature($this['admin_username'], $this['admin_password'], $additional)];
+	// }
+
+
+
 	//---------------------
-
-
-	//----------------
+	
+	function smtp(string $url = NULL):webapp_client_smtp
+	{
+		return new webapp_client_smtp($url ?? $this['smtp_url']);
+	}
 	function open(string $url, array $options = []):webapp_client_http
 	{
 		// $options['headers']['Authorization'] ??= 'Bearer ' . static::signature($this['admin_username'], $this['admin_password']);
@@ -736,41 +772,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		// 	array_push($this->errors, ...$client->errors);
 		// }
 		// return $this($client->headers(['User-Agent' => 'WebApp/' . self::version]));
-	}
-	// function formdata(array|webapp_html $node = NULL, string $action = NULL):array|webapp_html_form
-	// {
-	// 	if (is_array($node))
-	// 	{
-	// 		$form = new webapp_html_form($this);
-	// 		foreach ($node as $name => $attr)
-	// 		{
-	// 			$form->field($name, ...is_array($attr) ? [$attr['type'], $attr] : [$attr]);
-	// 		}
-	// 		return $form->fetch() ?? [];
-	// 	}
-	// 	return new webapp_html_form($this, $node, $action);
-	// }
-	//function sqlite():webapp_sqlite{}
-	function mysql(...$commands):webapp_mysql
-	{
-		if ($commands)
-		{
-			return ($this->mysql)(...$commands);
-		}
-		if (property_exists($this, 'mysql'))
-		{
-			return $this->mysql;
-		}
-		$mysql = new webapp_mysql($this['mysql_hostname'], $this['mysql_username'], $this['mysql_password'], $this['mysql_database'], $this['mysql_maptable']);
-		if ($mysql->connect_errno)
-		{
-			$this->errors[] = $mysql->connect_error;
-		}
-		else
-		{
-			$mysql->set_charset($this['mysql_charset']);
-		}
-		return $this($mysql);
 	}
 	function cond(...$conditions):object
 	{
@@ -818,19 +819,33 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			}
 		};
 	}
+	//function sqlite():webapp_sqlite{}
+	function mysql(...$commands):webapp_mysql
+	{
+		if ($commands)
+		{
+			return ($this->mysql)(...$commands);
+		}
+		if (property_exists($this, 'mysql'))
+		{
+			return $this->mysql;
+		}
+		$mysql = new webapp_mysql($this['mysql_hostname'], $this['mysql_username'], $this['mysql_password'], $this['mysql_database'], $this['mysql_maptable']);
+		if ($mysql->connect_errno)
+		{
+			$this->errors[] = $mysql->connect_error;
+		}
+		else
+		{
+			$mysql->set_charset($this['mysql_charset']);
+		}
+		return $this($mysql);
+	}
 	function redis():webapp_redis
 	{
 		$redis = new webapp_redis($this, ...$this['redis_open']);
 		$this['redis_auth'] && $redis->auth($this['redis_auth']);
 		return $this($redis);
-	}
-	function locale():array
-	{
-		return [];
-	}
-	function smtp(string $url = NULL):webapp_client_smtp
-	{
-		return new webapp_client_smtp($url ?? $this['smtp_url']);
 	}
 	//request
 	function request_header(string $name):?string
@@ -1029,11 +1044,8 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 	return substr($maskdata, 8);
 	// }
 	//append function
-	function nonematch(string $etag, bool $needhash = FALSE):bool
-	{
-		$this->response_header('Etag', $hash = '"' . ($needhash ? static::hash($etag, TRUE) : $etag) . '"');
-		return $this->request_header('If-None-Match') !== $hash;
-	}
+
+
 	// private function remote_encode_value(NULL|bool|int|float|string|array|webapp_xml $value):array
 	// {
 	// 	return match (get_debug_type($value))
@@ -1139,8 +1151,8 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				$draw = static::qrcode($decrypt, $this['qrcode_ecc']);
 				in_array($type, ['png', 'jpeg'], TRUE)
 					? $this->response_content_type("image/{$type}")
-						|| webapp_image::qrcode($draw, $this['qrcode_size'])->{$type}($this->buffer)
-					: $this->echo_svg()->xml->qrcode($draw, $this['qrcode_size']);
+						|| webapp_image::qrcode($draw, $this['qrcode_pixel'])->{$type}($this->buffer)
+					: $this->echo_svg()->xml->qrcode($draw, $this['qrcode_pixel']);
 				$filename && $this->response_content_download($filename);
 				return 200;
 			}

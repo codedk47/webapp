@@ -2,10 +2,15 @@
 declare(strict_types=1);
 trait webapp_echo
 {
+	public $locale;
 	public array $errors = [];
 	public readonly webapp $webapp;
 	abstract function __construct(webapp $webapp);
 	abstract function __toString():string;
+	function locale(string $prefix, string ...$locales):string
+	{
+		return $this->webapp->locale($this->locale, $prefix, ...$locales);
+	}
 	function input(string $type = NULL):webapp_xml|array|string
 	{
 		return $this->webapp->request_content(match ($type)
@@ -201,9 +206,9 @@ class webapp_echo_json extends ArrayObject implements Stringable
 		$this['refresh'] = $url;
 	}
 }
-class webapp_echo_html extends webapp_implementation
+class webapp_echo_html extends webapp_implementation implements ArrayAccess
 {
-	use webapp_echo;
+	use webapp_echo {locale as private echo_locale;}
 	public readonly array $auth;
 	public readonly string $routename;
 	protected string|webapp_html|webapp_echo_json $echo;
@@ -214,7 +219,7 @@ class webapp_echo_html extends webapp_implementation
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
 		parent::__construct();
 		$this->routename = $webapp->routename;
-		$this->xml->setattr(['lang' => 'en'])->append('head');
+		$this->xml->setattr(['lang' => $webapp['app_locale']])->append('head');
 		$this->meta(['charset' => $webapp['app_charset']]);
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
@@ -235,6 +240,26 @@ class webapp_echo_html extends webapp_implementation
 			'webapp_echo_json' => (string)$this->echo,
 			default => $this->echo
 		} : parent::__toString();
+	}
+	final function offsetExists(mixed $offset):bool
+	{
+		return array_key_exists($offset, $this->locale);
+	}
+	final function offsetGet(mixed $offset):mixed
+	{
+		return $this->locale[$offset] ?? NULL;
+	}
+	final function offsetSet(mixed $offset, mixed $value):void
+	{
+		$this->locale[$offset] = $value;
+	}
+	final function offsetUnset(mixed $offset):void
+	{
+		unset($this->locale[$offset]);
+	}
+	final function locale(string $prefix, string ...$locales):string
+	{
+		return $this->xml['lang'] = $this->echo_locale($prefix, ...$locales);
 	}
 	final function initauth(webapp|string $context, string ...$allow):void
 	{
@@ -288,6 +313,16 @@ class webapp_echo_html extends webapp_implementation
 		// return false;
 		// JS;
 		return 401;
+	}
+	function clear(bool $all = FALSE):void
+	{
+		if ($all)
+		{
+			unset($this->xml->head->link,
+				$this->xml->head->script,
+				$this->xml->head->title);
+		}
+		unset($this->xml->body->div);
 	}
 	function echo(string $data = ''):void
 	{
