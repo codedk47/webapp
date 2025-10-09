@@ -270,7 +270,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->button('提交生成', 'submit');
 		$form->fieldset()->append('img', ['name' => 'result']);
 
-		$form->echo && $form->echo(['size' => 8]);
+		$form->echo && $form->echo(['size' => 4]);
 		return $form;
 	}
 	function get_qrcode_create()

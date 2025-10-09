@@ -526,16 +526,38 @@ dialog[class|=webapp]{
 }
 
 :is([class|=webapp]){
-
-	// &[class*=plittle]{
-	// 	padding: var(--webapp-gaplittle);
+	// &[class*=-fs14]{
+	// 	font-size: 14px;
 	// }
-	// &[class*=pmedium]{
+	// &[class*=-fs18]{
+	// 	font-size: 18px;
+	// }
+	// &[class*=-fs20]{
+	// 	font-size: 20px;
+	// }
+	// &[class*=-pl]{
+	// 	padding: var(--webapp-gap);
+	// }
+	// &[class*=-pm]{
 	// 	padding: var(--webapp-gapitem);
 	// }
-	// &[class*=plarge]{
-	// 	padding: var(--webapp-ga);
+	// &[class*=-ps]{
+	// 	padding: var(--webapp-gaplittle);
 	// }
+	// &[class*=-plrs]{
+	// 	padding-left: var(--webapp-gaplittle);
+	// 	padding-right: var(--webapp-gaplittle);
+	// }
+	// &[class*=-ptbs]{
+	// 	padding-top: var(--webapp-gaplittle);
+	// 	padding-bottom: var(--webapp-gaplittle);
+	// }
+	
+
+	// &[class*=-flex]{
+	// 	display: flex;
+	// }
+
 	// margin: 0;
 	// padding: 0;
 	// &[class*=-inline]{

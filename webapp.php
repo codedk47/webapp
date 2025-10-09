@@ -37,12 +37,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	public string $method;
 	private array $errors = [], $cookies = [], $headers = [], $uploadedfiles, $configs, $route, $entry;
 	private static array $lib = [], $remote = [];
-	static function lib(string $filename, ...$parameters)
+	static function lib(string $filename, ...$parameters):mixed
 	{
-		$lib = array_key_exists($name = strtolower($filename), static::$lib)
-			? static::$lib[$name]
-			: static::$lib[$name] = require is_file($name) ? $name : __DIR__ . "/library/{$name}";
-		return $parameters ? $lib(...$parameters) : $lib;
+		static::$lib[$name = strtolower($filename)] ??= (require is_file($name) ? $name : __DIR__ . "/library/{$name}") ?? 1;
+		return $parameters && is_callable(static::$lib[$name]) ? static::$lib[$name](...$parameters) : static::$lib[$name];
 	}
 	static function simplified_chinese(string $content):string
 	{
@@ -680,13 +678,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			?? $this->request_cookie($storage ?? $this['admin_cookie']), $authenticate
 			?? $this->admin(...));
 	}
-	// function allow(string|self $router, string ...$methods):bool
-	// {
-	// 	return $this->router === $router
-	// 		&& in_array($this->method, $router === $this ? [
-	// 			'get_captcha', 'get_qrcode', 'get_favicon', 'get_manifests', ...$methods] : $methods, TRUE);
-	// }
-
+	
 
 
 	// function request_authorized(callable $authenticate = NULL, string $storage = NULL)
