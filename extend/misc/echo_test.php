@@ -18,7 +18,7 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 	}
 	function get_home()
 	{
-		$localed = $this->locale('D:/wmhp/work/', 'en', 'zh1');
+		$localed = $this->locale('D:/wmhp/work/');
 
 		$this->main->text("{$localed}: {$this['asd']}");
 	}

@@ -1,0 +1,1 @@
+https://simplelocalize.io/data/locales/
