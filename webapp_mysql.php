@@ -12,7 +12,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 			//ini_set('mysqli.reconnect', TRUE);
 			mysqli_report(MYSQLI_REPORT_STRICT);
 			parent::__construct();
-			parent::options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
+			//parent::options(MYSQLI_OPT_INT_AND_FLOAT_NATIVE, 1);
 			//parent::options(MYSQLI_OPT_CONNECT_TIMEOUT, 1);
 			parent::real_connect($hostname, $username, $password, $database, flags: MYSQLI_CLIENT_FOUND_ROWS | MYSQLI_CLIENT_INTERACTIVE);
 			//parent::ping();
