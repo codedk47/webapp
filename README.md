@@ -13,7 +13,7 @@
 ### 大概功能介绍
 - Streams 的 TCP Client 包括 HTTP、SMTP、WebSocket 协议
 - SimpleXMLElement 的 DOM 操作，比如 XML、SVG、HTML
-- Locale 区域设置、环境、多国语言实现支持
+- Locale 按需加载区域设置、环境、多国语言实现支持
 - GdImage 扩展简单的图像处理，生成验证码、二维码
 - HTML5 原生表单生成和验证输入
 - MySQL 扩展和单表操作以及一些功能
