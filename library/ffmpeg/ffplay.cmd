@@ -2,5 +2,6 @@
 title FFPlay
 :play
 set /p filename=File:
-ffplay -allowed_extensions ALL %filename%
+cls
+ffplay -hide_banner -allowed_extensions ALL %filename%
 goto play

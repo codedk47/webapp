@@ -10,6 +10,7 @@ export default new pq((window, undefined)=>
 		Array,
 		atob,
 		btoa,
+		cookieStore,
 		CSSStyleSheet,
 		clearInterval,
 		clearTimeout,
@@ -40,17 +41,27 @@ export default new pq((window, undefined)=>
 	} = window,
 	fromCodePoint = String.fromCodePoint, cookie =
 	{
+
+		refresh(name)
+		{
+			//arguments.length ? cookieStore[arguments.length > 1 ? 'set' : 'delete'](...arguments) : Promise.resolve()
+			location.reload(arguments.length > 1 ? cookie.set(...arguments) : pq.is_string(name) && cookie.delete(name));
+		},
 		set(name, value = '', expire, path, domain, secure)
 		{
+			return cookieStore.set(...arguments);
 			document.cookie = [`${pq.urlencode(name)}=${pq.urlencode(value)}`,
-			pq.is_int(expire) ? `;expires=${pq.date_create(expire).toUTCString()}` : '',
-			pq.is_string(path) ? `;path=${path}` : '',
-			pq.is_string(domain) ? `;domain=${domain}` : '',
-			secure ? ';secure' : ''].join('');
+				pq.is_int(expire) ? `;expires=${pq.date_create(expire).toUTCString()}` : '',
+				pq.is_string(path) ? `;path=${path}` : '',
+				pq.is_string(domain) ? `;domain=${domain}` : '',
+				secure ? ';secure' : ''].join('');
 		},
+		// set : (...params) => cookieStore.set(...params),
+		// delete : name => cookieStore.delete(name),
 		delete(name)
 		{
-			document.cookie = `${pq.urlencode(name)}=;expires=0`;
+			return cookieStore.delete(name);
+			document.cookie = `${pq.urlencode(name)}=0;expires=0`;
 		},
 		get(name)
 		{

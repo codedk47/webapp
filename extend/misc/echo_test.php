@@ -10,7 +10,8 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 				['Back to webapp home', '?']
 			]],
 			['JavaScript Action', "?{$this->routename}/jsa"],
-			['QRCode', "?{$this->routename}/qrcode"]
+			['QRCode', "?{$this->routename}/qrcode"],
+			['FFMpeg', "?{$this->routename}/ffmpeg"]
 		]);
 	}
 	function post_home()
@@ -18,9 +19,15 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 	}
 	function get_home()
 	{
-		$localed = $this->locale('D:/wmhp/work/');
-
-		$this->main->text("{$localed}: {$this['asd']}");
+		$localed = $this->webapp->locales($this->locale);
+		$this->main->select([
+			'zh-CN' => 'Chinese',
+			'en' => 'English',
+			'km-KH' => 'Khmer',
+			'ja-JP' => 'Japanese',
+			'ko' => 'Korean'
+		])->selected($localed)['onchange'] = 'location.reload($.cookie.set("locale",this.value))';
+		$this->main->text("{$localed}: {$this['hello']}");
 	}
 
 
@@ -66,5 +73,22 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 
 
 		$this->main->append('img', ['src' => "?{$this->routename}/qrcode,data:asd"]);
+	}
+
+	function get_ffmpeg()
+	{
+		$f = $this->webapp->ffmpeg('C:\Users\admin\Desktop\youtube\watch.mp4');
+
+		//print_r( $f->resolution(998) );
+
+		//$f->video('D:\wmhp\work\m\m.mp4', 720);
+
+		//$f->m3u8('D:\wmhp\work\m', 540);
+
+		var_dump( $f->m3u8('D:\wmhp\work\m' ) );
+
+		//var_dump( webapp_ffmpeg_interface::from_m3u8_save_as('http://127.0.0.1/m/play.m3u8', 'D:\wmhp\work\m/play.mp4') );
+		
+
 	}
 }

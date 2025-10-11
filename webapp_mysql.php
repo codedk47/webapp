@@ -327,19 +327,16 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	}
 	function __toString():string
 	{
-		$cond = $this->cond;
-		$this->fields = '*';
-		$this->cond = '';
-		return strlen($cond) ? ' ' . $cond : $cond;
+		return [$this->cond, $this->fields = '*', $this->cond = ''][0];
 	}
 	function count(string &$cond = NULL):int
 	{
 		$cond = $this->cond;
-		return intval(($this->mysql)('SELECT SQL_NO_CACHE COUNT(1) FROM ?a?? LIMIT 1', $this->tablename, (string)$this)->value());
+		return intval(($this->mysql)('SELECT SQL_NO_CACHE COUNT(1) FROM ?a ?? LIMIT 1', $this->tablename, (string)$this)->value());
 	}
 	function getIterator():webapp_mysql|Traversable
 	{
-		return ($this->mysql)('SELECT ?? FROM ?a??', $this->fields, $this->tablename, (string)$this);
+		return ($this->mysql)('SELECT ?? FROM ?a ??', $this->fields, $this->tablename, (string)$this);
 	}
 	function result(&$fields = NULL, bool $detailed = FALSE):iterable
 	{
@@ -420,11 +417,11 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	}
 	function delete(mixed ...$conditionals):int
 	{
-		return ($this->mysql)('DELETE FROM ?a??', $this->tablename, (string)($conditionals ? $this(...$conditionals) : $this))->affected_rows;
+		return ($this->mysql)('DELETE FROM ?a ??', $this->tablename, (string)($conditionals ? $this(...$conditionals) : $this))->affected_rows;
 	}
 	function update(iterable|string $data):int
 	{
-		return ($this->mysql)('UPDATE ?a SET ????', $this->tablename, $this->mysql->format(...is_iterable($data) ? ['?v', $data] : func_get_args()), (string)$this)->affected_rows;
+		return ($this->mysql)('UPDATE ?a SET ?? ??', $this->tablename, $this->mysql->format(...is_iterable($data) ? ['?v', $data] : func_get_args()), (string)$this)->affected_rows;
 	}
 	function select(iterable|string $fields):static
 	{

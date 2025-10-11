@@ -50,7 +50,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return static::lib('fileinfo/mime.php', $filename);
 	}
-	static function ffmpeg(string ...$filename):Closure|ffmpeg
+	static function ffmpeg(string ...$filename):Closure|webapp_ffmpeg_interface
 	{
 		return static::lib('ffmpeg/interface.php', ...$filename);
 	}
@@ -630,6 +630,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		$set = require "{$prefix}{$localed}.php";
 		return $localed;
 	}
+	function locales(&$set):string
+	{
+		return $this->locale($set, __DIR__ . '/extend/locale/', 'zh-CN', 'en', 'km-KH', 'ja-JP', 'ko');
+	}
 	function nonematch(string $etag):bool
 	{
 		$this->io->response_header('Etag', sprintf('"%s"', $hash = static::hash($etag, TRUE)));
@@ -773,25 +777,25 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		// }
 		// return $this($client->headers(['User-Agent' => 'WebApp/' . self::version]));
 	}
-	function cond(...$conditions):object
+	function cond(...$conditionals):object
 	{
-		return new class($this->query, ...$conditions)
+		return new class($this->query, ...$conditionals)
 		{
 			private array $syntax = [], $values = [], $merge = [];
-			function __construct(private readonly array $query, ...$conditions)
+			function __construct(private readonly array $query, ...$conditionals)
 			{
-				$this->append(...$conditions);
+				$this->append(...$conditionals);
 			}
 			function __invoke(callable $object):object
 			{
-				if ($object instanceof webapp_mysql_table && $this->syntax)
-				{
-					$this->syntax[0] = "WHERE {$this->syntax[0]}";
-				}
 				$syntax = join(' AND ', $this->syntax);
+				if ($syntax && $object instanceof webapp_mysql_table)
+				{
+					$syntax = "WHERE {$syntax} ";
+				}
 				if ($this->merge)
 				{
-					$syntax = trim($syntax . ' ' . join(',', $this->merge));
+					$syntax .= join(',', $this->merge);
 				}
 				return $syntax ? $object($syntax, ...$this->values) : $object;
 			}
@@ -805,17 +809,17 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				}
 				return NULL;
 			}
-			function append(...$conditions):void
+			function append(...$conditionals):void
 			{
-				if ($conditions)
+				if ($conditionals)
 				{
-					$this->syntax[] = array_shift($conditions);
-					array_push($this->values, ...$conditions);
+					$this->syntax[] = array_shift($conditionals);
+					array_push($this->values, ...$conditionals);
 				}
 			}
-			function merge(string $conditions):void
+			function merge(string $conditionals):void
 			{
-				$this->merge[] = $conditions;
+				$this->merge[] = $conditionals;
 			}
 		};
 	}
