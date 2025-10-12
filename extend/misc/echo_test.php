@@ -85,7 +85,7 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 
 		//$f->m3u8('D:\wmhp\work\m', 540);
 
-		var_dump( $f->m3u8('D:\wmhp\work\m' ) );
+		//var_dump( $f->m3u8('D:\wmhp\work\m' ) );
 
 		//var_dump( webapp_ffmpeg_interface::from_m3u8_save_as('http://127.0.0.1/m/play.m3u8', 'D:\wmhp\work\m/play.mp4') );
 		

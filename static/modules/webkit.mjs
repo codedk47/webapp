@@ -39,8 +39,39 @@ export default new pq((window, undefined)=>
 		WebSocket,
 		XMLHttpRequest
 	} = window,
-	fromCodePoint = String.fromCodePoint, cookie =
-	{
+	fromCodePoint = String.fromCodePoint, cookie = new Proxy({
+		asd: 123,
+		refresh(name)
+		{
+			cookie
+		}
+	}, {
+		// set(target, thisArg, argumentsList)
+		// {
+		// 	console.log(target, thisArg, argumentsList)
+		// },
+		get(target, property, receiver)
+		{
+			return (asd) => console.log(asd);
+			console.log(target, property)
+			
+			//cookieStore.get(property).then(a => console.log(a.value))
+
+
+			// const find = ` ${pq.urlencode(property)}=`, cookie = ` ${document.cookie};`, offset = cookie.indexOf(find) + find.length;
+
+			// console.log(find, "\n", cookie, "\n", offset, "\n",
+			
+			// cookie.indexOf(';', offset),
+			// "\n",
+			// pq.urldecode(cookie.substring(offset, cookie.indexOf(';', offset))) , [offset, find.length])
+			
+			// return offset > find.length ? pq.urldecode(cookie.substring(offset, cookie.indexOf(';', offset))) : '';
+
+		}
+	});
+	
+	const aaa = {
 
 		refresh(name)
 		{
