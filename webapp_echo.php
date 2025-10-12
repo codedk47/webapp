@@ -216,7 +216,7 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	function __construct(public readonly webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
 
-		$webapp->response_header('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-inline' 'unsafe-eval'");
+		$webapp->response_header('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-eval'");
 		$webapp->response_header('X-Content-Type-Options', 'nosniff');
 		$webapp->response_header('X-Frame-Options', 'DENY');
 
