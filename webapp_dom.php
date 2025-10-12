@@ -1123,10 +1123,6 @@ class webapp_form implements ArrayAccess
 			else
 			{
 				$errors = &($this->context)(new stdClass)->errors;
-				if (isset($this->context->echo) && $this->context->echo instanceof ArrayObject)
-				{
-					$error = &$this->context->echo['error'];
-				}
 				$input ??= $this->context->request_content((string)$this->xml['enctype']);
 				if (isset($this->captcha) && (isset($input['captcha_encrypt'], $input['captcha_decrypt'])
 					&& is_string($input['captcha_encrypt']) && is_string($input['captcha_decrypt'])

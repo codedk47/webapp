@@ -1,13 +1,12 @@
 "use strict";
-const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
+const webapp = import('../modules/webkit.mjs').then(function({default: $}, undefined)
 {
-	const xhr = $.xhr, dialog = $.dialog(true);
-	xhr.upload.onprogress = event => xhr.progress && (xhr.progress.value = event.loaded / event.total);
-	$.dialog.message = context => dialog.open(() =>
-		dialog.draw(Object.assign({class: 'webapp', accept: 'OK'}, $.is_entries(context) ? context : {content: context})));
-	$.dialog.confirm = context => dialog.open(() =>
-		dialog.draw(Object.assign({class: 'webapp', accept: 'Accept', cancel: 'Cancel'}, $.is_entries(context) ? context : {content: context})));
-	$.dialog.prompt = context => dialog.open(() =>
+	const xhr = $.xhr, dialog = $.dialog(true),
+	message = context => dialog.open(() =>
+		dialog.draw(Object.assign({class: 'webapp', accept: 'OK'}, $.is_entries(context) ? context : {content: context}))),
+	confirm = context => dialog.open(() =>
+		dialog.draw(Object.assign({class: 'webapp', accept: 'Accept', cancel: 'Cancel'}, $.is_entries(context) ? context : {content: context}))),
+	prompt = context => dialog.open(() =>
 	{
 		const draw = {class: 'webapp'};
 		while ($.is_string(context))
@@ -41,22 +40,12 @@ const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
 		}
 		dialog.draw(draw).append(context);
 	});
-	$.dialog.hint = content =>
-	{
-		const dialog = $.dialog();
-		dialog.open(() =>
-		{
-			dialog.draw({class: 'webapp-hint', content});
-			dialog.once('transitionend', () => dialog.remove());
-			setTimeout(() => dialog.target.style.opacity = 0, 600);
-		});
-	};
 	async function pending(context)
 	{
 		let retval;
 		if ($.is_object(context) && $.is_array(context.errors) && context.errors.length)
 		{
-			await $.dialog.message({class: 'webapp-warning', title: 'Errors', content: context.errors.join('\n')});
+			await message({class: 'webapp-warning', title: 'Errors', content: context.errors.join('\n')});
 		}
 		for (let method of ['message', 'confirm', 'prompt'])
 		{
@@ -77,7 +66,7 @@ const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
 	{
 		if (xhr.status < 200 || xhr.status > 299)
 		{
-			return $.dialog.message({class: 'webapp-warning', title: xhr.status, content: xhr.statusText});
+			return message({class: 'webapp-warning', title: xhr.status, content: xhr.statusText});
 		}
 		try
 		{
@@ -94,7 +83,7 @@ const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
 		}
 		catch (error)
 		{
-			$.dialog.message({class: 'webapp-warning', title: error.message, content: xhr.responseText.trim()});
+			message({class: 'webapp-warning', title: error.message, content: xhr.responseText.trim()});
 		}
 	}
 	async function action(context, retval)
@@ -154,43 +143,61 @@ const webapp = import('./webkit.mjs').then(function({default: $}, undefined)
 		}
 		return xhr.request(method || (body === null ? 'GET' : 'POST'), url, body).then(callback);
 	}
-	$.action = element => !pending(element.dataset).then(retval => action(element, retval), demission => demission);
-
-	$.copytoclipboard = (content, success = 'Copied!') => navigator.clipboard
-		.writeText(content).then($.is_string(success) ? () => $.dialog.hint(success) : success);
-
-	// $.save_content_as = (text, name) =>
-	// {
-	// 	const a = document.createElement('a');
-	// 	a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
-	// 	a.download = name;
-	// 	a.click();
-	// };
-	$.delete_cookie_reload = name => location.reload($.cookie.delete(name));
-
-	$.previewimage = (input, element) => element.src = input.files.length ? URL.createObjectURL(input.files[0]) : null;
-
-	$.authsignin = (element, callback) =>
+	Object.assign($.dialog, {message, confirm, prompt, hint(content)
 	{
-		if (element.style.pointerEvents !== 'none')
+		const dialog = $.dialog();
+		dialog.open(() =>
 		{
-			const
-				account = Object.fromEntries(new FormData(element).entries()),
-				fieldset = element.querySelectorAll('fieldset');
-			element.style.pointerEvents = 'none';
-			fieldset.forEach(field => field.disabled = true);
-			element.oninput = () => Object.keys(account).forEach(field => element[field].setCustomValidity(''));
-			fetch(element.action, {headers: {'Sign-In': encodeURI(JSON.stringify(account))}}).then(response => response.json()).then(callback)
-				.finally(() => fieldset.forEach(field => field.disabled = false), element.style.pointerEvents = null);
+			dialog.draw({class: 'webapp-hint', content});
+			dialog.once('transitionend', () => dialog.remove());
+			setTimeout(() => dialog.target.style.opacity = 0, 600);
+		});
+	}});
+	return globalThis.$ = Object.assign($, {
+		action(element)
+		{
+			return !pending(element.dataset).then(retval => action(element, retval), demission => demission);
+		},
+		at(p, a)
+		{
+			location.assign(((o,q)=>Object.keys(o).reduce((p,k)=>o[k]===null?p:`${p},${k}:${o[k]}`,q))
+			(...typeof(p)==="string"?[{},p]:[
+				Object.assign(Object.fromEntries(Array.from(location.search.matchAll(/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/g)).map(v=>v.slice(1))),p),
+				a||location.search.replace(/\,.+/,"")]))
+		},
+		sign_in(form, authorize)
+		{
+			if (form.style.pointerEvents !== 'none')
+			{
+				const data = $.formdata(form), fieldset = form.querySelectorAll('fieldset');
+				form.style.pointerEvents = 'none';
+				fieldset.forEach(field => field.disabled = true);
+				form.oninput = () => data.keys().forEach(field => form[field].setCustomValidity(''));
+				fetch(form.action, {headers: {'Sign-In': data.toString()}}).then(response => response.json()).then(authorize || (authorize =>
+					authorize.signature
+						? $.cookie.refresh(form.dataset.storage, authorize.signature)
+						: (form[authorize.error.field].setCustomValidity(authorize.error.message),
+							requestAnimationFrame(() => form.reportValidity())))).finally(() =>
+					(fieldset.forEach(field => field.disabled = false), form.style.pointerEvents = null));
+			}
+			return false;
+		},
+		copytoclipboard(content, success = 'Copied!')
+		{
+			$.copy(content).then($.is_string(success) ? () => $.dialog.hint(success) : success);
+		},
+		// save_content_as(text, name)
+		// {
+		// 	const a = document.createElement('a');
+		// 	a.href = URL.createObjectURL(new Blob([text], {type: 'text/plain'}));
+		// 	a.download = name;
+		// 	a.click();
+		// },
+		previewimage(input, element)
+		{
+			element.src = input.files.length ? URL.createObjectURL(input.files[0]) : null;
 		}
-		return false;
-	};
-	$.at = (p, a) => location.assign(((o,q)=>Object.keys(o).reduce((p,k)=>o[k]===null?p:`${p},${k}:${o[k]}`,q))
-		(...typeof(p)==="string"?[{},p]:[
-			Object.assign(Object.fromEntries(Array.from(location.search.matchAll(/\,(\w+)(?:\:([\%\+\-\.\/\=\w]*))?/g)).map(v=>v.slice(1))),p),
-			a||location.search.replace(/\,.+/,"")]));
-
-	return globalThis.$ = $;
+	});
 });
 addEventListener('DOMContentLoaded', () =>
 {

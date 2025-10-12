@@ -2,7 +2,7 @@
 该库为PQ分离浏览器库，为了PQ核心函库数可以独立运行在其他JS平台上
 请与PQ核心库一起使用，由ZERONETA编写PQ库的扩展在WebApp骨架上使用
 */
-import pq from './pq.min.mjs';
+import pq from './pq.mjs';
 export default new pq((window, undefined)=>
 {
 	const//Web APIs
@@ -23,10 +23,12 @@ export default new pq((window, undefined)=>
 		getComputedStyle,
 		HTMLElement,
 		Image,
+		JSON,
 		location,
 		Map,
 		Notification,
 		navigator,
+		Object,
 		Proxy,
 		Set,
 		String,
@@ -36,68 +38,31 @@ export default new pq((window, undefined)=>
 		TextEncoder,
 		Uint32Array,
 		Uint8Array,
+		URLSearchParams,
 		WebSocket,
 		XMLHttpRequest
 	} = window,
-	fromCodePoint = String.fromCodePoint, cookie = new Proxy({
-		asd: 123,
+	fromCodePoint = String.fromCodePoint, cookie = {
 		refresh(name)
 		{
-			cookie
-		}
-	}, {
-		// set(target, thisArg, argumentsList)
-		// {
-		// 	console.log(target, thisArg, argumentsList)
-		// },
-		get(target, property, receiver)
-		{
-			return (asd) => console.log(asd);
-			console.log(target, property)
-			
-			//cookieStore.get(property).then(a => console.log(a.value))
-
-
-			// const find = ` ${pq.urlencode(property)}=`, cookie = ` ${document.cookie};`, offset = cookie.indexOf(find) + find.length;
-
-			// console.log(find, "\n", cookie, "\n", offset, "\n",
-			
-			// cookie.indexOf(';', offset),
-			// "\n",
-			// pq.urldecode(cookie.substring(offset, cookie.indexOf(';', offset))) , [offset, find.length])
-			
-			// return offset > find.length ? pq.urldecode(cookie.substring(offset, cookie.indexOf(';', offset))) : '';
-
-		}
-	});
-	
-	const aaa = {
-
-		refresh(name)
-		{
-			//arguments.length ? cookieStore[arguments.length > 1 ? 'set' : 'delete'](...arguments) : Promise.resolve()
 			location.reload(arguments.length > 1 ? cookie.set(...arguments) : pq.is_string(name) && cookie.delete(name));
 		},
 		set(name, value = '', expire, path, domain, secure)
 		{
-			return cookieStore.set(...arguments);
-			document.cookie = [`${pq.urlencode(name)}=${pq.urlencode(value)}`,
-				pq.is_int(expire) ? `;expires=${pq.date_create(expire).toUTCString()}` : '',
-				pq.is_string(path) ? `;path=${path}` : '',
-				pq.is_string(domain) ? `;domain=${domain}` : '',
-				secure ? ';secure' : ''].join('');
+			document.cookie = `${pq.urlencode(name)}=${pq.urlencode(value)}`
+				+ (pq.is_int(expire) ? `;expires=${pq.date_create(expire).toUTCString()}` : '')
+				+ (pq.is_string(path) ? `;path=${path}` : '')
+				+ (pq.is_string(domain) ? `;domain=${domain}` : '')
+				+ (secure ? ';secure' : '');
 		},
-		// set : (...params) => cookieStore.set(...params),
-		// delete : name => cookieStore.delete(name),
 		delete(name)
 		{
-			return cookieStore.delete(name);
-			document.cookie = `${pq.urlencode(name)}=0;expires=0`;
+			document.cookie = `${pq.urlencode(name)}=;expires=${pq.date_create(0).toUTCString()}`;
 		},
 		get(name)
 		{
 			const find = ` ${pq.urlencode(name)}=`, cookie = ` ${document.cookie};`, offset = cookie.indexOf(find) + find.length;
-			return offset > find.length ? pq.urldecode(cookie.substring(offset, cookie.indexOf(';', offset))) : '';
+			return offset >= find.length ? pq.urldecode(cookie.substring(offset, cookie.indexOf(';', offset))) : '';
 		},
 		all()
 		{
@@ -112,6 +77,7 @@ export default new pq((window, undefined)=>
 			}
 		}
 	};
+
 	// ,
 	// ajax = pq.mapping(()=> pq.http),
 	// observers = new Map,
@@ -399,6 +365,18 @@ export default new pq((window, undefined)=>
 		// 		}
 		// 	}
 		// }
+		// get fields()
+		// {
+		// 	return [...new Set(this.keys())];
+		// }
+		// get json()
+		// {
+		// 	return Object.fromEntries(this.entries());
+		// }
+		toString()
+		{
+			return new URLSearchParams(this).toString();
+		}
 	}
 
 	class xhr extends XMLHttpRequest
@@ -481,7 +459,11 @@ export default new pq((window, undefined)=>
 		cookie,
 		element,
 		extend: 			(classname, prototype) => Object.assign({element, dialog, formdata, websocket}[classname].prototype, prototype),
-		
+		copy(data)
+		{
+			return navigator.clipboard.writeText(data);
+		},
+
 		// clipboard:			navigator.clipboard,
 		// session:			window.sessionStorage,
 		// storage:			window.localStorage,

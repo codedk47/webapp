@@ -31,7 +31,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 	}
 	function get_admin()
 	{
-		$this->main->append('button', ['Sign out Administrator', 'onclick' => '$.delete_cookie_reload("nfs")', 'class' => 'primary']);
+		$this->main->append('button', ['Sign out Administrator', 'onclick' => '$.cookie.refresh("nfs")', 'class' => 'primary']);
 	}
 	function get_home(int $sort = 0, int $page = 1, string $search = NULL, string $node = NULL)
 	{

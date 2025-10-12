@@ -215,9 +215,9 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	public readonly webapp_html $header, $aside, $main, $footer;
 	function __construct(public readonly webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
-		//$webapp->response_header('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-eval'");
-		$webapp->response_header('X-Content-Type-Options', 'nosniff');
-		$webapp->response_header('X-Frame-Options', 'DENY');
+		// $webapp->response_header('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-eval'");
+		// $webapp->response_header('X-Content-Type-Options', 'nosniff');
+		// $webapp->response_header('X-Frame-Options', 'DENY');
 		//https://validator.w3.org/nu/#textarea
 		$webapp->response_content_type("text/html; charset={$webapp['app_charset']}");
 		parent::__construct();
@@ -227,7 +227,7 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
 		$this->stylesheet('/webapp/static/webapp.css');
-		$this->script(['type' => 'module', 'src' => '/webapp/static/modules/webapp.mjs']);
+		$this->script(['fetchpriority' => 'high', 'src' => '/webapp/static/scripts/webapp.js']);
 		$webapp['manifests'] && $this->link(['rel' => 'manifest', 'href' => '?manifests']);
 		$node = $this->xml->append('body')->append('div', ['class' => 'webapp-grid']);
 		[$this->header, $this->aside, $this->main, $this->footer] = [
@@ -269,18 +269,15 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		[$this->auth, $authenticate, $storage] = is_string($context)
 			? [$this->webapp->auth($this->authenticate(...), $context), $this->authenticate(...), $context]
 			: [$this->webapp->auth, $this->webapp->authenticate(...), $this->webapp['admin_cookie']];
-		if (in_array($this->webapp->method, $allow, TRUE) === FALSE && empty($this->auth))
-		{
-			$this->webapp->response_status($this->auth(json_decode(rawurldecode(
-				$this->webapp->request_header('Sign-In') ?? ''), TRUE), $authenticate, $storage));
-		}
+		in_array($this->webapp->method, $allow, TRUE) === FALSE && empty($this->auth)
+			&& $this->webapp->response_status($this->auth($authenticate, $storage));
 	}
-	function auth(?array $data, callable $authenticate, string $storage):int
+	function auth(callable $authenticate, string $storage):int
 	{
-		if (is_array($data))
+		if ($data = $this->webapp->request_sign_in())
 		{
 			$this->json();
-			if (static::form_sign_in($this->webapp)->fetch($account, input: $data))
+			if (static::form_sign_in($this->webapp)->fetch($account, $this->echo['error'], $data))
 			{
 				if ($auth = $authenticate($account['username'], $account['password'], $this->webapp->time))
 				{
@@ -293,28 +290,8 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 			}
 			return 200;
 		}
-		$this->title('Authenticate');
-		$form = static::form_sign_in($this->main);
-		$form->xml['onsubmit'] = 'return $.authsignin(this,authorize=>authorize.signature?location.reload(document.cookie=`${this.dataset.storage}=${authorize.signature};path=/`):(this[authorize.error.field].setCustomValidity(authorize.error.message),requestAnimationFrame(()=>this.reportValidity())))';
-		$form->xml['data-storage'] = $storage;
-		// $form->xml['onsubmit'] = <<<'JS'
-		// if (this.style.pointerEvents !== 'none')
-		// {
-		// 	const
-		// 	account = Object.fromEntries(new FormData(this).entries()),
-		// 	fieldset = this.querySelectorAll('fieldset');
-		// 	this.style.pointerEvents = 'none';
-		// 	fieldset.forEach(field => field.disabled = true);
-		// 	this.oninput = event => Object.keys(account).forEach(field => this[field].setCustomValidity(''));
-		// 	fetch(this.action, {headers: {'Sign-In': encodeURI(JSON.stringify(account))}}).then(response => response.json())
-		// 	.then(authorize => authorize.signature
-		// 		? location.reload(document.cookie = `${this.dataset.storage}=${authorize.signature};path=/`)
-		// 		: (this[authorize.error.field].setCustomValidity(authorize.error.message),
-		// 			requestAnimationFrame(() => this.reportValidity())))
-		// 	.finally(() => fieldset.forEach(field => field.disabled = false), this.style.pointerEvents = null);
-		// }
-		// return false;
-		// JS;
+		$this->title('Authorization');
+		static::form_sign_in($this->main, $storage);
 		return 401;
 	}
 	function clear(bool $all = FALSE):void
@@ -450,9 +427,9 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		return $form;
 	}
 
-	static function form_sign_in(array|webapp|webapp_html $context, ?string $authurl = NULL):webapp_form
+	static function form_sign_in(array|webapp|webapp_html $context, ?string $storage = NULL):webapp_form
 	{
-		$form = new webapp_form($context, $authurl);
+		$form = new webapp_form($context);
 		$form->fieldset('Username');
 		$form->field('username', 'text', ['placeholder' => 'Type username', 'required' => NULL, 'autofocus' => NULL]);
 		$form->fieldset('Password');
@@ -460,7 +437,11 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		$form->captcha('Captcha');
 		$form->fieldset();
 		$form->button('Sign In', 'submit');
-		$form->xml['spellcheck'] = 'false';
+		$form->xml->setattr([
+			'spellcheck' => 'false',
+			'onsubmit' => 'return $.sign_in(this)',
+			'data-storage' => $storage
+		]);
 		return $form;
 	}
 }

@@ -9,6 +9,7 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 				['Back to current home', "?{$this->routename}"],
 				['Back to webapp home', '?']
 			]],
+			['Form', "?{$this->routename}/form"],
 			['JavaScript Action', "?{$this->routename}/jsa"],
 			['QRCode', "?{$this->routename}/qrcode"],
 			['FFMpeg', "?{$this->routename}/ffmpeg"]
@@ -26,10 +27,29 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 			'km-KH' => 'Khmer',
 			'ja-JP' => 'Japanese',
 			'ko' => 'Korean'
-		])->selected($localed)['onchange'] = 'location.reload($.cookie.set("locale",this.value))';
+		])->selected($localed)['onchange'] = '$.cookie.refresh("locale",this.value)';
 		$this->main->text("{$localed}: {$this['hello']}");
 	}
 
+	function get_form()
+	{
+
+		$form = new webapp_form($this->main);
+
+		$form->fieldset('aaaa');
+		$form->field('t', 'text');
+
+
+		$form->fieldset('aaaa');
+		$form->field('m', 'checkbox', ['options' => [
+			'dasd' => 'wwdddddddddddda',
+			'weaeae' => 'wwakljij'
+		]]);
+
+		$form->fieldset();
+		$form->button('submit');
+
+	}
 
 	function post_jsa()
 	{

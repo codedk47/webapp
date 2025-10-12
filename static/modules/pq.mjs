@@ -11,7 +11,7 @@
 		static Infinity = global.Infinity;
 		static NaN = global.NaN;
 		static encoding = 'utf8';
-		static version = 3;
+		static version = 3.1;
 		constructor(extend)
 		{
 			return extend.call(this, global);
@@ -142,22 +142,22 @@
 		get U() {return parseInt(this * 0.001, 10);}//从 Unix 纪元（January 1 1970 00:00:00 GMT）开始至今的秒数
 	}
 
-	class mapping extends Map
-	{
-		constructor(initialize)
-		{
-			super().initialize = initialize;
-		}
-		push(object)
-		{
-			this.set(object, object = this.initialize(object));
-			return object;
-		}
-		pull(object)
-		{
-			return this.has(object) ? this.get(object) : this.push(object);
-		}
-	}
+	// class mapping extends Map
+	// {
+	// 	constructor(initialize)
+	// 	{
+	// 		super().initialize = initialize;
+	// 	}
+	// 	push(object)
+	// 	{
+	// 		this.set(object, object = this.initialize(object));
+	// 		return object;
+	// 	}
+	// 	pull(object)
+	// 	{
+	// 		return this.has(object) ? this.get(object) : this.push(object);
+	// 	}
+	// }
 
 	class base64
 	{
@@ -508,4 +508,4 @@
 		}),
 		hash_algos:			()=> pq.array_keys(pq.hash)
 	});
-})(Function('return this')());
+})(globalThis);

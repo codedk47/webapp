@@ -856,10 +856,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return $this->io->request_header($name);
 	}
-	function request_ip(bool $proxy = FALSE):string
+	function request_ip():string
 	{
 		//CF-Connecting-IP
-		return $proxy && ($ip = $this->request_header('X-Forwarded-For'))
+		return is_string($ip = $this->request_header('X-Forwarded-For'))
 			? current(explode(',', $ip))
 			: $this->io->request_ip();
 	}
@@ -900,6 +900,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		return is_string($authorization = $this->request_header('Authorization'))
 			? ([$type] = explode(' ', $authorization, 2))[1] ?? $type : NULL;
 	}
+	function request_sign_in():array
+	{
+		return [parse_str($this->request_header('Sign-In') ?? '', $result), $result][1];
+	}
 	function request_cookie(string $name):?string
 	{
 		return $this->io->request_cookie($name);
@@ -907,11 +911,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	function request_cookie_decrypt(string $name):?string
 	{
 		return static::decrypt($this->request_cookie($name));
-	}
-	function request_locale():array
-	{
-		return is_string($locale = $this->request_cookie('locale') ?? $this->request_header('Accept-Language'))
-			&& preg_match('/([a-z]{2})[_\-]([a-z]{2,3})/', strtolower($locale), $name) ? array_slice($name, 1) : ['zh', 'cn'];
 	}
 	function request_device():string
 	{
