@@ -71,6 +71,15 @@
 			}
 			return fromCodePoint(...buffer);
 		}
+		set(data, offset)
+		{
+			if (typeof data === 'string')
+			{
+				data = Array.from(data, byte => byte.codePointAt(0));
+			}
+			super.set(data.length > this.length ? data.slice(0, this.length) : data, offset);
+			return this;
+		}
 	}
 
 	class datetime extends Date

@@ -956,11 +956,11 @@ class webapp_implementation extends DOMImplementation implements Stringable
 	public webapp_xml $xml;
 	function __construct(string $type = 'html', string ...$params)
 	{
-		self::$hooks ??= new WeakMap;
 		$this(($this->document = $this->createDocument(static::xmlns, $type, $type === 'html'
 			|| $params ? $this->createDocumentType($type, ...$params) : NULL)) !== FALSE);
 		if (isset($this->webapp))
 		{
+			self::$hooks ??= new WeakMap;#PHP when the fuck are you going to fix this
 			self::$hooks[$this->document] = $this->webapp;
 			$this->document->encoding = $this->webapp['app_charset'];
 			//$this->document->insertBefore(new DOMComment($this->webapp['copy_webapp']), $this->document->documentElement);

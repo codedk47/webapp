@@ -1,12 +1,16 @@
 "use strict";
-const webapp = import('../modules/webkit.mjs').then(function({default: $}, undefined)
+const
+script = document.currentScript,
+webapp = import('../modules/webkit.min.mjs').then(function({default: $}, undefined)
 {
 	const xhr = $.xhr, dialog = $.dialog(true),
-	message = context => dialog.open(() =>
+	open = callback =>
+		dialog.open(callback, dialog),
+	message = context => open(() =>
 		dialog.draw(Object.assign({class: 'webapp', accept: 'OK'}, $.is_entries(context) ? context : {content: context}))),
-	confirm = context => dialog.open(() =>
+	confirm = context => open(() =>
 		dialog.draw(Object.assign({class: 'webapp', accept: 'Accept', cancel: 'Cancel'}, $.is_entries(context) ? context : {content: context}))),
-	prompt = context => dialog.open(() =>
+	prompt = context => open(() =>
 	{
 		const draw = {class: 'webapp'};
 		while ($.is_string(context))
@@ -143,7 +147,7 @@ const webapp = import('../modules/webkit.mjs').then(function({default: $}, undef
 		}
 		return xhr.request(method || (body === null ? 'GET' : 'POST'), url, body).then(callback);
 	}
-	Object.assign($.dialog, {message, confirm, prompt, hint(content)
+	Object.assign($.dialog, {open, message, confirm, prompt, hint(content)
 	{
 		const dialog = $.dialog();
 		dialog.open(() =>
@@ -153,7 +157,35 @@ const webapp = import('../modules/webkit.mjs').then(function({default: $}, undef
 			setTimeout(() => dialog.target.style.opacity = 0, 600);
 		});
 	}});
-	return globalThis.$ = Object.assign($, {
+
+
+	$.imageview = (url) => dialog.open(() => {
+
+
+		
+
+
+		//dialog.target.requestFullscreen();
+		const c = dialog.draw({class: 'webapp'});
+
+
+		console.log( c.style() );
+
+		//dialog.target.style = 'width:100%;height:100%;';
+
+		
+
+		$.loadimage('/webapp/static/images/favicon.jpg').then(a => {
+			c.append(a);
+
+		})
+
+		
+
+	});
+
+
+	return Object.assign($, {
 		action(element)
 		{
 			return !pending(element.dataset).then(retval => action(element, retval), demission => demission);
@@ -199,8 +231,9 @@ const webapp = import('../modules/webkit.mjs').then(function({default: $}, undef
 		}
 	});
 });
-addEventListener('DOMContentLoaded', () =>
+addEventListener('DOMContentLoaded', () => webapp.then($ =>
 {
+	globalThis.$ = $;
 	document.addEventListener('mouseup', event => document.querySelectorAll('details.popup[open]').forEach(details =>
 	{
 		for (let element = event.target.parentNode; element; element = element.parentNode)
@@ -212,5 +245,43 @@ addEventListener('DOMContentLoaded', () =>
 		}
 		details.open = false;
 	}));
+
+
+	//console.log( $.struct.latin1($.md5('asd', true))  )
+
+	
+
+	//$.subtle.encrypt('asd', 'nihao')
+	// .then(a =>{
+
+
+	// 	console.log(a)
+	// })
+	
+
+	//console.log( $.encrypt('asd', 'www') )
+	
+
+
+
+	// $.loadimage('/webapp/static/images/favicon.jpg').then(a => {
+
+
+	// 	$.dialog.open(w => {
+
+	// 		w.draw({class: 'webapp'}).append(a);
+	// 	});
+
+	// })
+
+
+
+
+
+
+
+	//console.log( $('div#ww').target.requestFullscreen() )
+
+
 	webapp.then(window.webapp);
-});
+}));

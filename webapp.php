@@ -351,6 +351,16 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 		//: 'javascript:Function(atob(\''. base64_encode($code) .'\'))();';
 
 	// }
+	static function encryptdata(string $content, string $key)
+	{
+		$iv = static::random(12);
+		$en = openssl_encrypt($content, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+		return $iv . $en . $tag;
+	}
+
+
+
+
 	static function masker($stream, string &$key = NULL, bool $merged = FALSE)
 	{
 		$key ??= static::random(8);

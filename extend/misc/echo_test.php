@@ -59,6 +59,17 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 	}
 	function get_jsa()
 	{
+		$this->main->append('div', ['asd', 'id' => 'ww', 'style' => 'background:silver']);
+		$this->main->append('button', ['Image View',
+			'onclick' => '$.imageview()'
+		]);
+
+
+		$this->main->append('button', ['Copy to clipboard',
+			'onclick' => '$.copytoclipboard(this.textContent)'
+		]);
+
+
 		$this->main->append('button', [
 			'Action',
 			//'class' => 'webapp-pl-ptbs-fs20 hover:asd',
@@ -97,7 +108,7 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 
 	function get_ffmpeg()
 	{
-		$f = $this->webapp->ffmpeg('C:\Users\admin\Desktop\youtube\watch.mp4');
+		//$f = $this->webapp->ffmpeg('C:\Users\admin\Desktop\youtube\watch.mp4');
 
 		//print_r( $f->resolution(998) );
 
@@ -110,5 +121,40 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 		//var_dump( webapp_ffmpeg_interface::from_m3u8_save_as('http://127.0.0.1/m/play.m3u8', 'D:\wmhp\work\m/play.mp4') );
 		
 
+	}
+	function get_crypto()
+	{
+
+
+		// $a = openssl_encrypt('abc', 'aes-128-gcm', webapp::key, OPENSSL_RAW_DATA, $iv = webapp::random(12), $tag);
+
+
+		// var_dump(bin2hex($tag));
+
+
+		// return;
+		//$iv = random_bytes(12);
+		//header('iv: ' . bin2hex($iv));
+
+		$key = '1';
+		header('key: ' . bin2hex($key));
+		echo $this->webapp->encryptdata('妈的法克！', $key);
+
+		// $key = 'fuck';
+		// header('key: ' . bin2hex($key) );
+
+
+
+		//$data = openssl_encrypt('妈的法克！', 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+		//var_dump(strlen($data), strlen('妈的法克！'));
+
+		//var_dump( openssl_decrypt($data, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag) );
+
+		
+		//var_dump(hash('xxh3', 'asd'));
+
+		//echo $iv .$data . $tag;
+		//echo bin2hex( $data . $tag);
+		//var_dump(bin2hex($tag));
 	}
 }

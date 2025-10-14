@@ -365,7 +365,7 @@ table[class|=webapp] > thead > tr:first-of-type > td:first-of-type {
 table[class|=webapp] > tbody > tr.fieldset:first-of-type {
   background-color: hsl(var(--webapp-default) 90%);
 }
-table[class|=webapp] > tbody > tr > td[data-null]::before {
+table[class|=webapp] > tbody > tr > td:empty[data-null]::before {
   content: "NULL";
   color: hsl(var(--webapp-color-hint));
 }

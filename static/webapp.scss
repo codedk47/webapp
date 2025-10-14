@@ -380,10 +380,19 @@ table[class|=webapp]{
 		>tr.fieldset:first-of-type{
 			background-color: hsl(var(--webapp-default) 90%);
 		}
-		>tr>td[data-null]::before{
+		>tr>td:empty[data-null]::before{
 			content: 'NULL';
 			color: hsl(var(--webapp-color-hint));
 		}
+		// >tr>td{
+		// 	overflow: hidden;
+		// 	display: -webkit-box;
+		// 	-webkit-box-orient: vertical;
+		// 	-webkit-line-clamp: 4;
+		// }
+		// >tr:nth-child(even){
+		// 	background-color: hsl(var(--webapp-color-primary) / .1);
+		// }
 	}
 	>tfoot{
 		background-color: hsl(var(--webapp-anchor) 98%);

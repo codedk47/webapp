@@ -39,6 +39,7 @@ export default new pq((window, undefined)=>
 		Uint32Array,
 		Uint8Array,
 		URLSearchParams,
+		WebAssembly,
 		WebSocket,
 		XMLHttpRequest
 	} = window,
@@ -150,6 +151,21 @@ export default new pq((window, undefined)=>
 		{
 			return this.target.textContent;
 		}
+		get locked()
+		{
+			return this.style().pointerEvents === 'none';
+		}
+		get style()
+		{
+			return this.target.style;
+		}
+		style(pseudo = null)
+		{
+			return getComputedStyle(this.target, pseudo);
+		}
+
+
+
 		exists(callback)
 		{
 			this.target && callback(this);
@@ -198,21 +214,7 @@ export default new pq((window, undefined)=>
 		}
 		fetch(body)
 		{
-			let url;
-			const options = {};
-			if (this.name === 'form')
-			{
-				url = this.target.action;
-				options.method = this.target.getAttribute('method');
-				options.body = body || pq.is_string(body) ? body : new formdata(this.target);
-			}
-			else
-			{
-				url = this.target.href || this.target.dataset.action;
-				options.method = this.target.dataset.method || (body || pq.is_string(body) ? 'POST' : 'GET');
-				options.body = body;
-			}
-			return fetch(url, options);
+
 		}
 		remove(nodename)
 		{
@@ -262,19 +264,14 @@ export default new pq((window, undefined)=>
 
 		// }
 	}
-
-
 	class dialog extends element
 	{
 		#retval;
 		#header = element.create('header');
 		#section = element.create('section');
 		#footer = element.create('footer');
-
-		
 		#cancel = element.create('button');
 		#accept = element.create('button');
-
 		constructor(modal)
 		{
 			let valve = true;
@@ -447,8 +444,113 @@ export default new pq((window, undefined)=>
 
 	class websocket extends WebSocket
 	{
+		ping()
+		{
+			super.send(new Uint8Array([0x9]));
+		}
+		pong()
+		{
+			super.send(new Uint8Array([0xa]));
+		}
+		send(object)
+		{
+			super.send(pq.is_object(object) ? JSON.stringify(object) : object);
+		}
 	}
 
+	// class subtle
+	// {
+	// 	#key;
+	// 	constructor(data)
+	// 	{
+	// 		this.#key = crypto.subtle.importKey('raw', new pq.struct(16).set(data), 'AES-GCM', false, ['encrypt', 'decrypt']);
+	// 	}
+	// 	get iv()
+	// 	{
+	// 		return crypto.getRandomValues(new pq.struct(12));
+	// 	}
+	// 	encrypt(data)
+	// 	{
+	// 		return this.#key.then(key =>
+	// 		{
+	// 			const iv = this.iv;
+	// 			return crypto.subtle.encrypt({name: "AES-GCM", iv, tagLength: 128}, key, data).then(buffer =>
+	// 			{
+	// 				const data = new pq.struct(buffer.byteLength + 12);
+	// 				data.set(iv);
+	// 				data.set(new pq.struct(buffer), 12);
+	// 				return data;
+	// 			});
+	// 		});
+	// 	}
+	// 	decrypt(data)
+	// 	{
+	// 		return this.#key.then(key => crypto.subtle.decrypt({name: 'AES-GCM',
+	// 			iv: data.slice(0, 12), tagLength: 128}, key, data.slice(12)));
+	// 	}
+	// }
+	// const cc = new subtle('test');
+
+	// cc.encrypt(pq.struct.utf8('abc')).then(en =>{
+
+	// 	cc.decrypt(en).then(de => {
+
+	// 		console.log( new TextDecoder().decode(de))
+	// 	})
+
+	// });
+
+	/*
+		static function encryptdata(string $content, string $key)
+		{
+			$iv = static::random(12);
+			$en = openssl_encrypt($content, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+			return $iv . $en . $tag;
+		}
+	*/
+	// fetch('?test/crypto').then(async r => {
+	// 	const
+	// 	key = pq.struct.hex(r.headers.get('key')),
+	// 	cc = new subtle(key);
+	// 	const bin = await r.arrayBuffer();
+
+	// 	cc.decrypt(bin).then(s =>{
+
+	// 		console.log(new TextDecoder().decode(s))
+	// 	});
+	// });
+	
+
+
+
+	function storage(storage)
+	{
+		return new Proxy(Object.assign((method, ...args) => storage[method](...args), {storage}),
+		{
+			apply(target, ...[, args])
+			{
+				return target(...args);
+			},
+			set(...[, key, value])
+			{
+				storage.setItem(key, value);
+				return true;
+			},
+			deleteProperty(...[, key])
+			{
+				storage.removeItem(key);
+				return true;
+			},
+			get(...[, key])
+			{
+				return storage.getItem(key);
+			},
+			has(...[, key])
+			{
+				return storage.getItem(key) !== null;
+			},
+		});
+	}
 
 	return new Proxy(Object.assign(Object.defineProperties(pq,
 	{
@@ -457,16 +559,15 @@ export default new pq((window, undefined)=>
 	}),
 	{
 		cookie,
+		//subtle,
 		element,
 		extend: 			(classname, prototype) => Object.assign({element, dialog, formdata, websocket}[classname].prototype, prototype),
 		copy(data)
 		{
 			return navigator.clipboard.writeText(data);
 		},
-
-		// clipboard:			navigator.clipboard,
-		// session:			window.sessionStorage,
-		// storage:			window.localStorage,
+		session:			storage(window.sessionStorage),
+		storage:			storage(window.localStorage),
 		// utf8_decode:		(data)=> new TextDecoder('utf-8').decode(Uint8Array.from(data, (byte)=>byte.codePointAt(0))),
 		// utf8_encode:		(data)=> fromCodePoint(...new TextEncoder().encode(data)),
 		// base64_decode:		(data)=> pq.utf8_decode(atob(data)),
@@ -485,7 +586,7 @@ export default new pq((window, undefined)=>
 		// pq.replace =			(url)=> location.replace(url);
 		// openwindow:			(...params)=> window.open(...params),
 		// notification:		(title, options)=> new Notification(title, options),
-		loadimg:			(url)=> pq.promise((resolve, reject)=>
+		loadimage:			(url)=> pq.promise((resolve, reject)=>
 		{
 			const image = new Image;
 			image.onload = resolve;
@@ -493,9 +594,9 @@ export default new pq((window, undefined)=>
 			image.src = url;
 		}).then((event)=> new element(event.target)),
 		formdata:			(element) => new formdata(element),
-		websocket:			(url)=> pq.promise((resolve, reject)=>
+		websocket:			(url, protocols)=> pq.promise((resolve, reject)=>
 		{
-			const ws = new websocket(url);
+			const ws = new websocket(url, protocols);
 			ws.onopen = resolve;
 			ws.onerror = reject;
 		}).then((event)=> event.target),
