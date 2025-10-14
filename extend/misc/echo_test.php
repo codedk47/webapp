@@ -20,6 +20,7 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 	}
 	function get_home()
 	{
+
 		$localed = $this->webapp->locales($this->locale);
 		$this->main->select([
 			'zh-CN' => 'Chinese',

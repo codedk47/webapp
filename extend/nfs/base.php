@@ -269,7 +269,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 	}
 	function filename(string $hash, string $suffix = NULL):string
 	{
-		return sprintf('/%d/%04X/%s%s', $this->sort, $this->webapp->hashtime33($hash) % 0xffff, $hash, $suffix);
+		return sprintf('/%d/%04X/%s%s', $this->sort, $this->webapp->signrevert($hash) % 0xffff, $hash, $suffix);
 	}
 	function create(array $data):?string
 	{
@@ -476,7 +476,7 @@ class webapp_extend_nfs extends webapp
 	{
 		return sprintf('%s/%d/%04X/%s%s?%X#%s',
 			$this->origin, $file['sort'],
-			$this->hashtime33($file['hash']) % 0xffff,
+			$this->signrevert($file['hash']) % 0xffff,
 			$file['hash'], $name, $file['t1'], bin2hex((string)$file['key']));
 	}
 

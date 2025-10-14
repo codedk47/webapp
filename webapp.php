@@ -29,7 +29,7 @@ interface webapp_io
 }
 abstract class webapp extends stdClass implements ArrayAccess, Stringable, Countable
 {
-	const version = '4.7.1b', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-', algo = 'xxh3';
+	const version = '4.7.1b', key = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz-', sign = 'xxh3';
 	public readonly self $webapp;
 	public readonly array $query;
 	public readonly string $into;
@@ -66,55 +66,11 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return time() + $offset;
 	}
-	// static function algo(string $data):int
-	// {
-	// 	return hexdec(substr(hash(static::algo, $data, FALSE), -15));
-	// }
-	// static function algoreduce(int $code, bool $care = FALSE):string
-	// {
-	// 	for ($hash = '', [$i, $n, $b] = $care ? [10, 6, 63] : [12, 5, 31]; $i;)
-	// 	{
-	// 		$hash .= self::key[$code >> --$i * $n & $b];
-	// 	}
-	// 	return $hash;
-	// }
-	// static function algorevert(string $hash):int
-	// {
-	// 	for ($code = 0, [$i, $n, $b] = strlen($hash) === 10 ? [10, 6, 54] : [12, 5, 55]; $i;)
-	// 	{
-	// 		$code |= strpos(self::key, $hash[--$i]) << $b - $i * $n;
-	// 	}
-	// 	return $code;
-	// }
-	// static function hash(string $data, bool $care = FALSE):string
-	// {
-	// 	return static::algoreduce(static::algo($data), $care);
-	// }
-	// static function hashfile(string $filename, bool $care = FALSE):?string
-	// {
-	// 	return is_file($filename) && is_string($hex = hash_file(static::algo, $filename, FALSE))
-	// 		? static::algoreduce(hexdec(substr($hex, -15)), $care) : NULL;
-	// }
-	// static function random_hash(bool $care):string
-	// {
-	// 	return static::hash(static::random(8), $care);
-	// }
-
-	static function time33(string $data):int
+	static function sign(string $data):int
 	{
-		// static $bit = PHP_INT_MAX >> 6, $add = PHP_INT_MAX >> 2;
-		// for ($hash = 5381, $i = strlen($data); $i;)
-		// {
-		// 	$hash = (($hash & $bit) << 5) + ($hash & $add) + ord($data[--$i]);
-		// }
-		// return $hash;
-		for ($hash = 5381, $i = strlen($data); $i;)
-		{
-			$hash = ($hash & 0xfffffffffffffff) + (($hash & 0x1ffffffffffffff) << 5) + ord($data[--$i]);
-		}
-		return $hash;
+		return hexdec(substr(hash(static::sign, $data, FALSE), -15));
 	}
-	static function time33hash(int $code, bool $care = FALSE):string
+	static function signreduce(int $code, bool $care):string
 	{
 		for ($hash = '', [$i, $n, $b] = $care ? [10, 6, 63] : [12, 5, 31]; $i;)
 		{
@@ -122,25 +78,23 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		}
 		return $hash;
 	}
-	static function hashtime33(string $hash):int
+	static function signrevert(string $hash):int
 	{
-		for ($code = 0, [$i, $n, $b] = strlen($hash) === 10 ? [10, 6, 54] : [12, 5, 55]; $i;)
-		{
-			$code |= strpos(self::key, $hash[--$i]) << $b - $i * $n;
+		for ($code = 0, $i = 0, [$n, $b, $data] = strlen($hash) === 10
+			? [6, 54, $hash] : [5, 55, strtoupper(substr($hash, 0, 12))]; isset($data[$i]); ++$i) {
+			$code |= strpos(self::key, $data[$i]) << $b - $i * $n;
 		}
 		return $code;
 	}
 	static function hash(string $data, bool $care = FALSE):string
 	{
-		return static::time33hash(static::time33($data), $care);
+		return static::signreduce(static::sign($data), $care);
 	}
 	static function hashfile(string $filename, bool $care = FALSE):?string
 	{
-		return is_file($filename) && is_string($hash = hash_file('haval160,4', $filename, TRUE)) ? static::hash($hash, $care) : NULL;
+		return is_file($filename) && is_string($hex = hash_file(static::sign, $filename, FALSE))
+			? static::signreduce(hexdec(substr($hex, -15)), $care) : NULL;
 	}
-	// static function shuffle()
-	// {
-	// }
 	static function random(int $length):string
 	{
 		return random_bytes($length);
@@ -149,13 +103,13 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return random_int($min, $max);
 	}
-	static function random_time33():int
+	static function random_code():int
 	{
-		return static::time33(static::random(16));
+		return static::sign(static::random(8));
 	}
 	static function random_hash(bool $care):string
 	{
-		return static::hash(static::random(16), $care);
+		return static::hash(static::random(8), $care);
 	}
 	static function random_weight(array $items, string $key = 'weight'):array
 	{
@@ -174,6 +128,9 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			return $items[$index];
 		}
 		return $items;
+	}
+	static function shuffle(array $list)
+	{
 	}
 	static function iphex(string $ip):string
 	{
@@ -351,12 +308,12 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 		//: 'javascript:Function(atob(\''. base64_encode($code) .'\'))();';
 
 	// }
-	static function encryptdata(string $content, string $key)
-	{
-		$iv = static::random(12);
-		$en = openssl_encrypt($content, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
-		return $iv . $en . $tag;
-	}
+	// static function encryptdata(string $content, string $key)
+	// {
+	// 	$iv = static::random(12);
+	// 	$en = openssl_encrypt($content, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
+	// 	return $iv . $en . $tag;
+	// }
 
 
 
