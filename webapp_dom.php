@@ -942,10 +942,14 @@ class webapp_html extends webapp_xml
 	{
 		return new webapp_form($this, $action);
 	}
-	function table(iterable $contents = [], Closure $output = NULL, mixed ...$params):webapp_table
+	function table(iterable $contents = [], callable $output = NULL, mixed ...$params):webapp_table
 	{
 		return new webapp_table($this, $contents, $output, ...$params);
 	}
+	// function flexbox(Closure $output, iterable $data = []):webapp_flexbox
+	// {
+	// 	return new webapp_flexbox($this, $contents, $output, ...$params);
+	// }
 }
 class webapp_implementation extends DOMImplementation implements Stringable
 {
@@ -1465,3 +1469,19 @@ class webapp_table extends stdClass implements Countable
 		return $node;
 	}
 }
+// class webapp_flexbox
+// {
+// 	public readonly webapp_html $xml;
+// 	function __construct(webapp_html $node, public readonly Closure $echo, public readonly iterable $data = [])
+// 	{
+// 		$this->xml = $node->append('div');
+// 		foreach($data as $item)
+// 		{
+// 			$echo($item);
+// 		}
+// 	}
+// 	function echo($data)
+// 	{
+// 		($this->echo)($data);
+// 	}
+// }

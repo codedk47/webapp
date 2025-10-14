@@ -199,25 +199,28 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	static function encrypt(?string $data):?string
 	{
-		return is_string($data) && is_string($binary = openssl_encrypt($data, 'aes-128-gcm', static::key, OPENSSL_RAW_DATA, $iv = static::random(12), $tag)) ? static::url64_encode($tag . $iv . $binary) : NULL;
+		return is_string($data)
+			&& is_string($binary = openssl_encrypt($data, 'aes-128-gcm', static::key, OPENSSL_RAW_DATA,
+				$iv = static::random(12), $tag, '', 16)) ? static::url64_encode($iv . $binary . $tag) : NULL;
 	}
 	static function decrypt(?string $data):?string
 	{
 		return is_string($data) && strlen($data) > 37
 			&& is_string($binary = static::url64_decode($data))
-			&& is_string($result = openssl_decrypt(substr($binary, 28), 'aes-128-gcm', static::key, OPENSSL_RAW_DATA, substr($binary, 16, 12), substr($binary, 0, 16))) ? $result : NULL;
+			&& is_string($result = openssl_decrypt(substr($binary, 12, -16), 'aes-128-gcm', static::key, OPENSSL_RAW_DATA,
+				substr($binary, 0, 12), substr($binary, -16), '')) ? $result : NULL;
 	}
 	static function signature(string $username, string $password, string $additional = NULL):?string
 	{
-		return static::encrypt(pack('VCCa*', static::time(), strlen($username), strlen($password), $username . $password . $additional));
+		return static::encrypt(pack('PCCa*', static::time(), strlen($username), strlen($password), $username . $password . $additional));
 	}
 	static function authorize(?string $signature, callable $authenticate):array
 	{
 		return is_string($data = static::decrypt($signature))
 			&& strlen($data) > 5
-			&& extract(unpack('Vsigntime/C2length', $data)) === 3
+			&& extract(unpack('Psigntime/C2length', $data)) === 3
 			&& strlen($data) > 5 + $length1 + $length2
-			&& is_array($acc = unpack("a{$length1}uid/a{$length2}pwd/a*add", $data, 6))
+			&& is_array($acc = unpack("a{$length1}uid/a{$length2}pwd/a*add", $data, 10))
 				? $authenticate($acc['uid'], $acc['pwd'], $signtime, $acc['add']) : [];
 	}
 	static function captcha_random(int $length, int $expire):?string
@@ -227,15 +230,15 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		{
 			$random[$i] = chr((ord($random[$i]) % 26) + 65);
 		}
-		return static::encrypt(pack('VCa*', static::time($expire), $length, $random));
+		return static::encrypt(pack('PCa*', static::time($expire), $length, $random));
 	}
 	static function captcha_result(?string $random):?array
 	{
 		if (is_string($binary = static::decrypt($random))
 			&& strlen($binary) > 4
-			&& extract(unpack('Vexpire/Clength', $binary)) === 2
+			&& extract(unpack('Pexpire/Clength', $binary)) === 2
 			&& strlen($binary) > 4 + $length * 3
-			&& is_array($values = unpack("a{$length}code/c{$length}size/c{$length}angle", $binary, 5))) {
+			&& is_array($values = unpack("a{$length}code/c{$length}size/c{$length}angle", $binary, 9))) {
 			if ($length > 1)
 			{
 				for ($result = [$expire, '', [], []], $i = 0; $i < $length;)
@@ -854,14 +857,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return sprintf('%s://%s%s', $this->request_scheme(), $this->request_host(), $path);
 	}
-	// function request_entry(bool $route = FALSE):string
-	// {
-	// 	return $this->request_origin() . $this->io->request_entry();
-	// }
-	// function request_dir():string
-	// {
-	// 	return dirname($this->request_entry());
-	// }
 	function request_authorization(&$type = NULL):?string
 	{
 		return is_string($authorization = $this->request_header('Authorization'))
@@ -967,7 +962,6 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	}
 	function response_header(string $name, string $value):void
 	{
-		//$this->headers[ucwords($name, '-')] = $value;
 		$this->headers[$name] = $value;
 	}
 	function response_location(string $url):void
