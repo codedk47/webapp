@@ -44,6 +44,7 @@ webapp = import('../modules/webkit.min.mjs').then(function({default: $}, undefin
 		}
 		dialog.draw(draw).append(context);
 	});
+	xhr.upload.onprogress = event => xhr.progress && (xhr.progress.value = event.loaded / event.total);
 	async function pending(context)
 	{
 		let retval;
