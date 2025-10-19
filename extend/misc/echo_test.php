@@ -9,6 +9,7 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 				['Back to current home', "?{$this->routename}"],
 				['Back to webapp home', '?']
 			]],
+			['FlexBox', "?{$this->routename}/flexbox"],
 			['Form', "?{$this->routename}/form"],
 			['JavaScript Action', "?{$this->routename}/jsa"],
 			['QRCode', "?{$this->routename}/qrcode"],
@@ -31,7 +32,31 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 		])->selected($localed)['onchange'] = '$.cookie.refresh("locale",this.value)';
 		$this->main->text("{$localed}: {$this['hello']}");
 	}
+	function get_flexbox()
+	{
+		//$this->search();
+		$this->submenu([
+			['asda', '#'],
+			['asda', '#'],
+			['asda', '#'],
+			['asda', '#'],
+			['asda', '#'],
+		]);
+		// $this->main->append('article', 123);
+		// $this->main->append('input', ['type' => 'date']);
+		// $this->main->flexbox(function($data)
+		// {
+			
+		// 	$this->figure('/webapp/static/images/favicon.jpg', $data['name']);
 
+
+		// }, $this->webapp->nfs(0,1)->node('MV2V7VEMI6PI'));
+
+
+
+
+
+	}
 	function get_form()
 	{
 

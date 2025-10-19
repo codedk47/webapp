@@ -229,10 +229,21 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		$this->stylesheet('/webapp/static/webapp.css');
 		$this->script(['fetchpriority' => 'high', 'src' => '/webapp/static/scripts/webapp.js']);
 		$webapp['manifests'] && $this->link(['rel' => 'manifest', 'href' => '?manifests']);
-		$node = $this->xml->append('body')->append('div', ['class' => 'webapp-grid']);
-		[$this->header, $this->aside, $this->main, $this->footer] = [
-			&$node->header, &$node->aside, &$node->main,
-			$node->append('footer', $webapp['copy_webapp'])];
+		$root = $this->xml->append('body')->append('div', ['class' => 'webapp-root']);
+		[$this->header, $menu, $input, $this->aside, $this->main, $this->footer] = [
+			&$root->header, &$root->header->menu, $root->append('section')->append('input', ['type' => 'checkbox' , 'id' => 'aside', 'hidden' => NULL]),
+			&$root->section->aside, &$root->section->main,
+			$root->append('footer', $webapp['copy_webapp'])];
+
+		//$this->header->append('label', ['show', 'for' => 'aside']);
+
+		//$this->header->append('span', 'asdasd');
+
+		//$this->locales();
+		//$this->header->menu->append('li', 'asdasd');
+
+		//$menu->append('li')->append('a', ['a', 'href' => '?']);
+
 		$authenticate && $this->initauth($authenticate, ...$allow);
 	}
 	function __toString():string
@@ -412,7 +423,22 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 
 	function nav(array $anchors):webapp_html
 	{
-		return $this->header->append('nav')->listmenu($anchors, TRUE, TRUE, TRUE);
+		
+
+
+		$this->header->append('input', ['type' => 'checkbox', 'name' => 'nav']);
+		$section = &$this->header->section;
+		return $section->append('nav')->listmenu($anchors, TRUE, TRUE, TRUE);
+
+		//$this->main->append('input', ['type' => 'checkbox', 'name' => 'locale']);
+
+		//$this->header->append('input', ['type' => 'checkbox', 'name' => 'locale']);
+		
+		
+		//$this->header->span->append('input', ['type' => 'search']);
+
+		// $section = &$this->header->section;
+		// return $section->append('nav')->listmenu($anchors, TRUE, TRUE, TRUE);
 	}
 	function submenu(array $anchors, bool $fold = FALSE):webapp_html
 	{
@@ -420,12 +446,24 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	}
 	function search(?string $action = NULL):webapp_form
 	{
-		$form = $this->header->form($action);
+		$form = $this->header->menu->form($action);
 		$form->xml['method'] = 'get';
 		$form->field('search', 'search');
 		$form->button('Search', 'submit');
 		return $form;
 	}
+	// function locales()
+	// {
+	// 	$this->header->append('input', ['name' => 'locale', 'type' => 'checkbox']);
+	// 	$this->header->details_popup('Locale', [
+	// 		['Chinese', 'zh-CN'],
+	// 		['English', 'en'],
+	// 		['Khmer', 'km-KH'],
+	// 		['Japanese', 'ja-JP'],
+	// 		['Korean', 'ko']
+	// 	]);
+	// }
+
 
 	static function form_sign_in(array|webapp|webapp_html $context, ?string $storage = NULL):webapp_form
 	{
@@ -436,9 +474,8 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		$form->field('password', 'password', ['placeholder' => 'Type password', 'required' => NULL]);
 		$form->captcha('Captcha');
 		$form->fieldset();
-		$form->button('Sign In', 'submit');
+		$form->submit('Sign In');
 		$form->xml->setattr([
-			'spellcheck' => 'false',
 			'onsubmit' => 'return $.sign_in(this)',
 			'data-storage' => $storage
 		]);

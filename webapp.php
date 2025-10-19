@@ -511,6 +511,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			}
 		}
 	}
+	// function __debugInfo()
+	// {
+	// 	return ['query' => $this->query, 'into' => $this->into, 'route' => $this->route];
+	// }
 	function __toString():string
 	{
 		return stream_get_contents($this->buffer, -rewind($this->buffer));

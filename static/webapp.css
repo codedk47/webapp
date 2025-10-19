@@ -30,31 +30,101 @@
 :root, :root > body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  height: 100vh;
 }
-:root > body > div:first-of-type {
-  display: grid;
-  grid-template-columns: auto 1fr;
-}
-:root > body > div:first-of-type > header:first-of-type {
+:root div.webapp-root {
   display: flex;
-  grid-column: 1/-1;
-}
-:root > body > div:first-of-type > header:first-of-type:empty {
-  margin-top: var(--webapp-gap);
-}
-:root > body > div:first-of-type > aside:first-of-type:not(:empty) {
-  display: flex;
-  gap: var(--webapp-gapitem);
+  gap: var(--webapp-gap);
   flex-direction: column;
-  padding-left: var(--webapp-gap);
 }
-:root > body > div:first-of-type > main:first-of-type {
-  margin: 0 var(--webapp-gap);
+:root div.webapp-root > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  background-color: hsl(var(--webapp-color-background));
+  z-index: 1;
 }
-:root > body > div:first-of-type > footer:first-of-type {
-  grid-column: 1/-1;
+:root div.webapp-root > header > menu {
+  display: flex;
+  gap: var(--webapp-gap);
+  align-items: center;
+  min-height: 2.5rem;
+  margin-left: var(--webapp-gap);
+}
+:root div.webapp-root > header > label, :root div.webapp-root > header > input[type=checkbox] {
+  display: none;
+}
+:root div.webapp-root > header > section {
+  white-space: nowrap;
+}
+:root div.webapp-root > section {
+  display: flex;
+}
+:root div.webapp-root > section > main {
+  padding: 0 var(--webapp-gap);
+}
+:root div.webapp-root > footer {
   padding: var(--webapp-gap);
+}
+@media (width < 47rem) {
+  :root div.webapp-root > header {
+    position: sticky;
+    top: 0;
+  }
+  :root div.webapp-root > header > menu {
+    flex: 1 1 auto;
+  }
+  :root div.webapp-root > header > section {
+    position: relative;
+    flex-basis: 100vw;
+    border-top: 1px solid hsl(var(--webapp-color-edge));
+  }
+  :root div.webapp-root > header > section > * {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: hsl(var(--webapp-color-background));
+    border-bottom: 1px solid hsl(var(--webapp-color-edge));
+  }
+  :root div.webapp-root > header > section > nav > ul {
+    flex-direction: column;
+  }
+  :root div.webapp-root > header > input[type=checkbox] {
+    border: none;
+    display: block;
+    width: 24px;
+    height: 24px;
+    border-radius: 0;
+    margin-right: var(--webapp-gap);
+    background-color: hsl(var(--webapp-color-foreground));
+    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M3.75 5.25a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 6a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 6a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z"></path></svg>');
+    mask-size: cover;
+  }
+  :root div.webapp-root > header > input[type=checkbox]::before {
+    inset: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 0;
+    background-color: transparent;
+  }
+  :root div.webapp-root > header > input[type=checkbox]:checked {
+    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M5.72 5.72a.75.75 0 0 1 1.06 0L12 10.94l5.22-5.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L13.06 12l5.22 5.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L12 13.06l-5.22 5.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L10.94 12 5.72 6.78a.75.75 0 0 1 0-1.06Z"></path></svg>');
+  }
+  :root div.webapp-root > header > input[type=checkbox]:checked ~ section {
+    display: flex;
+  }
+  :root div.webapp-root > header > input[type=checkbox][name=nav]:checked ~ section > nav {
+    display: block;
+  }
+  :root div.webapp-root > header > input[type=checkbox][name=nav]:checked ~ section > nav ul {
+    position: unset;
+    border: none;
+    box-shadow: none;
+    flex-direction: column;
+    background-color: transparent;
+  }
 }
 
 a {
@@ -85,12 +155,13 @@ option:hover {
   background-color: hsl(var(--webapp-color-anchor));
 }
 
-select, ::picker(select) {
-  appearance: base-select;
-  border: 1px solid hsl(var(--webapp-color-edge));
-  border-radius: var(--webapp-radius);
+@supports (appearance: base-select) {
+  select::picker(select) {
+    appearance: base-select;
+    border: 1px solid hsl(var(--webapp-color-edge));
+    border-radius: var(--webapp-radius);
+  }
 }
-
 select, button, textarea, input,
 [class*=webapp-button], [class*=webapp-bar] > a {
   font: 1rem var(--webapp-font-default);
@@ -255,12 +326,12 @@ label {
   line-height: 1.6rem;
 }
 
-details > summary, ul[class|=webapp][class*=-popup] details > summary, ol[class|=webapp][class*=-popup] details > summary {
+details > summary, menu[class*=-popup] details > summary, ul[class|=webapp][class*=-popup] details > summary, ol[class|=webapp][class*=-popup] details > summary {
   cursor: pointer;
   display: flex;
   align-items: center;
 }
-details > summary::before, ul[class|=webapp][class*=-popup] details > summary::before, ol[class|=webapp][class*=-popup] details > summary::before {
+details > summary::before, menu[class*=-popup] details > summary::before, ul[class|=webapp][class*=-popup] details > summary::before, ol[class|=webapp][class*=-popup] details > summary::before {
   content: "";
   width: 1.25rem;
   height: 1.25rem;
@@ -272,10 +343,10 @@ details > summary::before, ul[class|=webapp][class*=-popup] details > summary::b
 details[open] > summary::before, ul[class|=webapp][class*=-popup] details[open] > summary::before, ol[class|=webapp][class*=-popup] details[open] > summary::before {
   mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>');
 }
-details.popup, ul[class|=webapp][class*=-popup] details, ol[class|=webapp][class*=-popup] details {
+details.popup, menu[class*=-popup] details, ul[class|=webapp][class*=-popup] details, ol[class|=webapp][class*=-popup] details {
   position: relative;
 }
-details.popup > :not(summary), ul[class|=webapp][class*=-popup] details > :not(summary), ol[class|=webapp][class*=-popup] details > :not(summary) {
+details.popup > :not(summary), menu[class*=-popup] details > :not(summary), ul[class|=webapp][class*=-popup] details > :not(summary), ol[class|=webapp][class*=-popup] details > :not(summary) {
   position: absolute;
   padding: var(--webapp-gaplittle);
   border: 1px solid hsl(var(--webapp-color-edge));
@@ -285,7 +356,7 @@ details.popup > :not(summary), ul[class|=webapp][class*=-popup] details > :not(s
   white-space: nowrap;
   z-index: 2;
 }
-details.popup > :not(summary) details > :not(summary), ul[class|=webapp][class*=-popup] details > :not(summary) details > :not(summary), ol[class|=webapp][class*=-popup] details > :not(summary) details > :not(summary), details.popup > :not(summary) ul[class|=webapp][class*=-popup] details > :not(summary), details.popup > :not(summary) ol[class|=webapp][class*=-popup] details > :not(summary) {
+details.popup > :not(summary) details > :not(summary), menu[class*=-popup] details > :not(summary) details > :not(summary), ul[class|=webapp][class*=-popup] details > :not(summary) details > :not(summary), ol[class|=webapp][class*=-popup] details > :not(summary) details > :not(summary), details.popup > :not(summary) ul[class|=webapp][class*=-popup] details > :not(summary), menu[class*=-popup] details > :not(summary) ul[class|=webapp][class*=-popup] details > :not(summary), details.popup > :not(summary) ol[class|=webapp][class*=-popup] details > :not(summary), menu[class*=-popup] details > :not(summary) ol[class|=webapp][class*=-popup] details > :not(summary) {
   left: 100%;
   top: 0;
 }
@@ -336,6 +407,7 @@ table[class|=webapp] {
   border-collapse: separate;
   border-spacing: 1px;
   border-radius: calc(var(--webapp-radius) + 1px);
+  empty-cells: show;
 }
 table[class|=webapp] > :first-child > tr:first-of-type > td:first-of-type {
   border-top-left-radius: var(--webapp-radius);
@@ -376,20 +448,20 @@ table[class|=webapp] > tfoot > tr > td > div.webapp-bar-merge:last-of-type > a {
   padding: var(--webapp-gaplittle) var(--webapp-gap);
 }
 
-ul[class|=webapp], ul[class|=webapp] ul, ul[class|=webapp] ol, ol[class|=webapp], ol[class|=webapp] ul, ol[class|=webapp] ol {
+menu, menu ul, menu ol, ul[class|=webapp], ul[class|=webapp] ul, ul[class|=webapp] ol, ol[class|=webapp], ol[class|=webapp] ul, ol[class|=webapp] ol {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-ul[class|=webapp][class*=-tree], ul[class|=webapp][class*=-tree] ul, ul[class|=webapp][class*=-tree] ol, ol[class|=webapp][class*=-tree], ol[class|=webapp][class*=-tree] ul, ol[class|=webapp][class*=-tree] ol {
+menu[class*=-tree], menu[class*=-tree] ul, menu[class*=-tree] ol, ul[class|=webapp][class*=-tree], ul[class|=webapp][class*=-tree] ul, ul[class|=webapp][class*=-tree] ol, ol[class|=webapp][class*=-tree], ol[class|=webapp][class*=-tree] ul, ol[class|=webapp][class*=-tree] ol {
   margin-left: calc(var(--webapp-gapitem) + var(--webapp-gaplittle));
 }
-ul[class|=webapp][class*=-tree] > li, ul[class|=webapp][class*=-tree] ul > li, ul[class|=webapp][class*=-tree] ol > li, ol[class|=webapp][class*=-tree] > li, ol[class|=webapp][class*=-tree] ul > li, ol[class|=webapp][class*=-tree] ol > li {
+menu[class*=-tree] > li, menu[class*=-tree] ul > li, menu[class*=-tree] ol > li, ul[class|=webapp][class*=-tree] > li, ul[class|=webapp][class*=-tree] ul > li, ul[class|=webapp][class*=-tree] ol > li, ol[class|=webapp][class*=-tree] > li, ol[class|=webapp][class*=-tree] ul > li, ol[class|=webapp][class*=-tree] ol > li {
   border-left: 1px solid hsl(var(--webapp-color-edge));
   padding-left: var(--webapp-gaplittle);
   line-height: 1.4rem;
 }
-ul[class|=webapp][class*=-tree] > li:before, ul[class|=webapp][class*=-tree] ul > li:before, ul[class|=webapp][class*=-tree] ol > li:before, ol[class|=webapp][class*=-tree] > li:before, ol[class|=webapp][class*=-tree] ul > li:before, ol[class|=webapp][class*=-tree] ol > li:before {
+menu[class*=-tree] > li::before, menu[class*=-tree] ul > li::before, menu[class*=-tree] ol > li::before, ul[class|=webapp][class*=-tree] > li::before, ul[class|=webapp][class*=-tree] ul > li::before, ul[class|=webapp][class*=-tree] ol > li::before, ol[class|=webapp][class*=-tree] > li::before, ol[class|=webapp][class*=-tree] ul > li::before, ol[class|=webapp][class*=-tree] ol > li::before {
   content: "";
   position: relative;
   top: calc(0rem - var(--webapp-gapitem));
@@ -399,40 +471,40 @@ ul[class|=webapp][class*=-tree] > li:before, ul[class|=webapp][class*=-tree] ul 
   display: inline-block;
   border-bottom: 1px solid hsl(var(--webapp-color-edge));
 }
-ul[class|=webapp][class*=-tree] > li:last-of-type, ul[class|=webapp][class*=-tree] ul > li:last-of-type, ul[class|=webapp][class*=-tree] ol > li:last-of-type, ol[class|=webapp][class*=-tree] > li:last-of-type, ol[class|=webapp][class*=-tree] ul > li:last-of-type, ol[class|=webapp][class*=-tree] ol > li:last-of-type {
+menu[class*=-tree] > li:last-of-type, menu[class*=-tree] ul > li:last-of-type, menu[class*=-tree] ol > li:last-of-type, ul[class|=webapp][class*=-tree] > li:last-of-type, ul[class|=webapp][class*=-tree] ul > li:last-of-type, ul[class|=webapp][class*=-tree] ol > li:last-of-type, ol[class|=webapp][class*=-tree] > li:last-of-type, ol[class|=webapp][class*=-tree] ul > li:last-of-type, ol[class|=webapp][class*=-tree] ol > li:last-of-type {
   border-left: none;
 }
-ul[class|=webapp][class*=-tree] > li:last-of-type:before, ul[class|=webapp][class*=-tree] ul > li:last-of-type:before, ul[class|=webapp][class*=-tree] ol > li:last-of-type:before, ol[class|=webapp][class*=-tree] > li:last-of-type:before, ol[class|=webapp][class*=-tree] ul > li:last-of-type:before, ol[class|=webapp][class*=-tree] ol > li:last-of-type:before {
+menu[class*=-tree] > li:last-of-type::before, menu[class*=-tree] ul > li:last-of-type::before, menu[class*=-tree] ol > li:last-of-type::before, ul[class|=webapp][class*=-tree] > li:last-of-type::before, ul[class|=webapp][class*=-tree] ul > li:last-of-type::before, ul[class|=webapp][class*=-tree] ol > li:last-of-type::before, ol[class|=webapp][class*=-tree] > li:last-of-type::before, ol[class|=webapp][class*=-tree] ul > li:last-of-type::before, ol[class|=webapp][class*=-tree] ol > li:last-of-type::before {
   border-left: 1px solid hsl(var(--webapp-color-edge));
 }
-ul[class|=webapp][class*=-listmenu], ul[class|=webapp][class*=-listmenu] ul, ul[class|=webapp][class*=-listmenu] ol, ol[class|=webapp][class*=-listmenu], ol[class|=webapp][class*=-listmenu] ul, ol[class|=webapp][class*=-listmenu] ol {
+menu[class*=-listmenu], menu[class*=-listmenu] ul, menu[class*=-listmenu] ol, ul[class|=webapp][class*=-listmenu], ul[class|=webapp][class*=-listmenu] ul, ul[class|=webapp][class*=-listmenu] ol, ol[class|=webapp][class*=-listmenu], ol[class|=webapp][class*=-listmenu] ul, ol[class|=webapp][class*=-listmenu] ol {
   padding: var(--webapp-gaplittle);
   line-height: 1.6rem;
 }
-ul[class|=webapp][class*=-listmenu] > li, ul[class|=webapp][class*=-listmenu] ul > li, ul[class|=webapp][class*=-listmenu] ol > li, ol[class|=webapp][class*=-listmenu] > li, ol[class|=webapp][class*=-listmenu] ul > li, ol[class|=webapp][class*=-listmenu] ol > li {
+menu[class*=-listmenu] > li, menu[class*=-listmenu] ul > li, menu[class*=-listmenu] ol > li, ul[class|=webapp][class*=-listmenu] > li, ul[class|=webapp][class*=-listmenu] ul > li, ul[class|=webapp][class*=-listmenu] ol > li, ol[class|=webapp][class*=-listmenu] > li, ol[class|=webapp][class*=-listmenu] ul > li, ol[class|=webapp][class*=-listmenu] ol > li {
   border-radius: var(--webapp-radius);
 }
-ul[class|=webapp][class*=-listmenu] > li > details > summary, ul[class|=webapp][class*=-listmenu] > li > a, ul[class|=webapp][class*=-listmenu] ul > li > details > summary, ul[class|=webapp][class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary, ul[class|=webapp][class*=-listmenu] ul > li > a, ul[class|=webapp][class*=-listmenu] ol > li > details > summary, ul[class|=webapp][class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary, ul[class|=webapp][class*=-listmenu] ol > li > a, ol[class|=webapp][class*=-listmenu] > li > details > summary, ol[class|=webapp][class*=-listmenu] > li > a, ol[class|=webapp][class*=-listmenu] ul > li > details > summary, ol[class|=webapp][class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary, ol[class|=webapp][class*=-listmenu] ul > li > a, ol[class|=webapp][class*=-listmenu] ol > li > details > summary, ol[class|=webapp][class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary, ol[class|=webapp][class*=-listmenu] ol > li > a {
+menu[class*=-listmenu] > li > details > summary, ul[class|=webapp][class*=-popup] menu[class*=-listmenu] > li > details > summary, ol[class|=webapp][class*=-popup] menu[class*=-listmenu] > li > details > summary, menu[class*=-listmenu] > li > a, menu[class*=-listmenu] ul > li > details > summary, menu[class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary, ul[class|=webapp][class*=-popup] menu[class*=-listmenu] ul > li > details > summary, menu[class*=-listmenu] ol[class|=webapp][class*=-popup] ul > li > details > summary, ol[class|=webapp][class*=-popup] menu[class*=-listmenu] ul > li > details > summary, menu[class*=-listmenu] ul > li > a, menu[class*=-listmenu] ol > li > details > summary, menu[class*=-listmenu] ul[class|=webapp][class*=-popup] ol > li > details > summary, ul[class|=webapp][class*=-popup] menu[class*=-listmenu] ol > li > details > summary, menu[class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary, ol[class|=webapp][class*=-popup] menu[class*=-listmenu] ol > li > details > summary, menu[class*=-listmenu] ol > li > a, ul[class|=webapp][class*=-listmenu] > li > details > summary, ul[class|=webapp][class*=-listmenu] > li > a, ul[class|=webapp][class*=-listmenu] ul > li > details > summary, ul[class|=webapp][class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary, ul[class|=webapp][class*=-listmenu] ul > li > a, ul[class|=webapp][class*=-listmenu] ol > li > details > summary, ul[class|=webapp][class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary, ul[class|=webapp][class*=-listmenu] ol > li > a, ol[class|=webapp][class*=-listmenu] > li > details > summary, ol[class|=webapp][class*=-listmenu] > li > a, ol[class|=webapp][class*=-listmenu] ul > li > details > summary, ol[class|=webapp][class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary, ol[class|=webapp][class*=-listmenu] ul > li > a, ol[class|=webapp][class*=-listmenu] ol > li > details > summary, ol[class|=webapp][class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary, ol[class|=webapp][class*=-listmenu] ol > li > a {
   display: flex;
   padding: var(--webapp-gaplittle) var(--webapp-gapitem);
   border-radius: var(--webapp-radius);
 }
-ul[class|=webapp][class*=-listmenu] > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] > li > a:hover, ul[class|=webapp][class*=-listmenu] ul > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] ul > li > a:hover, ul[class|=webapp][class*=-listmenu] ol > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] ol > li > a:hover, ol[class|=webapp][class*=-listmenu] > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] > li > a:hover, ol[class|=webapp][class*=-listmenu] ul > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] ul > li > a:hover, ol[class|=webapp][class*=-listmenu] ol > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] ol > li > a:hover {
+menu[class*=-listmenu] > li > details > summary:hover, menu[class*=-listmenu] > li > a:hover, menu[class*=-listmenu] ul > li > details > summary:hover, menu[class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary:hover, menu[class*=-listmenu] ul > li > a:hover, menu[class*=-listmenu] ol > li > details > summary:hover, menu[class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary:hover, menu[class*=-listmenu] ol > li > a:hover, ul[class|=webapp][class*=-listmenu] > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] > li > a:hover, ul[class|=webapp][class*=-listmenu] ul > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] ul > li > a:hover, ul[class|=webapp][class*=-listmenu] ol > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary:hover, ul[class|=webapp][class*=-listmenu] ol > li > a:hover, ol[class|=webapp][class*=-listmenu] > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] > li > a:hover, ol[class|=webapp][class*=-listmenu] ul > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] ul[class|=webapp][class*=-popup] ul > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] ul > li > a:hover, ol[class|=webapp][class*=-listmenu] ol > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] ol[class|=webapp][class*=-popup] ol > li > details > summary:hover, ol[class|=webapp][class*=-listmenu] ol > li > a:hover {
   background-color: hsl(var(--webapp-color-hint)/0.2);
 }
-ul[class|=webapp][class*=-inline], ol[class|=webapp][class*=-inline] {
+menu[class*=-inline], ul[class|=webapp][class*=-inline], ol[class|=webapp][class*=-inline] {
   display: flex;
 }
-ul[class|=webapp][class*=-option] > li, ol[class|=webapp][class*=-option] > li {
+menu[class*=-option] > li, ul[class|=webapp][class*=-option] > li, ol[class|=webapp][class*=-option] > li {
   border-radius: var(--webapp-radius);
 }
-ul[class|=webapp][class*=-option] > li:hover, ol[class|=webapp][class*=-option] > li:hover {
+menu[class*=-option] > li:hover, ul[class|=webapp][class*=-option] > li:hover, ol[class|=webapp][class*=-option] > li:hover {
   background-color: hsl(var(--webapp-color-hint)/0.2);
 }
-ul[class|=webapp][class*=-option] > li > label, ol[class|=webapp][class*=-option] > li > label {
+menu[class*=-option] > li > label, ul[class|=webapp][class*=-option] > li > label, ol[class|=webapp][class*=-option] > li > label {
   padding: var(--webapp-gaplittle) var(--webapp-gapitem);
 }
-ul[class|=webapp] > li.divider, ol[class|=webapp] > li.divider {
+menu > li.divider, ul[class|=webapp] > li.divider, ol[class|=webapp] > li.divider {
   height: 1px;
   margin: var(--webapp-gapitem);
   background-color: hsl(var(--webapp-color-edge));
@@ -491,6 +563,10 @@ dialog[class|=webapp][class*=-hint] {
   transition: opacity 0.4s ease-in-out;
 }
 
+:is([class|=webapp])[class*=-flex-colum] {
+  display: flex;
+  flex-direction: column;
+}
 :is([class|=webapp])[class*=-edge] {
   border: 1px solid hsl(var(--webapp-color-edge));
   border-radius: var(--webapp-radius);

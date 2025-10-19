@@ -732,7 +732,7 @@ class webapp_html extends webapp_xml
 	{
 		$node = $this->append('label');
 		$node->append('input', ['type' => $type, 'name' => $name, 'value' => $value]);
-		$node->text((string)$comment);
+		$comment === NULL || $node->text((string)$comment);
 		return $node;
 	}
 	
@@ -946,10 +946,10 @@ class webapp_html extends webapp_xml
 	{
 		return new webapp_table($this, $contents, $output, ...$params);
 	}
-	// function flexbox(Closure $output, iterable $data = []):webapp_flexbox
-	// {
-	// 	return new webapp_flexbox($this, $contents, $output, ...$params);
-	// }
+	function flexbox(Closure $output, iterable $contents = []):webapp_flexbox
+	{
+		return new webapp_flexbox($this, $output, $contents);
+	}
 }
 class webapp_implementation extends DOMImplementation implements Stringable
 {
@@ -1042,8 +1042,8 @@ class webapp_form implements ArrayAccess
 		[$this->webapp, $this->xml] = ($this->echo = $context instanceof webapp_html)
 			? [$context->webapp(), $context->append('form', [
 				'method' => 'post',
+				'spellcheck' => 'false',
 				'autocomplete' => 'off',
-				//'onsubmit' => 'webapp.submit(this)',
 				'class' => 'webapp',
 				...is_string($action) ? ['action' => $action] : []])]
 			: [$context instanceof webapp ? $context : NULL, new webapp_html('<form/>')];
@@ -1076,7 +1076,7 @@ class webapp_form implements ArrayAccess
 			$this->xml['enctype'] = 'multipart/form-data';
 			return $this->files[$alias] = $this->fieldset->append('input', ['type' => 'file', ...$type === 'file'
 				? ['name' => array_key_exists('multiple', $attr) ? "{$alias}[]" : $alias]
-				: ['name' => "{$alias}[]", 'webkitdirectory' => NULL, 'multiple' => NULL]
+				: ['name' => "{$alias}[]", 'webkitdirectory' => NULL]
 			] + $attr);
 		}
 		$this->format[$alias] = $format ?? fn($value) => $value;
@@ -1087,6 +1087,17 @@ class webapp_form implements ArrayAccess
 			'textarea' => $this->fieldset->append('textarea', ['name' => $alias] + $attr),
 			default => $this->fieldset->append('input', ['type' => $type, 'name' => $alias] + $attr)
 		};
+	}
+	function file(string $name, string $accept = '*', bool $multiple = FALSE):webapp_html
+	{
+		$attributes = ['accept' => $accept];
+		$multiple && $attributes['multiple'] = NULL;
+		return $this->field($name, 'file', $attributes);
+	}
+	//上传文件夹（非标准）
+	function directory(string $name):webapp_html
+	{
+		return $this->field($name, 'directory');
 	}
 	function echo(array $data):static
 	{
@@ -1168,11 +1179,6 @@ class webapp_form implements ArrayAccess
 		$error = ['field' => $field, 'message' => $errors[] = "Form input[{$field}] invalid"];
 		return FALSE;
 	}
-
-	// function files(string $name):ArrayObject
-	// {
-
-	// }
 	function fieldset(string $name = NULL):webapp_html
 	{
 		return $this->fieldset = $this->xml->fieldset($name);
@@ -1186,9 +1192,17 @@ class webapp_form implements ArrayAccess
 	{
 		return $this->fieldset->progress();
 	}
+	function output(string $name, array $attributes = []):webapp_html
+	{
+		return $this->fieldset->append('output', ['name' => $name] + $attributes);
+	}
 	function button(string $name, string $type = 'button', array $attributes = []):webapp_html
 	{
 		return $this->fieldset->append('button', [$name, 'type' => $type] + $attributes);
+	}
+	function submit(string $name, array $attributes = []):webapp_html
+	{
+		return $this->button($name, 'submit', $attributes);
 	}
 	function captcha(string $name):?webapp_html
 	{
@@ -1198,11 +1212,7 @@ class webapp_form implements ArrayAccess
 			$this->field('captcha_encrypt');
 			$this->field('captcha_decrypt', 'text', [
 				'placeholder' => 'Type following captcha',
-				'spellcheck' => 'false',
-				'autocorrect' => 'off',
-				'autocapitalize' => 'off',
 				'onfocus' => 'this.select()',
-				'style' => 'ime-mode:disabled',
 				'required' => NULL
 			]);
 			if ($this->echo)
@@ -1223,14 +1233,12 @@ class webapp_form implements ArrayAccess
 		}
 		return $this->captcha ?? NULL;
 	}
-
-
 	function novalidate():static
 	{
 		$this->xml->setattr('novalidate');
 		return $this;
 	}
-	private static function is_numeric(webapp_html $node, string $value):bool
+	static function is_numeric(webapp_html $node, string $value):bool
 	{
 		if (is_numeric($value))
 		{
@@ -1279,21 +1287,6 @@ class webapp_form implements ArrayAccess
 				&& (isset($node['minlength']) === FALSE || intval($node['minlength']) <= strlen($value))
 		};
 	}
-	// static function data(array|webapp_html $fields, array|webapp $contents):array
-	// {
-	// 	$form = new static($contents);
-	// 	$form['name'] = ['www'=> 333];
-	// 	$form['age'] = ['class'=> 'wa'];
-	// 	// foreach ($node->xpath('//*[@name]') as $field)
-	// 	// {
-	// 	// 	//if ($field->getName())
-	// 	// 	print_r($field->getName());
-	// 	// }
-
-
-
-	// 	return $form();
-	// }
 }
 class webapp_table extends stdClass implements Countable
 {
@@ -1469,19 +1462,25 @@ class webapp_table extends stdClass implements Countable
 		return $node;
 	}
 }
-// class webapp_flexbox
-// {
-// 	public readonly webapp_html $xml;
-// 	function __construct(webapp_html $node, public readonly Closure $echo, public readonly iterable $data = [])
-// 	{
-// 		$this->xml = $node->append('div');
-// 		foreach($data as $item)
-// 		{
-// 			$echo($item);
-// 		}
-// 	}
-// 	function echo($data)
-// 	{
-// 		($this->echo)($data);
-// 	}
-// }
+class webapp_flexbox
+{
+	public readonly webapp_html $xml;
+	function __construct(webapp_html $node, public readonly Closure $echo, public readonly iterable $data = [])
+	{
+		$this->xml = $node->append('div', ['class' => 'webapp-flexbox']);
+		foreach($data as $item)
+		{
+			//figure
+			//$echo($item);
+			$echo->call($this->xml, $item);
+		}
+	}
+	function echo($data)
+	{
+		$this->echo->call($this->xml, $data);
+	}
+	function echoimage()
+	{
+
+	}
+}
