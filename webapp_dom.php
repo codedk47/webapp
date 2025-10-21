@@ -638,7 +638,7 @@ class webapp_svg extends webapp_xml
 		$this->append('circle', ['cx' => 15, 'cy' => 10, 'r' => 2]);
 		return $this;
 	}
-	function icon(string $name, int $size = 16):static
+	function icon(string $name, int $size = 24):static
 	{
 		$this->setattr(['width' => $size, 'height'=> $size, 'viewBox' => '0 0 16 16']);
 		foreach (static::icons[$name] as $value)

@@ -34,7 +34,6 @@
 }
 :root div.webapp-root {
   display: flex;
-  gap: var(--webapp-gap);
   flex-direction: column;
 }
 :root div.webapp-root > header {
@@ -44,38 +43,68 @@
   background-color: hsl(var(--webapp-color-background));
   z-index: 1;
 }
+:root div.webapp-root > header > input[type=checkbox] {
+  display: none;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--webapp-radius);
+  margin-right: var(--webapp-gap);
+  background-color: hsl(var(--webapp-color-foreground));
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3.75 5.25a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 6a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 6a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z"></path></svg>');
+  mask-size: cover;
+}
+:root div.webapp-root > header > input[type=checkbox]::before {
+  content: none;
+}
+:root div.webapp-root > header > input[type=checkbox]:checked {
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.72 5.72a.75.75 0 0 1 1.06 0L12 10.94l5.22-5.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L13.06 12l5.22 5.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L12 13.06l-5.22 5.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L10.94 12 5.72 6.78a.75.75 0 0 1 0-1.06Z"></path></svg>');
+}
+:root div.webapp-root > header > input[type=checkbox]:first-of-type {
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M7.22 14.47 9.69 12 7.22 9.53a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l3 3a.75.75 0 0 1 0 1.06l-3 3a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Z"></path><path d="M3.75 2h16.5c.966 0 1.75.784 1.75 1.75v16.5A1.75 1.75 0 0 1 20.25 22H3.75A1.75 1.75 0 0 1 2 20.25V3.75C2 2.784 2.784 2 3.75 2ZM3.5 3.75v16.5c0 .138.112.25.25.25H15v-17H3.75a.25.25 0 0 0-.25.25Zm13 16.75h3.75a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25H16.5Z"></path></svg>');
+}
+:root div.webapp-root > header > input[type=checkbox]:first-of-type:checked {
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11.28 9.53 8.81 12l2.47 2.47a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215l-3-3a.75.75 0 0 1 0-1.06l3-3a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734Z"></path><path d="M3.75 2h16.5c.966 0 1.75.784 1.75 1.75v16.5A1.75 1.75 0 0 1 20.25 22H3.75A1.75 1.75 0 0 1 2 20.25V3.75C2 2.784 2.784 2 3.75 2ZM3.5 3.75v16.5c0 .138.112.25.25.25H15v-17H3.75a.25.25 0 0 0-.25.25Zm13 16.75h3.75a.25.25 0 0 0 .25-.25V3.75a.25.25 0 0 0-.25-.25H16.5Z"></path></svg>');
+}
 :root div.webapp-root > header > menu {
+  order: 1;
   display: flex;
   gap: var(--webapp-gap);
   align-items: center;
   min-height: 2.5rem;
   margin-left: var(--webapp-gap);
 }
-:root div.webapp-root > header > label, :root div.webapp-root > header > input[type=checkbox] {
-  display: none;
-}
 :root div.webapp-root > header > section {
   white-space: nowrap;
 }
 :root div.webapp-root > section {
+  position: relative;
   display: flex;
 }
-:root div.webapp-root > section > main {
-  padding: 0 var(--webapp-gap);
+:root div.webapp-root > section > aside {
+  display: flex;
+  flex-direction: column;
 }
-:root div.webapp-root > footer {
+:root div.webapp-root > section > main {
   padding: var(--webapp-gap);
 }
 @media (width < 47rem) {
-  :root div.webapp-root > header {
-    position: sticky;
-    top: 0;
+  :root div.webapp-root {
+    height: 100vh;
+  }
+  :root div.webapp-root > header:has(+ section > aside:empty) > input[type=checkbox][name=aside] {
+    display: none;
+  }
+  :root div.webapp-root > header:has(input[type=checkbox][name=aside]:checked) + section > aside {
+    display: flex;
   }
   :root div.webapp-root > header > menu {
+    order: 0;
     flex: 1 1 auto;
   }
   :root div.webapp-root > header > section {
     position: relative;
+    height: 0;
     flex-basis: 100vw;
     border-top: 1px solid hsl(var(--webapp-color-edge));
   }
@@ -92,25 +121,7 @@
     flex-direction: column;
   }
   :root div.webapp-root > header > input[type=checkbox] {
-    border: none;
     display: block;
-    width: 24px;
-    height: 24px;
-    border-radius: 0;
-    margin-right: var(--webapp-gap);
-    background-color: hsl(var(--webapp-color-foreground));
-    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M3.75 5.25a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 6a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Zm0 6a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z"></path></svg>');
-    mask-size: cover;
-  }
-  :root div.webapp-root > header > input[type=checkbox]::before {
-    inset: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 0;
-    background-color: transparent;
-  }
-  :root div.webapp-root > header > input[type=checkbox]:checked {
-    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="M5.72 5.72a.75.75 0 0 1 1.06 0L12 10.94l5.22-5.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L13.06 12l5.22 5.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L12 13.06l-5.22 5.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L10.94 12 5.72 6.78a.75.75 0 0 1 0-1.06Z"></path></svg>');
   }
   :root div.webapp-root > header > input[type=checkbox]:checked ~ section {
     display: flex;
@@ -124,6 +135,20 @@
     box-shadow: none;
     flex-direction: column;
     background-color: transparent;
+  }
+  :root div.webapp-root > section {
+    overflow: auto;
+    flex-grow: 1;
+  }
+  :root div.webapp-root > section > aside {
+    display: none;
+    overflow: auto;
+    position: fixed;
+    height: stretch;
+    max-width: 90vw;
+    background-color: hsl(var(--webapp-color-background));
+    border-right: 1px solid hsl(var(--webapp-color-edge));
+    z-index: 1;
   }
 }
 
@@ -336,12 +361,12 @@ details > summary::before, menu[class*=-popup] details > summary::before, ul[cla
   width: 1.25rem;
   height: 1.25rem;
   display: inline-block;
-  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>');
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>');
   background-color: hsl(var(--webapp-color-foreground));
   mask-size: cover;
 }
 details[open] > summary::before, ul[class|=webapp][class*=-popup] details[open] > summary::before, ol[class|=webapp][class*=-popup] details[open] > summary::before {
-  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>');
+  mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>');
 }
 details.popup, menu[class*=-popup] details, ul[class|=webapp][class*=-popup] details, ol[class|=webapp][class*=-popup] details {
   position: relative;

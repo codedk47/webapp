@@ -34,6 +34,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 					]);
 					$charset = $this->mysql->charsets->column('Charset');
 					$node = $this->aside->select($this->charsets = array_combine($charset, $charset))->setattr([
+						'style' => 'margin: var(--webapp-gap) var(--webapp-gapitem)',
 						'data-action' => "?{$this->routename},command:charset",
 						'onchange' => '$.action(this)'
 					]);

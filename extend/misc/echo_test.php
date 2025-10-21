@@ -13,7 +13,22 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 			['Form', "?{$this->routename}/form"],
 			['JavaScript Action', "?{$this->routename}/jsa"],
 			['QRCode', "?{$this->routename}/qrcode"],
-			['FFMpeg', "?{$this->routename}/ffmpeg"]
+			['FFMpeg', "?{$this->routename}/ffmpeg"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
+			// ['QRCode', "?{$this->routename}/qrcode"],
 		]);
 	}
 	function post_home()
@@ -44,13 +59,13 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 		]);
 		// $this->main->append('article', 123);
 		// $this->main->append('input', ['type' => 'date']);
-		// $this->main->flexbox(function($data)
-		// {
+		$this->main->flexbox(function($data)
+		{
 			
-		// 	$this->figure('/webapp/static/images/favicon.jpg', $data['name']);
+			$this->figure('/webapp/static/images/favicon.jpg', $data['name']);
 
 
-		// }, $this->webapp->nfs(0,1)->node('MV2V7VEMI6PI'));
+		}, $this->webapp->nfs(0,1)->node('MV2V7VEMI6PI'));
 
 
 
