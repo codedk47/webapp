@@ -212,7 +212,7 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	public readonly array $auth;
 	public readonly string $routename;
 	protected string|webapp_html|webapp_echo_json $echo;
-	public readonly webapp_html $header, $menu, $aside, $main, $footer;
+	public readonly webapp_html $header, $menu, $aside, $main;
 	function __construct(public readonly webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
 	{
 		// $webapp->response_header('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-eval'");
@@ -230,24 +230,10 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		$this->script(['fetchpriority' => 'high', 'src' => '/webapp/static/scripts/webapp.js']);
 		$webapp['manifests'] && $this->link(['rel' => 'manifest', 'href' => '?manifests']);
 		$root = $this->xml->append('body')->append('div', ['class' => 'webapp-root']);
-		[$this->header, $this->menu, $input, $this->aside, $this->main, $this->footer] = [
-			&$root->header,
-			&$root->header->menu,
+		[$this->header, $this->menu, $this->aside, $this->main] = [
+			&$root->header, &$root->header->menu, &$root->section->aside, &$root->section->main,
 			$root->header->append('input', ['type' => 'checkbox', 'name' => 'aside']),
-			//$root->append('section')->append('input', ['type' => 'checkbox' , 'id' => 'aside', 'hidden' => NULL]),
-			&$root->section->aside, &$root->section->main,
-			&$root->footer];
-			//$root->append('footer', $webapp['copy_webapp'])];
-
-		//$this->header->append('label', ['show', 'for' => 'aside']);
-
-		//$this->header->append('span', 'asdasd');
-
-		//$this->locales();
-		//$this->header->menu->append('li', 'asdasd');
-
-		//$root->section->append('footer', 'wdwdasdasdasdasdddddddddddddddasd');
-
+			$root->section->append('footer', $webapp['copy_webapp'])];
 		$authenticate && $this->initauth($authenticate, ...$allow);
 	}
 	function __toString():string
@@ -424,17 +410,28 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	// 	}
 	// 	JS);
 	// }
-	function logo()
+	function menu(string|array $context = NULL):webapp_html
 	{
-		$this->menu->append('li', 'asd');
+		return $this->menu->append('li', $context);
 	}
-	function back(string $href = 'javascript:history.back()')
+	function logo(string|array $image = '?favicon', string $anchor = 'javascript:location.reload()'):webapp_html
 	{
-		$this->menu->append('li')->append('a', ['href' => '#', 'style' => 'height:24px;display:block'])->svg()->icon('arrow-left');
+		$menu = $this->menu();
+		$menu->append('a', ['href' => $anchor])->icon('windows');
+		//->append('img', ['width' => 24, 'height' => 24, 'src' => '?icon/windows']);
+		return $menu;
+	}
+	function back(string $anchor = 'javascript:history.back()'):webapp_html
+	{
+		$menu = $this->menu();
+		$menu->append('a', ['href' => $anchor])->icon('chevron-left');
+		return $menu;
 	}
 	function nav(array $anchors):webapp_html
 	{
+		
 		//$this->back();
+		$this->logo();
 		//$this->search();
 
 		$this->header->append('input', ['type' => 'checkbox', 'name' => 'nav']);
@@ -457,7 +454,7 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	}
 	function search(?string $action = NULL)//:webapp_form
 	{
-		return $this->menu->append('input', ['type' => 'search']);
+		return $this->menu->append('li', ['class' => 'search'])->append('input', ['type' => 'search']);
 
 		// $form = $this->header->menu->form($action);
 		// $form->xml['method'] = 'get';

@@ -160,30 +160,30 @@ webapp = import('../modules/webkit.min.mjs').then(function({default: $}, undefin
 	}});
 
 
-	$.imageview = (url) => dialog.open(() => {
+	// $.imageview = (url) => dialog.open(() => {
 
 
 		
 
 
-		//dialog.target.requestFullscreen();
-		const c = dialog.draw({class: 'webapp'});
+	// 	//dialog.target.requestFullscreen();
+	// 	const c = dialog.draw({class: 'webapp'});
 
 
-		console.log( c.style() );
+	// 	console.log( c.style() );
 
-		//dialog.target.style = 'width:100%;height:100%;';
-
-		
-
-		$.loadimage('/webapp/static/images/favicon.jpg').then(a => {
-			c.append(a);
-
-		})
+	// 	//dialog.target.style = 'width:100%;height:100%;';
 
 		
 
-	});
+	// 	$.loadimage('/webapp/static/images/favicon.jpg').then(a => {
+	// 		c.append(a);
+
+	// 	})
+
+		
+
+	// });
 
 
 	return Object.assign($, {

@@ -608,10 +608,10 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return $this->locale($set, __DIR__ . '/extend/locale/', 'zh-CN', 'en', 'km-KH', 'ja-JP', 'ko');
 	}
-	function nonematch(string $etag):bool
+	function nonematch(?string $etag):bool
 	{
-		$this->io->response_header('Etag', sprintf('"%s"', $hash = static::hash($etag, TRUE)));
-		return $this->io->request_header('If-None-Match') !== $hash;
+		$this->response_header('Etag', $hash = '"' . static::hash($etag ?? $this['request_query'], TRUE) . '"');
+		return $this->request_header('If-None-Match') !== $hash;
 	}
 	function webappxml():webapp_xml
 	{
@@ -1092,7 +1092,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		{
 			if ($result = static::captcha_result($random))
 			{
-				if ($this->nonematch($random, TRUE))
+				if ($this->nonematch(NULL))
 				{
 					$this->response_content_type('image/jpeg');
 					webapp_image::captcha($result, ...$this['captcha_params'])->jpeg($this->buffer);
@@ -1114,7 +1114,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		if ($this['qrcode_echo'] && is_string($decrypt = $this->decrypt($encrypt)) && strlen($decrypt) < $this['qrcode_maxdata'])
 		{
-			if ($this->nonematch($decrypt . $type, TRUE))
+			if ($this->nonematch(NULL))
 			{
 				$draw = static::qrcode($decrypt, $this['qrcode_ecc']);
 				in_array($type, ['png', 'jpeg'], TRUE)
@@ -1128,10 +1128,34 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		}
 		return 404;
 	}
+	function get_icon(string $name = NULL)
+	{
+		if ($name === NULL || isset(webapp_svg::icons[$name]))
+		{
+			if ($this->nonematch(NULL))
+			{
+				$this->echo_svg();
+				if ($name)
+				{
+					$this->echo->xml->icon($name);
+				}
+				else
+				{
+					foreach (array_keys(webapp_svg::icons) as $name)
+					{
+						$this->echo->xml->append('symbol', ['id' => $name])->icon($name);
+					}
+				}
+				return 200;
+			}
+			return 304;
+		}
+		return 404;
+	}
 	function get_favicon()
 	{
 		$this->response_cache_control('private, max-age=86400');
-		if ($this->nonematch($this->request_ip(), TRUE))
+		if ($this->nonematch(NULL))
 		{
 			$this->echo_svg()->xml->logo();
 			return 200;
@@ -1153,32 +1177,32 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		$this->response_cache_control('no-transform');
 		$this->response_content_type('text/javascript');
-		return $this->response_sendfile(__DIR__ . '/static/scripts/masker.js');
-		if ($this->nonematch(self::version, TRUE))
+		//return $this->response_sendfile(__DIR__ . '/static/scripts/masker.js');
+		if ($this->nonematch(NULL))
 		{
 			$this->response_sendfile(__DIR__ . '/static/scripts/masker.js');
 			return 200;
 		}
 		return 304;
 	}
-	function get_help(string $method = 'index')
-	{
-		if ($this['app_help'] && class_exists('webapp_echo_help') === FALSE)
-		{
-			try
-			{
-				include 'extend/help/echo.php';
-				$this->echo = new webapp_echo_help($this);
-				return $this->echo->{$method}(...$this->query);
-			}
-			catch (Error)
-			{
-				unset($this->echo);
-				return 500;
-			}
-		}
-		return 404;
-	}
+	// function get_help(string $method = 'index')
+	// {
+	// 	if ($this['app_help'] && class_exists('webapp_echo_help') === FALSE)
+	// 	{
+	// 		try
+	// 		{
+	// 			include 'extend/help/echo.php';
+	// 			$this->echo = new webapp_echo_help($this);
+	// 			return $this->echo->{$method}(...$this->query);
+	// 		}
+	// 		catch (Error)
+	// 		{
+	// 			unset($this->echo);
+	// 			return 500;
+	// 		}
+	// 	}
+	// 	return 404;
+	// }
 }
 class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Stringable, Countable
 {
