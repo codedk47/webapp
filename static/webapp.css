@@ -30,7 +30,7 @@
 :root, :root > body {
   margin: 0;
   padding: 0;
-  height: 100vh;
+  height: 100dvh;
 }
 :root div.webapp-root {
   display: flex;
@@ -101,7 +101,7 @@
 }
 @media (width < 47rem) {
   :root div.webapp-root {
-    height: 100vh;
+    height: 100dvh;
   }
   :root div.webapp-root > header:has(+ section > aside:empty) > input[type=checkbox][name=aside] {
     display: none;
