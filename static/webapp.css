@@ -30,6 +30,7 @@
 :root, :root > body {
   margin: 0;
   padding: 0;
+  width: 100dvw;
   height: 100dvh;
 }
 :root div.webapp-root {
@@ -70,7 +71,11 @@
   display: flex;
   gap: var(--webapp-gap);
   align-items: center;
+}
+:root div.webapp-root > header > menu:has(~ div) {
   min-height: 2.5rem;
+}
+:root div.webapp-root > header > menu:not(:empty) {
   margin: 0 var(--webapp-gap);
 }
 :root div.webapp-root > header > menu > li > a {
@@ -80,45 +85,56 @@
   display: block;
   color: hsl(var(--webapp-color-foreground));
 }
-:root div.webapp-root > header > section {
+:root div.webapp-root > header > menu > li.title {
+  flex-grow: 1;
+  text-align: center;
+}
+:root div.webapp-root > header > div {
   white-space: nowrap;
 }
-:root div.webapp-root > section {
+:root div.webapp-root > div {
   position: relative;
-  display: grid;
-  grid-template-columns: auto 1fr;
+  display: flex;
+  flex-wrap: wrap;
 }
-:root div.webapp-root > section > aside {
+:root div.webapp-root > div > aside {
   display: flex;
   flex-direction: column;
 }
-:root div.webapp-root > section > main:has(> :only-child) {
-  padding: var(--webapp-gap);
+:root div.webapp-root > div > main {
+  flex-grow: 1;
 }
-:root div.webapp-root > section > footer {
+:root div.webapp-root > div > footer {
+  width: 100%;
   padding: var(--webapp-gap);
-  grid-column: 1/-1;
 }
 @media (width < 47rem) {
   :root div.webapp-root {
     height: 100dvh;
   }
-  :root div.webapp-root > header:has(+ section > aside:empty) > input[type=checkbox][name=aside] {
+  :root div.webapp-root > header:has(+ div > aside:empty) > input[type=checkbox][name=aside] {
     display: none;
   }
-  :root div.webapp-root > header:has(input[type=checkbox][name=aside]:checked) + section > aside {
+  :root div.webapp-root > header:has(input[type=checkbox][name=aside]:checked) + div {
+    grid-template-columns: auto 1fr;
+  }
+  :root div.webapp-root > header:has(input[type=checkbox][name=aside]:checked) + div > aside {
+    width: unset;
     display: flex;
+  }
+  :root div.webapp-root > header:has(input[type=checkbox][name=aside]:checked) + div > footer {
+    grid-column: unset;
   }
   :root div.webapp-root > header > menu {
     flex: 1 1 auto;
   }
-  :root div.webapp-root > header > section {
+  :root div.webapp-root > header > div {
     position: relative;
     height: 0;
     flex-basis: 100vw;
     border-top: 1px solid hsl(var(--webapp-color-edge));
   }
-  :root div.webapp-root > header > section > * {
+  :root div.webapp-root > header > div > * {
     display: none;
     position: absolute;
     top: 0;
@@ -127,7 +143,7 @@
     background-color: hsl(var(--webapp-color-background));
     border-bottom: 1px solid hsl(var(--webapp-color-edge));
   }
-  :root div.webapp-root > header > section > nav > ul {
+  :root div.webapp-root > header > div > nav > ul {
     flex-direction: column;
   }
   :root div.webapp-root > header > input[type=checkbox] {
@@ -136,37 +152,37 @@
   :root div.webapp-root > header > input[type=checkbox]:checked ~ section {
     display: flex;
   }
-  :root div.webapp-root > header > input[type=checkbox][name=nav]:checked ~ section > nav {
+  :root div.webapp-root > header > input[type=checkbox][name=nav]:checked ~ div > nav {
     display: block;
   }
-  :root div.webapp-root > header > input[type=checkbox][name=nav]:checked ~ section > nav ul {
+  :root div.webapp-root > header > input[type=checkbox][name=nav]:checked ~ div > nav ul {
     position: unset;
     border: none;
     box-shadow: none;
     flex-direction: column;
     background-color: transparent;
   }
-  :root div.webapp-root > section {
-    overflow: auto;
+  :root div.webapp-root > div {
+    overflow: hidden;
     flex-grow: 1;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr;
+    flex-wrap: nowrap;
+    flex-direction: column;
   }
-  :root div.webapp-root > section > aside {
+  :root div.webapp-root > div > aside {
     display: none;
     overflow: auto;
-    position: fixed;
-    height: stretch;
+    position: absolute;
+    top: 0;
+    bottom: 0;
     max-width: 90vw;
     background-color: hsl(var(--webapp-color-background));
     border-right: 1px solid hsl(var(--webapp-color-edge));
     z-index: 1;
   }
-  :root div.webapp-root > section > main:has(> :only-child) {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  :root div.webapp-root > div > div {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
   }
 }
 
@@ -199,7 +215,7 @@ option:hover {
 }
 
 @supports (appearance: base-select) {
-  select::picker(select) {
+  select, select::picker(select) {
     appearance: base-select;
     border: 1px solid hsl(var(--webapp-color-edge));
     border-radius: var(--webapp-radius);

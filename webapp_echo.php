@@ -226,14 +226,14 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		$this->meta(['charset' => $webapp['app_charset']]);
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
-		$this->stylesheet('/webapp/static/webapp.min.css');
+		$this->stylesheet('/webapp/static/webapp.css');
 		$this->script(['fetchpriority' => 'high', 'src' => '/webapp/static/scripts/webapp.js']);
 		$webapp['manifests'] && $this->link(['rel' => 'manifest', 'href' => '?manifests']);
 		$root = $this->xml->append('body')->append('div', ['class' => 'webapp-root']);
 		[$this->header, $this->menu, $this->aside, $this->main] = [
-			&$root->header, &$root->header->menu, &$root->section->aside, &$root->section->main,
+			&$root->header, &$root->header->menu, &$root->div->aside, &$root->div->main,
 			$root->header->append('input', ['type' => 'checkbox', 'name' => 'aside']),
-			$root->section->append('footer', $webapp['copy_webapp'])];
+			$root->div->append('footer', $webapp['copy_webapp'])];
 		$authenticate && $this->initauth($authenticate, ...$allow);
 	}
 	function __toString():string
@@ -414,6 +414,22 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	{
 		return $this->menu->append('li', $context);
 	}
+	function back(string $anchor = 'javascript:history.back()'):webapp_html
+	{
+		$menu = $this->menu();
+		$menu->append('a', ['href' => $anchor])->icon('chevron-left');
+		return $menu;
+	}
+	function search()
+	{
+		return $this->menu->append('li', ['class' => 'search'])->append('input', ['type' => 'search']);
+
+		// $form = $this->header->menu->form($action);
+		// $form->xml['method'] = 'get';
+		// $form->field('search', 'search');
+		// $form->button('Search', 'submit');
+		// return $form;
+	}
 	function logo(string|array $image = '?favicon', string $anchor = 'javascript:location.reload()'):webapp_html
 	{
 		$menu = $this->menu();
@@ -421,22 +437,20 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		//->append('img', ['width' => 24, 'height' => 24, 'src' => '?icon/windows']);
 		return $menu;
 	}
-	function back(string $anchor = 'javascript:history.back()'):webapp_html
-	{
-		$menu = $this->menu();
-		$menu->append('a', ['href' => $anchor])->icon('chevron-left');
-		return $menu;
-	}
+
 	function nav(array $anchors):webapp_html
 	{
 		
 		//$this->back();
-		$this->logo();
-		//$this->search();
+		// $this->back();
+		// $this->menu(['Titled', 'class' => 'title']);
+		//$this->locales();
+
+		//$this->xml->body->div->append('footer', 'wdada');
 
 		$this->header->append('input', ['type' => 'checkbox', 'name' => 'nav']);
-		$section = &$this->header->section;
-		return $section->append('nav')->listmenu($anchors, TRUE, TRUE, TRUE);
+		$div = &$this->header->div;
+		return $div->append('nav')->listmenu($anchors, TRUE, TRUE, TRUE);
 
 		//$this->main->append('input', ['type' => 'checkbox', 'name' => 'locale']);
 
@@ -452,27 +466,28 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	{
 		return $this->aside->listmenu($anchors, $fold);
 	}
-	function search(?string $action = NULL)//:webapp_form
-	{
-		return $this->menu->append('li', ['class' => 'search'])->append('input', ['type' => 'search']);
 
-		// $form = $this->header->menu->form($action);
-		// $form->xml['method'] = 'get';
-		// $form->field('search', 'search');
-		// $form->button('Search', 'submit');
-		// return $form;
+	function locales(array $set = ['zh-CN' => '简体中文', 'en' => 'English'])
+	{
+		$select = $this->menu()->append('select', ['name' => 'locale']);
+		$select->append('button')->append('selectedcontent');
+		foreach ($set as $locale => $c)
+		{
+			$option = $select->append('option', ['value' => $locale]);
+			$option->append('img', ['src' => '/webapp/static/flags/CN.svg']);
+			$option->append('span', $c);
+		}
+
+
+		// $this->header->append('input', ['name' => 'locale', 'type' => 'checkbox']);
+		// $this->header->details_popup('Locale', [
+		// 	['Chinese', 'zh-CN'],
+		// 	['English', 'en'],
+		// 	['Khmer', 'km-KH'],
+		// 	['Japanese', 'ja-JP'],
+		// 	['Korean', 'ko']
+		// ]);
 	}
-	// function locales()
-	// {
-	// 	$this->header->append('input', ['name' => 'locale', 'type' => 'checkbox']);
-	// 	$this->header->details_popup('Locale', [
-	// 		['Chinese', 'zh-CN'],
-	// 		['English', 'en'],
-	// 		['Khmer', 'km-KH'],
-	// 		['Japanese', 'ja-JP'],
-	// 		['Korean', 'ko']
-	// 	]);
-	// }
 
 
 	static function form_sign_in(array|webapp|webapp_html $context, ?string $storage = NULL):webapp_form

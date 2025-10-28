@@ -49,6 +49,7 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 	}
 	function get_flexbox()
 	{
+		$this->title('asd');
 		//$this->search();
 		$this->submenu([
 			['asda', '#'],
@@ -59,16 +60,17 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 		]);
 		//$this->main->append('article', 123);
 		// $this->main->append('input', ['type' => 'date']);
+
 		// $this->main->flexbox(function($data)
 		// {
-			
+	
 		// 	$this->figure('/webapp/static/images/favicon.jpg', $data['name']);
-
 
 		// }, $this->webapp->nfs(0,1)->node('MV2V7VEMI6PI'));
 
 		//$this->main->text('asdasd');
-		static::form_sign_in($this->main);
+		//static::form_sign_in($this->main);
+
 
 
 	}
