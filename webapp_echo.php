@@ -226,7 +226,7 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 		$this->meta(['charset' => $webapp['app_charset']]);
 		$this->meta(['name' => 'viewport', 'content' => 'width=device-width,initial-scale=1']);
 		$this->link(['rel' => 'icon', 'type' => 'image/svg+xml', 'href' => '?favicon']);
-		$this->stylesheet('/webapp/static/webapp.css');
+		$this->stylesheet('/webapp/static/webapp.min.css');
 		$this->script(['fetchpriority' => 'high', 'src' => '/webapp/static/scripts/webapp.js']);
 		$webapp['manifests'] && $this->link(['rel' => 'manifest', 'href' => '?manifests']);
 		$root = $this->xml->append('body')->append('div', ['class' => 'webapp-root']);
