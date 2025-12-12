@@ -1474,7 +1474,7 @@ class webapp_flexbox
 		{
 			//figure
 			//$echo($item);
-			$echo->call($this->xml, $item);
+			$echo->call($this->xml, $this->xml, $item);
 		}
 	}
 	function echo($data)

@@ -94,19 +94,16 @@
 }
 :root div.webapp-root > div {
   position: relative;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto 1fr;
 }
 :root div.webapp-root > div > aside {
   display: flex;
   flex-direction: column;
 }
-:root div.webapp-root > div > main {
-  flex-grow: 1;
-}
 :root div.webapp-root > div > footer {
-  width: 100%;
   padding: var(--webapp-gap);
+  grid-column: 1/-1;
 }
 @media (width < 47rem) {
   :root div.webapp-root {
@@ -163,9 +160,9 @@
     background-color: transparent;
   }
   :root div.webapp-root > div {
-    overflow: hidden;
+    overflow: auto;
+    display: flex;
     flex-grow: 1;
-    flex-wrap: nowrap;
     flex-direction: column;
   }
   :root div.webapp-root > div > aside {
@@ -178,11 +175,6 @@
     background-color: hsl(var(--webapp-color-background));
     border-right: 1px solid hsl(var(--webapp-color-edge));
     z-index: 1;
-  }
-  :root div.webapp-root > div > div {
-    width: 100%;
-    height: 100%;
-    overflow: auto;
   }
 }
 
