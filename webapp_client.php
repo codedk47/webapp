@@ -155,6 +155,7 @@ class webapp_client implements Stringable, Countable
 	//读取一行
 	function readline(&$output, int $length = 65535, string $ending = "\r\n"):bool
 	{
+		
 		return is_string($output = @stream_get_line($this->client, $length, $ending));
 	}
 	//读取至流
