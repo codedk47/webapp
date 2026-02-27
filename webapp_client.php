@@ -153,10 +153,14 @@ class webapp_client implements Stringable, Countable
 		return is_string($output = @stream_get_contents($this->client, $length)) ? strlen($output) : 0;
 	}
 	//读取一行
-	function readline(&$output, int $length = 65535, string $ending = "\r\n"):bool
+	function readline(&$output, int $length = 65535, string $ending = "\n", string $trim = "\r"):bool
 	{
-		
-		return is_string($output = @stream_get_line($this->client, $length, $ending));
+		if (is_string($output = @stream_get_line($this->client, $length, $ending)))
+		{
+			$output = rtrim($output, $trim);
+			return TRUE;
+		}
+		return FALSE;
 	}
 	//读取至流
 	// function readinto($stream, int $length = NULL):int
@@ -590,7 +594,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 							&& $this->response['Transfer-Encoding'] === 'chunked') {
 							do
 							{
-								if ($this->readline($code, 8) === FALSE)
+								if ($this->readline($code, 16) === FALSE)
 								{
 									continue 2;
 								}
