@@ -10,7 +10,7 @@ class webapp_image implements IteratorAggregate
 	}
 	function __destruct()
 	{
-		imagedestroy($this->image);
+		unset($this->image);
 	}
 	function getIterator():Traversable
 	{

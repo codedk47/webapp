@@ -125,7 +125,7 @@ class webapp_extend_misc_echo_test extends webapp_echo_html
 	}
 
 
-	function get_qrcode(string $data = NULL)
+	function get_qrcode(?string $data = NULL)
 	{
 		if ($data)
 		{

@@ -402,7 +402,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			//Misc
 			'copy_webapp'		=> 'Web Application v' . self::version,
 			'smtp_url'			=> 'ssl://user:pass@smtp.gmail.com:465',
-			'gzip_level'		=> -1,
+			'gzip_level'		=> 0,
 			'manifests'			=> [],]];
 		[$this->route, $this->entry] = method_exists($this, $route = sprintf('%s_%s', $this['request_method'],
 			$track = preg_match('/^[-\w]+(?=\/([\-\w]*))?/', $this['request_query'], $entry)
