@@ -167,7 +167,7 @@ class webapp_buffer implements Stringable
 
 
 
-	static function open($stream, array $context = NULL)
+	static function open($stream, ?array $context = NULL)
 	{
 		if (in_array($scheme = strtr(static::class, '_', '.'), stream_get_wrappers(), TRUE) === FALSE)
 		{
