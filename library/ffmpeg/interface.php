@@ -141,7 +141,7 @@ class webapp_ffmpeg_interface implements Stringable, Countable
 		$fotmat = is_array($options) ? join(' ', $options) : $options;
 		return static::exec("%s -i \"%s\" {$fotmat}", join(' ', $this->options), $this, ...$commands);
 	}
-	function audio(string $filename, string $type = NULL):bool
+	function audio(string $filename, ?string $type = NULL):bool
 	{
 		return $this('-vn -c:a %s -b:a %d %s', match ($type
 			??= is_string($suffix = strrchr($filename, '.')) ? strtolower(substr($suffix, 1)) : NULL) {

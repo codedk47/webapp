@@ -11,7 +11,7 @@ trait webapp_echo
 	{
 		return $this->webapp->locale($this->locale, $prefix, ...$locales);
 	}
-	function input(string $type = NULL):webapp_xml|array|string
+	function input(?string $type = NULL):webapp_xml|array|string
 	{
 		return $this->webapp->request_content(match ($type)
 		{
@@ -29,7 +29,7 @@ class webapp_echo_xml extends webapp_implementation
 		$webapp->response_content_type('application/xml');
 		parent::__construct($type, ...$params);
 	}
-	static function apple_mobile_config(array $values, webapp $webapp = NULL, ?string $basename = NULL):webapp_implementation
+	static function apple_mobile_config(array $values, ?webapp $webapp = NULL, ?string $basename = NULL):webapp_implementation
 	{
 		#https://developer.apple.com/documentation/devicemanagement/webclip?changes=latest_beta&language=objc
 		$mobileconfig = new webapp_implementation('plist', '-//Apple//DTD PLIST 1.0//EN', 'http://www.apple.com/DTDs/PropertyList-1.0.dtd');
@@ -164,7 +164,7 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	{
 		return array_is_list($this->getArrayCopy());
 	}
-	function error(Error|string|array $message, string $field = NULL):void
+	function error(Error|string|array $message, ?string $field = NULL):void
 	{
 		$this['error'] = match (TRUE)
 		{
@@ -191,7 +191,7 @@ class webapp_echo_json extends ArrayObject implements Stringable
 	{
 		$this['prompt'] = $context instanceof webapp_form ? $context->xml->html() : $context;
 	}
-	function continue(string $action, string $method = NULL, string|array $body = NULL):void
+	function continue(string $action, ?string $method = NULL, NULL|string|array $body = NULL):void
 	{
 		$this['continue'] = ['action' => $action, 'method' => $method, 'body' => $body];
 	}
@@ -213,7 +213,7 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	public readonly string $routename;
 	protected string|webapp_html|webapp_echo_json $echo;
 	public readonly webapp_html $header, $menu, $aside, $main;
-	function __construct(public readonly webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
+	function __construct(public readonly webapp $webapp, NULL|string|webapp $authenticate = NULL, string ...$allow)
 	{
 		// $webapp->response_header('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-eval'");
 		// $webapp->response_header('X-Content-Type-Options', 'nosniff');
@@ -355,13 +355,13 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	{
 		$this->xml->head->title = $title;
 	}
-	function meta_pageinfo(string $keywords, string $description = NULL, string $author = NULL):void
+	function meta_pageinfo(string $keywords, ?string $description = NULL, ?string $author = NULL):void
 	{
 		$this->meta(['name' => 'keywords', 'content' => $keywords]);
 		$this->meta(['name' => 'description', 'content' => $description]);
 		$author && $this->meta(['name' => 'author', 'content' => $author]);
 	}
-	function meta_opengraph(string $title, string $type = 'website', string $image = NULL):void
+	function meta_opengraph(string $title, string $type = 'website', ?string $image = NULL):void
 	{
 		//https://ogp.me/
 		$this->xml['prefix'] = 'og:https://ogp.me/ns#';
@@ -410,7 +410,7 @@ class webapp_echo_html extends webapp_implementation implements ArrayAccess
 	// 	}
 	// 	JS);
 	// }
-	function menu(string|array $context = NULL):webapp_html
+	function menu(NULL|string|array $context = NULL):webapp_html
 	{
 		return $this->menu->append('li', $context);
 	}
@@ -513,7 +513,7 @@ class webapp_echo_masker extends webapp_echo_html
 	public readonly array $auth;
 	public readonly webapp_html $sw;
 	public array $initallow = [];
-	function __construct(webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
+	function __construct(webapp $webapp,  NULL|string|webapp $authenticate = NULL, string ...$allow)
 	{
 		parent::__construct($webapp);
 		//$this->template = $this->document;
@@ -589,7 +589,7 @@ class webapp_echo_masker extends webapp_echo_html
 		$this->json($this->webapp->request_content('application/json'));
 		return 200;
 	}
-	function splashscreen(string $cover, string $jumpurl, string $skip = 'SKIP', int $cd = 4, bool $auto = FALSE, string $hash = NULL):webapp_html
+	function splashscreen(string $cover, string $jumpurl, string $skip = 'SKIP', int $cd = 4, bool $auto = FALSE, ?string $hash = NULL):webapp_html
 	{
 		$body = $this->xml->body;
 		$body->append('a', [
@@ -615,7 +615,7 @@ class webapp_echo_masker extends webapp_echo_html
 class webapp_echo_admin extends webapp_echo_masker
 {
 	public array $nav = [], $submenu = [];
-	function __construct(webapp $webapp, webapp|string $authenticate = NULL, string ...$allow)
+	function __construct(webapp $webapp, NULL|string|webapp $authenticate = NULL, string ...$allow)
 	{
 		parent::__construct($webapp, $authenticate ?? $webapp['admin_cookie'], ...$allow);
 		if ($this->init)
@@ -635,7 +635,7 @@ class webapp_echo_admin extends webapp_echo_masker
 			}
 		}
 	}
-	function authenticate(string $username, string $password, int $signtime, string $additional = NULL):array
+	function authenticate(string $username, string $password, int $signtime, ?string $additional = NULL):array
 	{
 		return $this->webapp->admin($username, $password, $signtime, $additional);
 	}

@@ -77,7 +77,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		}
 		return $openssl;
 	}
-	function form_openssl_pkey_new(webapp_html $html = NULL):webapp_form
+	function form_openssl_pkey_new(?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->xml['onsubmit'] = 'return tools.openssl_submit(this)';
@@ -99,7 +99,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			&& openssl_pkey_export(openssl_pkey_new(static::openssl),
 				$output, $data['passphrase'] ? $data['passphrase'] : NULL, static::openssl) ? $output : openssl_error_string());
 	}
-	function form_openssl_csr_new(webapp_html $html = NULL):webapp_form
+	function form_openssl_csr_new(?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->xml['onsubmit'] = 'return tools.openssl_submit(this)';
@@ -150,7 +150,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			$this->echo('数据效验失败！');
 		}
 	}
-	function form_openssl_csr_sign_x509(webapp_html $html = NULL):webapp_form
+	function form_openssl_csr_sign_x509(?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->xml['onsubmit'] = 'return tools.openssl_submit(this)';
@@ -194,7 +194,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 			$this->echo('数据效验失败！');
 		}
 	}
-	function form_openssl_zeroneta_user_cert(webapp_html $html = NULL):webapp_form
+	function form_openssl_zeroneta_user_cert(?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->xml['onsubmit'] = 'return tools.openssl_zeroneta(this)';
@@ -236,7 +236,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 				$cerdata) ? "{$keydata}\n\n{$cerdata}" : "数据效验失败！\n\n" . openssl_error_string());
 	}
 	#----------------QRCode----------------
-	function form_qrcode_create(webapp_html $html = NULL):webapp_form
+	function form_qrcode_create(?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->xml['onsubmit'] = 'return tools.qrcode_create(this)';
@@ -335,7 +335,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->fieldset();
 		$form->field('result', 'textarea', ['placeholder' => '编码或者解码的结果显示在这里', 'rows' => 8, 'cols' => 64, 'readonly' => NULL]);
 	}
-	function form_hash(array $algos = [], webapp_html $html = NULL):webapp_form
+	function form_hash(array $algos = [], ?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->field('content', 'textarea', ['placeholder' => '需要散列算法的原始内容', 'rows' => 8, 'cols' => 64]);
@@ -398,7 +398,7 @@ class webapp_extend_simple_tools_echo extends webapp_echo_html
 		$form->button('开始生成', 'submit');
 		$form->fieldset()->append('textarea', ['name' => 'result', 'placeholder' => '生成结果会显示在这里', 'rows' => 10, 'cols' => 64, 'readonly' => NULL]);
 	}
-	function form_apple_mobile_webclip(webapp_html $html = NULL):webapp_form
+	function form_apple_mobile_webclip(?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		//$form->xml['onsubmit'] = 'return tools.apple_mobile_webclip(this)';

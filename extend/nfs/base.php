@@ -9,7 +9,7 @@ class webapp_nfs_client extends webapp_client_http
 		{
 			#https://developers.cloudflare.com/r2/tutorials/postman/
 			'cloudflare_r2' => ["https://{$options[2]}.{$options[3]}.r2.cloudflarestorage.com",
-			function(string $method, string $path, $body = NULL, string $type = NULL):bool
+			function(string $method, string $path, $body = NULL, ?string $type = NULL):bool
 			{
 				[$filename, $query] = ($offset = strpos($path, '?')) === FALSE
 					? [$path, '']
@@ -52,7 +52,7 @@ class webapp_nfs_client extends webapp_client_http
 			}],
 			#https://docs.aws.amazon.com/AmazonS3/latest/API/RESTAuthentication.html
 			'amazon_s3' => ["https://{$options[2]}.s3.{$options[3]}.amazonaws.com",
-			function(string $method, string $path, $body = NULL, string $type = NULL):bool
+			function(string $method, string $path, $body = NULL, ?string $type = NULL):bool
 			{
 				$date = date(DATE_RFC2822);
 				$filename = strpos($path, '?') ? strstr($path, '?', TRUE) : $path;
@@ -62,7 +62,7 @@ class webapp_nfs_client extends webapp_client_http
 			}],
 			#https://help.aliyun.com/zh/oss/developer-reference/overview-24
 			'aliyun_oss' => ["https://{$options[2]}.{$options[3]}.aliyuncs.com",
-			function(string $method, string $path, $body = NULL, string $type = NULL):bool
+			function(string $method, string $path, $body = NULL, ?string $type = NULL):bool
 			{
 				$date = gmdate(DATE_RFC7231);
 				$filename = strpos($path, '?') ? strstr($path, '?', TRUE) : $path;
@@ -70,7 +70,7 @@ class webapp_nfs_client extends webapp_client_http
 				$this->headers(['Authorization' => "OSS {$this->username}:{$signature}", 'Date' => $date, 'x-oss-acl' => 'public-read']);
 				return parent::request($method, $path, $body, $type);
 			}],
-			default => [$api, function(string $method, string $path, $body = NULL, string $type = NULL):bool
+			default => [$api, function(string $method, string $path, $body = NULL, ?string $type = NULL):bool
 			{
 				static $entry = $this->path;
 
@@ -93,7 +93,7 @@ class webapp_nfs_client extends webapp_client_http
 		// $a = $this->request('GET', '/');
 		// var_dump($a, $this->status($res), $res, $this->content());
 	}
-	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
+	function request(string $method, string $path, $body = NULL, ?string $type = NULL):bool
 	{
 		return ($this->request)($method, $path, $body, $type);
 	}
@@ -178,7 +178,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 	//private readonly webapp_redis_table $cache;
 	private readonly array $where;
 	private readonly Closure $format;
-	function __construct(public readonly webapp_extend_nfs $webapp, public readonly int $sort, public readonly int $type, Closure $format = NULL)
+	function __construct(public readonly webapp_extend_nfs $webapp, public readonly int $sort, public readonly int $type, ?Closure $format = NULL)
 	{
 		$this->where = ['WHERE `sort`=?i AND `type`=?i', $this->sort, $this->type];
 		$this->format = $format ?? fn($data) => $data;
@@ -267,7 +267,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 		return $node !== NULL && $this->webapp->table
 			('WHERE `sort`=?i AND `node`=?s LIMIT 1', $this->sort, $node)->select('hash')->value() === NULL;
 	}
-	function filename(string $hash, string $suffix = NULL):string
+	function filename(string $hash, ?string $suffix = NULL):string
 	{
 		return sprintf('/%d/%04X/%s%s', $this->sort, $this->webapp->signrevert($hash) % 0xffff, $hash, $suffix);
 	}
@@ -367,7 +367,7 @@ class webapp_nfs implements Countable, IteratorAggregate
 			&& is_string($hash = $this->create(['key' => $key] + $data + $uploadedfile()))
 			&& $this->webapp->client->put($this->filename($hash), $uploadedfile->open(0, $mask, $key), $uploadedfile->mime()), $hash) ? $hash : NULL;
 	}
-	function update_uploadedfile(string $hash, array $data = [], string $name = NULL, bool $mask = FALSE):bool
+	function update_uploadedfile(string $hash, array $data = [], ?string $name = NULL, bool $mask = FALSE):bool
 	{
 		$key = $mask ? $this->webapp->random(8) : NULL;
 		return $name && count($uploadedfile = $this->webapp->request_uploadedfile($name))
@@ -468,11 +468,11 @@ class webapp_extend_nfs extends webapp
 		// return new webapp_nfs_client('aliyun_oss', 'AccessKeyID', 'AccessKeySecret', 'BucketName', 'region');
 		return new webapp_nfs_client('http://localhost/?server', $this['admin_username'], $this['admin_password'], 'D:/wmhp/work/nfs');
 	}
-	function nfs(int $sort = 0, int $type = 1, Closure $format = NULL):webapp_nfs
+	function nfs(int $sort = 0, int $type = 1, ?Closure $format = NULL):webapp_nfs
 	{
 		return $this->nfs[($sort &= 0xff) << 8 | $type &= 0xff] ??= new webapp_nfs($this, $sort, $type, $format);
 	}
-	function src(array $file, string $name = NULL):string
+	function src(array $file, ?string $name = NULL):string
 	{
 		return sprintf('%s/%d/%04X/%s%s?%X#%s',
 			$this->origin, $file['sort'],
@@ -490,10 +490,10 @@ class webapp_extend_nfs extends webapp
 	// }
 
 	//NFS客户端都是通过POST方法请求的，请确保调用该函数的路由是POST方法
-	function server(string $c, string $v, string $open = NULL):int
+	function server(string $c, string $v, ?string $open = NULL):int
 	{
 		if (current([$root, $v] = $open ? [$open, $this->url64_decode($v)] : $this->authorize($this->request_authorization($type),
-			function(string $username, string $password, int $signtime, string $additional = NULL) use($c, $v) {
+			function(string $username, string $password, int $signtime, ?string $additional = NULL) use($c, $v) {
 				return str_starts_with($additional, $this->hash($c . $v, TRUE))
 				&& $signtime > $this->time(-$this['admin_expire'])
 				&& $username === $this['admin_username']

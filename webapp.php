@@ -321,27 +321,27 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 
 
 
-	static function masker($stream, string &$key = NULL, bool $merged = FALSE)
+	static function masker($stream, ?string &$key = NULL, bool $merged = FALSE)
 	{
 		$key ??= static::random(8);
 		return is_resource(is_string($stream) ? $stream = fopen($stream, 'r') : $stream)
 			&& is_resource(stream_filter_append($stream, 'webapp.filter_mask.encode', STREAM_FILTER_READ,
 				$merged ? $key : array_map(ord(...), str_split($key)))) ? $stream : NULL;
 	}
-	static function unmasker($stream, string $key = NULL)
+	static function unmasker($stream, ?string $key = NULL)
 	{
 		return is_resource(is_string($stream) ? $stream = fopen($stream, 'r') : $stream)
 			&& is_resource(stream_filter_append($stream, 'webapp.filter_mask.decode', STREAM_FILTER_READ,
 				$key ? array_map(ord(...), str_split($key)) : NULL)) ? $stream : NULL;
 	}
-	static function maskfile($from, $to, string &$key = NULL, bool $merged = FALSE):bool
+	static function maskfile($from, $to, ?string &$key = NULL, bool $merged = FALSE):bool
 	{
 		return is_resource($stream = static::masker($from, $key, $merged))
 			&& is_resource(is_string($to) ? $to = fopen($to, 'w') : $to)
 			&& stream_copy_to_stream($stream, $to) !== FALSE
 			&& feof($stream);
 	}
-	static function maskdata(string $data, string &$key = NULL, bool $merged = FALSE):?string
+	static function maskdata(string $data, ?string &$key = NULL, bool $merged = FALSE):?string
 	{
 		return is_resource($stream = fopen('php://memory', 'w+'))
 			&& fwrite($stream, $data) === strlen($data)
@@ -349,14 +349,14 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			&& rewind($stream)
 			&& is_string($result = stream_get_contents($stream)) ? $result : NULL;
 	}
-	static function unmaskfile($from, $to, string $key = NULL):bool
+	static function unmaskfile($from, $to, ?string $key = NULL):bool
 	{
 		return is_resource($stream = static::unmasker($from, $key))
 			&& is_resource(is_string($to) ? $to = fopen($to, 'w') : $to)
 			&& stream_copy_to_stream($stream, $to) !== FALSE
 			&& feof($stream);
 	}
-	static function unmaskdata(string $data, string $key = NULL):?string
+	static function unmaskdata(string $data, ?string $key = NULL):?string
 	{
 		return is_resource($stream = fopen('php://memory', 'w+'))
 			&& fwrite($stream, $data) === strlen($data)
@@ -617,7 +617,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return static::xml(sprintf('<?xml version="1.0" encoding="%s"?><webapp version="%s"/>', $this['app_charset'], self::version));
 	}
-	function at(array $params, string $router = NULL):string
+	function at(array $params, ?string $router = NULL):string
 	{
 		return array_reduce(array_keys($replace = array_reverse($params + $this->query, TRUE)),
 			fn($carry, $key) => is_scalar($replace[$key])
@@ -670,7 +670,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		return $this($this->echo = new webapp_echo_json($this, $data));
 	}
-	function echo_html(string $title = NULL, webapp|string $authenticate = NULL):webapp_echo_html
+	function echo_html(?string $title = NULL, NULL|string|webapp $authenticate = NULL):webapp_echo_html
 	{
 		$this->echo = new webapp_echo_html($this, $authenticate);
 		is_string($title) && $this->echo->title($title);
@@ -682,14 +682,14 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			? [$this->router, strlen($this['app_router'])]
 			: [$this->method, strlen($this['request_method']) + 1]), '_', '-');
 	}
-	function admin(string $username, string $password, int $signtime, string $additional = NULL):array
+	function admin(string $username, string $password, int $signtime, ?string $additional = NULL):array
 	{
 		return $signtime > static::time(-$this['admin_expire'])
 			&& $username === $this['admin_username']
 			&& $password === $this['admin_password']
 				? [$username, $password, $additional] : [];
 	}
-	function auth(callable $authenticate = NULL, ?string $storage = NULL):array
+	function auth(?callable $authenticate = NULL, ?string $storage = NULL):array
 	{
 		return static::authorize($this->request_authorization($type)
 			?? $this->request_cookie($storage ?? $this['admin_cookie']), $authenticate
@@ -730,7 +730,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 
 	//---------------------
 	
-	function smtp(string $url = NULL):webapp_client_smtp
+	function smtp(?string $url = NULL):webapp_client_smtp
 	{
 		return new webapp_client_smtp($url ?? $this['smtp_url']);
 	}
@@ -773,7 +773,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 				}
 				return $syntax ? $object($syntax, ...$this->values) : $object;
 			}
-			function query(string $name, string $syntax, callable $format = NULL, string $default = NULL):?string
+			function query(string $name, string $syntax, ?callable $format = NULL, ?string $default = NULL):?string
 			{
 				if (is_string($value = $this->query[$name] ?? $default))
 				{
@@ -857,7 +857,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			?? $this->request_header('Host')
 			?? $this->request_ip();
 	}
-	function request_origin(string $path = NULL):string
+	function request_origin(?string $path = NULL):string
 	{
 		return sprintf('%s://%s%s', $this->request_scheme(), $this->request_host(), $path);
 	}
@@ -972,7 +972,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	{
 		$this->response_header('Location', $url);
 	}
-	function response_refresh(int $second = 0, string $url = NULL):void
+	function response_refresh(int $second = 0, ?string $url = NULL):void
 	{
 		$this->response_header('Refresh', $url === NULL ? (string)$second : "{$second}; url={$url}");
 	}
@@ -1086,7 +1086,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 	// 	}
 	// 	return 401;
 	// }
-	function get_captcha(string $random = NULL)
+	function get_captcha(?string $random = NULL)
 	{
 		if ($this['captcha_length'])
 		{
@@ -1110,7 +1110,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		}
 		return 404;
 	}
-	function get_qrcode(string $encrypt, string $type = NULL, string $filename = NULL)
+	function get_qrcode(string $encrypt, ?string $type = NULL, ?string $filename = NULL)
 	{
 		if ($this['qrcode_echo'] && is_string($decrypt = $this->decrypt($encrypt)) && strlen($decrypt) < $this['qrcode_maxdata'])
 		{
@@ -1128,7 +1128,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 		}
 		return 404;
 	}
-	function get_icon(string $name = NULL)
+	function get_icon(?string $name = NULL)
 	{
 		if ($name === NULL || isset(webapp_svg::icons[$name]))
 		{
@@ -1273,7 +1273,7 @@ class webapp_request_uploadedfile implements ArrayAccess, IteratorAggregate, Str
 	{
 		return $this->uploadedfiles[$index]['file'];
 	}
-	function hash(int $index = 0, string $algo = NULL):string
+	function hash(int $index = 0, ?string $algo = NULL):string
 	{
 		return $algo === NULL
 			? $this->uploadedfiles[$index]['hash'] ??= $this->webapp->hashfile($this->file($index))

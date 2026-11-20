@@ -66,7 +66,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			}
 		}
 	}
-	function form_connect(webapp_html $html = NULL):webapp_form
+	function form_connect(?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->xml['onsubmit'] = 'return $.action(this)';
@@ -80,7 +80,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$form->button('Connect to MySQL', 'submit');
 		return $form;
 	}
-	function post_home(string $command = NULL)
+	function post_home(?string $command = NULL)
 	{
 		$this->json();
 		switch ($command)
@@ -111,7 +111,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 	{
 		$this->form_connect($this->main)->echo(array_combine(['hostname', 'username', 'password'], $this->connect));
 	}
-	function form_console(webapp_html $html = NULL):webapp_form
+	function form_console(?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->xml['onsubmit'] = 'return $.action(this)';
@@ -222,7 +222,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		]);
 	}
 
-	function form_field(string $tablename, webapp_html $html = NULL):webapp_form
+	function form_field(string $tablename, ?webapp_html $html = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		$form->fieldset('Field / Comment');
@@ -255,7 +255,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$form->button('Submit', 'submit');
 		return $form;
 	}
-	function form_field_query(string $tablename, string $fieldname = NULL):bool
+	function form_field_query(string $tablename, ?string $fieldname = NULL):bool
 	{
 		if ($this->form_field($tablename)->fetch($input))
 		{
@@ -299,7 +299,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		}
 		return FALSE;
 	}
-	function post_table(string $name = NULL, string $field = NULL)
+	function post_table(?string $name = NULL, ?string $field = NULL)
 	{
 		$this->json();
 		if ($name === NULL)
@@ -474,7 +474,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		}, $name);
 		$table->fieldset('Delete', ...$fields);
 	}
-	function form_data(string $tablename, webapp_html $html = NULL, &$allownull = NULL):webapp_form
+	function form_data(string $tablename, ?webapp_html $html = NULL, &$allownull = NULL):webapp_form
 	{
 		$form = new webapp_form($html ?? $this->webapp);
 		foreach ($this->mysql->table($tablename)->fields as $data)
@@ -527,7 +527,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$form->button('Submit', 'submit');
 		return $form;
 	}
-	function post_data(string $name, string $primary = NULL)
+	function post_data(string $name, ?string $primary = NULL)
 	{
 		$this->json();
 		$datatable = $this->mysql->table($this->webapp->url64_decode($name));
@@ -568,7 +568,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 		$this->mysql->real_query('SELECT * FROM ?a ??', $this->webapp->url64_decode($name), $input = $this->input())
 			&& $this->echo->redirect("?{$this->routename}/data,name:{$name},cond:" . $this->webapp->encrypt($input));
 	}
-	function get_data(string $name, string $cond = NULL, int $page = 1)
+	function get_data(string $name, ?string $cond = NULL, int $page = 1)
 	{
 		$datatable = $this->mysql->table($this->webapp->url64_decode($name));
 		$this->form_data($datatable->tablename, $this->template('form_data'));
@@ -611,7 +611,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'data-method' => 'patch'
 		]);
 	}
-	function get_users(string $like = NULL, int $page = 1)
+	function get_users(?string $like = NULL, int $page = 1)
 	{
 		$this->mysql->select_db('mysql');
 		$user = $this->mysql->table('user')->select('user,host,plugin,authentication_string');
@@ -626,7 +626,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'onkeydown' => 'event.keyCode===13&&$.at({like:this.value})'
 		]);
 	}
-	function get_status(string $like = NULL)
+	function get_status(?string $like = NULL)
 	{
 		$table = $this->main->table($this->mysql->show(...$like
 			? ['STATUS LIKE ?s', sprintf('%%%s%%', $like = urldecode($like))]
@@ -639,7 +639,7 @@ class webapp_extend_mysql_admin_echo extends webapp_echo_admin
 			'onkeydown' => 'event.keyCode===13&&$.at({like:this.value})'
 		]);
 	}
-	function get_variables(string $like = NULL)
+	function get_variables(?string $like = NULL)
 	{
 		$table = $this->main->table($this->mysql->show(...$like
 			? ['VARIABLES LIKE ?s', sprintf('%%%s%%', $like = urldecode($like))]

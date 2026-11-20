@@ -62,7 +62,7 @@ class webapp_xml extends SimpleXMLElement
 		};
 		return $node->nodeType === XML_ELEMENT_NODE ? static::from($node) : $node;
 	}
-	function iter(iterable $contents, Closure $iterator = NULL, ...$params):static
+	function iter(iterable $contents, ?Closure $iterator = NULL, ...$params):static
 	{
 		$iterator ??= function(Closure $iterator, array $element):void
 		{
@@ -76,7 +76,7 @@ class webapp_xml extends SimpleXMLElement
 		return $this;
 	}
 	//获取属性
-	function getattr(string $name = NULL):NULL|string|array
+	function getattr(?string $name = NULL):NULL|string|array
 	{
 		$attributes = ((array)$this->attributes())['@attributes'] ?? [];
 		return is_string($name) ? $attributes[$name] ?? NULL : $attributes;
@@ -105,7 +105,7 @@ class webapp_xml extends SimpleXMLElement
 			? $this->addChild($name)->setattr($contents)
 			: $this->addChild($name, $contents);
 	}
-	function appends(string $name, iterable $contents, string $keyattr = NULL):static
+	function appends(string $name, iterable $contents, ?string $keyattr = NULL):static
 	{
 		if ($keyattr) foreach ($contents as $key => $content)
 		{
@@ -670,14 +670,14 @@ class webapp_html extends webapp_xml
 		$dom = $this->dom();
 		return $dom->ownerDocument->saveHTML($dom);
 	}
-	function id(string $set = NULL):string
+	function id(?string $set = NULL):string
 	{
 		static $id = 0;
 		$set ??= 'webapp-idx'. $id++;
 		$this['id'] = $set;
 		return $set;
 	}
-	function template(string $id = NULL):static
+	function template(?string $id = NULL):static
 	{
 		$template = $this->append('template');
 		$id && $template->id($id);
@@ -701,7 +701,7 @@ class webapp_html extends webapp_xml
 	}
 	// function anchor(string $href)
 	// {}
-	function fieldset(string $legend = NULL):static
+	function fieldset(?string $legend = NULL):static
 	{
 		//An optional <legend> element, followed by flow content.
 		$node = $this->append('fieldset');
@@ -711,7 +711,7 @@ class webapp_html extends webapp_xml
 		}
 		return $node;
 	}
-	function details(string $summary = NULL):static
+	function details(?string $summary = NULL):static
 	{
 		//One <summary> element followed by flow content.
 		$node = $this->append('details');
@@ -730,7 +730,7 @@ class webapp_html extends webapp_xml
 	// 		'optimum' => $optimum ?? $min + ($max - $min) * 0.7
 	// 	]);
 	// }
-	function labelinput(string $name, string $type, float|string $value, float|string $comment = NULL):static
+	function labelinput(string $name, string $type, float|string $value, NULL|float|string $comment = NULL):static
 	{
 		$node = $this->append('label');
 		$node->append('input', ['type' => $type, 'name' => $name, 'value' => $value]);
@@ -823,14 +823,14 @@ class webapp_html extends webapp_xml
 	// {
 
 	// }
-	function details_popup(string $summary = NULL, ?iterable $anchors = NULL):static
+	function details_popup(?string $summary = NULL, ?iterable $anchors = NULL):static
 	{
 		$node = $this->details($summary);
 		$node['class'] = 'popup';
 		$anchors && $node->listmenu($anchors, TRUE, TRUE);
 		return $node;
 	}
-	function details_popup_button(string $summary = NULL, ?iterable $anchors = NULL, ?string $class = 'webapp-button'):static
+	function details_popup_button(?string $summary = NULL, ?iterable $anchors = NULL, ?string $class = 'webapp-button'):static
 	{
 		$node = $this->details_popup($summary, $anchors);
 		$node->summary['class'] = $class;
@@ -851,7 +851,7 @@ class webapp_html extends webapp_xml
 		}
 		//return ()->displayarray($contents, $fold);
 	}
-	function figure(string $source, string $caption = NULL):static
+	function figure(string $source, ?string $caption = NULL):static
 	{
 		$figure = $this->append('figure');
 		$figure->append('img', ['loading' => 'lazy', 'src' => $source]);
@@ -944,7 +944,7 @@ class webapp_html extends webapp_xml
 	{
 		return new webapp_form($this, $action);
 	}
-	function table(iterable $contents = [], callable $output = NULL, mixed ...$params):webapp_table
+	function table(iterable $contents = [], ?callable $output = NULL, mixed ...$params):webapp_table
 	{
 		return new webapp_table($this, $contents, $output, ...$params);
 	}
@@ -1070,7 +1070,7 @@ class webapp_form implements ArrayAccess
 	{
 		unset($this->fields[$offset]);
 	}
-	function field(string $name, string $type = 'hidden', array $attr = [], callable $format = NULL):webapp_html
+	function field(string $name, string $type = 'hidden', array $attr = [], ?callable $format = NULL):webapp_html
 	{
 		$alias = preg_match('/^\w+/', $name, $pattern) ? $pattern[0] : count($this->files) + count($this->fields);
 		if ($type === 'file' || $type === 'directory')
@@ -1123,7 +1123,7 @@ class webapp_form implements ArrayAccess
 		}
 		return $this;
 	}
-	function fetch(?array &$data, &$error = NULL, array $input = NULL):bool
+	function fetch(?array &$data, &$error = NULL, ?array $input = NULL):bool
 	{
 		do
 		{
@@ -1181,7 +1181,7 @@ class webapp_form implements ArrayAccess
 		$error = ['field' => $field, 'message' => $errors[] = "Form input[{$field}] invalid"];
 		return FALSE;
 	}
-	function fieldset(string $name = NULL):webapp_html
+	function fieldset(?string $name = NULL):webapp_html
 	{
 		return $this->fieldset = $this->xml->fieldset($name);
 	}
@@ -1297,7 +1297,7 @@ class webapp_table extends stdClass implements Countable
 	private array $rows = [];
 	private array $column = [];
 
-	function __construct(webapp_html $node, public readonly iterable $data = [], callable $echo = NULL, ...$params)
+	function __construct(webapp_html $node, public readonly iterable $data = [], ?callable $echo = NULL, ...$params)
 	{
 		$this->paging = is_object($this->data)
 			&& property_exists($this->data, 'paging')
@@ -1338,7 +1338,7 @@ class webapp_table extends stdClass implements Countable
 	{
 		return $this->paging['count'] ?? 0;
 	}
-	function row(int $index = NULL):webapp_html
+	function row(?int $index = NULL):webapp_html
 	{
 		return $this->row = array_key_exists($index, $this->rows) ? $this->rows[$index] : $this->rows[] = $this->tbody->append('tr');
 	}
@@ -1423,7 +1423,7 @@ class webapp_table extends stdClass implements Countable
 	{
 		return $this->bar->append('input', $attributes + ['type' => 'search', 'placeholder' => 'Type search keywords']);
 	}
-	function footer(string|array $context = NULL):webapp_html
+	function footer(NULL|string|array $context = NULL):webapp_html
 	{
 		return $this->maxspan($this->tfoot->append('tr')->append('td', $context));
 	}

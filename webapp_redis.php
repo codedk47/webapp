@@ -15,12 +15,12 @@ class webapp_redis extends Redis
 			($deny = $this->incr($key) > $count) ? $denytime : 1);
 		return $deny;
 	}
-	function uniqueip(int $expire = NULL):bool
+	function uniqueip(?int $expire = NULL):bool
 	{
 		return $this->sAdd('uniqueip', $this->webapp->iphex($this->webapp->request_ip(TRUE)))
 			&& ($this->sCard('uniqueip') > 1 || $this->expireAt('uniqueip', $expire ?? mktime(23, 59, 59)));
 	}
-	function clear(string|webapp_redis_table $table = NULL):void
+	function clear(NULL|string|webapp_redis_table $table = NULL):void
 	{
 		if ($table)
 		{
@@ -194,7 +194,7 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	{
 		return intval($this->redis->get("{$this->key}.time"));
 	}
-	function alloc(&$key, string $keyname, int $expire = NULL):bool
+	function alloc(&$key, string $keyname, ?int $expire = NULL):bool
 	{
 		$key = "{$this->key}.{$keyname}";
 		return $this->cache && $this->redis->sAdd($this->key, $key);
@@ -292,7 +292,7 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	// 	}
 	// 	return $this;
 	// }
-	function column(string $field, string $index = NULL):array
+	function column(string $field, ?string $index = NULL):array
 	{
 		if ($this->cache)
 		{
@@ -391,7 +391,7 @@ abstract class webapp_redis_table implements ArrayAccess, IteratorAggregate, Cou
 	{
 		return new static($this, ...$commands);
 	}
-	function unique(string $field, string $content = NULL):array|bool
+	function unique(string $field, ?string $content = NULL):array|bool
 	{
 		if ($this->cache)
 		{

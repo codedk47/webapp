@@ -39,7 +39,7 @@ class webapp_image implements IteratorAggregate
 	{
 		return imagecolorat($this->image, $x, $y);
 	}
-	function arc(int $x, int $y, int $width, int $height, int $start, int $end, int $color, int $style = NULL)
+	function arc(int $x, int $y, int $width, int $height, int $start, int $end, int $color, ?int $style = NULL)
 	{
 		($style === NULL ? 'imagearc' : 'imagefilledarc')($this->image, ...func_get_args());
 		return $this;

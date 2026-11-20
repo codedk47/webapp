@@ -115,14 +115,14 @@ class webapp_client implements Stringable, Countable
 		return $this->echo(sprintf($format, ...$values));
 	}
 	//缓冲区从
-	function from($stream, int $length = NULL):bool
+	function from($stream, ?int $length = NULL):bool
 	{
 		return is_int($copied = stream_copy_to_stream(
 			is_resource($stream) ? $stream : fopen($stream, 'r'),
 			$this->buffer, $length)) && ($length === NULL || $copied === $length);
 	}
 	//缓冲区拉取
-	function pull(int $length = NULL):bool
+	function pull(?int $length = NULL):bool
 	{
 		return $this->from($this->client, $length);
 	}
@@ -148,7 +148,7 @@ class webapp_client implements Stringable, Countable
 		return is_string($output = @stream_socket_recvfrom($this->client, $length, STREAM_PEEK)) && strlen($output) === $length;
 	}
 	//读取
-	function read(&$output, int $length = NULL):int
+	function read(&$output, ?int $length = NULL):int
 	{
 		return is_string($output = @stream_get_contents($this->client, $length)) ? strlen($output) : 0;
 	}
@@ -187,7 +187,7 @@ class webapp_client implements Stringable, Countable
 	{
 		return $this->client && @fwrite($this->client, $data) === strlen($data);
 	}
-	function sendfrom($stream, int $length = NULL):bool
+	function sendfrom($stream, ?int $length = NULL):bool
 	{
 		return is_int($copied = @stream_copy_to_stream($stream, $this->client, $length))
 			&& ($length === NULL || $copied === $length);
@@ -284,7 +284,7 @@ class webapp_client_smtp extends webapp_client implements Countable
 	{
 		return $this->echo(join("\r\n", $contents));
 	}
-	function mail(string|array $to, string $from = NULL):bool
+	function mail(string|array $to, ?string $from = NULL):bool
 	{
 		foreach ([$from ?? $this->from, ...is_string($to) ? [$to] : $to] as $i => $command)
 		{
@@ -498,7 +498,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 		return TRUE;
 	}
 
-	function request(string $method, string $path, $body = NULL, string $type = NULL):bool
+	function request(string $method, string $path, $body = NULL, ?string $type = NULL):bool
 	{
 		$this->path = $path;
 		$request = ["{$method} {$path} HTTP/1.1"];
@@ -621,7 +621,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 		$this->clear();
 		return FALSE;
 	}
-	function status(array &$response = NULL, bool $raw = FALSE):int
+	function status(?array &$response = NULL, bool $raw = FALSE):int
 	{
 		if ($raw)
 		{
@@ -637,7 +637,7 @@ class webapp_client_http extends webapp_client implements ArrayAccess
 		}
 		return $this->response ? intval(substr($this[0], 9)) : 0;
 	}
-	function then(Closure $success, Closure $failure = NULL):static
+	function then(Closure $success, ?Closure $failure = NULL):static
 	{
 		#look then like that promise
 		$closure = $this->response && strlen($this[0]) > 9 && $this[0][9] === '2'
@@ -861,7 +861,7 @@ class webapp_client_websocket extends webapp_client_http
 			'Sec-WebSocket-Key' => base64_encode(random_bytes(16))
 		])->request('GET', $this->path);
 	}
-	function then(Closure $success, Closure $failure = NULL):static
+	function then(Closure $success, ?Closure $failure = NULL):static
 	{
 		$closure = $this->response
 			&& $this->response[0] === 'HTTP/1.1 101 Switching Protocols'

@@ -33,7 +33,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 	{
 		$this->main->append('button', ['Sign out Administrator', 'onclick' => '$.cookie.refresh("nfs")', 'class' => 'primary']);
 	}
-	function get_home(int $sort = 0, int $page = 1, string $search = NULL, string $node = NULL)
+	function get_home(int $sort = 0, int $page = 1, ?string $search = NULL, ?string $node = NULL)
 	{
 		$title = 'Explorer';
 		$backtotop = "?{$this->routename},sort:{$sort}";
@@ -200,7 +200,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 			$this->echo->error("Delete failure\nIf type is node keep node must empty");
 		}
 	}
-	function form_uploadfile(webapp_html $node = NULL)
+	function form_uploadfile(?webapp_html $node = NULL)
 	{
 		$form = new webapp_form($node ?? $this->webapp);
 		$form->progress();//->setattr(['value' => 0.47]);
@@ -237,7 +237,7 @@ class webapp_extend_nfs_echo extends webapp_echo_html
 			}
 		}
 	}
-	function form_createnode(webapp_html $node = NULL)
+	function form_createnode(?webapp_html $node = NULL)
 	{
 		$form = new webapp_form($node ?? $this->webapp);
 		$form->field('name', 'text', ['placeholder' => 'Folder name', 'required' => NULL]);

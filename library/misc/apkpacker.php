@@ -173,7 +173,7 @@ class AndroidSignApkToolV2
 插件：flutter_walle_plugin
 await FlutterWallePlugin.getWalleChannel();
 */
-return function(string $source, string $unit, string $saveto, callable $masker = NULL):bool
+return function(string $source, string $unit, string $saveto, ?callable $masker = NULL):bool
 {
     $packer = new AndroidSignApkToolV2;
     if ($masker)

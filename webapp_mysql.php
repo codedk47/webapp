@@ -5,7 +5,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	public webapp $webapp;
 	public array $errors = [];
 	private array $maptables = [];
-	function __construct(string $hostname = 'p:127.0.0.1:3306', string $username = 'root', string $password = NULL, string $database = NULL, private string $maptable = 'webapp_maptable_')
+	function __construct(string $hostname = 'p:127.0.0.1:3306', string $username = 'root', ?string $password = NULL, ?string $database = NULL, private string $maptable = 'webapp_maptable_')
 	{
 		try
 		{
@@ -80,11 +80,11 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	{
 		return $this->use_result()->fetch_all($mode);
 	}
-	function column(string $key, string $index = NULL):array
+	function column(string $key, ?string $index = NULL):array
 	{
 		return array_column($this->all(), $key, $index);
 	}
-	function group(string $field, string $key, string $index = NULL):array
+	function group(string $field, string $key, ?string $index = NULL):array
 	{
 		$group = [];
 		foreach ($this as $data)
@@ -247,7 +247,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 	// 		}
 	// 	};
 	// }
-	function kill(int $pid = NULL):bool
+	function kill(?int $pid = NULL):bool
 	{
 		return $this->real_query('KILL ?i', $pid ?? $this->thread_id);
 	}
@@ -277,7 +277,7 @@ class webapp_mysql extends mysqli implements IteratorAggregate
 		$fields = $detailed ? $result->fetch_fields() : array_column($result->fetch_fields(), 'name');
 		return $result;
 	}
-	function table(string $name, string $primary = NULL):webapp_mysql_table
+	function table(string $name, ?string $primary = NULL):webapp_mysql_table
 	{
 		return $this->maptables[$name] ??= class_exists($tablename = $this->maptable . $name, FALSE)
 			? new $tablename($this) : new class($this, $name, $primary) extends webapp_mysql_table {
@@ -329,7 +329,7 @@ abstract class webapp_mysql_table implements IteratorAggregate, Countable, Strin
 	{
 		return [$this->cond, $this->fields = '*', $this->cond = ''][0];
 	}
-	function count(string &$cond = NULL):int
+	function count(?string &$cond = NULL):int
 	{
 		$cond = $this->cond;
 		return intval(($this->mysql)('SELECT SQL_NO_CACHE COUNT(1) FROM ?a ?? LIMIT 1', $this->tablename, (string)$this)->value());
