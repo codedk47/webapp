@@ -210,7 +210,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 			&& is_string($result = openssl_decrypt(substr($binary, 12, -16), 'aes-128-gcm', static::key, OPENSSL_RAW_DATA,
 				substr($binary, 0, 12), substr($binary, -16), '')) ? $result : NULL;
 	}
-	static function signature(string $username, string $password, string $additional = NULL):?string
+	static function signature(string $username, string $password, ?string $additional = NULL):?string
 	{
 		return static::encrypt(pack('PCCa*', static::time(), strlen($username), strlen($password), $username . $password . $additional));
 	}
