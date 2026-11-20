@@ -186,7 +186,7 @@ abstract class webapp extends stdClass implements ArrayAccess, Stringable, Count
 						$buffer .= chr($value >> 8 & 255);
 						if ($i < $length)
 						{
-							$buffer .= chr($value | strpos(self::key, $data[$i++]) & 255);
+							$buffer .= chr(($value | strpos(self::key, $data[$i++])) & 255);
 						}
 					}
 					continue;

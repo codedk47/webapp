@@ -1340,7 +1340,7 @@ class webapp_table extends stdClass implements Countable
 	}
 	function row(?int $index = NULL):webapp_html
 	{
-		return $this->row = array_key_exists($index, $this->rows) ? $this->rows[$index] : $this->rows[] = $this->tbody->append('tr');
+		return $this->row = is_int($index) && array_key_exists($index, $this->rows) ? $this->rows[$index] : $this->rows[] = $this->tbody->append('tr');
 	}
 	function cell(NULL|string|array $value = NULL):webapp_html
 	{
